@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: toeicmaster-frontend:local
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: http://host.docker.internal:5287
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3000:3000"

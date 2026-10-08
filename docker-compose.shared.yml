@@ -1,0 +1,11 @@
+services:
+  frontend:
+    environment:
+      API_BASE_URL: http://backend:8080
+    networks:
+      default:
+      toeicmaster:
+networks:
+  toeicmaster:
+    external: true
+    name: toeicmaster-local
