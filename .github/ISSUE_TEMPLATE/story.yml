@@ -1,27 +1,50 @@
 name: User story
-description: Công việc có giá trị cho người dùng, có thể hoàn thành trong một sprint.
+description: User-facing work that can be completed within a sprint.
 title: "[Story] "
 body:
   - type: textarea
     id: story
     attributes:
       label: User story
-      description: "Là [người dùng], tôi muốn [khả năng], để [giá trị]."
+      description: "As a [user], I want [capability], so that [value]."
     validations: { required: true }
   - type: textarea
     id: criteria
     attributes:
       label: Acceptance criteria
-      description: "Điều kiện có thể kiểm chứng, bao gồm trạng thái lỗi khi phù hợp."
-      placeholder: "- [ ] Given … When … Then …"
+      description: "Make each item observable and testable; include errors and empty/loading states where relevant."
+      placeholder: "- [ ] Given … When … Then …\n- [ ] When the request fails, the user sees …"
     validations: { required: true }
+  - type: textarea
+    id: context
+    attributes:
+      label: Implementation context for AI
+      description: "Existing screen/flow, code patterns to follow, design references, and agreed business decisions. Do not guess new file names."
+      placeholder: "Related flow: …\nExample code: …\nDesign/rules: …"
+  - type: textarea
+    id: contract
+    attributes:
+      label: API and data contract
+      description: "Route, method, example request/response, errors, and access rules; write 'No API change' for UI-only work."
+      placeholder: "GET /api/v1/… → 200 { … }; errors …; backend issue: …"
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: "Required tests and manual checks; mention UI states and browsers where relevant."
+      placeholder: "Unit/route test: …\nUI check: …\nCommand: npm run check"
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Out of scope and assumptions
+      description: "State what this story will not cover and any open decision, so AI does not expand the feature on its own."
   - type: textarea
     id: dependencies
     attributes:
-      label: Phụ thuộc và tài liệu
-      description: "Link Issue/PR của repo kia, API contract, thiết kế."
+      label: Dependencies and references
+      description: "Link issues/PRs in the other repository, API contracts, and designs."
   - type: input
     id: estimate
     attributes:
       label: Story points
-      description: "Nhóm ước lượng trong refinement/planning; có thể để trống trước đó."
+      description: "Estimate during refinement/planning; it may be left blank before then."
