@@ -10,3 +10,4 @@ next-env.d.ts
 *.pem
 .DS_Store
 .idea/
+local/
