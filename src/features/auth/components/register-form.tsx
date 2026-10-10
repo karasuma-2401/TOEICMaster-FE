@@ -6,7 +6,6 @@ import {
   type RegisterField,
   type RegisterFieldErrors,
   type RegisterInput,
-  register,
   validateRegistration,
 } from "@/features/auth/register";
 
@@ -23,17 +22,6 @@ const initialValues: FormValues = {
   confirmPassword: "",
   termsAccepted: false,
 };
-
-function isRegisterError(
-  error: unknown,
-): error is { message: string; fieldErrors: RegisterFieldErrors } {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "fieldErrors" in error &&
-    typeof error.fieldErrors === "object"
-  );
-}
 
 const fields: Array<{
   name: TextField;
@@ -195,13 +183,14 @@ function PasswordToggle({
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({
+  onRegistrationAccepted,
+}: {
+  onRegistrationAccepted: (email: string) => void;
+}) {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<RegisterFieldErrors>({});
-  const [formError, setFormError] = useState<string>();
   const [googleNotice, setGoogleNotice] = useState<string>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<
     Partial<Record<"password" | "confirmPassword", boolean>>
   >({});
@@ -212,7 +201,6 @@ export function RegisterForm() {
     setValues(next);
     if (errors[name])
       setErrors((current) => ({ ...current, [name]: undefined }));
-    setFormError(undefined);
     setGoogleNotice(undefined);
   }
 
@@ -226,69 +214,13 @@ export function RegisterForm() {
     setGoogleNotice(undefined);
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateRegistration(values);
     setErrors(nextErrors);
-    setFormError(undefined);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setIsSubmitting(true);
-    try {
-      await register(values);
-      setIsSuccess(true);
-    } catch (error) {
-      if (isRegisterError(error)) {
-        setErrors(error.fieldErrors);
-        setFormError(error.message);
-      } else {
-        setFormError("Không thể tạo tài khoản. Vui lòng thử lại.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  if (isSuccess) {
-    return (
-      <section
-        aria-labelledby="registration-success-title"
-        className="text-center"
-      >
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-[#ef3f1b]">
-          <svg
-            aria-hidden="true"
-            className="h-7 w-7"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="m5 12 4.2 4L19 6.5"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-        </div>
-        <h2
-          className="mt-6 text-3xl font-semibold tracking-tight text-slate-900"
-          id="registration-success-title"
-        >
-          Kiểm tra email của bạn
-        </h2>
-        <p className="mt-3 text-sm leading-6 text-slate-500">
-          Chúng tôi đã gửi hướng dẫn xác minh đến{" "}
-          <strong className="font-semibold text-slate-700">
-            {values.email.trim()}
-          </strong>
-          .
-        </p>
-        <p className="mt-6 text-sm text-slate-500">
-          Bạn có thể đóng trang này sau khi hoàn tất xác minh.
-        </p>
-      </section>
-    );
+    onRegistrationAccepted(values.email.trim());
   }
 
   return (
@@ -381,20 +313,11 @@ export function RegisterForm() {
           </p>
         )}
       </div>
-      {formError && (
-        <p
-          className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
-          role="alert"
-        >
-          {formError}
-        </p>
-      )}
       <button
-        className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b] disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isSubmitting}
+        className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
         type="submit"
       >
-        {isSubmitting ? "Đang tạo tài khoản…" : "Tạo tài khoản"}
+        Tạo tài khoản
       </button>
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
         hoặc tiếp tục với

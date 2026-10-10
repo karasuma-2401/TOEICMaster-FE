@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { validateLogin, validateRecoveryEmail } from "@/features/auth/login";
 import { AuthTabs } from "./auth-layout";
+import { VerificationPanel } from "./verification-panel";
 
 function EmailIcon() {
   return (
@@ -132,7 +133,9 @@ function Footer() {
 }
 
 export function LoginPanel() {
-  const [view, setView] = useState<"login" | "recovery">("login");
+  const [view, setView] = useState<"login" | "recovery" | "verification">(
+    "login",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -180,8 +183,16 @@ export function LoginPanel() {
     setNotice(undefined);
     if (Object.keys(errors).length > 0) return;
 
-    setNotice(
-      "Tính năng gửi mã xác minh đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
+    setView("verification");
+  }
+
+  if (view === "verification") {
+    return (
+      <VerificationPanel
+        email={recoveryEmail.trim()}
+        onChangeEmail={showRecovery}
+        purpose="recovery"
+      />
     );
   }
 

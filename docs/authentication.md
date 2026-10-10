@@ -1,6 +1,6 @@
 # Authentication frontend contract
 
-The current frontend registration flow is available at `/register`. It does not create a session; after a successful registration request it asks the learner to verify their email.
+The current frontend registration flow is available at `/register`. It does not create a session; after valid registration input or password-recovery input, the browser shows a six-digit verification screen for the supplied email. Verification and resend actions validate locally and do not make requests until a backend contract exists.
 
 ## Registration
 
@@ -27,6 +27,6 @@ Request body:
 
 ## Login and password recovery UI
 
-`/login` provides the login and inline password-recovery interfaces. They validate fields in the browser and allow the learner to navigate between login, recovery, and registration. No credentials or recovery email addresses are sent or stored, and no authentication, Google sign-in, persistent-login, or recovery-email claim is made until a backend contract exists.
+`/login` provides the login, inline password-recovery, and email-verification interfaces. After valid recovery input or an accepted registration request, the browser shows a six-digit verification screen for the supplied email. Verification and resend actions validate locally and do not make requests until a backend contract exists.
 
 The backend must implement a contract before registration is linked from the homepage or before login, sessions, password recovery, and Google sign-in perform server requests.

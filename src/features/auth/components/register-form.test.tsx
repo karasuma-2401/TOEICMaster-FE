@@ -2,24 +2,16 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { RegisterForm } from "./register-form";
 
-const { registerMock } = vi.hoisted(() => ({ registerMock: vi.fn() }));
-
-vi.mock("@/features/auth/register", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@/features/auth/register")>();
-  return { ...actual, register: registerMock };
-});
-
-beforeEach(() => registerMock.mockReset());
 afterEach(cleanup);
 
 describe("RegisterForm", () => {
   it("shows local validation errors without submitting", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    const onRegistrationAccepted = vi.fn();
+    render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
     await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
 
@@ -31,16 +23,16 @@ describe("RegisterForm", () => {
     expect(
       screen.getByText("Vui lòng đồng ý với điều khoản sử dụng."),
     ).toBeInTheDocument();
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(onRegistrationAccepted).not.toHaveBeenCalled();
   });
 
-  it("shows the verification message after registration succeeds", async () => {
-    registerMock.mockResolvedValue(undefined);
+  it("invokes onRegistrationAccepted with trimmed email when valid", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    const onRegistrationAccepted = vi.fn();
+    render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
     await user.type(screen.getByLabelText("Tên hiển thị"), "Linh");
-    await user.type(screen.getByLabelText("Email"), "linh@example.com");
+    await user.type(screen.getByLabelText("Email"), "  linh@example.com  ");
     await user.type(screen.getByLabelText("Mật khẩu"), "password");
     await user.type(screen.getByLabelText("Xác nhận mật khẩu"), "password");
     await user.click(
@@ -48,21 +40,13 @@ describe("RegisterForm", () => {
     );
     await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
 
-    expect(
-      await screen.findByRole("heading", { name: "Kiểm tra email của bạn" }),
-    ).toBeInTheDocument();
-    expect(registerMock).toHaveBeenCalledWith({
-      displayName: "Linh",
-      email: "linh@example.com",
-      password: "password",
-      confirmPassword: "password",
-      termsAccepted: true,
-    });
+    expect(onRegistrationAccepted).toHaveBeenCalledWith("linh@example.com");
   });
 
   it("requires consent before it submits the form", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    const onRegistrationAccepted = vi.fn();
+    render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
     await user.type(screen.getByLabelText("Tên hiển thị"), "Linh");
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
@@ -73,12 +57,12 @@ describe("RegisterForm", () => {
     expect(
       await screen.findByText("Vui lòng đồng ý với điều khoản sử dụng."),
     ).toBeInTheDocument();
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(onRegistrationAccepted).not.toHaveBeenCalled();
   });
 
   it("explains that Google registration is not available yet", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<RegisterForm onRegistrationAccepted={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "Google" }));
 

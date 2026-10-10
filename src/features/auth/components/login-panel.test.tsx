@@ -58,17 +58,14 @@ describe("LoginPanel", () => {
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
     await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
     expect(
-      await screen.findByText(
-        "Tính năng gửi mã xác minh đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
-      ),
+      await screen.findByRole("heading", { name: "Xác minh email" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("linh@example.com")).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: "Quay lại đăng nhập" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Nhập lại email" }));
     expect(
       await screen.findByRole("heading", {
-        name: "Tiếp tục hành trình của bạn",
+        name: "Quên mật khẩu?",
       }),
     ).toBeInTheDocument();
   });
