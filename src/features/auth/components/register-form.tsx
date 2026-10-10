@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import {
   type RegisterField,
@@ -154,7 +155,7 @@ function PasswordToggle({
   return (
     <button
       aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-      className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
     >
@@ -198,6 +199,7 @@ export function RegisterForm() {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<RegisterFieldErrors>({});
   const [formError, setFormError] = useState<string>();
+  const [googleNotice, setGoogleNotice] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -211,6 +213,7 @@ export function RegisterForm() {
     if (errors[name])
       setErrors((current) => ({ ...current, [name]: undefined }));
     setFormError(undefined);
+    setGoogleNotice(undefined);
   }
 
   function updateTerms(event: ChangeEvent<HTMLInputElement>) {
@@ -220,6 +223,7 @@ export function RegisterForm() {
     }));
     if (errors.termsAccepted)
       setErrors((current) => ({ ...current, termsAccepted: undefined }));
+    setGoogleNotice(undefined);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -386,7 +390,7 @@ export function RegisterForm() {
         </p>
       )}
       <button
-        className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b] disabled:cursor-not-allowed disabled:opacity-70"
+        className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b] disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting}
         type="submit"
       >
@@ -396,10 +400,8 @@ export function RegisterForm() {
         hoặc tiếp tục với
       </div>
       <button
-        aria-label="Đăng ký bằng Google, sắp có"
-        className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-[#e4dcda] bg-white text-xs font-semibold text-[#615957] opacity-65"
-        disabled
-        title="Đăng ký bằng Google sẽ sớm có"
+        className="mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#e4dcda] bg-white text-xs font-semibold text-[#615957] transition hover:bg-[#fff8f5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+        onClick={() => setGoogleNotice("Đăng ký bằng Google sẽ sớm khả dụng.")}
         type="button"
       >
         <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
@@ -422,9 +424,19 @@ export function RegisterForm() {
         </svg>
         Google
       </button>
+      {googleNotice && (
+        <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+          {googleNotice}
+        </output>
+      )}
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
         Bạn đã có tài khoản?{" "}
-        <span className="font-bold text-[#b8b0ac]">Đăng nhập</span>
+        <Link
+          className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+          href="/login"
+        >
+          Đăng nhập
+        </Link>
       </p>
       <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
         © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.

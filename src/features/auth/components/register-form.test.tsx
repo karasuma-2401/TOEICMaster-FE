@@ -76,11 +76,14 @@ describe("RegisterForm", () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it("shows Google registration as unavailable", () => {
+  it("explains that Google registration is not available yet", async () => {
+    const user = userEvent.setup();
     render(<RegisterForm />);
 
+    await user.click(screen.getByRole("button", { name: "Google" }));
+
     expect(
-      screen.getByRole("button", { name: "Đăng ký bằng Google, sắp có" }),
-    ).toBeDisabled();
+      screen.getByText("Đăng ký bằng Google sẽ sớm khả dụng."),
+    ).toBeInTheDocument();
   });
 });

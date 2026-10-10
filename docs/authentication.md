@@ -25,4 +25,8 @@ Request body:
 | `409 Conflict` for an existing email                 | `409 application/problem+json`                           | Show the duplicate-email error      |
 | Unexpected response, timeout, or unavailable service | `502 application/problem+json`                           | Show a generic service error        |
 
-The backend must implement this contract before registration is linked from the homepage. Email-link verification, sign-in, sessions, password recovery, and Google sign-in are separate features.
+## Login and password recovery UI
+
+`/login` provides the login and inline password-recovery interfaces. They validate fields in the browser and allow the learner to navigate between login, recovery, and registration. No credentials or recovery email addresses are sent or stored, and no authentication, Google sign-in, persistent-login, or recovery-email claim is made until a backend contract exists.
+
+The backend must implement a contract before registration is linked from the homepage or before login, sessions, password recovery, and Google sign-in perform server requests.
