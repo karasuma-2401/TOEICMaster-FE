@@ -131,6 +131,8 @@ docker compose down
 
 ## Cấu trúc
 
+For new features, see the [feature development guide](docs/feature-development.md) for file placement, an existing code path, and verification steps. The [authentication contract](docs/authentication.md) describes the registration boundary. The **User story** template in `.github/ISSUE_TEMPLATE/` captures acceptance criteria and implementation context for AI.
+
 ```text
 src/
   app/                Route, layout và Next.js route handlers
