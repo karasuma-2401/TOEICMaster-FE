@@ -1,32 +1,25 @@
 # Authentication frontend contract
 
-The current frontend registration flow is available at `/register`. It does not create a session; after valid registration input or password-recovery input, the browser shows a six-digit verification screen for the supplied email. Verification and resend actions validate locally and do not make requests until a backend contract exists.
+The browser calls same-origin Next.js routes. The route handlers use server-side `API_BASE_URL` to call the backend's `/api/auth/*` endpoints. Backend auth routes are **not** under `/api/v1`.
 
 ## Registration
 
-The browser submits `POST /api/auth/register` to Next.js. The route handler uses the server-only `API_BASE_URL` and forwards the request to `POST /api/v1/auth/register`.
+`POST /api/auth/register` forwards trimmed `displayName` and `email` and the unchanged password to backend `POST /api/auth/register`. It returns `202` with no body, `400` with safe field errors, `409` for a duplicate email, or a generic `502` for unexpected failures. `confirmPassword` and terms consent remain browser-only. The existing verification screen appears after `202`; the backend does not yet send or verify a code.
 
-Request body:
+## Login and Google sign-in
 
-```json
-{
-  "displayName": "Nguyen Van A",
-  "email": "learner@example.com",
-  "password": "at-least-eight-characters"
-}
-```
+`POST /api/auth/login` accepts `{ "email": string, "password": string, "rememberMe": boolean }`. `POST /api/auth/google` accepts `{ "credential": string, "rememberMe": boolean }`. The Google credential comes from the Google Identity Services popup callback and is sent unchanged through Next.js to the backend. Google sign-in on `/register` uses `rememberMe=false` and requires the existing terms checkbox.
 
-`displayName` and `email` are trimmed. Passwords are sent unchanged. The browser-only `confirmPassword` and required terms-consent fields are never forwarded.
+Both routes return `200 { "user": { "id": string, "displayName": string, "email": string } }` on success. Access and refresh tokens are never returned to browser JavaScript. Validation failures return `400` property errors, login credential failures `401`, and unsafe Google account linking `409`. Unexpected upstream responses return a generic `502`.
 
-| Backend result                                       | Next.js result                                           | Frontend behavior                   |
-| ---------------------------------------------------- | -------------------------------------------------------- | ----------------------------------- |
-| `202 Accepted`                                       | `202` with no body                                       | Show the email-verification message |
-| `400 ValidationProblemDetails`                       | `400 application/problem+json` with safe property errors | Show field errors                   |
-| `409 Conflict` for an existing email                 | `409 application/problem+json`                           | Show the duplicate-email error      |
-| Unexpected response, timeout, or unavailable service | `502 application/problem+json`                           | Show a generic service error        |
+## Session and logout
 
-## Login and password recovery UI
+Next.js encrypts the backend token pair, expiry times, user, and remember-me choice into one `HttpOnly`, `SameSite=Lax`, path `/` cookie. The cookie is `Secure` in production. With `rememberMe=false`, it is a browser-session cookie while the backend refresh session remains valid for one day. With `rememberMe=true`, its maximum age is capped by the backend's refresh expiry (up to 30 days). Configure `AUTH_SESSION_SECRET` as one 32-byte base64url key shared by all frontend instances; rotate it only when invalidating existing browser sessions is acceptable.
 
-`/login` provides the login, inline password-recovery, and email-verification interfaces. After valid recovery input or an accepted registration request, the browser shows a six-digit verification screen for the supplied email. Verification and resend actions validate locally and do not make requests until a backend contract exists.
+`GET /api/auth/session` returns one of `{ "status": "guest" }`, `{ "status": "refresh_required" }`, or `{ "status": "authenticated", "user": ... }`. It never returns tokens. The home-page account control calls `POST /api/auth/refresh` when needed. This rotates the backend refresh token and replaces the encrypted cookie. `POST /api/auth/logout` revokes the backend refresh token and clears the cookie after a `204`; if revocation fails, it reports an error so the user can retry.
 
-The backend must implement a contract before registration is linked from the homepage or before login, sessions, password recovery, and Google sign-in perform server requests.
+The browser POST handlers require a same-origin `Origin` header. Auth responses use `Cache-Control: no-store`. Password recovery, verification, and account linking have no backend endpoints yet; their existing UI remains unchanged.
+
+## Configuration
+
+Set `API_BASE_URL` and `AUTH_SESSION_SECRET` in frontend runtime environment. Set `GOOGLE_CLIENT_ID` to the same Google Web Client ID as the backend and authorize the frontend origin in Google Cloud. The ID is passed from dynamically rendered auth pages to the browser. If it is missing, the Google control shows an unavailable message. For Docker Compose, supply these values through `.env.local` with `docker compose --env-file .env.local ...`.

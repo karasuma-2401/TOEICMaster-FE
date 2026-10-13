@@ -12,7 +12,7 @@ export async function GET() {
     ) {
       throw new Error("Invalid API_BASE_URL");
     }
-    const response = await fetch(new URL("/api/v1/system/ping", base), {
+    const response = await fetch(new URL("/api/system/ping", base), {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });

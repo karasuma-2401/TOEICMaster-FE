@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     )
       throw new Error("Invalid API_BASE_URL");
 
-    const response = await fetch(new URL("/api/v1/auth/register", base), {
+    const response = await fetch(new URL("/api/auth/register", base), {
       method: "POST",
       headers: {
         Accept: "application/json",

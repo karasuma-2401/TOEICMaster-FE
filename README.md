@@ -53,9 +53,14 @@ Chạy frontend bằng `npm run dev` để giao diện tự cập nhật khi s�
 
    ```dotenv
    API_BASE_URL=http://localhost:5287
+   GOOGLE_CLIENT_ID=<same Google Web Client ID configured in the backend>
+   AUTH_SESSION_SECRET=<32 random bytes encoded as base64url>
    ```
 
    Nếu backend dùng địa chỉ khác, sửa giá trị này rồi khởi động lại frontend. Biến này chỉ dùng trên server Next.js.
+   Tạo `AUTH_SESSION_SECRET` bằng `node -e 'console.log(require("node:crypto").randomBytes(32).toString("base64url"))'`.
+   Giữ bí mật giá trị này và dùng cùng một giá trị trên các instance frontend. `GOOGLE_CLIENT_ID` là public ID,
+   phải khớp backend và cần cấu hình authorized JavaScript origin của Google cho địa chỉ frontend.
 
 3. Cài dependency và chạy:
 
@@ -96,7 +101,7 @@ Cần Docker Desktop đang chạy Linux containers hoặc Docker Engine có Comp
 Nếu backend chạy trên máy host:
 
 ```sh
-docker compose up -d --build
+docker compose --env-file .env.local up -d --build
 ```
 
 Mở `http://localhost:3000`. Container frontend gọi backend qua `host.docker.internal:5287`.
@@ -105,7 +110,7 @@ Nếu cả hai repo chạy trong Docker, dùng shared network để hoạt độ
 
 ```sh
 docker network create toeicmaster-local
-docker compose -f docker-compose.yml -f docker-compose.shared.yml up -d --build
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.shared.yml up -d --build
 ```
 
 Chạy backend với override `docker-compose.shared.yml` của repo backend. Network chỉ cần tạo một lần; nếu đã tồn tại, bỏ qua lệnh tạo.
@@ -131,7 +136,7 @@ docker compose down
 
 ## Cấu trúc
 
-For new features, see the [feature development guide](docs/feature-development.md) for file placement, an existing code path, and verification steps. The [authentication contract](docs/authentication.md) describes the registration boundary. The **User story** template in `.github/ISSUE_TEMPLATE/` captures acceptance criteria and implementation context for AI.
+For new features, see the [feature development guide](docs/feature-development.md) for file placement, an existing code path, and verification steps. The [authentication contract](docs/authentication.md) describes session and registration behavior. The **User story** template in `.github/ISSUE_TEMPLATE/` captures acceptance criteria and implementation context for AI.
 
 ```text
 src/
@@ -142,7 +147,7 @@ scripts/              Chuẩn bị output standalone
 .github/              CI, publish image và template Issue
 ```
 
-Trạng thái kết nối gọi `/api/system/ping` trên Next.js, rồi gọi `/api/v1/system/ping` của backend.
+Trạng thái kết nối gọi `/api/system/ping` trên Next.js, rồi gọi `/api/system/ping` của backend.
 
 ## Xử lý lỗi thường gặp
 
@@ -156,7 +161,7 @@ Workflow được điều chỉnh từ [UGTM](https://github.com/karasuma-2401/U
 
 Feature/fix branch mở PR vào `dev`; release qua PR từ `dev` vào `main`. Khi tạo repo GitHub, push workflow vào default branch `main` và cho phép Actions publish package bằng `GITHUB_TOKEN`. Deploy Azure sẽ cấu hình khi VPS sẵn sàng.
 
-GitHub Actions được ghim commit SHA và dùng Node 24 cho các JavaScript actions. Khi cập nhật dependency, commit cả `package.json` và `package-lock.json`, chạy `npm run check` và `npm run audit`. Cấu hình hiện tại phục vụ nền project; các flow nghiệp vụ, authentication và browser E2E tests sẽ bổ sung theo backlog.
+GitHub Actions được ghim commit SHA và dùng Node 24 cho các JavaScript actions. Khi cập nhật dependency, commit cả `package.json` và `package-lock.json`, chạy `npm run check` và `npm run audit`. Các flow học tập và browser E2E tests sẽ bổ sung theo backlog.
 
 <details>
 <summary>Giấy phép cấu hình tham khảo UGTM (MIT)</summary>

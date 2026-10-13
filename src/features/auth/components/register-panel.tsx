@@ -5,7 +5,7 @@ import { AuthTabs } from "./auth-layout";
 import { RegisterForm } from "./register-form";
 import { VerificationPanel } from "./verification-panel";
 
-export function RegisterPanel() {
+export function RegisterPanel({ googleClientId }: { googleClientId?: string }) {
   const [verificationEmail, setVerificationEmail] = useState<string>();
 
   if (verificationEmail) {
@@ -31,7 +31,10 @@ export function RegisterPanel() {
       </p>
       <AuthTabs current="register" />
       <div className="mt-6">
-        <RegisterForm onRegistrationAccepted={setVerificationEmail} />
+        <RegisterForm
+          googleClientId={googleClientId}
+          onRegistrationAccepted={setVerificationEmail}
+        />
       </div>
     </>
   );

@@ -6,8 +6,11 @@ import {
   type RegisterField,
   type RegisterFieldErrors,
   type RegisterInput,
+  RegisterError,
+  register,
   validateRegistration,
 } from "@/features/auth/register";
+import { GoogleSignIn } from "./google-sign-in";
 
 type FormValues = RegisterInput & {
   confirmPassword: string;
@@ -184,13 +187,16 @@ function PasswordToggle({
 }
 
 export function RegisterForm({
+  googleClientId,
   onRegistrationAccepted,
 }: {
+  googleClientId?: string;
   onRegistrationAccepted: (email: string) => void;
 }) {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<RegisterFieldErrors>({});
-  const [googleNotice, setGoogleNotice] = useState<string>();
+  const [notice, setNotice] = useState<string>();
+  const [pending, setPending] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<
     Partial<Record<"password" | "confirmPassword", boolean>>
   >({});
@@ -201,7 +207,7 @@ export function RegisterForm({
     setValues(next);
     if (errors[name])
       setErrors((current) => ({ ...current, [name]: undefined }));
-    setGoogleNotice(undefined);
+    setNotice(undefined);
   }
 
   function updateTerms(event: ChangeEvent<HTMLInputElement>) {
@@ -211,16 +217,28 @@ export function RegisterForm({
     }));
     if (errors.termsAccepted)
       setErrors((current) => ({ ...current, termsAccepted: undefined }));
-    setGoogleNotice(undefined);
+    setNotice(undefined);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateRegistration(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    onRegistrationAccepted(values.email.trim());
+    setPending(true);
+    setNotice(undefined);
+    try {
+      await register(values);
+      onRegistrationAccepted(values.email.trim());
+    } catch (reason) {
+      if (reason instanceof RegisterError) setErrors(reason.fieldErrors);
+      setNotice(
+        reason instanceof Error ? reason.message : "Không thể tạo tài khoản.",
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -315,43 +333,20 @@ export function RegisterForm({
       </div>
       <button
         className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+        disabled={pending}
         type="submit"
       >
-        Tạo tài khoản
+        {pending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
       </button>
+      {notice && (
+        <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+          {notice}
+        </output>
+      )}
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
         hoặc tiếp tục với
       </div>
-      <button
-        className="mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#e4dcda] bg-white text-xs font-semibold text-[#615957] transition hover:bg-[#fff8f5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-        onClick={() => setGoogleNotice("Đăng ký bằng Google sẽ sớm khả dụng.")}
-        type="button"
-      >
-        <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
-          <path
-            d="M21.35 12.23c0-.73-.07-1.43-.2-2.1H12v3.97h5.23a4.47 4.47 0 0 1-1.94 2.93v2.57h3.32c1.94-1.78 3.04-4.4 3.04-7.37Z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 21.72c2.62 0 4.81-.87 6.41-2.35l-3.12-2.42c-.87.58-1.97.92-3.29.92-2.53 0-4.68-1.71-5.45-4.01H3.33v2.5A9.68 9.68 0 0 0 12 21.72Z"
-            fill="#34A853"
-          />
-          <path
-            d="M6.55 13.86A5.8 5.8 0 0 1 6.25 12c0-.64.11-1.25.3-1.86v-2.5H3.33A9.7 9.7 0 0 0 2.28 12c0 1.57.38 3.06 1.05 4.36l3.22-2.5Z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 6.13c1.43 0 2.7.49 3.7 1.44l2.77-2.77C16.81 3.25 14.62 2.28 12 2.28a9.68 9.68 0 0 0-8.67 5.36l3.22 2.5c.77-2.3 2.92-4.01 5.45-4.01Z"
-            fill="#EA4335"
-          />
-        </svg>
-        Google
-      </button>
-      {googleNotice && (
-        <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
-          {googleNotice}
-        </output>
-      )}
+      <GoogleSignIn clientId={googleClientId} enabled={values.termsAccepted} />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
         Bạn đã có tài khoản?{" "}
         <Link

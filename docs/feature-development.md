@@ -15,7 +15,7 @@ Prefer Server Components for server-rendered screens. Add `"use client"` at the 
 
 ## Existing end-to-end code path
 
-`ConnectionStatus` calls `ping(signal)` → `getJson` calls same-origin `/api/system/ping` → the Next.js route handler calls backend `/api/v1/system/ping` using `API_BASE_URL` → the UI shows ready/error and offers retry. The route handler validates the URL and upstream response, times out after five seconds, and returns a generic 502 on failure. The component aborts the request on unmount; tests cover the contract, errors, and cancellation.
+`ConnectionStatus` calls `ping(signal)` → `getJson` calls same-origin `/api/system/ping` → the Next.js route handler calls backend `/api/system/ping` using `API_BASE_URL` → the UI shows ready/error and offers retry. The route handler validates the URL and upstream response, times out after five seconds, and returns a generic 502 on failure. The component aborts the request on unmount; tests cover the contract, errors, and cancellation.
 
 For a new API: confirm the backend contract first; put the typed API function under the feature; validate network JSON before using it when its shape controls important behavior. Add a route handler when server-side processing, a same-origin proxy, or secret handling is needed. Never expose `API_BASE_URL` or credentials through `NEXT_PUBLIC_*`.
 

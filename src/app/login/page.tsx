@@ -7,10 +7,12 @@ export const metadata: Metadata = {
   description: "Đăng nhập TOEICMaster để tiếp tục hành trình học TOEIC.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function LoginPage() {
   return (
     <AuthLayout>
-      <LoginPanel />
+      <LoginPanel googleClientId={process.env.GOOGLE_CLIENT_ID} />
     </AuthLayout>
   );
 }

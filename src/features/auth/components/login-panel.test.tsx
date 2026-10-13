@@ -2,14 +2,27 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LoginPanel } from "./login-panel";
 
-afterEach(cleanup);
+const navigation = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
 
 describe("LoginPanel", () => {
-  it("validates credentials before showing the sign-in availability notice", async () => {
+  it("validates credentials and signs in with the backend", async () => {
     const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        user: { id: "user-id", displayName: "Linh", email: "linh@example.com" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
     render(<LoginPanel />);
 
     await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
@@ -21,11 +34,17 @@ describe("LoginPanel", () => {
     await user.type(screen.getByLabelText("Mật khẩu"), "password");
     await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
 
-    expect(
-      await screen.findByText(
-        "Tính năng đăng nhập đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
-      ),
-    ).toBeInTheDocument();
+    expect(navigation.replace).toHaveBeenCalledWith("/");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/login",
+      expect.objectContaining({
+        body: JSON.stringify({
+          email: "linh@example.com",
+          password: "password",
+          rememberMe: false,
+        }),
+      }),
+    );
   });
 
   it("supports password visibility and local remember-me state", async () => {
@@ -70,14 +89,10 @@ describe("LoginPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows an availability notice for Google", async () => {
-    const user = userEvent.setup();
+  it("explains when Google is not configured", () => {
     render(<LoginPanel />);
-
-    await user.click(screen.getByRole("button", { name: "Google" }));
-
     expect(
-      await screen.findByText("Đăng nhập bằng Google sẽ sớm khả dụng."),
+      screen.getByText("Đăng nhập bằng Google chưa được cấu hình."),
     ).toBeInTheDocument();
   });
 });

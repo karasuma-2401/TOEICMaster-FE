@@ -53,7 +53,7 @@ describe("registration proxy", () => {
 
     expect(response.status).toBe(202);
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      "http://api:8080/api/v1/auth/register",
+      "http://api:8080/api/auth/register",
     );
     expect(fetchMock.mock.calls[0][1]).toMatchObject({
       method: "POST",

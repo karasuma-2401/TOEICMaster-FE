@@ -18,7 +18,7 @@ describe("ping proxy", () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(String(mock.mock.calls[0][0])).toBe(
-      "http://api:8080/api/v1/system/ping",
+      "http://api:8080/api/system/ping",
     );
   });
   it("hides upstream details on errors", async () => {

@@ -5,7 +5,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RegisterForm } from "./register-form";
 
-afterEach(cleanup);
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("RegisterForm", () => {
   it("shows local validation errors without submitting", async () => {
@@ -27,6 +33,10 @@ describe("RegisterForm", () => {
   });
 
   it("invokes onRegistrationAccepted with trimmed email when valid", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
     const onRegistrationAccepted = vi.fn();
     render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
@@ -41,6 +51,10 @@ describe("RegisterForm", () => {
     await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
 
     expect(onRegistrationAccepted).toHaveBeenCalledWith("linh@example.com");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/register",
+      expect.any(Object),
+    );
   });
 
   it("requires consent before it submits the form", async () => {
@@ -60,14 +74,12 @@ describe("RegisterForm", () => {
     expect(onRegistrationAccepted).not.toHaveBeenCalled();
   });
 
-  it("explains that Google registration is not available yet", async () => {
-    const user = userEvent.setup();
+  it("requires terms before offering Google registration", () => {
     render(<RegisterForm onRegistrationAccepted={vi.fn()} />);
-
-    await user.click(screen.getByRole("button", { name: "Google" }));
-
     expect(
-      screen.getByText("Đăng ký bằng Google sẽ sớm khả dụng."),
+      screen.getByText(
+        "Vui lòng đồng ý với điều khoản sử dụng để tiếp tục bằng Google.",
+      ),
     ).toBeInTheDocument();
   });
 });
