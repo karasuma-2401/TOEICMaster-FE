@@ -33,6 +33,10 @@ npm run check
 
 `npm run check` covers formatting, Oxlint, type checking, Vitest, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient. For new APIs, consult `TOEICMaster-BE/docs/api-contract.md` when that repository is in the workspace; when cloned alone, use the backend's Development OpenAPI document and the issue's contract description.
 
+## User profile modal flow
+
+The user profile is presented as an in-place dialog (`UserMenu` and `ProfileDialog` under `src/features/user/components/`) triggered from the homepage header avatar button without navigating away. When not logged in, the header displays login and registration actions. Route `/profile` redirects to `/?profile=1` to preserve bookmark and backward compatibility while launching the dialog overlay.
+
 ## Before handing off
 
 Match the UI and API behavior to each acceptance criterion. Report loading/error/empty states, routes and requests checked, screenshots for UI changes where useful, commands run, and anything not verified. If design or business rules are missing, state assumptions before expanding scope.
