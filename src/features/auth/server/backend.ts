@@ -16,6 +16,24 @@ export function problem(status: number, title: string, errors?: Errors) {
   );
 }
 
+export function rateLimited(response: Response) {
+  const retryAfter = response.headers.get("retry-after");
+  return NextResponse.json(
+    {
+      title: "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
+      status: 429,
+    },
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/problem+json",
+        "Cache-Control": "no-store",
+        ...(retryAfter ? { "Retry-After": retryAfter } : {}),
+      },
+    },
+  );
+}
+
 export function sameOrigin(request: NextRequest): boolean {
   return request.headers.get("origin") === new URL(request.url).origin;
 }
@@ -42,13 +60,19 @@ export async function postAuth(
     base.password
   )
     throw new Error("Invalid API_BASE_URL");
-  return fetch(new URL(`/api/auth/${action}`, base), {
+  const options: RequestInit = {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/json" },
     body: JSON.stringify(body),
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
-  });
+  };
+  const versioned = await fetch(
+    new URL(`/api/v1/auth/${action}`, base),
+    options,
+  );
+  if (versioned.status !== 404) return versioned;
+  return fetch(new URL(`/api/auth/${action}`, base), options);
 }
 
 export async function upstreamProblem(

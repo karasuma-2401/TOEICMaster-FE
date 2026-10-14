@@ -147,7 +147,7 @@ scripts/              Chuẩn bị output standalone
 .github/              CI, publish image và template Issue
 ```
 
-Trạng thái kết nối gọi `/api/system/ping` trên Next.js, rồi gọi `/api/system/ping` của backend.
+Trạng thái kết nối gọi `/api/system/ping` trên Next.js, rồi gọi `/api/v1/system/ping` của backend.
 
 ## Xử lý lỗi thường gặp
 

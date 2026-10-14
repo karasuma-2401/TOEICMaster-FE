@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { postAuth, problem, sameOrigin } from "@/features/auth/server/backend";
+import {
+  postAuth,
+  problem,
+  rateLimited,
+  sameOrigin,
+} from "@/features/auth/server/backend";
 import {
   clearSessionCookie,
   sessionCookie,
@@ -13,6 +18,7 @@ export async function POST(request: NextRequest) {
       const upstream = await postAuth("logout", {
         refreshToken: current.refreshToken,
       });
+      if (upstream.status === 429) return rateLimited(upstream);
       if (upstream.status !== 204) throw new Error("Unexpected logout status");
     } catch {
       return problem(502, "Không thể đăng xuất. Vui lòng thử lại.");

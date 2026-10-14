@@ -1,6 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import {
+  AuthError,
+  resendVerification,
+  verifyEmail,
+} from "@/features/auth/api";
 
 type VerificationPurpose = "registration" | "recovery";
 
@@ -13,13 +19,16 @@ export function VerificationPanel({
   onChangeEmail: () => void;
   purpose: VerificationPurpose;
 }) {
+  const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [pending, setPending] = useState(false);
+  const [resending, setResending] = useState(false);
   const eyebrow =
     purpose === "recovery" ? "KHÔI PHỤC TÀI KHOẢN" : "XÁC MINH TÀI KHOẢN";
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!/^\d{6}$/.test(code)) {
       setError("Vui lòng nhập mã gồm 6 chữ số.");
@@ -27,10 +36,58 @@ export function VerificationPanel({
       return;
     }
 
+    if (purpose === "recovery") {
+      setError(undefined);
+      setNotice(
+        "Tính năng xác minh mã đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
+      );
+      return;
+    }
+
+    setPending(true);
     setError(undefined);
-    setNotice(
-      "Tính năng xác minh mã đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
-    );
+    setNotice(undefined);
+    try {
+      await verifyEmail(email, code);
+      router.replace("/login");
+      router.refresh();
+    } catch (reason) {
+      if (reason instanceof AuthError) setError(reason.fieldErrors.code);
+      setNotice(
+        reason instanceof Error
+          ? reason.message
+          : "Không thể xác minh email. Vui lòng thử lại.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resend() {
+    if (purpose === "recovery") {
+      setNotice(
+        "Tính năng gửi lại mã đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
+      );
+      return;
+    }
+
+    setResending(true);
+    setError(undefined);
+    setNotice(undefined);
+    try {
+      await resendVerification(email);
+      setNotice(
+        "Nếu tài khoản đang chờ xác minh, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
+      );
+    } catch (reason) {
+      setNotice(
+        reason instanceof Error
+          ? reason.message
+          : "Không thể gửi lại mã. Vui lòng thử lại.",
+      );
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
@@ -87,9 +144,10 @@ export function VerificationPanel({
         )}
         <button
           className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+          disabled={pending}
           type="submit"
         >
-          Xác minh mã
+          {pending ? "Đang xác minh..." : "Xác minh mã"}
         </button>
       </form>
       {notice && (
@@ -101,14 +159,11 @@ export function VerificationPanel({
         Không nhận được mã?{" "}
         <button
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-          onClick={() =>
-            setNotice(
-              "Tính năng gửi lại mã đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
-            )
-          }
+          disabled={resending}
+          onClick={resend}
           type="button"
         >
-          Gửi lại mã
+          {resending ? "Đang gửi..." : "Gửi lại mã"}
         </button>
       </p>
       <p className="mt-4 text-center text-[11px] text-[#a8a09c]">

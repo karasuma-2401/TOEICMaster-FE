@@ -3,6 +3,7 @@ import {
   authenticationResult,
   postAuth,
   problem,
+  rateLimited,
   readBody,
   sameOrigin,
   success,
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
         409,
         "Email này đã thuộc một tài khoản khác. Hãy đăng nhập bằng mật khẩu để liên kết Google.",
       );
+    if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected auth status");
     const session = await authenticationResult(upstream, rememberMe);
     const response = success(session);

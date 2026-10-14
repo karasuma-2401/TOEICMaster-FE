@@ -3,6 +3,7 @@ import {
   authenticationResult,
   postAuth,
   problem,
+  rateLimited,
   sameOrigin,
   success,
 } from "@/features/auth/server/backend";
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     });
     if (upstream.status === 401)
       return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+    if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected refresh status");
     const session = await authenticationResult(upstream, current.rememberMe);
     const response = success(session);

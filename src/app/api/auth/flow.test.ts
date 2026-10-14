@@ -68,7 +68,7 @@ describe("auth BFF", () => {
     expect(cookie).not.toContain("refresh-secret");
     expect(cookie).not.toContain("access-secret");
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://backend:8080/api/auth/login",
+      "http://backend:8080/api/v1/auth/login",
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       email: "linh@example.com",
@@ -79,6 +79,27 @@ describe("auth BFF", () => {
       request("session", undefined, cookie.split(";")[0]),
     );
     expect(await state.json()).toEqual({ status: "authenticated", user });
+  });
+
+  it("falls back to the legacy local auth route only when the versioned route is absent", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(Response.json(authBody()));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await login(
+      request("login", {
+        email: "linh@example.com",
+        password: "password",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      "http://backend:8080/api/v1/auth/login",
+      "http://backend:8080/api/auth/login",
+    ]);
   });
 
   it("rejects invalid input, cross-origin requests, and invalid upstream payloads", async () => {
@@ -143,7 +164,7 @@ describe("auth BFF", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ user });
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://backend:8080/api/auth/google",
+      "http://backend:8080/api/v1/auth/google",
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       credential: "signed-id-token",
@@ -179,5 +200,23 @@ describe("auth BFF", () => {
       refreshToken: "second-token",
     });
     expect(signedOut.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
+
+  it("returns the backend retry interval for rate-limited login attempts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(null, { status: 429, headers: { "Retry-After": "12" } }),
+        ),
+    );
+
+    const response = await login(
+      request("login", { email: "linh@example.com", password: "password" }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("12");
   });
 });

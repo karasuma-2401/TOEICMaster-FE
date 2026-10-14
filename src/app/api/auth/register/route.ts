@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimited, sameOrigin } from "@/features/auth/server/backend";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,13 @@ type ProblemErrors = Record<string, string[]>;
 function error(status: number, title: string, errors?: ProblemErrors) {
   return NextResponse.json(
     { title, status, ...(errors ? { errors } : {}) },
-    { status, headers: { "Content-Type": "application/problem+json" } },
+    {
+      status,
+      headers: {
+        "Content-Type": "application/problem+json",
+        "Cache-Control": "no-store",
+      },
+    },
   );
 }
 
@@ -62,6 +69,7 @@ function upstreamErrors(value: unknown): ProblemErrors | undefined {
 }
 
 export async function POST(request: NextRequest) {
+  if (!sameOrigin(request)) return error(403, "Yêu cầu không hợp lệ.");
   let value: unknown;
   try {
     value = await request.json();
@@ -82,7 +90,7 @@ export async function POST(request: NextRequest) {
     )
       throw new Error("Invalid API_BASE_URL");
 
-    const response = await fetch(new URL("/api/auth/register", base), {
+    const response = await fetch(new URL("/api/v1/auth/register", base), {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -92,13 +100,18 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (response.status === 202) return new NextResponse(null, { status: 202 });
+    if (response.status === 202)
+      return new NextResponse(null, {
+        status: 202,
+        headers: { "Cache-Control": "no-store" },
+      });
     if (response.status === 409)
       return error(409, "Email này đã được sử dụng.");
     if (response.status === 400) {
       const body: unknown = await response.json().catch(() => undefined);
       return error(400, "Dữ liệu đăng ký không hợp lệ.", upstreamErrors(body));
     }
+    if (response.status === 429) return rateLimited(response);
     throw new Error("Unexpected upstream response");
   } catch {
     return error(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");

@@ -14,7 +14,7 @@ export class AuthError extends Error {
     public readonly status: number,
     message: string,
     public readonly fieldErrors: Partial<
-      Record<"email" | "password", string>
+      Record<"email" | "password" | "code", string>
     > = {},
   ) {
     super(message);
@@ -53,6 +53,7 @@ async function errorFrom(response: Response): Promise<AuthError> {
   return new AuthError(response.status, title, {
     email: first("Email"),
     password: first("Password"),
+    code: first("Code"),
   });
 }
 
@@ -91,6 +92,21 @@ export function loginWithGoogle(credential: string, rememberMe: boolean) {
 
 export function refreshSession() {
   return authenticate("/api/auth/refresh", {});
+}
+
+export async function verifyEmail(email: string, code: string) {
+  const response = await post("/api/auth/verify-email", {
+    email: email.trim(),
+    code,
+  });
+  if (response.status !== 204) throw await errorFrom(response);
+}
+
+export async function resendVerification(email: string) {
+  const response = await post("/api/auth/resend-verification", {
+    email: email.trim(),
+  });
+  if (response.status !== 202) throw await errorFrom(response);
 }
 
 export async function logout() {

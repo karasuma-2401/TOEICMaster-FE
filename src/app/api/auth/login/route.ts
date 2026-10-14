@@ -3,6 +3,7 @@ import {
   authenticationResult,
   postAuth,
   problem,
+  rateLimited,
   readBody,
   sameOrigin,
   success,
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       return upstreamProblem(upstream, 400, "Dữ liệu đăng nhập không hợp lệ.");
     if (upstream.status === 401)
       return problem(401, "Email hoặc mật khẩu không chính xác.");
+    if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected auth status");
     const session = await authenticationResult(upstream, rememberMe);
     const response = success(session);

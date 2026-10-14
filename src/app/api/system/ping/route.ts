@@ -12,10 +12,18 @@ export async function GET() {
     ) {
       throw new Error("Invalid API_BASE_URL");
     }
-    const response = await fetch(new URL("/api/system/ping", base), {
+    const options: RequestInit = {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
-    });
+    };
+    const versioned = await fetch(
+      new URL("/api/v1/system/ping", base),
+      options,
+    );
+    const response =
+      versioned.status === 404
+        ? await fetch(new URL("/api/system/ping", base), options)
+        : versioned;
     if (!response.ok) throw new Error("Upstream unavailable");
     const value: unknown = await response.json();
     if (
