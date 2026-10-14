@@ -2,10 +2,16 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { RegisterPanel } from "./register-panel";
 
-afterEach(cleanup);
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("RegisterPanel", () => {
   it("renders the registration form initially", () => {
@@ -19,6 +25,10 @@ describe("RegisterPanel", () => {
   });
 
   it("moves to the verification OTP page upon successful registration and allows changing email", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 202 })),
+    );
     const user = userEvent.setup();
     render(<RegisterPanel />);
 

@@ -15,6 +15,8 @@ export function validateLogin(input: {
     errors.email = "Email không hợp lệ.";
 
   if (!input.password) errors.password = "Vui lòng nhập mật khẩu.";
+  else if (input.password.length > 128)
+    errors.password = "Mật khẩu không hợp lệ.";
 
   return errors;
 }

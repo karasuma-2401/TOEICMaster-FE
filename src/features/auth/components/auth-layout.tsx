@@ -92,8 +92,8 @@ function AuthHero() {
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="auth-page min-h-dvh lg:flex lg:min-h-screen lg:items-center lg:justify-center lg:px-8 lg:py-10">
-      <div className="auth-card mx-auto grid min-h-dvh w-full overflow-hidden bg-white lg:min-h-[778px] lg:max-w-[1180px] lg:grid-cols-[47.5%_52.5%] lg:rounded-[2.2rem]">
+    <main className="auth-page min-h-dvh">
+      <div className="auth-card grid min-h-dvh w-full overflow-hidden bg-white lg:min-h-screen lg:grid-cols-[47.5%_52.5%]">
         <AuthHero />
         <section className="flex min-h-dvh items-center justify-center bg-[#fffdfc] px-7 py-12 sm:px-14 lg:min-h-0 lg:px-[6rem] lg:py-12">
           <div className="w-full max-w-[426px]">{children}</div>

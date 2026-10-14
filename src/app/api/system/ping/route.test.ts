@@ -21,6 +21,22 @@ describe("ping proxy", () => {
       "http://api:8080/api/v1/system/ping",
     );
   });
+  it("uses the legacy backend route when a local backend has not adopted v1", async () => {
+    vi.stubEnv("API_BASE_URL", "http://api:8080");
+    const mock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(
+        Response.json({ service: "TOEICMaster", status: "ok" }),
+      );
+    vi.stubGlobal("fetch", mock);
+
+    expect((await GET()).status).toBe(200);
+    expect(mock.mock.calls.map(([url]) => String(url))).toEqual([
+      "http://api:8080/api/v1/system/ping",
+      "http://api:8080/api/system/ping",
+    ]);
+  });
   it("hides upstream details on errors", async () => {
     vi.stubGlobal(
       "fetch",

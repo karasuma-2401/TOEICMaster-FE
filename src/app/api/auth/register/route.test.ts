@@ -10,7 +10,10 @@ afterEach(() => {
 function registrationRequest(body: unknown) {
   return new NextRequest("http://localhost/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Origin: "http://localhost",
+    },
     body: JSON.stringify(body),
   });
 }
@@ -113,5 +116,27 @@ describe("registration proxy", () => {
 
     expect(response.status).toBe(502);
     expect(await response.text()).not.toContain("sensitive");
+  });
+
+  it("preserves the backend retry interval when registration is rate limited", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(null, { status: 429, headers: { "Retry-After": "42" } }),
+        ),
+    );
+
+    const response = await POST(
+      registrationRequest({
+        displayName: "Linh",
+        email: "linh@example.com",
+        password: "password",
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("42");
   });
 });

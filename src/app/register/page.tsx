@@ -8,10 +8,12 @@ export const metadata: Metadata = {
     "Tạo tài khoản TOEICMaster để bắt đầu hành trình chinh phục TOEIC.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RegisterPage() {
   return (
     <AuthLayout>
-      <RegisterPanel />
+      <RegisterPanel googleClientId={process.env.GOOGLE_CLIENT_ID} />
     </AuthLayout>
   );
 }

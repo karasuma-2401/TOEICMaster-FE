@@ -5,6 +5,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { VerificationPanel } from "./verification-panel";
 
+const navigation = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
+
 afterEach(cleanup);
 
 describe("VerificationPanel", () => {
@@ -25,8 +28,12 @@ describe("VerificationPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the supplied email and does not claim a working verification flow", async () => {
+  it("verifies a registration OTP and returns to login", async () => {
     const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
     render(
       <VerificationPanel
         email="linh@example.com"
@@ -41,11 +48,14 @@ describe("VerificationPanel", () => {
     await user.type(screen.getByLabelText("Mã xác minh"), "123456");
     await user.click(screen.getByRole("button", { name: "Xác minh mã" }));
 
-    expect(
-      await screen.findByText(
-        "Tính năng xác minh mã đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
-      ),
-    ).toBeInTheDocument();
+    expect(navigation.replace).toHaveBeenCalledWith("/login");
+    expect(navigation.refresh).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/verify-email",
+      expect.objectContaining({
+        body: JSON.stringify({ email: "linh@example.com", code: "123456" }),
+      }),
+    );
   });
 
   it("offers email correction and resend feedback", async () => {

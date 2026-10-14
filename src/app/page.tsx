@@ -1,4 +1,5 @@
 import { ConnectionStatus } from "@/features/system/components/connection-status";
+import { AccountControls } from "@/features/auth/components/account-controls";
 
 const areas = [
   ["Học theo chủ đề", "Củng cố từ vựng, ngữ pháp và kỹ năng nghe hiểu."],
@@ -14,9 +15,7 @@ export default function Home() {
           <span className="text-xl font-bold tracking-tight text-blue-700">
             TOEICMaster
           </span>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700">
-            Đang phát triển
-          </span>
+          <AccountControls />
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-16">

@@ -30,21 +30,11 @@ body {
     #faf8f7;
 }
 
-.auth-card {
-  box-shadow: 0 28px 65px rgb(54 37 28 / 14%);
-}
-
 .auth-card button:not(:disabled),
 .auth-card a,
 .auth-card input[type="checkbox"],
 .auth-card label:has(input[type="checkbox"]) {
   cursor: pointer;
-}
-
-@media (max-width: 1023px) {
-  .auth-card {
-    box-shadow: none;
-  }
 }
 
 .auth-hero {
