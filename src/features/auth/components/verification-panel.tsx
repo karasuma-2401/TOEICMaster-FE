@@ -59,7 +59,7 @@ export function VerificationPanel({
           aria-describedby={error ? "verificationCode-error" : undefined}
           aria-invalid={Boolean(error)}
           autoComplete="one-time-code"
-          className="h-14 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-6 text-center text-xl font-bold tracking-[0.55em] text-[#3d3532] outline-none transition placeholder:tracking-[0.55em] placeholder:text-[#d6cfcc] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+          className="h-14 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-6 text-center text-xl font-bold tracking-[0.55em] text-[#3d3532] outline-none transition placeholder:text-[#d6cfcc] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
           id="verificationCode"
           inputMode="numeric"
           maxLength={6}
@@ -69,7 +69,7 @@ export function VerificationPanel({
             setError(undefined);
             setNotice(undefined);
           }}
-          placeholder="0 0 0 0 0 0"
+          placeholder="000000"
           value={code}
         />
         {error ? (
