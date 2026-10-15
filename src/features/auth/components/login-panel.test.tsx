@@ -85,35 +85,11 @@ describe("LoginPanel", () => {
     expect(navigation.replace).toHaveBeenCalledWith("/dashboard?tab=progress");
   });
 
-  it("shows the designed recovery view and can return to login", async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(new Response(null, { status: 202 })),
-    );
+  it("links to the dedicated password recovery page", () => {
     render(<LoginPanel />);
-
-    await user.click(screen.getByRole("button", { name: "Quên mật khẩu?" }));
     expect(
-      await screen.findByRole("heading", { name: "Quên mật khẩu?" }),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
-    expect(await screen.findByText("Vui lòng nhập email.")).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
-    expect(
-      await screen.findByRole("heading", { name: "Xác minh email" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("linh@example.com")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Nhập lại email" }));
-    expect(
-      await screen.findByRole("heading", {
-        name: "Quên mật khẩu?",
-      }),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "Quên mật khẩu?" }),
+    ).toHaveAttribute("href", "/forgot-password");
   });
 
   it("explains when Google is not configured", () => {

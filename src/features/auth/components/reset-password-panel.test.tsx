@@ -5,12 +5,40 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ResetPasswordPanel } from "./reset-password-panel";
 
+const navigation = vi.hoisted(() => ({ replace: vi.fn() }));
+const toast = vi.hoisted(() => ({ success: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
+vi.mock("@/shared/ui/toast", () => ({ toast }));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe("ResetPasswordPanel", () => {
+  it("toggles visibility for each new-password field independently", async () => {
+    const user = userEvent.setup();
+    render(
+      <ResetPasswordPanel
+        expiresAtUtc={new Date(Date.now() + 10 * 60_000).toISOString()}
+        onRestart={vi.fn()}
+        resetToken="reset-token"
+      />,
+    );
+
+    const password = screen.getByLabelText("Mật khẩu mới");
+    const confirmation = screen.getByLabelText("Xác nhận mật khẩu mới");
+    expect(password).toHaveAttribute("type", "password");
+    expect(confirmation).toHaveAttribute("type", "password");
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Hiện mật khẩu" })[0],
+    );
+    expect(password).toHaveAttribute("type", "text");
+    expect(confirmation).toHaveAttribute("type", "password");
+  });
+
   it("submits the one-time token with a matching new password", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
@@ -32,9 +60,10 @@ describe("ResetPasswordPanel", () => {
     );
     await user.click(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
 
-    expect(
-      await screen.findByText(/Mật khẩu của bạn đã được đặt lại/),
-    ).toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalledWith(
+      "Mật khẩu của bạn đã được đặt lại. Hãy đăng nhập bằng mật khẩu mới.",
+    );
+    expect(navigation.replace).toHaveBeenCalledWith("/login");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/auth/reset-password",
       expect.objectContaining({
