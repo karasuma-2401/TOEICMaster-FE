@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { AuthError, login } from "@/features/auth/api";
+import { authUrl } from "@/features/auth/protected-routes";
 import { validateLogin, validateRecoveryEmail } from "@/features/auth/login";
 import { AuthTabs } from "./auth-layout";
 import { GoogleSignIn } from "./google-sign-in";
@@ -112,7 +113,13 @@ function Footer() {
   );
 }
 
-export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
+export function LoginPanel({
+  googleClientId,
+  returnTo = "/",
+}: {
+  googleClientId?: string;
+  returnTo?: string;
+}) {
   const router = useRouter();
   const [view, setView] = useState<"login" | "recovery" | "verification">(
     "login",
@@ -156,7 +163,7 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
     setPending(true);
     try {
       await login(email, password, rememberMe);
-      router.replace("/");
+      router.replace(returnTo);
       router.refresh();
     } catch (reason) {
       if (reason instanceof AuthError) {
@@ -287,7 +294,7 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
       <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
         Đăng nhập để tiếp tục học và theo dõi tiến độ mỗi ngày.
       </p>
-      <AuthTabs current="login" />
+      <AuthTabs current="login" returnTo={returnTo} />
       <form className="mt-6" noValidate onSubmit={submitLogin}>
         <div>
           <label
@@ -404,12 +411,16 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
         hoặc tiếp tục với
       </div>
-      <GoogleSignIn clientId={googleClientId} rememberMe={rememberMe} />
+      <GoogleSignIn
+        clientId={googleClientId}
+        rememberMe={rememberMe}
+        returnTo={returnTo}
+      />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
         Chưa có tài khoản?{" "}
         <Link
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-          href="/register"
+          href={authUrl("/register", returnTo)}
         >
           Đăng ký miễn phí
         </Link>

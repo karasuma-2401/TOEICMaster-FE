@@ -28,10 +28,12 @@ export function GoogleSignIn({
   clientId,
   rememberMe = false,
   enabled = true,
+  returnTo = "/",
 }: {
   clientId?: string;
   rememberMe?: boolean;
   enabled?: boolean;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const container = useRef<HTMLDivElement>(null);
@@ -66,7 +68,7 @@ export function GoogleSignIn({
         setError(undefined);
         try {
           await loginWithGoogle(credential, rememberMeRef.current);
-          router.replace("/");
+          router.replace(returnTo);
           router.refresh();
         } catch (reason) {
           setError(
@@ -87,7 +89,7 @@ export function GoogleSignIn({
       width: 350,
       locale: "vi",
     });
-  }, [clientId, enabled, loaded, router]);
+  }, [clientId, enabled, loaded, returnTo, router]);
 
   if (!enabled)
     return (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { authUrl } from "@/features/auth/protected-routes";
 
 type AuthMode = "login" | "register";
 
@@ -103,7 +104,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   );
 }
 
-export function AuthTabs({ current }: { current: AuthMode }) {
+export function AuthTabs({
+  current,
+  returnTo = "/",
+}: {
+  current: AuthMode;
+  returnTo?: string;
+}) {
   return (
     <nav
       aria-label="Tài khoản"
@@ -116,7 +123,7 @@ export function AuthTabs({ current }: { current: AuthMode }) {
             ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
             : "text-[#b7aeaa] hover:text-[#736a66]"
         }`}
-        href="/login"
+        href={authUrl("/login", returnTo)}
       >
         Đăng nhập
       </Link>
@@ -127,7 +134,7 @@ export function AuthTabs({ current }: { current: AuthMode }) {
             ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
             : "text-[#b7aeaa] hover:text-[#736a66]"
         }`}
-        href="/register"
+        href={authUrl("/register", returnTo)}
       >
         Đăng ký
       </Link>

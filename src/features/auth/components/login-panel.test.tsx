@@ -62,6 +62,29 @@ describe("LoginPanel", () => {
     expect(rememberMe).toBeChecked();
   });
 
+  it("returns to the protected destination after local login", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          user: {
+            id: "user-id",
+            displayName: "Linh",
+            email: "linh@example.com",
+          },
+        }),
+      ),
+    );
+    render(<LoginPanel returnTo="/dashboard?tab=progress" />);
+
+    await user.type(screen.getByLabelText("Email"), "linh@example.com");
+    await user.type(screen.getByLabelText("Mật khẩu"), "password");
+    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    expect(navigation.replace).toHaveBeenCalledWith("/dashboard?tab=progress");
+  });
+
   it("shows the designed recovery view and can return to login", async () => {
     const user = userEvent.setup();
     render(<LoginPanel />);

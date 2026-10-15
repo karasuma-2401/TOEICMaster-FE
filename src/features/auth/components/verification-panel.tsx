@@ -7,6 +7,7 @@ import {
   resendVerification,
   verifyEmail,
 } from "@/features/auth/api";
+import { authUrl } from "@/features/auth/protected-routes";
 
 type VerificationPurpose = "registration" | "recovery";
 
@@ -14,10 +15,12 @@ export function VerificationPanel({
   email,
   onChangeEmail,
   purpose,
+  returnTo = "/",
 }: {
   email: string;
   onChangeEmail: () => void;
   purpose: VerificationPurpose;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -49,7 +52,7 @@ export function VerificationPanel({
     setNotice(undefined);
     try {
       await verifyEmail(email, code);
-      router.replace("/login");
+      router.replace(authUrl("/login", returnTo));
       router.refresh();
     } catch (reason) {
       if (reason instanceof AuthError) setError(reason.fieldErrors.code);

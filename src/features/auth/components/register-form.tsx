@@ -11,6 +11,7 @@ import {
   validateRegistration,
 } from "@/features/auth/register";
 import { GoogleSignIn } from "./google-sign-in";
+import { authUrl } from "@/features/auth/protected-routes";
 
 type FormValues = RegisterInput & {
   confirmPassword: string;
@@ -189,9 +190,11 @@ function PasswordToggle({
 export function RegisterForm({
   googleClientId,
   onRegistrationAccepted,
+  returnTo = "/",
 }: {
   googleClientId?: string;
   onRegistrationAccepted: (email: string) => void;
+  returnTo?: string;
 }) {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<RegisterFieldErrors>({});
@@ -346,12 +349,16 @@ export function RegisterForm({
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
         hoặc tiếp tục với
       </div>
-      <GoogleSignIn clientId={googleClientId} enabled={values.termsAccepted} />
+      <GoogleSignIn
+        clientId={googleClientId}
+        enabled={values.termsAccepted}
+        returnTo={returnTo}
+      />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
         Bạn đã có tài khoản?{" "}
         <Link
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-          href="/login"
+          href={authUrl("/login", returnTo)}
         >
           Đăng nhập
         </Link>

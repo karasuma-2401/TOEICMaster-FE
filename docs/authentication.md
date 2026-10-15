@@ -22,6 +22,10 @@ Next.js encrypts the backend token pair, expiry times, user, and remember-me cho
 
 The browser POST handlers require a same-origin `Origin` header. Auth responses use `Cache-Control: no-store`. Password recovery and account linking have no backend endpoints yet; their existing UI remains unchanged.
 
+## Protected browser paths
+
+Add a path prefix to `src/features/auth/protected-routes.ts` when its pages require a signed-in user. The Next.js proxy redirects guests to `/login?next=<requested path and query>` and permits a valid refresh session even when its access token needs refreshing. After local or Google sign-in, the app returns only to a configured protected path on the same origin. API route handlers and server-side data access must still validate authorization themselves; the browser-path guard is only a navigation boundary.
+
 ## Configuration
 
 Set `API_BASE_URL` and `AUTH_SESSION_SECRET` in frontend runtime environment. Set `GOOGLE_CLIENT_ID` to the same Google Web Client ID as the backend and authorize the frontend origin in Google Cloud. The ID is passed from dynamically rendered auth pages to the browser. If it is missing, the Google control shows an unavailable message. For Docker Compose, supply these values through `.env.local` with `docker compose --env-file .env.local ...`.
