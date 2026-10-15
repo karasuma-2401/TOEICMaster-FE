@@ -20,7 +20,13 @@ Next.js encrypts the backend token pair, expiry times, user, and remember-me cho
 
 `GET /api/auth/session` returns one of `{ "status": "guest" }`, `{ "status": "refresh_required" }`, or `{ "status": "authenticated", "user": ... }`. It never returns tokens. The home-page account control calls `POST /api/auth/refresh` when needed. This rotates the backend refresh token and replaces the encrypted cookie. `POST /api/auth/logout` revokes the backend refresh token and clears the cookie after a `204`; if revocation fails, it reports an error so the user can retry.
 
-The browser POST handlers require a same-origin `Origin` header. Auth responses use `Cache-Control: no-store`. Password recovery and account linking have no backend endpoints yet; their existing UI remains unchanged.
+## Password recovery
+
+`POST /api/auth/forgot-password` accepts `{ "email": string }` and forwards it to `POST /api/v1/auth/forgot-password`. A valid request always returns `202`, including when the account cannot receive a reset code. `POST /api/auth/verify-password-reset` accepts `{ "email": string, "code": string }` and returns a validated `{ "resetToken": string, "expiresAtUtc": string }` only after a valid OTP. `POST /api/auth/reset-password` accepts `{ "resetToken": string, "newPassword": string }` and returns `204` after setting the password.
+
+All recovery routes require a same-origin `Origin`, use `Cache-Control: no-store`, preserve backend `429 Retry-After`, and return safe validation errors or a generic `502`. The reset token is only held in the recovery component's memory; reloading the page requires a new recovery request. A successful password reset clears the encrypted frontend session cookie because the backend revokes active refresh sessions.
+
+The browser POST handlers require a same-origin `Origin` header. Auth responses use `Cache-Control: no-store`.
 
 ## Protected browser paths
 

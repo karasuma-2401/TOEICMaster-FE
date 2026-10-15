@@ -87,6 +87,10 @@ describe("LoginPanel", () => {
 
   it("shows the designed recovery view and can return to login", async () => {
     const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 202 })),
+    );
     render(<LoginPanel />);
 
     await user.click(screen.getByRole("button", { name: "Quên mật khẩu?" }));

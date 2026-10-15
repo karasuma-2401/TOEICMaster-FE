@@ -58,21 +58,39 @@ describe("VerificationPanel", () => {
     );
   });
 
-  it("offers email correction and resend feedback", async () => {
+  it("verifies a recovery OTP and resends a recovery code", async () => {
     const user = userEvent.setup();
     const onChangeEmail = vi.fn();
+    const onPasswordResetVerified = vi.fn();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          resetToken: "reset-token",
+          expiresAtUtc: new Date(Date.now() + 10 * 60_000).toISOString(),
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
     render(
       <VerificationPanel
         email="linh@example.com"
         onChangeEmail={onChangeEmail}
+        onPasswordResetVerified={onPasswordResetVerified}
         purpose="recovery"
       />,
+    );
+
+    await user.type(screen.getByLabelText("Mã xác minh"), "123456");
+    await user.click(screen.getByRole("button", { name: "Xác minh mã" }));
+    expect(onPasswordResetVerified).toHaveBeenCalledWith(
+      expect.objectContaining({ resetToken: "reset-token" }),
     );
 
     await user.click(screen.getByRole("button", { name: "Gửi lại mã" }));
     expect(
       await screen.findByText(
-        "Tính năng gửi lại mã đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
+        "Nếu email có thể đặt lại mật khẩu, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
       ),
     ).toBeInTheDocument();
 

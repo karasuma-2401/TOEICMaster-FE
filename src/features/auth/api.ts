@@ -14,7 +14,7 @@ export class AuthError extends Error {
     public readonly status: number,
     message: string,
     public readonly fieldErrors: Partial<
-      Record<"email" | "password" | "code", string>
+      Record<"email" | "password" | "code" | "newPassword", string>
     > = {},
   ) {
     super(message);
@@ -54,6 +54,7 @@ async function errorFrom(response: Response): Promise<AuthError> {
     email: first("Email"),
     password: first("Password"),
     code: first("Code"),
+    newPassword: first("NewPassword"),
   });
 }
 
@@ -107,6 +108,47 @@ export async function resendVerification(email: string) {
     email: email.trim(),
   });
   if (response.status !== 202) throw await errorFrom(response);
+}
+
+export async function requestPasswordReset(email: string) {
+  const response = await post("/api/auth/forgot-password", {
+    email: email.trim(),
+  });
+  if (response.status !== 202) throw await errorFrom(response);
+}
+
+export interface PasswordResetVerification {
+  resetToken: string;
+  expiresAtUtc: string;
+}
+
+export async function verifyPasswordReset(
+  email: string,
+  code: string,
+): Promise<PasswordResetVerification> {
+  const response = await post("/api/auth/verify-password-reset", {
+    email: email.trim(),
+    code,
+  });
+  if (!response.ok) throw await errorFrom(response);
+  const body: unknown = await response.json().catch(() => null);
+  if (
+    !isObject(body) ||
+    typeof body.resetToken !== "string" ||
+    !body.resetToken ||
+    typeof body.expiresAtUtc !== "string" ||
+    !Number.isFinite(Date.parse(body.expiresAtUtc))
+  )
+    throw new AuthError(502, "Phản hồi đặt lại mật khẩu không hợp lệ.");
+  return { resetToken: body.resetToken, expiresAtUtc: body.expiresAtUtc };
+}
+
+export async function resetPassword(resetToken: string, newPassword: string) {
+  const response = await post("/api/auth/reset-password", {
+    resetToken,
+    newPassword,
+  });
+  if (response.status !== 204) throw await errorFrom(response);
 }
 
 export async function logout() {

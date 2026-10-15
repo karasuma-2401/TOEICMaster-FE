@@ -4,8 +4,11 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import {
   AuthError,
+  type PasswordResetVerification,
+  requestPasswordReset,
   resendVerification,
   verifyEmail,
+  verifyPasswordReset,
 } from "@/features/auth/api";
 import { authUrl } from "@/features/auth/protected-routes";
 
@@ -16,11 +19,13 @@ export function VerificationPanel({
   onChangeEmail,
   purpose,
   returnTo = "/",
+  onPasswordResetVerified,
 }: {
   email: string;
   onChangeEmail: () => void;
   purpose: VerificationPurpose;
   returnTo?: string;
+  onPasswordResetVerified?: (verification: PasswordResetVerification) => void;
 }) {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -39,18 +44,14 @@ export function VerificationPanel({
       return;
     }
 
-    if (purpose === "recovery") {
-      setError(undefined);
-      setNotice(
-        "Tính năng xác minh mã đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
-      );
-      return;
-    }
-
     setPending(true);
     setError(undefined);
     setNotice(undefined);
     try {
+      if (purpose === "recovery") {
+        onPasswordResetVerified?.(await verifyPasswordReset(email, code));
+        return;
+      }
       await verifyEmail(email, code);
       router.replace(authUrl("/login", returnTo));
       router.refresh();
@@ -67,20 +68,19 @@ export function VerificationPanel({
   }
 
   async function resend() {
-    if (purpose === "recovery") {
-      setNotice(
-        "Tính năng gửi lại mã đang được hoàn thiện. Chúng tôi chưa gửi email nào.",
-      );
-      return;
-    }
-
     setResending(true);
     setError(undefined);
     setNotice(undefined);
     try {
-      await resendVerification(email);
+      if (purpose === "recovery") {
+        await requestPasswordReset(email);
+      } else {
+        await resendVerification(email);
+      }
       setNotice(
-        "Nếu tài khoản đang chờ xác minh, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
+        purpose === "recovery"
+          ? "Nếu email có thể đặt lại mật khẩu, một mã mới sẽ được gửi khi thời gian chờ kết thúc."
+          : "Nếu tài khoản đang chờ xác minh, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
       );
     } catch (reason) {
       setNotice(

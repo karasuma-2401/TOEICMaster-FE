@@ -3,12 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { AuthError, login } from "@/features/auth/api";
+import {
+  AuthError,
+  requestPasswordReset,
+  type PasswordResetVerification,
+  login,
+} from "@/features/auth/api";
 import { authUrl } from "@/features/auth/protected-routes";
 import { validateLogin, validateRecoveryEmail } from "@/features/auth/login";
 import { AuthTabs } from "./auth-layout";
 import { GoogleSignIn } from "./google-sign-in";
 import { VerificationPanel } from "./verification-panel";
+import { ResetPasswordPanel } from "./reset-password-panel";
 
 function EmailIcon() {
   return (
@@ -121,9 +127,9 @@ export function LoginPanel({
   returnTo?: string;
 }) {
   const router = useRouter();
-  const [view, setView] = useState<"login" | "recovery" | "verification">(
-    "login",
-  );
+  const [view, setView] = useState<
+    "login" | "recovery" | "verification" | "reset-password"
+  >("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -134,6 +140,8 @@ export function LoginPanel({
   const [recoveryError, setRecoveryError] = useState<string>();
   const [notice, setNotice] = useState<string>();
   const [pending, setPending] = useState(false);
+  const [resetVerification, setResetVerification] =
+    useState<PasswordResetVerification>();
 
   function resetNotice() {
     setNotice(undefined);
@@ -144,6 +152,7 @@ export function LoginPanel({
     setNotice(undefined);
     setEmailError(undefined);
     setPasswordError(undefined);
+    setResetVerification(undefined);
   }
 
   function showLogin() {
@@ -178,14 +187,28 @@ export function LoginPanel({
     }
   }
 
-  function submitRecovery(event: FormEvent<HTMLFormElement>) {
+  async function submitRecovery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const errors = validateRecoveryEmail(recoveryEmail);
     setRecoveryError(errors.email);
     setNotice(undefined);
     if (Object.keys(errors).length > 0) return;
 
-    setView("verification");
+    setPending(true);
+    try {
+      await requestPasswordReset(recoveryEmail);
+      setView("verification");
+    } catch (reason) {
+      if (reason instanceof AuthError)
+        setRecoveryError(reason.fieldErrors.email);
+      setNotice(
+        reason instanceof Error
+          ? reason.message
+          : "Không thể gửi mã xác minh. Vui lòng thử lại.",
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   if (view === "verification") {
@@ -194,6 +217,20 @@ export function LoginPanel({
         email={recoveryEmail.trim()}
         onChangeEmail={showRecovery}
         purpose="recovery"
+        onPasswordResetVerified={(verification) => {
+          setResetVerification(verification);
+          setView("reset-password");
+        }}
+      />
+    );
+  }
+
+  if (view === "reset-password" && resetVerification) {
+    return (
+      <ResetPasswordPanel
+        expiresAtUtc={resetVerification.expiresAtUtc}
+        onRestart={showRecovery}
+        resetToken={resetVerification.resetToken}
       />
     );
   }
@@ -255,9 +292,10 @@ export function LoginPanel({
           )}
           <button
             className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+            disabled={pending}
             type="submit"
           >
-            Gửi mã xác minh
+            {pending ? "Đang gửi..." : "Gửi mã xác minh"}
           </button>
         </form>
         {notice && (
