@@ -5,7 +5,13 @@ import { AuthTabs } from "./auth-layout";
 import { RegisterForm } from "./register-form";
 import { VerificationPanel } from "./verification-panel";
 
-export function RegisterPanel({ googleClientId }: { googleClientId?: string }) {
+export function RegisterPanel({
+  googleClientId,
+  returnTo = "/",
+}: {
+  googleClientId?: string;
+  returnTo?: string;
+}) {
   const [verificationEmail, setVerificationEmail] = useState<string>();
 
   if (verificationEmail) {
@@ -14,6 +20,7 @@ export function RegisterPanel({ googleClientId }: { googleClientId?: string }) {
         email={verificationEmail}
         onChangeEmail={() => setVerificationEmail(undefined)}
         purpose="registration"
+        returnTo={returnTo}
       />
     );
   }
@@ -29,11 +36,12 @@ export function RegisterPanel({ googleClientId }: { googleClientId?: string }) {
       <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
         Tạo tài khoản miễn phí và bắt đầu chinh phục TOEIC ngay hôm nay.
       </p>
-      <AuthTabs current="register" />
+      <AuthTabs current="register" returnTo={returnTo} />
       <div className="mt-6">
         <RegisterForm
           googleClientId={googleClientId}
           onRegistrationAccepted={setVerificationEmail}
+          returnTo={returnTo}
         />
       </div>
     </>

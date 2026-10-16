@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { AuthError, login } from "@/features/auth/api";
-import { validateLogin, validateRecoveryEmail } from "@/features/auth/login";
+import { validateLogin } from "@/features/auth/login";
+import { authUrl } from "@/features/auth/protected-routes";
 import { AuthTabs } from "./auth-layout";
 import { GoogleSignIn } from "./google-sign-in";
-import { VerificationPanel } from "./verification-panel";
 
 function EmailIcon() {
   return (
@@ -104,46 +104,22 @@ function PasswordToggle({
   );
 }
 
-function Footer() {
-  return (
-    <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
-      © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
-    </p>
-  );
-}
-
-export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
+export function LoginPanel({
+  googleClientId,
+  returnTo = "/",
+}: {
+  googleClientId?: string;
+  returnTo?: string;
+}) {
   const router = useRouter();
-  const [view, setView] = useState<"login" | "recovery" | "verification">(
-    "login",
-  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState<string>();
   const [passwordError, setPasswordError] = useState<string>();
-  const [recoveryError, setRecoveryError] = useState<string>();
   const [notice, setNotice] = useState<string>();
   const [pending, setPending] = useState(false);
-
-  function resetNotice() {
-    setNotice(undefined);
-  }
-
-  function showRecovery() {
-    setView("recovery");
-    setNotice(undefined);
-    setEmailError(undefined);
-    setPasswordError(undefined);
-  }
-
-  function showLogin() {
-    setView("login");
-    setNotice(undefined);
-    setRecoveryError(undefined);
-  }
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -152,11 +128,10 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
     setPasswordError(errors.password);
     setNotice(undefined);
     if (Object.keys(errors).length > 0) return;
-
     setPending(true);
     try {
       await login(email, password, rememberMe);
-      router.replace("/");
+      router.replace(returnTo);
       router.refresh();
     } catch (reason) {
       if (reason instanceof AuthError) {
@@ -169,108 +144,6 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
     } finally {
       setPending(false);
     }
-  }
-
-  function submitRecovery(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const errors = validateRecoveryEmail(recoveryEmail);
-    setRecoveryError(errors.email);
-    setNotice(undefined);
-    if (Object.keys(errors).length > 0) return;
-
-    setView("verification");
-  }
-
-  if (view === "verification") {
-    return (
-      <VerificationPanel
-        email={recoveryEmail.trim()}
-        onChangeEmail={showRecovery}
-        purpose="recovery"
-      />
-    );
-  }
-
-  if (view === "recovery") {
-    return (
-      <section aria-labelledby="recovery-title">
-        <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
-          KHÔI PHỤC TÀI KHOẢN
-        </p>
-        <h1
-          className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
-          id="recovery-title"
-        >
-          Quên mật khẩu?
-        </h1>
-        <p className="mx-auto mt-3 max-w-[23rem] text-center text-[13px] leading-5 text-[#a89f9b]">
-          Nhập email đã đăng ký, chúng tôi sẽ gửi cho bạn mã xác minh để đặt lại
-          mật khẩu.
-        </p>
-        <form className="mt-8" noValidate onSubmit={submitRecovery}>
-          <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
-            htmlFor="recoveryEmail"
-          >
-            Email
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
-              <EmailIcon />
-            </span>
-            <input
-              aria-describedby={
-                recoveryError ? "recoveryEmail-error" : undefined
-              }
-              aria-invalid={Boolean(recoveryError)}
-              autoComplete="email"
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-4 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
-              id="recoveryEmail"
-              name="recoveryEmail"
-              onChange={(event) => {
-                setRecoveryEmail(event.target.value);
-                setRecoveryError(undefined);
-                resetNotice();
-              }}
-              placeholder="ban@example.com"
-              type="email"
-              value={recoveryEmail}
-            />
-          </div>
-          {recoveryError && (
-            <p
-              className="mt-1.5 text-xs text-red-600"
-              id="recoveryEmail-error"
-              role="alert"
-            >
-              {recoveryError}
-            </p>
-          )}
-          <button
-            className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
-            type="submit"
-          >
-            Gửi mã xác minh
-          </button>
-        </form>
-        {notice && (
-          <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
-            {notice}
-          </output>
-        )}
-        <p className="mt-6 text-center text-[11px] text-[#a8a09c]">
-          Bạn đã nhớ mật khẩu?{" "}
-          <button
-            className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-            onClick={showLogin}
-            type="button"
-          >
-            Quay lại đăng nhập
-          </button>
-        </p>
-        <Footer />
-      </section>
-    );
   }
 
   return (
@@ -287,7 +160,7 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
       <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
         Đăng nhập để tiếp tục học và theo dõi tiến độ mỗi ngày.
       </p>
-      <AuthTabs current="login" />
+      <AuthTabs current="login" returnTo={returnTo} />
       <form className="mt-6" noValidate onSubmit={submitLogin}>
         <div>
           <label
@@ -310,7 +183,7 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
               onChange={(event) => {
                 setEmail(event.target.value);
                 setEmailError(undefined);
-                resetNotice();
+                setNotice(undefined);
               }}
               placeholder="ban@example.com"
               type="email"
@@ -348,7 +221,7 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
               onChange={(event) => {
                 setPassword(event.target.value);
                 setPasswordError(undefined);
-                resetNotice();
+                setNotice(undefined);
               }}
               placeholder="Nhập mật khẩu"
               type={showPassword ? "text" : "password"}
@@ -380,13 +253,12 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
             />
             Ghi nhớ đăng nhập
           </label>
-          <button
+          <Link
             className="shrink-0 cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-            onClick={showRecovery}
-            type="button"
+            href="/forgot-password"
           >
             Quên mật khẩu?
-          </button>
+          </Link>
         </div>
         <button
           className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
@@ -404,17 +276,23 @@ export function LoginPanel({ googleClientId }: { googleClientId?: string }) {
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
         hoặc tiếp tục với
       </div>
-      <GoogleSignIn clientId={googleClientId} rememberMe={rememberMe} />
+      <GoogleSignIn
+        clientId={googleClientId}
+        rememberMe={rememberMe}
+        returnTo={returnTo}
+      />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
         Chưa có tài khoản?{" "}
         <Link
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-          href="/register"
+          href={authUrl("/register", returnTo)}
         >
           Đăng ký miễn phí
         </Link>
       </p>
-      <Footer />
+      <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
+        © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
+      </p>
     </section>
   );
 }

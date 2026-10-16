@@ -5,6 +5,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccountControls } from "./account-controls";
 
+const toast = vi.hoisted(() => ({ success: vi.fn() }));
+vi.mock("@/shared/ui/toast", () => ({ toast }));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -31,5 +34,6 @@ describe("AccountControls", () => {
       await screen.findByRole("link", { name: "Đăng nhập" }),
     ).toBeInTheDocument();
     expect(fetchMock.mock.calls[1][0]).toBe("/api/auth/logout");
+    expect(toast.success).toHaveBeenCalledWith("Đã đăng xuất.");
   });
 });

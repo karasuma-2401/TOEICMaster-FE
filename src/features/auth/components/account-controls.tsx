@@ -9,6 +9,7 @@ import {
   refreshSession,
   type SessionState,
 } from "@/features/auth/api";
+import { toast } from "@/shared/ui/toast";
 
 async function currentSession(): Promise<SessionState> {
   let state = await getSession();
@@ -63,6 +64,7 @@ export function AccountControls() {
     try {
       await logout();
       setState({ status: "guest" });
+      toast.success("Đã đăng xuất.");
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Không thể đăng xuất.",

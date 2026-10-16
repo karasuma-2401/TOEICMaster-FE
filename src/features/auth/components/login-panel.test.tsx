@@ -62,31 +62,34 @@ describe("LoginPanel", () => {
     expect(rememberMe).toBeChecked();
   });
 
-  it("shows the designed recovery view and can return to login", async () => {
+  it("returns to the protected destination after local login", async () => {
     const user = userEvent.setup();
-    render(<LoginPanel />);
-
-    await user.click(screen.getByRole("button", { name: "Quên mật khẩu?" }));
-    expect(
-      await screen.findByRole("heading", { name: "Quên mật khẩu?" }),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
-    expect(await screen.findByText("Vui lòng nhập email.")).toBeInTheDocument();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          user: {
+            id: "user-id",
+            displayName: "Linh",
+            email: "linh@example.com",
+          },
+        }),
+      ),
+    );
+    render(<LoginPanel returnTo="/dashboard?tab=progress" />);
 
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
-    expect(
-      await screen.findByRole("heading", { name: "Xác minh email" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("linh@example.com")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Mật khẩu"), "password");
+    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
 
-    await user.click(screen.getByRole("button", { name: "Nhập lại email" }));
+    expect(navigation.replace).toHaveBeenCalledWith("/dashboard?tab=progress");
+  });
+
+  it("links to the dedicated password recovery page", () => {
+    render(<LoginPanel />);
     expect(
-      await screen.findByRole("heading", {
-        name: "Quên mật khẩu?",
-      }),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "Quên mật khẩu?" }),
+    ).toHaveAttribute("href", "/forgot-password");
   });
 
   it("explains when Google is not configured", () => {
