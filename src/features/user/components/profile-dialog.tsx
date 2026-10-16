@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  type UserProfile,
-  getInitials,
-  mockUserProfile,
-} from "@/features/user/profile";
+import Image from "next/image";
+import { type UserProfile, getInitials } from "@/features/user/profile";
+import { avatarUrl } from "@/features/user/api";
 import { ChangePasswordForm } from "./change-password-form";
 import { ProfileForm } from "./profile-form";
 
@@ -16,19 +14,22 @@ export interface ProfileDialogProps {
   onClose: () => void;
   user?: UserProfile;
   onLogout?: () => void;
+  onSaved?: (profile: UserProfile) => void;
 }
 
 export function ProfileDialog({
   isOpen,
   onClose,
-  user = mockUserProfile,
+  user,
   onLogout,
+  onSaved,
 }: ProfileDialogProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>("info");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
-  const initials = getInitials(user.displayName);
+  const initials = user ? getInitials(user.displayName) : "U";
+  const imageUrl = user ? avatarUrl(user) : null;
 
   // Focus trap & Escape key listener
   useEffect(() => {
@@ -98,7 +99,7 @@ export function ProfileDialog({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !user) return null;
 
   return (
     <div
@@ -143,11 +144,19 @@ export function ProfileDialog({
 
         {/* Thông tin học viên trên đầu popup */}
         <div className="flex items-center gap-3.5 pr-10">
-          <span
-            aria-label={`Ảnh đại diện của ${user.displayName}`}
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-base font-bold text-[#841013] shadow-sm"
-          >
-            {initials}
+          <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-base font-bold text-[#841013] shadow-sm">
+            {imageUrl ? (
+              <Image
+                alt={`Ảnh đại diện của ${user.displayName}`}
+                className="h-full w-full object-cover"
+                fill
+                sizes="48px"
+                src={imageUrl}
+                unoptimized
+              />
+            ) : (
+              initials
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <h2
@@ -204,9 +213,13 @@ export function ProfileDialog({
         {/* Nội dung theo Tab */}
         <div className="mt-5">
           {activeTab === "info" ? (
-            <ProfileForm initialValues={user} />
+            <ProfileForm
+              initialValues={user}
+              key={JSON.stringify(user)}
+              onSaved={onSaved}
+            />
           ) : (
-            <ChangePasswordForm />
+            <ChangePasswordForm hasPassword={user.hasPassword} />
           )}
         </div>
 

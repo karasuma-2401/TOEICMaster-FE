@@ -75,6 +75,29 @@ export async function postAuth(
   return fetch(new URL(`/api/auth/${action}`, base), options);
 }
 
+export async function backendFetch(
+  path: string,
+  accessToken: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
+  if (
+    !["http:", "https:"].includes(base.protocol) ||
+    base.username ||
+    base.password
+  )
+    throw new Error("Invalid API_BASE_URL");
+  const headers = new Headers(init.headers);
+  headers.set("Accept", headers.get("Accept") ?? "application/json");
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  return fetch(new URL(path, base), {
+    ...init,
+    headers,
+    cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(5000),
+  });
+}
+
 export async function upstreamProblem(
   response: Response,
   status: number,

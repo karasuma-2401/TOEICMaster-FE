@@ -1,12 +1,15 @@
 "use client";
 
 import { type ChangeEvent, type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ApiError, changePassword } from "@/features/user/api";
 import {
   type PasswordChangeField,
   type PasswordChangeFieldErrors,
   type PasswordChangeInput,
   validatePasswordChange,
 } from "@/features/user/profile";
+import { toast } from "@/shared/ui/toast";
 
 const initialValues: PasswordChangeInput = {
   currentPassword: "",
@@ -112,7 +115,11 @@ const passwordFields: Array<{
   },
 ];
 
-export function ChangePasswordForm() {
+export function ChangePasswordForm({
+  hasPassword = true,
+}: {
+  hasPassword?: boolean;
+}) {
   const [values, setValues] = useState<PasswordChangeInput>(initialValues);
   const [errors, setErrors] = useState<PasswordChangeFieldErrors>({});
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -123,6 +130,8 @@ export function ChangePasswordForm() {
     confirmPassword: false,
   });
   const [notice, setNotice] = useState<string>();
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
 
   function updateValue(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -138,14 +147,41 @@ export function ChangePasswordForm() {
     setVisiblePasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validatePasswordChange(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setNotice(
-      "Tính năng đổi mật khẩu đang được hoàn thiện. Yêu cầu của bạn chưa được gửi đi.",
+    setPending(true);
+    setNotice(undefined);
+    try {
+      await changePassword(values);
+      setValues(initialValues);
+      setErrors({});
+      toast.success("Đổi mật khẩu thành công.");
+    } catch (reason) {
+      if (reason instanceof ApiError && reason.status === 400) {
+        setErrors(reason.fieldErrors as PasswordChangeFieldErrors);
+      } else if (reason instanceof ApiError && reason.status === 429) {
+        setNotice(
+          `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,
+        );
+      } else if (reason instanceof ApiError && reason.status === 401) {
+        router.replace("/login?next=%2Fprofile");
+      } else {
+        toast.error("Không thể đổi mật khẩu. Vui lòng thử lại.");
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  if (!hasPassword) {
+    return (
+      <p className="text-sm text-[#736a66]">
+        Tài khoản đăng nhập bằng Google, không có mật khẩu.
+      </p>
     );
   }
 
@@ -200,9 +236,10 @@ export function ChangePasswordForm() {
 
       <button
         className="mt-6 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+        disabled={pending}
         type="submit"
       >
-        Đổi mật khẩu
+        {pending ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
       </button>
 
       {notice && (

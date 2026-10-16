@@ -40,6 +40,14 @@ describe("protectRoute", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
+  it("redirects unauthenticated profile navigation to login", () => {
+    const response = protectRoute(request("/profile"));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/login?next=%2Fprofile",
+    );
+  });
+
   it("redirects a guest to login with the requested path and query", () => {
     const response = protectRoute(request("/dashboard?tab=progress"), paths);
 

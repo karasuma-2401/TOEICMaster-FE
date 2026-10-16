@@ -5,15 +5,20 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProfileDialog } from "./profile-dialog";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
+
 afterEach(cleanup);
 
 describe("ProfileDialog", () => {
   const sampleUser = {
+    id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
     phone: "0912345678",
     dateOfBirth: "2000-01-15",
     targetScore: 750,
+    avatarVersion: null,
+    hasPassword: true,
   };
 
   it("không hiển thị khi isOpen = false", () => {

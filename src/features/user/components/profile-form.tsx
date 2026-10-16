@@ -1,12 +1,30 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  ApiError,
+  avatarUrl,
+  removeAvatar,
+  updateProfile,
+  uploadAvatar,
+} from "@/features/user/api";
 import {
   type ProfileFieldErrors,
   type UserProfile,
-  mockUserProfile,
+  toUpdateRequest,
+  validateAvatarFile,
   validateProfile,
 } from "@/features/user/profile";
+import { toast } from "@/shared/ui/toast";
 
 interface FormState {
   displayName: string;
@@ -100,24 +118,42 @@ function TargetIcon() {
 }
 
 export function ProfileForm({
-  initialValues = mockUserProfile,
+  initialValues,
+  onSaved,
 }: {
-  initialValues?: UserProfile;
+  initialValues: UserProfile;
+  onSaved?: (profile: UserProfile) => void;
 }) {
-  const normalizedInitial: FormState = {
-    displayName: initialValues.displayName ?? "",
-    email: initialValues.email ?? "",
-    phone: initialValues.phone ?? "",
-    dateOfBirth: initialValues.dateOfBirth ?? "",
-    targetScore:
-      initialValues.targetScore !== undefined
-        ? String(initialValues.targetScore)
-        : "",
-  };
+  const normalizedInitial = useMemo<FormState>(
+    () => ({
+      displayName: initialValues.displayName,
+      email: initialValues.email,
+      phone: initialValues.phone ?? "",
+      dateOfBirth: initialValues.dateOfBirth ?? "",
+      targetScore:
+        initialValues.targetScore === null
+          ? ""
+          : String(initialValues.targetScore),
+    }),
+    [initialValues],
+  );
 
   const [values, setValues] = useState<FormState>(normalizedInitial);
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
   const [notice, setNotice] = useState<string>();
+  const [pending, setPending] = useState(false);
+  const [avatarPending, setAvatarPending] = useState(false);
+  const [avatarError, setAvatarError] = useState<string>();
+  const [previewUrl, setPreviewUrl] = useState<string>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const submitLock = useRef(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const isChanged =
     values.displayName !== normalizedInitial.displayName ||
@@ -140,25 +176,165 @@ export function ProfileForm({
     setNotice(undefined);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitLock.current) return;
     const nextErrors = validateProfile({
       displayName: values.displayName,
       email: values.email,
       phone: values.phone,
       dateOfBirth: values.dateOfBirth,
-      targetScore: values.targetScore ? Number(values.targetScore) : undefined,
+      targetScore: values.targetScore,
     });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setNotice(
-      "Tính năng cập nhật hồ sơ đang được hoàn thiện. Thông tin của bạn chưa được gửi đi.",
-    );
+    setPending(true);
+    submitLock.current = true;
+    setNotice(undefined);
+    try {
+      const profile = await updateProfile(toUpdateRequest(values));
+      setValues({
+        displayName: profile.displayName,
+        email: profile.email,
+        phone: profile.phone ?? "",
+        dateOfBirth: profile.dateOfBirth ?? "",
+        targetScore:
+          profile.targetScore === null ? "" : String(profile.targetScore),
+      });
+      setErrors({});
+      onSaved?.(profile);
+      toast.success("Đã lưu thông tin.");
+      window.dispatchEvent(
+        new CustomEvent("profile:updated", { detail: profile }),
+      );
+    } catch (reason) {
+      if (reason instanceof ApiError && reason.status === 400) {
+        setErrors(reason.fieldErrors as ProfileFieldErrors);
+      } else if (reason instanceof ApiError && reason.status === 429) {
+        setNotice(
+          `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,
+        );
+      } else if (reason instanceof ApiError && reason.status === 401) {
+        router.replace("/login?next=%2Fprofile");
+      } else {
+        toast.error("Không thể cập nhật hồ sơ. Vui lòng thử lại.");
+      }
+    } finally {
+      submitLock.current = false;
+      setPending(false);
+    }
+  }
+
+  async function selectAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    setAvatarError(undefined);
+    if (!file) return;
+    const validation = validateAvatarFile(file);
+    if (validation) {
+      setAvatarError(validation);
+      return;
+    }
+
+    const preview = URL.createObjectURL(file);
+    setPreviewUrl(preview);
+    setAvatarPending(true);
+    try {
+      const profile = await uploadAvatar(file);
+      setPreviewUrl(undefined);
+      onSaved?.(profile);
+      window.dispatchEvent(
+        new CustomEvent("profile:updated", { detail: profile }),
+      );
+    } catch (reason) {
+      setPreviewUrl(undefined);
+      setAvatarError(
+        reason instanceof ApiError
+          ? (reason.fieldErrors.avatar ?? reason.message)
+          : "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.",
+      );
+      if (reason instanceof ApiError && reason.status === 401)
+        router.replace("/login?next=%2Fprofile");
+    } finally {
+      setAvatarPending(false);
+    }
+  }
+
+  async function deleteAvatar() {
+    setAvatarPending(true);
+    setAvatarError(undefined);
+    try {
+      await removeAvatar();
+      const profile = { ...initialValues, avatarVersion: null };
+      onSaved?.(profile);
+      window.dispatchEvent(
+        new CustomEvent("profile:updated", { detail: profile }),
+      );
+    } catch (reason) {
+      setAvatarError(
+        reason instanceof ApiError
+          ? (reason.fieldErrors.avatar ?? reason.message)
+          : "Không thể xóa ảnh đại diện. Vui lòng thử lại.",
+      );
+      if (reason instanceof ApiError && reason.status === 401)
+        router.replace("/login?next=%2Fprofile");
+    } finally {
+      setAvatarPending(false);
+    }
   }
 
   return (
     <form noValidate onSubmit={submit}>
+      <div className="mb-5 flex items-center gap-3">
+        <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-base font-bold text-[#841013]">
+          {previewUrl || avatarUrl(initialValues) ? (
+            <Image
+              alt={`Ảnh đại diện của ${initialValues.displayName}`}
+              className="h-full w-full object-cover"
+              fill
+              sizes="48px"
+              src={previewUrl ?? avatarUrl(initialValues)!}
+              unoptimized
+            />
+          ) : (
+            initialValues.displayName.slice(0, 1).toUpperCase()
+          )}
+        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={selectAvatar}
+            ref={fileInputRef}
+            type="file"
+          />
+          <button
+            className="cursor-pointer text-xs font-semibold text-[#ed361c] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={avatarPending}
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+          >
+            {avatarPending ? "Đang cập nhật ảnh..." : "Đổi ảnh đại diện"}
+          </button>
+          {initialValues.avatarVersion && (
+            <button
+              className="cursor-pointer text-xs font-semibold text-[#736a66] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={avatarPending}
+              onClick={() => void deleteAvatar()}
+              type="button"
+            >
+              Xóa ảnh
+            </button>
+          )}
+        </div>
+      </div>
+      {avatarError && (
+        <p className="mb-4 text-xs text-red-600" role="alert">
+          {avatarError}
+        </p>
+      )}
       <div className="space-y-3.5">
         {/* Tên hiển thị */}
         <div>
@@ -358,14 +534,14 @@ export function ProfileForm({
       <div className="mt-6 flex items-center gap-3">
         <button
           className="flex h-12 flex-1 cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
-          disabled={!isChanged}
+          disabled={!isChanged || pending}
           type="submit"
         >
           Lưu thay đổi
         </button>
         <button
           className="flex h-12 cursor-pointer items-center justify-center rounded-xl border border-[#e4dcda] bg-white px-5 text-sm font-semibold text-[#615957] transition hover:bg-[#fff8f5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-          disabled={!isChanged}
+          disabled={!isChanged || pending}
           onClick={handleReset}
           type="button"
         >

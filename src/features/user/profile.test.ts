@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   getInitials,
+  AVATAR_MAX_BYTES,
+  toUpdateRequest,
+  validateAvatarFile,
   validatePasswordChange,
   validateProfile,
 } from "./profile";
@@ -103,6 +106,34 @@ describe("validateProfile", () => {
     });
   });
 
+  it("chỉ chấp nhận ngày có thật từ năm 1900 trở đi và không ở tương lai", () => {
+    for (const dateOfBirth of ["2000-13-45", "abc", "1899-12-31"]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", dateOfBirth })
+          .dateOfBirth,
+      ).toBe("Ngày sinh không hợp lệ.");
+    }
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = `${tomorrowDate.getFullYear()}-${String(tomorrowDate.getMonth() + 1).padStart(2, "0")}-${String(tomorrowDate.getDate()).padStart(2, "0")}`;
+    expect(
+      validateProfile({
+        displayName: "Linh",
+        email: "x@y.z",
+        dateOfBirth: tomorrow,
+      }).dateOfBirth,
+    ).toBe("Ngày sinh không được ở tương lai.");
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    expect(
+      validateProfile({
+        displayName: "Linh",
+        email: "x@y.z",
+        dateOfBirth: today,
+      }),
+    ).toEqual({});
+  });
+
   it("kiểm tra các giá trị biên 10 và 990 của điểm TOEIC mục tiêu", () => {
     expect(
       validateProfile({
@@ -162,6 +193,86 @@ describe("validateProfile", () => {
       targetScore: "Điểm TOEIC mục tiêu phải từ 10 đến 990.",
     });
   });
+
+  it("chỉ nhận điểm mục tiêu dạng số nguyên thập phân", () => {
+    for (const targetScore of ["1e2", "0x10", "12.5", "5", "995"]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", targetScore })
+          .targetScore,
+      ).toBe("Điểm TOEIC mục tiêu phải từ 10 đến 990.");
+    }
+    expect(
+      validateProfile({
+        displayName: "Linh",
+        email: "x@y.z",
+        targetScore: "750",
+      }),
+    ).toEqual({});
+  });
+});
+
+describe("toUpdateRequest", () => {
+  it("trim dữ liệu, chuyển chuỗi rỗng thành null và không gửi email", () => {
+    expect(
+      toUpdateRequest({
+        displayName: "  Linh  ",
+        email: "private@example.com",
+        phone: "  ",
+        dateOfBirth: "",
+        targetScore: "",
+      }),
+    ).toEqual({
+      displayName: "Linh",
+      phone: null,
+      dateOfBirth: null,
+      targetScore: null,
+    });
+    expect(
+      toUpdateRequest({
+        displayName: "Linh",
+        email: "private@example.com",
+        phone: " 0912345678 ",
+        dateOfBirth: " 2000-01-01 ",
+        targetScore: "750",
+      }),
+    ).toEqual({
+      displayName: "Linh",
+      phone: "0912345678",
+      dateOfBirth: "2000-01-01",
+      targetScore: 750,
+    });
+  });
+});
+
+describe("validateAvatarFile", () => {
+  it("chỉ chấp nhận JPG, PNG và WebP đúng MIME và kích thước", () => {
+    for (const file of [
+      { name: "photo.gif", type: "image/gif", size: 10 },
+      { name: "doc.pdf", type: "application/pdf", size: 10 },
+      { name: "photo.png", type: "image/jpeg", size: 10 },
+    ]) {
+      expect(validateAvatarFile(file)).toBe(
+        "Chỉ hỗ trợ ảnh định dạng JPG, PNG hoặc WebP.",
+      );
+    }
+    expect(
+      validateAvatarFile({ name: "empty.png", type: "image/png", size: 0 }),
+    ).toBe("Tệp ảnh không hợp lệ.");
+    expect(
+      validateAvatarFile({
+        name: "large.png",
+        type: "image/png",
+        size: AVATAR_MAX_BYTES + 1,
+      }),
+    ).toBe("Ảnh không được vượt quá 2MB.");
+    expect(
+      validateAvatarFile({
+        name: "limit.png",
+        type: "image/png",
+        size: AVATAR_MAX_BYTES,
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("validatePasswordChange", () => {
@@ -193,8 +304,8 @@ describe("validatePasswordChange", () => {
     expect(
       validatePasswordChange({
         currentPassword: "current-password-123",
-        newPassword: "short",
-        confirmPassword: "short",
+        newPassword: "1234567",
+        confirmPassword: "1234567",
       }),
     ).toEqual({
       newPassword: "Mật khẩu cần từ 8 đến 128 ký tự.",

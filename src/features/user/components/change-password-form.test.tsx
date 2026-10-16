@@ -2,18 +2,38 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/features/user/api";
 import { ChangePasswordForm } from "./change-password-form";
 
+const mocks = vi.hoisted(() => ({
+  changePassword: vi.fn(),
+  success: vi.fn(),
+  error: vi.fn(),
+  replace: vi.fn(),
+}));
+vi.mock("@/features/user/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/user/api")>();
+  return { ...actual, changePassword: mocks.changePassword };
+});
+vi.mock("@/shared/ui/toast", () => ({
+  toast: { success: mocks.success, error: mocks.error },
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mocks.replace }),
+}));
+
 afterEach(cleanup);
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.changePassword.mockResolvedValue(undefined);
+});
 
 describe("ChangePasswordForm", () => {
-  it("hiển thị lỗi khi submit để trống và xóa lỗi khi người dùng gõ vào ô", async () => {
+  it("hiển thị lỗi client-side khi để trống và xóa lỗi khi sửa", async () => {
     const user = userEvent.setup();
     render(<ChangePasswordForm />);
-
     await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
-
     expect(
       await screen.findByText("Vui lòng nhập mật khẩu hiện tại."),
     ).toBeInTheDocument();
@@ -21,97 +41,84 @@ describe("ChangePasswordForm", () => {
     expect(
       screen.getByText("Vui lòng xác nhận mật khẩu mới."),
     ).toBeInTheDocument();
-
-    const currentPwdInput = screen.getByLabelText("Mật khẩu hiện tại");
-    await user.type(currentPwdInput, "oldpassword");
-
+    await user.type(screen.getByLabelText("Mật khẩu hiện tại"), "oldpassword");
     expect(
       screen.queryByText("Vui lòng nhập mật khẩu hiện tại."),
     ).not.toBeInTheDocument();
+    expect(mocks.changePassword).not.toHaveBeenCalled();
   });
 
   it("cho phép toggle ẩn/hiện mật khẩu", async () => {
     const user = userEvent.setup();
     render(<ChangePasswordForm />);
-
-    const currentPwdInput = screen.getByLabelText("Mật khẩu hiện tại");
-    expect(currentPwdInput).toHaveAttribute("type", "password");
-
-    const toggleButtons = screen.getAllByRole("button", {
-      name: "Hiện mật khẩu",
-    });
-    // Click toggle button của ô mật khẩu hiện tại
-    await user.click(toggleButtons[0]);
-    expect(currentPwdInput).toHaveAttribute("type", "text");
-
-    const hideButtons = screen.getAllByRole("button", {
-      name: "Ẩn mật khẩu",
-    });
-    await user.click(hideButtons[0]);
-    expect(currentPwdInput).toHaveAttribute("type", "password");
-  });
-
-  it("báo lỗi khi mật khẩu mới trùng với mật khẩu hiện tại", async () => {
-    const user = userEvent.setup();
-    render(<ChangePasswordForm />);
-
-    await user.type(screen.getByLabelText("Mật khẩu hiện tại"), "password123");
-    await user.type(screen.getByLabelText("Mật khẩu mới"), "password123");
-    await user.type(
-      screen.getByLabelText("Xác nhận mật khẩu mới"),
-      "password123",
+    const current = screen.getByLabelText("Mật khẩu hiện tại");
+    expect(current).toHaveAttribute("type", "password");
+    await user.click(
+      screen.getAllByRole("button", { name: "Hiện mật khẩu" })[0],
     );
-
-    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
-
-    expect(
-      await screen.findByText(
-        "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
-      ),
-    ).toBeInTheDocument();
+    expect(current).toHaveAttribute("type", "text");
+    await user.click(screen.getAllByRole("button", { name: "Ẩn mật khẩu" })[0]);
+    expect(current).toHaveAttribute("type", "password");
   });
 
-  it("báo lỗi khi xác nhận mật khẩu không khớp", async () => {
+  it("hiển thị lỗi BE sai mật khẩu ở ô mật khẩu hiện tại", async () => {
     const user = userEvent.setup();
+    mocks.changePassword.mockRejectedValueOnce(
+      new ApiError(400, "Không hợp lệ", {
+        currentPassword: "Mật khẩu hiện tại không đúng.",
+      }),
+    );
     render(<ChangePasswordForm />);
-
     await user.type(
       screen.getByLabelText("Mật khẩu hiện tại"),
-      "oldpassword123",
+      "wrong-password",
     );
-    await user.type(screen.getByLabelText("Mật khẩu mới"), "newpassword123");
+    await user.type(screen.getByLabelText("Mật khẩu mới"), "new-password-123");
     await user.type(
       screen.getByLabelText("Xác nhận mật khẩu mới"),
-      "differentpwd",
+      "new-password-123",
     );
-
     await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
-
     expect(
-      await screen.findByText("Mật khẩu xác nhận chưa khớp."),
+      await screen.findByText("Mật khẩu hiện tại không đúng."),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Mật khẩu hiện tại")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
   });
 
-  it("hiển thị thông báo khi đổi mật khẩu hợp lệ", async () => {
+  it("gọi API thành công, xóa ba ô và báo thành công", async () => {
     const user = userEvent.setup();
     render(<ChangePasswordForm />);
-
     await user.type(
       screen.getByLabelText("Mật khẩu hiện tại"),
-      "oldpassword123",
+      "old-password-123",
     );
-    await user.type(screen.getByLabelText("Mật khẩu mới"), "newpassword123");
+    await user.type(screen.getByLabelText("Mật khẩu mới"), "new-password-123");
     await user.type(
       screen.getByLabelText("Xác nhận mật khẩu mới"),
-      "newpassword123",
+      "new-password-123",
     );
-
     await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    expect(mocks.changePassword).toHaveBeenCalledWith({
+      currentPassword: "old-password-123",
+      newPassword: "new-password-123",
+      confirmPassword: "new-password-123",
+    });
+    expect(await screen.findByLabelText("Mật khẩu hiện tại")).toHaveValue("");
+    expect(screen.getByLabelText("Mật khẩu mới")).toHaveValue("");
+    expect(screen.getByLabelText("Xác nhận mật khẩu mới")).toHaveValue("");
+    expect(mocks.success).toHaveBeenCalledWith("Đổi mật khẩu thành công.");
+  });
 
+  it("không hiện form nếu tài khoản chưa có mật khẩu", () => {
+    render(<ChangePasswordForm hasPassword={false} />);
     expect(
-      await screen.findByText(
-        "Tính năng đổi mật khẩu đang được hoàn thiện. Yêu cầu của bạn chưa được gửi đi.",
-      ),
+      screen.getByText("Tài khoản đăng nhập bằng Google, không có mật khẩu."),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Mật khẩu hiện tại"),
+    ).not.toBeInTheDocument();
   });
 });

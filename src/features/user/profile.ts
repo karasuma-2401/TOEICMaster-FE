@@ -1,26 +1,27 @@
 export interface UserProfile {
-  displayName: string;
+  id: string;
   email: string;
-  phone?: string;
-  dateOfBirth?: string;
-  targetScore?: number;
+  displayName: string;
+  phone: string | null;
+  dateOfBirth: string | null;
+  targetScore: number | null;
+  avatarVersion: string | null;
+  hasPassword: boolean;
 }
-
-// TODO: thay bằng dữ liệu từ API khi có contract
-export const mockUserProfile: UserProfile = {
-  displayName: "Nguyễn Văn A",
-  email: "learner@example.com",
-  phone: "0912345678",
-  dateOfBirth: "2000-01-15",
-  targetScore: 750,
-};
 
 export interface ProfileInput {
   displayName: string;
   email: string;
-  phone?: string;
-  dateOfBirth?: string;
-  targetScore?: number | string;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  targetScore?: number | string | null;
+}
+
+export interface UpdateProfileRequest {
+  displayName: string;
+  phone: string | null;
+  dateOfBirth: string | null;
+  targetScore: number | null;
 }
 
 export type ProfileField = keyof ProfileInput;
@@ -38,14 +39,50 @@ export type PasswordChangeFieldErrors = Partial<
 >;
 
 export const phonePattern = /^(0|\+84)\d{9}$/;
+export const AVATAR_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export const AVATAR_ALLOWED_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+] as const;
+export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "U";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  const first = parts[0][0];
-  const last = parts[parts.length - 1][0];
-  return `${first}${last}`.toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+export function toUpdateRequest(input: ProfileInput): UpdateProfileRequest {
+  const score = input.targetScore;
+  const phone = input.phone?.trim() ?? "";
+  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
+  return {
+    displayName: input.displayName.trim(),
+    phone: phone || null,
+    dateOfBirth: dateOfBirth || null,
+    targetScore:
+      score === undefined || score === null || String(score).trim() === ""
+        ? null
+        : Number(score),
+  };
+}
+
+function isRealDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 export function validateProfile(input: ProfileInput): ProfileFieldErrors {
@@ -58,53 +95,85 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
     errors.displayName = "Tên hiển thị không được vượt quá 100 ký tự.";
   }
 
-  if (input.phone) {
-    const trimmedPhone = input.phone.trim();
-    if (trimmedPhone && !phonePattern.test(trimmedPhone)) {
-      errors.phone = "Số điện thoại không hợp lệ.";
-    }
+  const phone = input.phone?.trim() ?? "";
+  if (phone && !phonePattern.test(phone)) {
+    errors.phone = "Số điện thoại không hợp lệ.";
   }
 
-  if (input.dateOfBirth) {
-    const dateStr = input.dateOfBirth.trim();
-    if (dateStr) {
+  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
+  if (dateOfBirth) {
+    if (!isRealDate(dateOfBirth) || dateOfBirth < "1900-01-01") {
+      errors.dateOfBirth = "Ngày sinh không hợp lệ.";
+    } else {
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      if (dateStr > todayStr) {
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (dateOfBirth > today)
         errors.dateOfBirth = "Ngày sinh không được ở tương lai.";
-      }
     }
   }
 
+  const targetScore = input.targetScore;
   if (
-    input.targetScore !== undefined &&
-    input.targetScore !== null &&
-    String(input.targetScore).trim() !== ""
+    targetScore !== undefined &&
+    targetScore !== null &&
+    String(targetScore).trim() !== ""
   ) {
-    const scoreNum = Number(input.targetScore);
-    if (!Number.isInteger(scoreNum) || scoreNum < 10 || scoreNum > 990) {
+    const scoreString = String(targetScore).trim();
+    if (!/^\d+$/.test(scoreString)) {
       errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
-    } else if (scoreNum % 5 !== 0) {
-      errors.targetScore = "Điểm TOEIC mục tiêu phải là bội số của 5.";
+    } else {
+      const score = Number(scoreString);
+      if (score < 10 || score > 990) {
+        errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
+      } else if (score % 5 !== 0) {
+        errors.targetScore = "Điểm TOEIC mục tiêu phải là bội số của 5.";
+      }
     }
   }
 
   return errors;
 }
 
+export function validateAvatarFile(
+  file: Pick<File, "name" | "type" | "size">,
+): string | null {
+  const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+  if (
+    !AVATAR_ALLOWED_EXTENSIONS.includes(
+      extension as (typeof AVATAR_ALLOWED_EXTENSIONS)[number],
+    ) ||
+    !AVATAR_ALLOWED_TYPES.includes(
+      file.type as (typeof AVATAR_ALLOWED_TYPES)[number],
+    ) ||
+    (extension === ".png" && file.type !== "image/png") ||
+    ((extension === ".jpg" || extension === ".jpeg") &&
+      file.type !== "image/jpeg") ||
+    (extension === ".webp" && file.type !== "image/webp")
+  ) {
+    return "Chỉ hỗ trợ ảnh định dạng JPG, PNG hoặc WebP.";
+  }
+  if (file.size <= 0) return "Tệp ảnh không hợp lệ.";
+  if (file.size > AVATAR_MAX_BYTES) return "Ảnh không được vượt quá 2MB.";
+  return null;
+}
+
+export function validateNewPassword(password: string): string | null {
+  if (!password) return "Vui lòng nhập mật khẩu mới.";
+  if (password.length < 8 || password.length > 128)
+    return "Mật khẩu cần từ 8 đến 128 ký tự.";
+  return null;
+}
+
 export function validatePasswordChange(
   input: PasswordChangeInput,
 ): PasswordChangeFieldErrors {
   const errors: PasswordChangeFieldErrors = {};
-
-  if (!input.currentPassword) {
+  if (!input.currentPassword)
     errors.currentPassword = "Vui lòng nhập mật khẩu hiện tại.";
-  }
 
-  if (!input.newPassword) {
-    errors.newPassword = "Vui lòng nhập mật khẩu mới.";
-  } else if (input.newPassword.length < 8 || input.newPassword.length > 128) {
-    errors.newPassword = "Mật khẩu cần từ 8 đến 128 ký tự.";
+  const newPasswordError = validateNewPassword(input.newPassword);
+  if (newPasswordError) {
+    errors.newPassword = newPasswordError;
   } else if (
     input.currentPassword &&
     input.newPassword === input.currentPassword
@@ -112,11 +181,9 @@ export function validatePasswordChange(
     errors.newPassword = "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
   }
 
-  if (!input.confirmPassword) {
+  if (!input.confirmPassword)
     errors.confirmPassword = "Vui lòng xác nhận mật khẩu mới.";
-  } else if (input.confirmPassword !== input.newPassword) {
+  else if (input.confirmPassword !== input.newPassword)
     errors.confirmPassword = "Mật khẩu xác nhận chưa khớp.";
-  }
-
   return errors;
 }

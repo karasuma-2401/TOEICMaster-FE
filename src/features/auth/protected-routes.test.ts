@@ -9,6 +9,8 @@ describe("protected routes", () => {
     expect(isProtectedPath("/dashboard/results", paths)).toBe(true);
     expect(isProtectedPath("/practices", paths)).toBe(false);
     expect(isProtectedPath("/", paths)).toBe(false);
+    expect(isProtectedPath("/profile")).toBe(true);
+    expect(isProtectedPath("/profile/security")).toBe(true);
   });
 
   it("keeps only same-origin destinations within protected paths", () => {
@@ -27,5 +29,6 @@ describe("protected routes", () => {
       "/login?next=%2Fdashboard%3Ftab%3Dprogress",
     );
     expect(authUrl("/register", "/")).toBe("/register");
+    expect(safeReturnTo("/profile")).toBe("/profile");
   });
 });

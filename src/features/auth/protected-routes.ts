@@ -3,7 +3,7 @@
  * signed-in user. Keep this list to browser page paths; API handlers must
  * validate their caller independently.
  */
-export const protectedRoutePrefixes: readonly string[] = [];
+export const protectedRoutePrefixes: readonly string[] = ["/profile"];
 
 export function isProtectedPath(
   pathname: string,

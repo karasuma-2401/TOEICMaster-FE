@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
   AuthError,
@@ -9,6 +10,7 @@ import {
   refreshSession,
   type SessionState,
 } from "@/features/auth/api";
+import { ApiError, avatarUrl, getProfile } from "@/features/user/api";
 import { type UserProfile, getInitials } from "@/features/user/profile";
 import { ProfileDialog } from "./profile-dialog";
 
@@ -60,9 +62,13 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
     }
 
     currentSession()
-      .then((state) => {
+      .then(async (state) => {
         if (!active) return;
-        setUser(state.status === "authenticated" ? state.user : null);
+        if (state.status !== "authenticated") {
+          setUser(null);
+          return;
+        }
+        setUser(await getProfile());
       })
       .catch((reason) => {
         if (!active) return;
@@ -78,6 +84,30 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
 
     return () => {
       active = false;
+    };
+  }, [initialUser]);
+
+  useEffect(() => {
+    if (initialUser !== undefined) return;
+    let active = true;
+    const reload = () => {
+      void getProfile()
+        .then((profile) => {
+          if (active) setUser(profile);
+        })
+        .catch((reason: unknown) => {
+          if (!active) return;
+          if (reason instanceof ApiError && reason.status === 401) {
+            setUser(null);
+            return;
+          }
+          setError("Không thể tải hồ sơ cá nhân.");
+        });
+    };
+    window.addEventListener("profile:updated", reload);
+    return () => {
+      active = false;
+      window.removeEventListener("profile:updated", reload);
     };
   }, [initialUser]);
 
@@ -111,11 +141,37 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
 
   if (user === undefined) return null;
 
-  // Nếu chưa đăng nhập: hiện nút Đăng nhập và Đăng ký
+  // Khách vẫn có thể mở trang hồ sơ cùng các lựa chọn đăng nhập/đăng ký.
   if (!user) {
     return (
       <div className="flex flex-col items-end gap-1">
         <div className="flex items-center gap-2.5">
+          <Link
+            aria-label="Hồ sơ cá nhân"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+            href="/profile"
+          >
+            <svg
+              aria-hidden="true"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="12"
+                cy="8"
+                r="3.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M4.8 20c.6-3.3 3.4-5.2 7.2-5.2s6.6 1.9 7.2 5.2"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.8"
+              />
+            </svg>
+          </Link>
           <Link
             className="cursor-pointer text-sm font-semibold text-[#4e4542] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/login"
@@ -139,6 +195,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
   }
 
   const initials = getInitials(user.displayName);
+  const imageUrl = avatarUrl(user);
 
   return (
     <>
@@ -148,13 +205,25 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
         onClick={() => setIsOpen(true)}
         type="button"
       >
-        {initials}
+        {imageUrl ? (
+          <Image
+            alt={`Ảnh đại diện của ${user.displayName}`}
+            className="absolute inset-0 h-full w-full rounded-full object-cover"
+            fill
+            sizes="40px"
+            src={imageUrl}
+            unoptimized
+          />
+        ) : (
+          initials
+        )}
       </button>
 
       <ProfileDialog
         isOpen={isOpen}
         onClose={handleClose}
         onLogout={handleLogout}
+        onSaved={setUser}
         user={user}
       />
       {pending && <span className="sr-only">Đang đăng xuất...</span>}
