@@ -1,5 +1,5 @@
 import { ConnectionStatus } from "@/features/system/components/connection-status";
-import { AccountControls } from "@/features/auth/components/account-controls";
+import { UserMenu } from "@/features/user/components/user-menu";
 
 const areas = [
   ["Học theo chủ đề", "Củng cố từ vựng, ngữ pháp và kỹ năng nghe hiểu."],
@@ -7,7 +7,12 @@ const areas = [
   ["Thi thử", "Làm bài theo thời gian và theo dõi kết quả."],
 ];
 
-export default function Home() {
+export default async function Home(props: {
+  searchParams?: Promise<{ profile?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const openProfile = searchParams?.profile === "1";
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
@@ -15,7 +20,12 @@ export default function Home() {
           <span className="text-xl font-bold tracking-tight text-blue-700">
             TOEICMaster
           </span>
-          <AccountControls />
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700">
+              Đang phát triển
+            </span>
+            <UserMenu initialOpen={openProfile} />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-16">
