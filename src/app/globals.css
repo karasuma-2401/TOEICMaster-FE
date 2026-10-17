@@ -3,6 +3,32 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --admin-brand-red: #ed361c;
+  --admin-brand-red-dark: #c70e1a;
+  --admin-brand-orange: #ff6c0d;
+  --admin-brand-gradient: linear-gradient(90deg, #ec251b, #ff6c0d);
+  --admin-action-shadow: 0 6px 16px rgb(236 37 27 / 18%);
+  --admin-highlight: #ffd361;
+  --admin-avatar-border: #ffd49e;
+  --admin-avatar-orange: #f17939;
+  --admin-page: #faf8f7;
+  --admin-surface: #fffdfc;
+  --admin-surface-muted: #f5f1ef;
+  --admin-ink: #342d2a;
+  --admin-ink-soft: #4e4542;
+  --admin-muted: #a89f9b;
+  --admin-border: #e7deda;
+  --admin-nav-active: #fff0e6;
+  --admin-success: #16834a;
+  --admin-success-soft: #e8f5ed;
+  --admin-warning: #9a5b00;
+  --admin-warning-soft: #fff4d6;
+  --admin-danger: #b31322;
+  --admin-danger-soft: #fcebed;
+  --admin-role-admin: #c2570c;
+  --admin-role-admin-soft: #ffe9d6;
+  --admin-row-hover: #fffaf7;
+  --admin-skeleton: #eee8e5;
 }
 @theme inline {
   --color-background: var(--background);

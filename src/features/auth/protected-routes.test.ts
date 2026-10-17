@@ -11,6 +11,8 @@ describe("protected routes", () => {
     expect(isProtectedPath("/", paths)).toBe(false);
     expect(isProtectedPath("/profile")).toBe(true);
     expect(isProtectedPath("/profile/security")).toBe(true);
+    expect(isProtectedPath("/admin/users")).toBe(true);
+    expect(isProtectedPath("/administrator")).toBe(false);
   });
 
   it("keeps only same-origin destinations within protected paths", () => {
@@ -30,5 +32,6 @@ describe("protected routes", () => {
     );
     expect(authUrl("/register", "/")).toBe("/register");
     expect(safeReturnTo("/profile")).toBe("/profile");
+    expect(safeReturnTo("/admin/users")).toBe("/admin/users");
   });
 });

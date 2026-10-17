@@ -25,8 +25,25 @@ function sessionCookie(accessExpiresAt: number, refreshExpiresAt: number) {
   return response.headers.get("set-cookie")!.split(";")[0];
 }
 
+function adminSessionCookie(role?: string) {
+  const response = NextResponse.next();
+  const session = {
+    accessToken: "access-token",
+    accessTokenExpiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+    refreshToken: "refresh-token",
+    refreshTokenExpiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+    user: { id: "user-id", displayName: "Linh", email: "linh@example.com" },
+    rememberMe: false,
+    ...(role ? { role } : {}),
+  } as AuthSession;
+  setSessionCookie(response, session);
+  return response.headers.get("set-cookie")!.split(";")[0];
+}
+
 beforeEach(() => {
   vi.stubEnv("AUTH_SESSION_SECRET", Buffer.alloc(32, 7).toString("base64url"));
+  vi.stubEnv("NODE_ENV", "test");
+  vi.stubEnv("ADMIN_PREVIEW", "false");
 });
 
 afterEach(() => {
@@ -61,6 +78,36 @@ describe("protectRoute", () => {
     const cookie = sessionCookie(Date.now() - 1_000, Date.now() + 60_000);
     const response = protectRoute(request("/dashboard", cookie), paths);
 
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("redirects a signed-in non-admin away from the admin area", () => {
+    const cookie = adminSessionCookie("Student");
+    const response = protectRoute(request("/admin/users", cookie));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/");
+  });
+
+  it("fails closed when the session has no role", () => {
+    const cookie = adminSessionCookie();
+    const response = protectRoute(request("/admin/users", cookie));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/");
+  });
+
+  it("allows a session with the Admin role", () => {
+    const cookie = adminSessionCookie("ADMIN");
+    const response = protectRoute(request("/admin/users", cookie));
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("allows viewing the Admin shell in explicitly enabled local preview", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("ADMIN_PREVIEW", "true");
+    const response = protectRoute(request("/admin/users"));
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 

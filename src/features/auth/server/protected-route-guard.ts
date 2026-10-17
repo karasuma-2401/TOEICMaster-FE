@@ -4,6 +4,7 @@ import {
   protectedRoutePrefixes,
 } from "@/features/auth/protected-routes";
 import { sessionCookie } from "./session";
+import { isAdminPreviewEnabled } from "@/features/admin/server/admin-preview";
 
 export function protectRoute(
   request: NextRequest,
@@ -12,9 +13,19 @@ export function protectRoute(
   if (!isProtectedPath(request.nextUrl.pathname, paths))
     return NextResponse.next();
 
+  const isAdminPath =
+    request.nextUrl.pathname === "/admin" ||
+    request.nextUrl.pathname.startsWith("/admin/");
+  if (isAdminPath && isAdminPreviewEnabled()) return NextResponse.next();
   const session = sessionCookie(request);
-  if (session && Date.parse(session.refreshTokenExpiresAtUtc) > Date.now())
+  if (session && Date.parse(session.refreshTokenExpiresAtUtc) > Date.now()) {
+    if (isAdminPath) {
+      const role = (session as typeof session & { role?: unknown }).role;
+      if (role !== "ADMIN")
+        return NextResponse.redirect(new URL("/", request.url));
+    }
     return NextResponse.next();
+  }
 
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set(
