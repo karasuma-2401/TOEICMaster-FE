@@ -58,6 +58,33 @@ function LoadingState() {
   );
 }
 
+export function UsersPageSkeleton() {
+  return (
+    <div aria-label="Đang tải trang quản lý người dùng" aria-busy="true">
+      <div className="mb-6 space-y-3">
+        <div className="h-3 w-40 animate-pulse rounded bg-[var(--admin-skeleton)]" />
+        <div className="h-9 w-64 animate-pulse rounded bg-[var(--admin-skeleton)]" />
+        <div className="h-4 w-96 max-w-full animate-pulse rounded bg-[var(--admin-skeleton)]" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            className="h-[100px] animate-pulse rounded-xl bg-[var(--admin-skeleton)]"
+            key={index}
+          />
+        ))}
+      </div>
+      <div className="mt-5 h-[68px] animate-pulse rounded-xl bg-[var(--admin-skeleton)]" />
+      <section
+        aria-label="Danh sách người dùng"
+        className="mt-4 overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]"
+      >
+        <LoadingState />
+      </section>
+    </div>
+  );
+}
+
 export function UsersPage() {
   const router = useRouter();
   const pathname = usePathname();
