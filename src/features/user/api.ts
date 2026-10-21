@@ -89,38 +89,37 @@ async function send(path: string, init: RequestInit = {}): Promise<Response> {
   return response;
 }
 
-function isUserProfile(value: unknown): value is UserProfile {
+interface BackendProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+function isBackendProfile(value: unknown): value is BackendProfile {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const profile = value as Record<string, unknown>;
-  const validScore =
-    profile.targetScore === null ||
-    (typeof profile.targetScore === "number" &&
-      Number.isInteger(profile.targetScore) &&
-      profile.targetScore >= 10 &&
-      profile.targetScore <= 990 &&
-      profile.targetScore % 5 === 0);
   return (
     typeof profile.id === "string" &&
     profile.id.length > 0 &&
     typeof profile.email === "string" &&
     profile.email.length > 0 &&
     typeof profile.displayName === "string" &&
-    (typeof profile.phone === "string" || profile.phone === null) &&
-    (profile.dateOfBirth === null ||
-      (typeof profile.dateOfBirth === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/.test(profile.dateOfBirth))) &&
-    validScore &&
-    (typeof profile.avatarVersion === "string" ||
-      profile.avatarVersion === null) &&
-    typeof profile.hasPassword === "boolean"
+    (typeof profile.avatarUrl === "string" || profile.avatarUrl === null)
   );
 }
 
 async function profileResponse(response: Response): Promise<UserProfile> {
   const body: unknown = await response.json().catch(() => null);
-  if (!isUserProfile(body))
+  if (!isBackendProfile(body))
     throw new ApiError(502, "Phản hồi hồ sơ không hợp lệ.");
-  return body;
+  // Backend always returns the same avatar path, so a per-fetch version busts the browser image cache.
+  return {
+    id: body.id,
+    email: body.email,
+    displayName: body.displayName,
+    avatarVersion: body.avatarUrl ? Date.now().toString(36) : null,
+  };
 }
 
 export async function getProfile(): Promise<UserProfile> {
@@ -145,20 +144,18 @@ export async function changePassword(
   await send("/api/profile/password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      currentPassword: input.currentPassword,
+      newPassword: input.newPassword,
+    }),
   });
 }
 
 export async function uploadAvatar(file: File): Promise<UserProfile> {
   const body = new FormData();
   body.append("file", file);
-  return profileResponse(
-    await send("/api/profile/avatar", { method: "PUT", body }),
-  );
-}
-
-export async function removeAvatar(): Promise<void> {
-  await send("/api/profile/avatar", { method: "DELETE" });
+  await send("/api/profile/avatar", { method: "PUT", body });
+  return getProfile();
 }
 
 export function avatarUrl(profile: UserProfile): string | null {

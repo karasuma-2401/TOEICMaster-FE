@@ -16,7 +16,6 @@ import { ProfileForm } from "./profile-form";
 const mocks = vi.hoisted(() => ({
   updateProfile: vi.fn(),
   uploadAvatar: vi.fn(),
-  removeAvatar: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
   replace: vi.fn(),
@@ -28,7 +27,6 @@ vi.mock("@/features/user/api", async (importOriginal) => {
     ...actual,
     updateProfile: mocks.updateProfile,
     uploadAvatar: mocks.uploadAvatar,
-    removeAvatar: mocks.removeAvatar,
   };
 });
 vi.mock("@/shared/ui/toast", () => ({
@@ -42,11 +40,7 @@ const sampleUser: UserProfile = {
   id: "user-1",
   displayName: "Nguyễn Văn A",
   email: "learner@example.com",
-  phone: "0912345678",
-  dateOfBirth: "2000-01-15",
-  targetScore: 750,
   avatarVersion: null,
-  hasPassword: true,
 };
 
 afterEach(cleanup);
@@ -57,7 +51,6 @@ beforeEach(() => {
     displayName: "Nguyễn Văn C",
   });
   mocks.uploadAvatar.mockResolvedValue({ ...sampleUser, avatarVersion: "v2" });
-  mocks.removeAvatar.mockResolvedValue(undefined);
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
     value: vi.fn(() => "blob:avatar-preview"),
@@ -91,9 +84,6 @@ describe("ProfileForm", () => {
     await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     expect(mocks.updateProfile).toHaveBeenCalledWith({
       displayName: "Nguyễn Văn C",
-      phone: "0912345678",
-      dateOfBirth: "2000-01-15",
-      targetScore: 750,
     });
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
     const saved = { ...sampleUser, displayName: "Nguyễn Văn C" };
@@ -122,8 +112,13 @@ describe("ProfileForm", () => {
     expect(nameInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("hiển thị email chỉ đọc", () => {
+  it("hiển thị email chỉ đọc và không có các trường backend chưa hỗ trợ", () => {
     render(<ProfileForm initialValues={sampleUser} />);
+    expect(screen.queryByLabelText("Số điện thoại")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Ngày sinh")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Điểm TOEIC mục tiêu"),
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
     expect(screen.getByText("Đã xác minh")).toBeInTheDocument();
   });
@@ -136,7 +131,7 @@ describe("ProfileForm", () => {
       target: { files: [new File(["x"], "bad.gif", { type: "image/gif" })] },
     });
     expect(
-      await screen.findByText("Chỉ hỗ trợ ảnh định dạng JPG, PNG hoặc WebP."),
+      await screen.findByText("Chỉ hỗ trợ ảnh định dạng JPG hoặc PNG."),
     ).toBeInTheDocument();
     expect(mocks.uploadAvatar).not.toHaveBeenCalled();
 

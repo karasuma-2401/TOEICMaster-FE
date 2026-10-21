@@ -182,7 +182,7 @@ export function ProfilePanel({
             onSaved={setProfile}
           />
         ) : (
-          <ChangePasswordForm hasPassword={profile.hasPassword} />
+          <ChangePasswordForm />
         )}
       </div>
 

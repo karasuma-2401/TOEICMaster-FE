@@ -6,11 +6,7 @@ import { forward } from "@/features/user/server/profile-proxy";
 export const dynamic = "force-dynamic";
 
 export function GET(request: NextRequest) {
-  return forward(request, "/api/v1/users/me/avatar", { method: "GET" });
-}
-
-export function DELETE(request: NextRequest) {
-  return forward(request, "/api/v1/users/me/avatar", { method: "DELETE" });
+  return forward(request, "/api/v1/profile/avatar", { method: "GET" });
 }
 
 export async function PUT(request: NextRequest) {
@@ -27,7 +23,7 @@ export async function PUT(request: NextRequest) {
   }
   const body = new FormData();
   body.append("file", file, file.name);
-  return forward(request, "/api/v1/users/me/avatar", {
+  return forward(request, "/api/v1/profile/avatar", {
     method: "PUT",
     body,
   });

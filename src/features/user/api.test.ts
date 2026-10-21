@@ -3,6 +3,7 @@ import { refreshSession } from "@/features/auth/api";
 import {
   ApiError,
   avatarUrl,
+  changePassword,
   getProfile,
   normalizeErrors,
   uploadAvatar,
@@ -11,15 +12,18 @@ import {
 
 vi.mock("@/features/auth/api", () => ({ refreshSession: vi.fn() }));
 
+const backendProfile = {
+  id: "user-1",
+  displayName: "Linh",
+  email: "linh@example.com",
+  avatarUrl: null,
+};
+
 const profile = {
   id: "user-1",
   email: "linh@example.com",
   displayName: "Linh",
-  phone: null,
-  dateOfBirth: null,
-  targetScore: null,
   avatarVersion: null,
-  hasPassword: true,
 };
 
 afterEach(() => vi.unstubAllGlobals());
@@ -81,7 +85,7 @@ describe("profile API", () => {
       .mockResolvedValueOnce(
         Response.json({ title: "Hết hạn" }, { status: 401 }),
       )
-      .mockResolvedValueOnce(Response.json(profile));
+      .mockResolvedValueOnce(Response.json(backendProfile));
     vi.stubGlobal("fetch", fetchMock);
     vi.mocked(refreshSession).mockResolvedValue({
       id: "user-1",
@@ -93,44 +97,80 @@ describe("profile API", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("sends only editable profile fields and validates the response", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(Response.json(profile));
+  it("maps the backend profile and rejects unexpected shapes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            ...backendProfile,
+            avatarUrl: "/api/v1/profile/avatar",
+          }),
+        )
+        .mockResolvedValueOnce(Response.json({ id: "user-1" })),
+    );
+    const mapped = await getProfile();
+    expect(mapped).toMatchObject({ id: "user-1", displayName: "Linh" });
+    expect(mapped.avatarVersion).toEqual(expect.any(String));
+    expect(avatarUrl(mapped)).toMatch(/^\/api\/profile\/avatar\?v=/);
+    await expect(getProfile()).rejects.toMatchObject({ status: 502 });
+  });
+
+  it("sends only the display name and validates the response", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(backendProfile));
     vi.stubGlobal("fetch", fetchMock);
-    await expect(
-      updateProfile({
-        displayName: "Linh",
-        phone: null,
-        dateOfBirth: null,
-        targetScore: null,
-      }),
-    ).resolves.toEqual(profile);
+    await expect(updateProfile({ displayName: "Linh" })).resolves.toEqual(
+      profile,
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/profile",
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({
-          displayName: "Linh",
-          phone: null,
-          dateOfBirth: null,
-          targetScore: null,
-        }),
+        body: JSON.stringify({ displayName: "Linh" }),
       }),
     );
   });
 
-  it("uploads the avatar as multipart under file without a manual content-type", async () => {
+  it("does not send the confirmation password to the backend", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(Response.json({ ...profile, avatarVersion: "v 2" }));
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await changePassword({
+      currentPassword: "current-password",
+      newPassword: "new-password",
+      confirmPassword: "new-password",
+    });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      currentPassword: "current-password",
+      newPassword: "new-password",
+    });
+  });
+
+  it("uploads the avatar as multipart under file, then reloads the profile", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        Response.json({
+          ...backendProfile,
+          avatarUrl: "/api/v1/profile/avatar",
+        }),
+      );
     vi.stubGlobal("fetch", fetchMock);
     const file = new File(["image"], "avatar.png", { type: "image/png" });
     await expect(uploadAvatar(file)).resolves.toMatchObject({
-      avatarVersion: "v 2",
+      avatarVersion: expect.any(String),
     });
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(path).toBe("/api/profile/avatar");
+    expect(init.method).toBe("PUT");
     expect(init.body).toBeInstanceOf(FormData);
     expect((init.body as FormData).get("file")).toBe(file);
     expect(new Headers(init.headers).has("content-type")).toBe(false);
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/profile");
     expect(avatarUrl({ ...profile, avatarVersion: "v 2" })).toBe(
       "/api/profile/avatar?v=v%202",
     );

@@ -2,26 +2,16 @@ export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
-  phone: string | null;
-  dateOfBirth: string | null;
-  targetScore: number | null;
   avatarVersion: string | null;
-  hasPassword: boolean;
 }
 
 export interface ProfileInput {
   displayName: string;
   email: string;
-  phone?: string | null;
-  dateOfBirth?: string | null;
-  targetScore?: number | string | null;
 }
 
 export interface UpdateProfileRequest {
   displayName: string;
-  phone: string | null;
-  dateOfBirth: string | null;
-  targetScore: number | null;
 }
 
 export type ProfileField = keyof ProfileInput;
@@ -38,18 +28,8 @@ export type PasswordChangeFieldErrors = Partial<
   Record<PasswordChangeField, string>
 >;
 
-export const phonePattern = /^(0|\+84)\d{9}$/;
-export const AVATAR_ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-] as const;
-export const AVATAR_ALLOWED_EXTENSIONS = [
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-] as const;
+export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png"] as const;
+export const AVATAR_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"] as const;
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 export function getInitials(name: string): string {
@@ -60,29 +40,7 @@ export function getInitials(name: string): string {
 }
 
 export function toUpdateRequest(input: ProfileInput): UpdateProfileRequest {
-  const score = input.targetScore;
-  const phone = input.phone?.trim() ?? "";
-  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
-  return {
-    displayName: input.displayName.trim(),
-    phone: phone || null,
-    dateOfBirth: dateOfBirth || null,
-    targetScore:
-      score === undefined || score === null || String(score).trim() === ""
-        ? null
-        : Number(score),
-  };
-}
-
-function isRealDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
+  return { displayName: input.displayName.trim() };
 }
 
 export function validateProfile(input: ProfileInput): ProfileFieldErrors {
@@ -93,42 +51,6 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
     errors.displayName = "Vui lòng nhập tên hiển thị.";
   } else if (displayName.length > 100) {
     errors.displayName = "Tên hiển thị không được vượt quá 100 ký tự.";
-  }
-
-  const phone = input.phone?.trim() ?? "";
-  if (phone && !phonePattern.test(phone)) {
-    errors.phone = "Số điện thoại không hợp lệ.";
-  }
-
-  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
-  if (dateOfBirth) {
-    if (!isRealDate(dateOfBirth) || dateOfBirth < "1900-01-01") {
-      errors.dateOfBirth = "Ngày sinh không hợp lệ.";
-    } else {
-      const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      if (dateOfBirth > today)
-        errors.dateOfBirth = "Ngày sinh không được ở tương lai.";
-    }
-  }
-
-  const targetScore = input.targetScore;
-  if (
-    targetScore !== undefined &&
-    targetScore !== null &&
-    String(targetScore).trim() !== ""
-  ) {
-    const scoreString = String(targetScore).trim();
-    if (!/^\d+$/.test(scoreString)) {
-      errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
-    } else {
-      const score = Number(scoreString);
-      if (score < 10 || score > 990) {
-        errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
-      } else if (score % 5 !== 0) {
-        errors.targetScore = "Điểm TOEIC mục tiêu phải là bội số của 5.";
-      }
-    }
   }
 
   return errors;
@@ -147,10 +69,9 @@ export function validateAvatarFile(
     ) ||
     (extension === ".png" && file.type !== "image/png") ||
     ((extension === ".jpg" || extension === ".jpeg") &&
-      file.type !== "image/jpeg") ||
-    (extension === ".webp" && file.type !== "image/webp")
+      file.type !== "image/jpeg")
   ) {
-    return "Chỉ hỗ trợ ảnh định dạng JPG, PNG hoặc WebP.";
+    return "Chỉ hỗ trợ ảnh định dạng JPG hoặc PNG.";
   }
   if (file.size <= 0) return "Tệp ảnh không hợp lệ.";
   if (file.size > AVATAR_MAX_BYTES) return "Ảnh không được vượt quá 2MB.";

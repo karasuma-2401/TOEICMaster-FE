@@ -88,6 +88,36 @@ describe("ChangePasswordForm", () => {
     );
   });
 
+  it("hiển thị title lỗi 400 không kèm field errors ở ô mật khẩu hiện tại", async () => {
+    const user = userEvent.setup();
+    mocks.changePassword.mockRejectedValueOnce(
+      new ApiError(
+        400,
+        "Mật khẩu hiện tại không đúng hoặc tài khoản không có mật khẩu.",
+      ),
+    );
+    render(<ChangePasswordForm />);
+    await user.type(
+      screen.getByLabelText("Mật khẩu hiện tại"),
+      "wrong-password",
+    );
+    await user.type(screen.getByLabelText("Mật khẩu mới"), "new-password-123");
+    await user.type(
+      screen.getByLabelText("Xác nhận mật khẩu mới"),
+      "new-password-123",
+    );
+    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    expect(
+      await screen.findByText(
+        "Mật khẩu hiện tại không đúng hoặc tài khoản không có mật khẩu.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Mật khẩu hiện tại")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
   it("gọi API thành công, xóa ba ô và báo thành công", async () => {
     const user = userEvent.setup();
     render(<ChangePasswordForm />);

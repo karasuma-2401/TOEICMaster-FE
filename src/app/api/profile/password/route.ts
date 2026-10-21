@@ -9,18 +9,16 @@ export async function POST(request: NextRequest) {
   if (
     !body ||
     typeof body.currentPassword !== "string" ||
-    typeof body.newPassword !== "string" ||
-    typeof body.confirmPassword !== "string"
+    typeof body.newPassword !== "string"
   ) {
     return problem(400, "Dữ liệu đổi mật khẩu không hợp lệ.");
   }
   const passwordChange = {
     currentPassword: body.currentPassword,
     newPassword: body.newPassword,
-    confirmPassword: body.confirmPassword,
   };
-  return forward(request, "/api/v1/users/me/password", {
-    method: "POST",
+  return forward(request, "/api/v1/profile/password", {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(passwordChange),
   });

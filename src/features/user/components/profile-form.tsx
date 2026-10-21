@@ -13,7 +13,6 @@ import Image from "next/image";
 import {
   ApiError,
   avatarUrl,
-  removeAvatar,
   updateProfile,
   uploadAvatar,
 } from "@/features/user/api";
@@ -29,9 +28,6 @@ import { toast } from "@/shared/ui/toast";
 interface FormState {
   displayName: string;
   email: string;
-  phone: string;
-  dateOfBirth: string;
-  targetScore: string;
 }
 
 function UserIcon() {
@@ -71,52 +67,6 @@ function EmailIcon() {
   );
 }
 
-function PhoneIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <path
-        d="M3 5.5A2.5 2.5 0 0 1 5.5 3h2.25a2 2 0 0 1 1.95 1.56l.72 3.12a2 2 0 0 1-.57 1.92l-1.5 1.5a13.06 13.06 0 0 0 5.5 5.5l1.5-1.5a2 2 0 0 1 1.92-.57l3.12.72A2 2 0 0 1 21 16.25V18.5a2.5 2.5 0 0 1-2.5 2.5h-1C9.61 21 3 14.39 3 6.5v-1Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <rect
-        height="15"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        width="17"
-        x="3.5"
-        y="4.5"
-      />
-      <path
-        d="M8 2.5v4M16 2.5v4M3.5 9.5h17"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function TargetIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="12" cy="12" fill="currentColor" r="1.5" />
-    </svg>
-  );
-}
-
 export function ProfileForm({
   initialValues,
   onSaved,
@@ -128,12 +78,6 @@ export function ProfileForm({
     () => ({
       displayName: initialValues.displayName,
       email: initialValues.email,
-      phone: initialValues.phone ?? "",
-      dateOfBirth: initialValues.dateOfBirth ?? "",
-      targetScore:
-        initialValues.targetScore === null
-          ? ""
-          : String(initialValues.targetScore),
     }),
     [initialValues],
   );
@@ -155,11 +99,7 @@ export function ProfileForm({
     };
   }, [previewUrl]);
 
-  const isChanged =
-    values.displayName !== normalizedInitial.displayName ||
-    values.phone !== normalizedInitial.phone ||
-    values.dateOfBirth !== normalizedInitial.dateOfBirth ||
-    values.targetScore !== normalizedInitial.targetScore;
+  const isChanged = values.displayName !== normalizedInitial.displayName;
 
   function updateValue(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -182,9 +122,6 @@ export function ProfileForm({
     const nextErrors = validateProfile({
       displayName: values.displayName,
       email: values.email,
-      phone: values.phone,
-      dateOfBirth: values.dateOfBirth,
-      targetScore: values.targetScore,
     });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -197,10 +134,6 @@ export function ProfileForm({
       setValues({
         displayName: profile.displayName,
         email: profile.email,
-        phone: profile.phone ?? "",
-        dateOfBirth: profile.dateOfBirth ?? "",
-        targetScore:
-          profile.targetScore === null ? "" : String(profile.targetScore),
       });
       setErrors({});
       onSaved?.(profile);
@@ -262,29 +195,6 @@ export function ProfileForm({
     }
   }
 
-  async function deleteAvatar() {
-    setAvatarPending(true);
-    setAvatarError(undefined);
-    try {
-      await removeAvatar();
-      const profile = { ...initialValues, avatarVersion: null };
-      onSaved?.(profile);
-      window.dispatchEvent(
-        new CustomEvent("profile:updated", { detail: profile }),
-      );
-    } catch (reason) {
-      setAvatarError(
-        reason instanceof ApiError
-          ? (reason.fieldErrors.avatar ?? reason.message)
-          : "Không thể xóa ảnh đại diện. Vui lòng thử lại.",
-      );
-      if (reason instanceof ApiError && reason.status === 401)
-        router.replace("/login?next=%2Fprofile");
-    } finally {
-      setAvatarPending(false);
-    }
-  }
-
   return (
     <form noValidate onSubmit={submit}>
       <div className="mb-5 flex items-center gap-3">
@@ -304,7 +214,7 @@ export function ProfileForm({
         </span>
         <div className="flex flex-wrap items-center gap-3">
           <input
-            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
             className="sr-only"
             onChange={selectAvatar}
             ref={fileInputRef}
@@ -318,16 +228,6 @@ export function ProfileForm({
           >
             {avatarPending ? "Đang cập nhật ảnh..." : "Đổi ảnh đại diện"}
           </button>
-          {initialValues.avatarVersion && (
-            <button
-              className="cursor-pointer text-xs font-semibold text-[#736a66] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={avatarPending}
-              onClick={() => void deleteAvatar()}
-              type="button"
-            >
-              Xóa ảnh
-            </button>
-          )}
         </div>
       </div>
       {avatarError && (
@@ -414,119 +314,6 @@ export function ProfileForm({
               value={values.email}
             />
           </div>
-        </div>
-
-        {/* Số điện thoại */}
-        <div>
-          <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
-            htmlFor="phone"
-          >
-            Số điện thoại
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
-              <PhoneIcon />
-            </span>
-            <input
-              aria-describedby={errors.phone ? "phone-error" : undefined}
-              aria-invalid={Boolean(errors.phone)}
-              autoComplete="tel"
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-4 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
-              id="phone"
-              name="phone"
-              onChange={updateValue}
-              placeholder="VD: 0912345678 hoặc +84912345678"
-              type="tel"
-              value={values.phone}
-            />
-          </div>
-          {errors.phone && (
-            <p
-              className="mt-1.5 text-xs text-red-600"
-              id="phone-error"
-              role="alert"
-            >
-              {errors.phone}
-            </p>
-          )}
-        </div>
-
-        {/* Ngày sinh */}
-        <div>
-          <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
-            htmlFor="dateOfBirth"
-          >
-            Ngày sinh
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
-              <CalendarIcon />
-            </span>
-            <input
-              aria-describedby={
-                errors.dateOfBirth ? "dateOfBirth-error" : undefined
-              }
-              aria-invalid={Boolean(errors.dateOfBirth)}
-              autoComplete="bday"
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-4 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
-              id="dateOfBirth"
-              name="dateOfBirth"
-              onChange={updateValue}
-              type="date"
-              value={values.dateOfBirth}
-            />
-          </div>
-          {errors.dateOfBirth && (
-            <p
-              className="mt-1.5 text-xs text-red-600"
-              id="dateOfBirth-error"
-              role="alert"
-            >
-              {errors.dateOfBirth}
-            </p>
-          )}
-        </div>
-
-        {/* Điểm TOEIC mục tiêu */}
-        <div>
-          <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
-            htmlFor="targetScore"
-          >
-            Điểm TOEIC mục tiêu
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
-              <TargetIcon />
-            </span>
-            <input
-              aria-describedby={
-                errors.targetScore ? "targetScore-error" : undefined
-              }
-              aria-invalid={Boolean(errors.targetScore)}
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-4 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
-              id="targetScore"
-              max={990}
-              min={10}
-              name="targetScore"
-              onChange={updateValue}
-              placeholder="10 - 990 (bội số của 5)"
-              step={5}
-              type="number"
-              value={values.targetScore}
-            />
-          </div>
-          {errors.targetScore && (
-            <p
-              className="mt-1.5 text-xs text-red-600"
-              id="targetScore-error"
-              role="alert"
-            >
-              {errors.targetScore}
-            </p>
-          )}
         </div>
       </div>
 

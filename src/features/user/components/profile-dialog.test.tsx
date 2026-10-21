@@ -14,11 +14,7 @@ describe("ProfileDialog", () => {
     id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
-    phone: "0912345678",
-    dateOfBirth: "2000-01-15",
-    targetScore: 750,
     avatarVersion: null,
-    hasPassword: true,
   };
 
   it("không hiển thị khi isOpen = false", () => {
@@ -39,7 +35,6 @@ describe("ProfileDialog", () => {
     expect(screen.getByText("Nguyễn Văn A")).toBeInTheDocument();
     expect(screen.getByText("learner@example.com")).toBeInTheDocument();
     expect(screen.getByText("NA")).toBeInTheDocument();
-    expect(screen.getByText("Mục tiêu: 750 TOEIC")).toBeInTheDocument();
 
     expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Nguyễn Văn A");
   });

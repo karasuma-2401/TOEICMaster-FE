@@ -49,13 +49,13 @@ describe("profile BFF", () => {
       .fn()
       .mockResolvedValue(Response.json({ id: "user-1" }));
     vi.stubGlobal("fetch", fetchMock);
-    const response = await forward(request(), "/api/v1/users/me", {
+    const response = await forward(request(), "/api/v1/profile", {
       method: "GET",
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ id: "user-1" });
     const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(String(url)).toBe("http://backend:5287/api/v1/users/me");
+    expect(String(url)).toBe("http://backend:5287/api/v1/profile");
     expect(options.cache).toBe("no-store");
     expect(new Headers(options.headers).get("authorization")).toBe(
       "Bearer access-token",
@@ -67,7 +67,7 @@ describe("profile BFF", () => {
     vi.stubGlobal("fetch", fetchMock);
     const response = await forward(
       request("/api/profile", ""),
-      "/api/v1/users/me",
+      "/api/v1/profile",
       { method: "GET" },
     );
     expect(response.status).toBe(401);
@@ -87,13 +87,13 @@ describe("profile BFF", () => {
           }),
         ),
     );
-    const removed = await forward(
-      request("/api/profile", cookie(), "DELETE"),
-      "/api/v1/users/me/avatar",
-      { method: "DELETE" },
+    const changed = await forward(
+      request("/api/profile/password", cookie(), "PUT"),
+      "/api/v1/profile/password",
+      { method: "PUT" },
     );
-    expect(removed.status).toBe(204);
-    const image = await forward(request(), "/api/v1/users/me/avatar", {
+    expect(changed.status).toBe(204);
+    const image = await forward(request(), "/api/v1/profile/avatar", {
       method: "GET",
     });
     expect(image.headers.get("Content-Type")).toBe("image/png");
@@ -108,7 +108,7 @@ describe("profile BFF", () => {
       method: "PUT",
       headers: { Cookie: cookie(), Origin: "http://evil.example" },
     });
-    const response = await forward(crossOrigin, "/api/v1/users/me", {
+    const response = await forward(crossOrigin, "/api/v1/profile", {
       method: "PUT",
     });
     expect(response.status).toBe(403);

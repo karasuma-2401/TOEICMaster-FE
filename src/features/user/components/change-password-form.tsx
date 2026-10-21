@@ -162,7 +162,12 @@ export function ChangePasswordForm({
       toast.success("Đổi mật khẩu thành công.");
     } catch (reason) {
       if (reason instanceof ApiError && reason.status === 400) {
-        setErrors(reason.fieldErrors as PasswordChangeFieldErrors);
+        // Backend reports a wrong current password with a title only, no field errors.
+        setErrors(
+          Object.keys(reason.fieldErrors).length > 0
+            ? (reason.fieldErrors as PasswordChangeFieldErrors)
+            : { currentPassword: reason.message },
+        );
       } else if (reason instanceof ApiError && reason.status === 429) {
         setNotice(
           `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,

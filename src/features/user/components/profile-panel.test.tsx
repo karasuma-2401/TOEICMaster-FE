@@ -24,11 +24,7 @@ describe("ProfilePanel", () => {
     id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
-    phone: "0912345678",
-    dateOfBirth: "2000-01-15",
-    targetScore: 750,
     avatarVersion: null,
-    hasPassword: true,
   };
 
   it("hiển thị ban đầu ở tab Thông tin và cho phép chuyển sang tab Bảo mật", async () => {

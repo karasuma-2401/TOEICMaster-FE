@@ -56,7 +56,7 @@ describe("PUT /api/profile/avatar", () => {
       string,
       RequestInit,
     ];
-    expect(path).toBe("/api/v1/users/me/avatar");
+    expect(path).toBe("/api/v1/profile/avatar");
     expect(init.method).toBe("PUT");
     expect(init.body).toBeInstanceOf(FormData);
     expect(init.headers).toBeUndefined();
