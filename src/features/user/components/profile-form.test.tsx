@@ -40,7 +40,10 @@ const sampleUser: UserProfile = {
   id: "user-1",
   displayName: "Nguyễn Văn A",
   email: "learner@example.com",
+  phone: "0912345678",
+  targetScore: 750,
   avatarVersion: null,
+  hasPassword: true,
 };
 
 afterEach(cleanup);
@@ -84,6 +87,8 @@ describe("ProfileForm", () => {
     await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     expect(mocks.updateProfile).toHaveBeenCalledWith({
       displayName: "Nguyễn Văn C",
+      phone: "0912345678",
+      targetScore: 750,
     });
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
     const saved = { ...sampleUser, displayName: "Nguyễn Văn C" };
@@ -112,13 +117,11 @@ describe("ProfileForm", () => {
     expect(nameInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("hiển thị email chỉ đọc và không có các trường backend chưa hỗ trợ", () => {
+  it("hiển thị email chỉ đọc, số điện thoại và điểm mục tiêu, không có ngày sinh", () => {
     render(<ProfileForm initialValues={sampleUser} />);
-    expect(screen.queryByLabelText("Số điện thoại")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Ngày sinh")).not.toBeInTheDocument();
-    expect(
-      screen.queryByLabelText("Điểm TOEIC mục tiêu"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0912345678");
+    expect(screen.getByLabelText("Điểm TOEIC mục tiêu")).toHaveValue(750);
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
     expect(screen.getByText("Đã xác minh")).toBeInTheDocument();
   });

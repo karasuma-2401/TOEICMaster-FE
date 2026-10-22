@@ -2,16 +2,23 @@ export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
+  phone: string | null;
+  targetScore: number | null;
   avatarVersion: string | null;
+  hasPassword: boolean;
 }
 
 export interface ProfileInput {
   displayName: string;
   email: string;
+  phone?: string | null;
+  targetScore?: number | string | null;
 }
 
 export interface UpdateProfileRequest {
   displayName: string;
+  phone: string | null;
+  targetScore: number | null;
 }
 
 export type ProfileField = keyof ProfileInput;
@@ -28,6 +35,7 @@ export type PasswordChangeFieldErrors = Partial<
   Record<PasswordChangeField, string>
 >;
 
+export const phonePattern = /^(0|\+84)\d{9}$/;
 export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png"] as const;
 export const AVATAR_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"] as const;
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -40,7 +48,16 @@ export function getInitials(name: string): string {
 }
 
 export function toUpdateRequest(input: ProfileInput): UpdateProfileRequest {
-  return { displayName: input.displayName.trim() };
+  const phone = input.phone?.trim() ?? "";
+  const score = input.targetScore;
+  return {
+    displayName: input.displayName.trim(),
+    phone: phone || null,
+    targetScore:
+      score === undefined || score === null || String(score).trim() === ""
+        ? null
+        : Number(score),
+  };
 }
 
 export function validateProfile(input: ProfileInput): ProfileFieldErrors {
@@ -51,6 +68,30 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
     errors.displayName = "Vui lòng nhập tên hiển thị.";
   } else if (displayName.length > 100) {
     errors.displayName = "Tên hiển thị không được vượt quá 100 ký tự.";
+  }
+
+  const phone = input.phone?.trim() ?? "";
+  if (phone && !phonePattern.test(phone)) {
+    errors.phone = "Số điện thoại không hợp lệ.";
+  }
+
+  const targetScore = input.targetScore;
+  if (
+    targetScore !== undefined &&
+    targetScore !== null &&
+    String(targetScore).trim() !== ""
+  ) {
+    const scoreString = String(targetScore).trim();
+    if (!/^\d+$/.test(scoreString)) {
+      errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
+    } else {
+      const score = Number(scoreString);
+      if (score < 10 || score > 990) {
+        errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
+      } else if (score % 5 !== 0) {
+        errors.targetScore = "Điểm TOEIC mục tiêu phải là bội số của 5.";
+      }
+    }
   }
 
   return errors;

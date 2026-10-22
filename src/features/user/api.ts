@@ -94,6 +94,9 @@ interface BackendProfile {
   email: string;
   displayName: string;
   avatarUrl: string | null;
+  phone?: string | null;
+  targetScore?: number | null;
+  hasPassword?: boolean;
 }
 
 function isBackendProfile(value: unknown): value is BackendProfile {
@@ -105,7 +108,17 @@ function isBackendProfile(value: unknown): value is BackendProfile {
     typeof profile.email === "string" &&
     profile.email.length > 0 &&
     typeof profile.displayName === "string" &&
-    (typeof profile.avatarUrl === "string" || profile.avatarUrl === null)
+    (typeof profile.avatarUrl === "string" || profile.avatarUrl === null) &&
+    // Older backends omit these fields; when present they must have the right type.
+    (profile.phone === undefined ||
+      profile.phone === null ||
+      typeof profile.phone === "string") &&
+    (profile.targetScore === undefined ||
+      profile.targetScore === null ||
+      (typeof profile.targetScore === "number" &&
+        Number.isInteger(profile.targetScore))) &&
+    (profile.hasPassword === undefined ||
+      typeof profile.hasPassword === "boolean")
   );
 }
 
@@ -118,7 +131,10 @@ async function profileResponse(response: Response): Promise<UserProfile> {
     id: body.id,
     email: body.email,
     displayName: body.displayName,
+    phone: body.phone ?? null,
+    targetScore: body.targetScore ?? null,
     avatarVersion: body.avatarUrl ? Date.now().toString(36) : null,
+    hasPassword: body.hasPassword ?? true,
   };
 }
 

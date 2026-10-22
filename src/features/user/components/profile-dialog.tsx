@@ -166,6 +166,11 @@ export function ProfileDialog({
               {user.displayName}
             </h2>
             <p className="truncate text-xs text-[#a89f9b]">{user.email}</p>
+            {user.targetScore !== null && (
+              <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-[#fbdcd0] bg-[#fdf2ec] px-2.5 py-0.5 text-[11px] font-semibold text-[#ed361c]">
+                Mục tiêu: {user.targetScore} TOEIC
+              </span>
+            )}
           </div>
         </div>
 
@@ -214,7 +219,7 @@ export function ProfileDialog({
               onSaved={onSaved}
             />
           ) : (
-            <ChangePasswordForm />
+            <ChangePasswordForm hasPassword={user?.hasPassword ?? true} />
           )}
         </div>
 
