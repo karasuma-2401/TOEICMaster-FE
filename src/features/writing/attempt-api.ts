@@ -3,6 +3,13 @@ import { getJson } from "@/shared/api/client";
 export type AttemptMode = "FULL" | "PART_1" | "PART_2" | "PART_3";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED_AWAITING_EVALUATION";
 export type AttemptPhase = "PREPARING" | "ANSWERING";
+export type EvaluationStatus =
+  | "CONSENT_REQUIRED"
+  | "QUEUED"
+  | "PROCESSING"
+  | "RETRYING"
+  | "COMPLETED"
+  | "FAILED";
 
 export interface WritingPartSummary {
   part: 1 | 2 | 3;
@@ -50,6 +57,35 @@ export interface WritingAttemptQuestionApi {
   lockedAtUtc: string | null;
 }
 
+export interface WritingEvaluationFeedbackApi {
+  questionPosition: number;
+  criterionScore: number;
+  feedback: string;
+  suggestedRevision: string;
+}
+
+export interface WritingAttemptReviewQuestionApi {
+  position: number;
+  modelAnswer: string;
+}
+
+export interface WritingEvaluationApi {
+  status: EvaluationStatus;
+  estimatedScore: number | null;
+  summary: string | null;
+  strengths: string[];
+  improvements: string[];
+  feedback: WritingEvaluationFeedbackApi[];
+  provider: string;
+  model: string;
+  rubricVersion: string;
+  consentAcceptedAtUtc: string | null;
+  queuedAtUtc: string | null;
+  completedAtUtc: string | null;
+  retryCount: number;
+  failureMessage: string | null;
+}
+
 export interface WritingAttemptApi {
   id: string;
   testId: string;
@@ -64,6 +100,8 @@ export interface WritingAttemptApi {
   createdAtUtc: string;
   submittedAtUtc: string | null;
   questions: WritingAttemptQuestionApi[];
+  evaluation: WritingEvaluationApi | null;
+  reviewQuestions: WritingAttemptReviewQuestionApi[];
 }
 
 export interface WritingAttemptSummaryApi {
@@ -78,6 +116,8 @@ export interface WritingAttemptSummaryApi {
   createdAtUtc: string;
   submittedAtUtc: string | null;
   updatedAtUtc: string;
+  evaluationStatus: EvaluationStatus | null;
+  estimatedScore: number | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -103,6 +143,17 @@ function isMode(value: unknown): value is AttemptMode {
 
 function isAttemptStatus(value: unknown): value is AttemptStatus {
   return value === "IN_PROGRESS" || value === "SUBMITTED_AWAITING_EVALUATION";
+}
+
+function isEvaluationStatus(value: unknown): value is EvaluationStatus {
+  return (
+    value === "CONSENT_REQUIRED" ||
+    value === "QUEUED" ||
+    value === "PROCESSING" ||
+    value === "RETRYING" ||
+    value === "COMPLETED" ||
+    value === "FAILED"
+  );
 }
 
 function nullableString(value: unknown): value is string | null {
@@ -181,6 +232,54 @@ function parseQuestion(value: unknown): WritingAttemptQuestionApi {
   return value as unknown as WritingAttemptQuestionApi;
 }
 
+function parseStringList(value: unknown): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string"))
+    throw new Error("Phản hồi chấm Writing không hợp lệ.");
+  return value as string[];
+}
+
+function parseEvaluation(value: unknown): WritingEvaluationApi | null {
+  if (value === null || value === undefined) return null;
+  if (
+    !isRecord(value) ||
+    !isEvaluationStatus(value.status) ||
+    !(
+      value.estimatedScore === null || Number.isInteger(value.estimatedScore)
+    ) ||
+    !nullableString(value.summary) ||
+    !nullableString(value.failureMessage) ||
+    !Array.isArray(value.feedback) ||
+    typeof value.provider !== "string" ||
+    typeof value.model !== "string" ||
+    typeof value.rubricVersion !== "string" ||
+    !nullableDate(value.consentAcceptedAtUtc) ||
+    !nullableDate(value.queuedAtUtc) ||
+    !nullableDate(value.completedAtUtc) ||
+    !Number.isInteger(value.retryCount)
+  )
+    throw new Error("Phản hồi chấm Writing không hợp lệ.");
+  const feedback = value.feedback.map((item) => {
+    if (
+      !isRecord(item) ||
+      !Number.isInteger(item.questionPosition) ||
+      !Number.isInteger(item.criterionScore) ||
+      typeof item.feedback !== "string" ||
+      typeof item.suggestedRevision !== "string"
+    )
+      throw new Error("Phản hồi chấm Writing không hợp lệ.");
+    return item as unknown as WritingEvaluationFeedbackApi;
+  });
+  return {
+    ...(value as Omit<
+      WritingEvaluationApi,
+      "strengths" | "improvements" | "feedback"
+    >),
+    strengths: parseStringList(value.strengths),
+    improvements: parseStringList(value.improvements),
+    feedback,
+  };
+}
+
 function parseAttempt(value: unknown): WritingAttemptApi {
   if (
     !isRecord(value) ||
@@ -203,12 +302,23 @@ function parseAttempt(value: unknown): WritingAttemptApi {
     !isDate(value.serverNowUtc) ||
     !isDate(value.createdAtUtc) ||
     !nullableDate(value.submittedAtUtc) ||
-    !Array.isArray(value.questions)
+    !Array.isArray(value.questions) ||
+    !Array.isArray(value.reviewQuestions)
   )
     throw new Error("Phản hồi lượt làm Writing không hợp lệ.");
   return {
     ...value,
     questions: value.questions.map(parseQuestion),
+    evaluation: parseEvaluation(value.evaluation),
+    reviewQuestions: value.reviewQuestions.map((item) => {
+      if (
+        !isRecord(item) ||
+        !Number.isInteger(item.position) ||
+        typeof item.modelAnswer !== "string"
+      )
+        throw new Error("Phản hồi lượt làm Writing không hợp lệ.");
+      return item as unknown as WritingAttemptReviewQuestionApi;
+    }),
   } as WritingAttemptApi;
 }
 
@@ -313,6 +423,15 @@ export async function submitWritingAttempt(attemptId: string) {
   );
 }
 
+export async function grantWritingEvaluationConsent(attemptId: string) {
+  return parseAttempt(
+    await requestJson(
+      `/api/writing/attempts/${encodeURIComponent(attemptId)}/evaluation-consent`,
+      { method: "POST", body: JSON.stringify({ accepted: true }) },
+    ),
+  );
+}
+
 export async function getWritingHistory(
   signal?: AbortSignal,
 ): Promise<WritingAttemptSummaryApi[]> {
@@ -335,7 +454,12 @@ export async function getWritingHistory(
       ) ||
       !isDate(item.createdAtUtc) ||
       !nullableDate(item.submittedAtUtc) ||
-      !isDate(item.updatedAtUtc)
+      !isDate(item.updatedAtUtc) ||
+      !(
+        item.evaluationStatus === null ||
+        isEvaluationStatus(item.evaluationStatus)
+      ) ||
+      !(item.estimatedScore === null || Number.isInteger(item.estimatedScore))
     )
       throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
     return item as unknown as WritingAttemptSummaryApi;

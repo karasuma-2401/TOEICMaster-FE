@@ -326,6 +326,7 @@ export function WritingAttemptPlaceholder({
               className="mt-2 min-h-44 w-full rounded-2xl border border-slate-200 p-4 text-sm leading-6 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
               disabled={preparing || saving}
               id="writing-answer"
+              spellCheck={false}
               onChange={(event) => saveLocalAnswer(event.target.value)}
               placeholder={
                 preparing

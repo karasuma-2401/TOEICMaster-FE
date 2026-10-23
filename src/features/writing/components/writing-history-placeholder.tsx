@@ -83,6 +83,7 @@ export function WritingHistoryPlaceholder() {
               {attempts.map((attempt) => {
                 const submitted =
                   attempt.status === "SUBMITTED_AWAITING_EVALUATION";
+                const score = attempt.estimatedScore;
                 return (
                   <li
                     className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5 last:border-0"
@@ -100,7 +101,13 @@ export function WritingHistoryPlaceholder() {
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-bold ${submitted ? "bg-orange-50 text-orange-700" : "bg-amber-50 text-amber-700"}`}
                       >
-                        {submitted ? "Chờ chấm AI" : "Đang làm"}
+                        {submitted
+                          ? score !== null
+                            ? `AI ước tính ${score}/200`
+                            : attempt.evaluationStatus === "FAILED"
+                              ? "Cần chấm lại"
+                              : "Chờ chấm AI"
+                          : "Đang làm"}
                       </span>
                       <Link
                         className="text-sm font-bold text-orange-700 underline"

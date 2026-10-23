@@ -13,6 +13,7 @@ const knownPaths = [
   /^attempts\/[0-9a-f-]{36}$/i,
   /^attempts\/[0-9a-f-]{36}\/next$/i,
   /^attempts\/[0-9a-f-]{36}\/submit$/i,
+  /^attempts\/[0-9a-f-]{36}\/evaluation-consent$/i,
   /^attempts\/[0-9a-f-]{36}\/answers\/[1-9]\d*$/i,
 ];
 
