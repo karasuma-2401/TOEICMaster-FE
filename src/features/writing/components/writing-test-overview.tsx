@@ -83,9 +83,20 @@ export function WritingTestOverview({
       <div className="min-h-dvh bg-stone-50">
         <WritingHeader />
         <main className="mx-auto max-w-4xl px-5 py-10">
-          <p className="rounded-xl bg-red-50 p-5 text-sm text-red-800">
-            {error}
-          </p>
+          <div
+            aria-live="assertive"
+            className="rounded-xl bg-red-50 p-5 text-sm text-red-800"
+            role="alert"
+          >
+            <p>{error}</p>
+            <button
+              className="mt-3 font-bold underline"
+              onClick={() => void load()}
+              type="button"
+            >
+              Thử tải lại
+            </button>
+          </div>
           <Link
             className="mt-5 inline-block font-bold text-orange-700 underline"
             href="/writing"
@@ -183,7 +194,11 @@ export function WritingTestOverview({
             </ol>
           </section>
           {error && (
-            <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+            <p
+              aria-live="assertive"
+              className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
+            >
               {error}
             </p>
           )}

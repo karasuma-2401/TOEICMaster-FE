@@ -405,6 +405,34 @@ export async function saveWritingAnswer(
   );
 }
 
+/**
+ * Sends a final best-effort save when a learner backgrounds or leaves the page.
+ * The normal autosave still owns the visible state and error handling.
+ */
+export async function flushWritingAnswerOnPageHide(
+  attemptId: string,
+  position: number,
+  answer: string,
+) {
+  try {
+    await fetch(
+      `/api/writing/attempts/${encodeURIComponent(attemptId)}/answers/${position}`,
+      {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ answer }),
+        cache: "no-store",
+        keepalive: true,
+      },
+    );
+  } catch {
+    // A page lifecycle request cannot surface an actionable error after unload.
+  }
+}
+
 export async function nextWritingQuestion(attemptId: string) {
   return parseAttempt(
     await requestJson(

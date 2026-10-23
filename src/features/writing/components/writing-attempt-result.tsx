@@ -106,9 +106,20 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
               </div>
             </dl>
           ) : error ? (
-            <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">
-              {error}
-            </p>
+            <div
+              aria-live="assertive"
+              className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
+            >
+              <p>{error}</p>
+              <button
+                className="mt-3 font-bold underline"
+                onClick={() => void load()}
+                type="button"
+              >
+                Thử tải lại
+              </button>
+            </div>
           ) : (
             <p className="mt-6 text-sm text-slate-500">
               Đang tải trạng thái bài làm…

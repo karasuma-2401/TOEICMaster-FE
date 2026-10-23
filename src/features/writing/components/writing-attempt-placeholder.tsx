@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  flushWritingAnswerOnPageHide,
   getWritingAttempt,
   nextWritingQuestion,
   saveWritingAnswer,
@@ -118,6 +119,10 @@ export function WritingAttemptPlaceholder({
   const [confirming, setConfirming] = useState(false);
   const refreshInFlight = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  const pendingAutosave = useRef<{ position: number; answer: string } | null>(
+    null,
+  );
+  const cancelSubmitButton = useRef<HTMLButtonElement>(null);
 
   const acceptAttempt = useCallback(
     (value: WritingAttemptApi) => {
@@ -167,12 +172,52 @@ export function WritingAttemptPlaceholder({
     },
     [],
   );
+  useEffect(() => {
+    const flushPendingAnswer = () => {
+      const pending = pendingAutosave.current;
+      if (pending)
+        void flushWritingAnswerOnPageHide(
+          attemptId,
+          pending.position,
+          pending.answer,
+        );
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushPendingAnswer();
+    };
+    window.addEventListener("pagehide", flushPendingAnswer);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", flushPendingAnswer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [attemptId]);
+  useEffect(() => {
+    if (!confirming) return;
+    const focusCancel = window.setTimeout(
+      () => cancelSubmitButton.current?.focus(),
+      0,
+    );
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setConfirming(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.clearTimeout(focusCancel);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [confirming]);
 
   const persistAnswer = useCallback(
     async (position: number, answer: string) => {
       setSaving(true);
       try {
         acceptAttempt(await saveWritingAnswer(attemptId, position, answer));
+        if (
+          pendingAutosave.current?.position === position &&
+          pendingAutosave.current.answer === answer
+        )
+          pendingAutosave.current = null;
         setError(null);
         return true;
       } catch (cause) {
@@ -196,7 +241,20 @@ export function WritingAttemptPlaceholder({
           Đang tải lượt làm Writing…
         </p>
         {error && (
-          <p className="mx-auto max-w-5xl px-5 text-sm text-red-700">{error}</p>
+          <div
+            aria-live="assertive"
+            className="mx-auto max-w-5xl px-5 text-sm text-red-700"
+            role="alert"
+          >
+            <p>{error}</p>
+            <button
+              className="mt-3 font-bold underline"
+              onClick={() => void refresh()}
+              type="button"
+            >
+              Thử tải lại
+            </button>
+          </div>
         )}
       </div>
     );
@@ -250,6 +308,7 @@ export function WritingAttemptPlaceholder({
         : value,
     );
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+    pendingAutosave.current = { position: current.position, answer };
     autosaveTimer.current = window.setTimeout(() => {
       void persistAnswer(current.position, answer);
     }, 800);
@@ -300,7 +359,9 @@ export function WritingAttemptPlaceholder({
               <h1 className="mt-2 text-xl font-bold">{attempt.testTitle}</h1>
             </div>
             <div
+              aria-label={`${preparing ? "Chuẩn bị" : "Làm bài"}, còn ${clock(seconds)}`}
               className={`rounded-xl px-4 py-2 text-right ${preparing ? "bg-amber-50 text-amber-800" : "bg-red-50 text-red-700"}`}
+              role="timer"
             >
               <p className="text-xs font-bold uppercase tracking-wide">
                 {preparing ? "Chuẩn bị" : "Làm bài"}
@@ -311,7 +372,11 @@ export function WritingAttemptPlaceholder({
             </div>
           </div>
           {error && (
-            <p className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+            <p
+              aria-live="assertive"
+              className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
+            >
               {error}
             </p>
           )}
@@ -341,6 +406,7 @@ export function WritingAttemptPlaceholder({
             />
             <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
               <span
+                aria-live="polite"
                 className={
                   preparing
                     ? "font-semibold text-amber-700"
@@ -406,12 +472,14 @@ export function WritingAttemptPlaceholder({
       {confirming && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
           <dialog
-            aria-label="Xác nhận nộp bài"
             aria-modal="true"
+            aria-labelledby="writing-submit-dialog-title"
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
             open
           >
-            <h2 className="text-xl font-bold">Nộp bài Writing?</h2>
+            <h2 className="text-xl font-bold" id="writing-submit-dialog-title">
+              Nộp bài Writing?
+            </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Câu cuối sẽ bị khóa và bài được chuyển sang trạng thái chờ chấm
               AI. Bạn không thể quay lại chỉnh sửa.
@@ -420,6 +488,7 @@ export function WritingAttemptPlaceholder({
               <button
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold"
                 onClick={() => setConfirming(false)}
+                ref={cancelSubmitButton}
                 type="button"
               >
                 Quay lại

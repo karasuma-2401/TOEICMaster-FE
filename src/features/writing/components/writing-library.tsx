@@ -150,7 +150,11 @@ export function WritingLibrary() {
             </p>
           )}
           {error && (
-            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+            <div
+              aria-live="assertive"
+              className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800"
+              role="alert"
+            >
               <p>{error}</p>
               <button
                 className="mt-3 font-bold underline underline-offset-4"
