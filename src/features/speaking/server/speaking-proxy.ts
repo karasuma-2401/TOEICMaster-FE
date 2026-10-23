@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { problem, sameOrigin } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
-import { backendBase, readForwardBody, relay } from "./upstream";
+import {
+  backendBase,
+  readForwardBody,
+  relay,
+  type ForwardBody,
+} from "./upstream";
 
 const anonymousCookieName = "toeicmaster_speaking_anonymous";
 const anonymousHeaderName = "X-Speaking-Anonymous-Session";
@@ -53,9 +58,9 @@ export async function forwardSpeaking(
       : randomUUID();
   }
 
-  const body =
+  const body: ForwardBody =
     method === "GET"
-      ? ({ ok: true } as const)
+      ? { ok: true }
       : await readForwardBody(
           request,
           route.upload ? recordingUploadLimit : null,

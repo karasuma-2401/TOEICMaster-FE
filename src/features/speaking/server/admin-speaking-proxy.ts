@@ -5,7 +5,7 @@ import {
   sameOrigin,
 } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
-import { readForwardBody, relay } from "./upstream";
+import { readForwardBody, relay, type ForwardBody } from "./upstream";
 
 /** Part 2 image upload limit: 5 MiB file plus multipart overhead. */
 export const imageUploadLimit = 5 * 1024 * 1024 + 64 * 1024;
@@ -45,9 +45,9 @@ export async function forwardAdminSpeaking(
   if (role !== "ADMIN")
     return problem(403, "Bạn không có quyền truy cập chức năng này.");
 
-  const body =
+  const body: ForwardBody =
     method === "GET" || method === "DELETE"
-      ? ({ ok: true } as const)
+      ? { ok: true }
       : await readForwardBody(request, route.upload ? imageUploadLimit : null);
   if (!body.ok) return body.response;
 
