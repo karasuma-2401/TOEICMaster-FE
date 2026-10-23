@@ -72,10 +72,14 @@ export function AdminSidebar({
           <div className="space-y-1">
             {adminNavigation.map((item) => {
               const current = activeItem?.href === item.href;
-              return current ? (
+              return item.enabled ? (
                 <Link
-                  aria-current="page"
-                  className="relative flex min-h-10 items-center gap-3 rounded-lg bg-[var(--admin-nav-active)] px-3 text-sm font-semibold text-[var(--admin-brand-red)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-[var(--admin-brand-red)] before:to-[var(--admin-brand-orange)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+                  aria-current={current ? "page" : undefined}
+                  className={`relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
+                    current
+                      ? "bg-[var(--admin-nav-active)] font-semibold text-[var(--admin-brand-red)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-[var(--admin-brand-red)] before:to-[var(--admin-brand-orange)]"
+                      : "font-medium text-[var(--admin-ink-soft)] hover:bg-[var(--admin-surface-muted)]"
+                  }`}
                   href={item.href}
                   key={item.label}
                   onClick={onCloseMobile}

@@ -14,6 +14,13 @@ export const adminNavigation = [
     enabled: true,
   },
   {
+    label: "Kho dữ liệu",
+    icon: "▤",
+    href: "/admin/content/writing",
+    description: "Quản lý dữ liệu và đề Writing",
+    enabled: true,
+  },
+  {
     label: "Nhật ký hoạt động",
     icon: "◷",
     href: "/admin/activity",

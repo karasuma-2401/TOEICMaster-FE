@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminSidebar } from "./admin-sidebar";
 
@@ -20,7 +20,10 @@ describe("AdminSidebar", () => {
     onToggleCollapsed: vi.fn(),
   };
 
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
 
   it("marks the current admin section and offers the collapse control", () => {
     render(<AdminSidebar {...props} />);
@@ -32,6 +35,18 @@ describe("AdminSidebar", () => {
       screen.getByRole("button", { name: "Thu gọn thanh điều hướng" }),
     );
     expect(props.onToggleCollapsed).toHaveBeenCalledOnce();
+  });
+
+  it("keeps available Writing data pages navigable while future pages stay disabled", () => {
+    render(<AdminSidebar {...props} />);
+
+    expect(screen.getByRole("link", { name: "Kho dữ liệu" })).toHaveAttribute(
+      "href",
+      "/admin/content/writing",
+    );
+    expect(
+      screen.getByRole("button", { name: /Nhật ký hoạt động/ }),
+    ).toBeDisabled();
   });
 
   it("closes the mobile menu when its backdrop is selected", () => {
