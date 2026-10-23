@@ -2,12 +2,10 @@ import { WritingAttemptPlaceholder } from "@/features/writing/components/writing
 
 export default async function WritingAttemptRoute({
   params,
-  searchParams,
 }: {
   params: Promise<{ attemptId: string }>;
-  searchParams: Promise<{ mode?: string }>;
 }) {
-  const [{ attemptId }, { mode }] = await Promise.all([params, searchParams]);
+  const { attemptId } = await params;
 
-  return <WritingAttemptPlaceholder attemptId={attemptId} mode={mode} />;
+  return <WritingAttemptPlaceholder attemptId={attemptId} />;
 }

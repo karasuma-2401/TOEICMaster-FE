@@ -1,21 +1,104 @@
+"use client";
+
 import Link from "next/link";
-import type { WritingTestSummary } from "@/features/writing/types";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import {
+  getWritingTest,
+  modeFromRoute,
+  startWritingAttempt,
+  type WritingTestSummaryApi,
+} from "@/features/writing/attempt-api";
 import { WritingHeader } from "./writing-header";
 
 function formatDuration(seconds: number) {
-  const minutes = Math.ceil(seconds / 60);
-  return `${minutes} phút`;
+  return `${Math.ceil(seconds / 60)} phút`;
 }
 
-interface WritingTestOverviewProps {
-  mode: string | undefined;
-  test: WritingTestSummary;
-}
+export function WritingTestOverview({
+  testId,
+  mode,
+}: {
+  testId: string;
+  mode?: string;
+}) {
+  const router = useRouter();
+  const [test, setTest] = useState<WritingTestSummaryApi | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const selectedMode = modeFromRoute(mode);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      setError(null);
+      try {
+        setTest(await getWritingTest(testId, signal));
+      } catch (cause) {
+        if (!signal?.aborted)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Không thể tải đề Writing.",
+          );
+      }
+    },
+    [testId],
+  );
+  useEffect(() => {
+    const controller = new AbortController();
+    const task = window.setTimeout(() => void load(controller.signal), 0);
+    return () => {
+      window.clearTimeout(task);
+      controller.abort();
+    };
+  }, [load]);
 
-export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
-  const selectedPart = test.parts.find((part) => mode === `part-${part.part}`);
-  const isPartPractice = selectedPart !== undefined;
-  const title = isPartPractice ? "Luyện theo Part" : "Full Writing Test";
+  const start = async () => {
+    if (starting) return;
+    setStarting(true);
+    setError(null);
+    try {
+      const attempt = await startWritingAttempt(testId, selectedMode);
+      router.push(`/writing/attempts/${encodeURIComponent(attempt.id)}`);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể bắt đầu lượt làm bài.",
+      );
+      setStarting(false);
+    }
+  };
+
+  if (!test && !error)
+    return (
+      <div className="min-h-dvh bg-stone-50">
+        <WritingHeader />
+        <p className="mx-auto max-w-4xl px-5 py-10 text-sm text-slate-500">
+          Đang tải đề Writing…
+        </p>
+      </div>
+    );
+  if (!test)
+    return (
+      <div className="min-h-dvh bg-stone-50">
+        <WritingHeader />
+        <main className="mx-auto max-w-4xl px-5 py-10">
+          <p className="rounded-xl bg-red-50 p-5 text-sm text-red-800">
+            {error}
+          </p>
+          <Link
+            className="mt-5 inline-block font-bold text-orange-700 underline"
+            href="/writing"
+          >
+            Quay lại thư viện
+          </Link>
+        </main>
+      </div>
+    );
+
+  const selectedPart = test.parts.find(
+    (part) => selectedMode === `PART_${part.part}`,
+  );
   const visibleParts = selectedPart ? [selectedPart] : test.parts;
   const questionCount = visibleParts.reduce(
     (total, part) => total + part.questionCount,
@@ -27,7 +110,6 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
       part.questionCount * (part.preparationSeconds + part.responseSeconds),
     0,
   );
-
   return (
     <div className="min-h-dvh bg-stone-50 text-slate-900">
       <WritingHeader />
@@ -40,7 +122,7 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
         </Link>
         <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
           <p className="text-xs font-extrabold tracking-[0.14em] text-orange-600">
-            {title.toUpperCase()}
+            {selectedPart ? "LUYỆN THEO PART" : "FULL WRITING TEST"}
           </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight">
             {test.title}
@@ -48,8 +130,7 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
           <p className="mt-3 max-w-2xl leading-7 text-slate-600">
             {test.description}
           </p>
-
-          <dl className="mt-7 grid gap-3 sm:grid-cols-3">
+          <dl className="mt-7 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl bg-stone-50 p-4">
               <dt className="text-xs font-semibold text-slate-500">Cấu trúc</dt>
               <dd className="mt-1 text-lg font-bold">{questionCount} câu</dd>
@@ -62,12 +143,7 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
                 {formatDuration(totalSeconds)}
               </dd>
             </div>
-            <div className="rounded-xl bg-stone-50 p-4">
-              <dt className="text-xs font-semibold text-slate-500">Độ khó</dt>
-              <dd className="mt-1 text-lg font-bold">{test.difficulty}</dd>
-            </div>
           </dl>
-
           <section className="mt-8" aria-labelledby="test-rules">
             <h2 className="font-bold" id="test-rules">
               Quy tắc làm bài
@@ -75,10 +151,12 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
             <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
               <li>Mỗi câu có pha chuẩn bị và pha làm bài riêng.</li>
               <li>Hết thời gian hoặc bấm Next, câu hiện tại sẽ bị khóa.</li>
-              <li>Bài được autosave trong khi làm và tự nộp sau câu cuối.</li>
+              <li>
+                Bài được autosave trên server trong khi làm và tự nộp sau câu
+                cuối.
+              </li>
             </ul>
           </section>
-
           <section className="mt-8" aria-labelledby="test-structure">
             <h2 className="font-bold" id="test-structure">
               Cấu trúc đề
@@ -93,7 +171,7 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
                     {part.part}
                   </span>
                   <div>
-                    <h3 className="font-semibold">{part.title}</h3>
+                    <h3 className="font-semibold">Writing Part {part.part}</h3>
                     <p className="mt-1 text-sm text-slate-500">
                       {part.questionCount} câu · Chuẩn bị{" "}
                       {part.preparationSeconds}s · Làm bài{" "}
@@ -104,13 +182,19 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
               ))}
             </ol>
           </section>
-
-          <Link
-            className="mt-8 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 px-5 text-sm font-bold text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-orange-600"
-            href={`/writing/attempts/mock-${test.id}?mode=${encodeURIComponent(mode ?? "full")}`}
+          {error && (
+            <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+              {error}
+            </p>
+          )}
+          <button
+            className="mt-8 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 px-5 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={starting}
+            onClick={() => void start()}
+            type="button"
           >
-            Bắt đầu làm bài
-          </Link>
+            {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài"}
+          </button>
         </div>
       </main>
     </div>

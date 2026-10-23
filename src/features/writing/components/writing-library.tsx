@@ -1,104 +1,129 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  totalWritingQuestions,
-  totalWritingSeconds,
-  writingContentSummaries,
-  writingTests,
-} from "@/features/writing/mock-data";
-import type { WritingDifficulty } from "@/features/writing/types";
+  getWritingTests,
+  type WritingTestSummaryApi,
+} from "@/features/writing/attempt-api";
 import { WritingHeader } from "./writing-header";
 
-const difficultyOptions: Array<WritingDifficulty | "Tất cả"> = [
-  "Tất cả",
-  "Dễ",
-  "Trung bình",
-  "Khó",
-];
+const parts = [
+  {
+    part: 1,
+    subtitle: "Viết câu theo tranh",
+    description: "Ảnh và hai từ/cụm từ bắt buộc cho mỗi câu.",
+  },
+  {
+    part: 2,
+    subtitle: "Viết email phản hồi",
+    description: "Đọc email, đáp ứng đầy đủ yêu cầu và viết phản hồi phù hợp.",
+  },
+  {
+    part: 3,
+    subtitle: "Viết bài luận quan điểm",
+    description:
+      "Nêu quan điểm, phát triển lập luận và viết bài luận hoàn chỉnh.",
+  },
+] as const;
 
-function formatDuration(seconds: number) {
-  const minutes = Math.ceil(seconds / 60);
-  return `${minutes} phút`;
+function duration(test: WritingTestSummaryApi) {
+  const seconds = test.parts.reduce(
+    (total, part) =>
+      total +
+      part.questionCount * (part.preparationSeconds + part.responseSeconds),
+    0,
+  );
+  return `${Math.ceil(seconds / 60)} phút`;
 }
 
 export function WritingLibrary() {
-  const [query, setQuery] = useState("");
-  const [difficulty, setDifficulty] = useState<WritingDifficulty | "Tất cả">(
-    "Tất cả",
-  );
-  const normalizedQuery = query.trim().toLocaleLowerCase("vi-VN");
-  const visibleTests = useMemo(
-    () =>
-      writingTests.filter(
-        (test) =>
-          (difficulty === "Tất cả" || test.difficulty === difficulty) &&
-          (!normalizedQuery ||
-            `${test.code} ${test.title} ${test.description}`
-              .toLocaleLowerCase("vi-VN")
-              .includes(normalizedQuery)),
-      ),
-    [difficulty, normalizedQuery],
-  );
+  const [tests, setTests] = useState<WritingTestSummaryApi[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const page = await getWritingTests(signal);
+      setTests(page.items);
+    } catch (cause) {
+      if (signal?.aborted) return;
+      setError(
+        cause instanceof Error ? cause.message : "Không thể tải đề Writing.",
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    const task = window.setTimeout(() => void load(controller.signal), 0);
+    return () => {
+      window.clearTimeout(task);
+      controller.abort();
+    };
+  }, [load]);
 
   return (
     <div className="min-h-dvh bg-stone-50 text-slate-900">
       <WritingHeader />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:py-14">
-        <div className="max-w-3xl">
-          <p className="text-xs font-extrabold tracking-[0.16em] text-orange-600">
-            TOEIC WRITING
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Luyện Writing theo đúng từng dạng bài
-          </h1>
-          <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
-            Chọn luyện từng Part để củng cố kỹ năng, hoặc làm Full Test để mô
-            phỏng bài thi Writing theo thời gian.
-          </p>
-        </div>
+        <p className="text-xs font-extrabold tracking-[0.14em] text-orange-600">
+          TOEIC WRITING
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          Luyện Writing theo đúng nhịp thi
+        </h1>
+        <p className="mt-3 max-w-3xl leading-7 text-slate-600">
+          Mỗi câu có pha chuẩn bị và làm bài riêng. Đồng hồ được tính ở máy chủ,
+          nên tải lại trang hoặc đổi tab không làm thay đổi thời gian.
+        </p>
 
-        <section aria-labelledby="writing-parts" className="mt-9">
-          <div className="flex items-end justify-between gap-4">
+        <section className="mt-10" aria-labelledby="writing-parts">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold" id="writing-parts">
                 Luyện theo Part
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Chọn một dạng bài cần tập trung trước khi làm đề tổng hợp.
+                Chọn một đề đã công bố rồi luyện riêng phần bạn cần.
               </p>
             </div>
-            <span className="hidden rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 sm:inline">
+            <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
               3 Part
             </span>
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            {writingContentSummaries.map((part) => (
-              <article
-                className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm"
-                key={part.part}
-              >
-                <p className="text-xs font-bold tracking-[0.12em] text-orange-600">
-                  WRITING PART {part.part}
-                </p>
-                <h3 className="mt-2 text-lg font-bold">{part.subtitle}</h3>
-                <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600">
-                  {part.description}
-                </p>
-                <div className="mt-5 flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                    {part.exerciseCount} bài tập
-                  </span>
-                  <Link
-                    className="text-sm font-bold text-orange-700 underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-orange-600"
-                    href={`/writing/tests/${writingTests[0].id}?mode=part-${part.part}`}
-                  >
-                    Luyện Part {part.part}
-                  </Link>
-                </div>
-              </article>
-            ))}
+            {parts.map((part) => {
+              const available = tests[0];
+              return (
+                <article
+                  className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm"
+                  key={part.part}
+                >
+                  <p className="text-xs font-bold tracking-[0.12em] text-orange-600">
+                    WRITING PART {part.part}
+                  </p>
+                  <h3 className="mt-2 text-lg font-bold">{part.subtitle}</h3>
+                  <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600">
+                    {part.description}
+                  </p>
+                  {available ? (
+                    <Link
+                      className="mt-5 inline-flex text-sm font-bold text-orange-700 underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-orange-600"
+                      href={`/writing/tests/${available.id}?mode=part-${part.part}`}
+                    >
+                      Luyện Part {part.part} →
+                    </Link>
+                  ) : (
+                    <p className="mt-5 text-sm font-semibold text-slate-400">
+                      Chưa có đề công bố
+                    </p>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
 
@@ -109,109 +134,80 @@ export function WritingLibrary() {
                 Đề Writing
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Dữ liệu minh họa cho CP1; kết nối API thật sẽ có ở checkpoint
-                sau.
+                Chỉ hiển thị đề được Admin công bố.
               </p>
             </div>
-            <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
-              Full Test
-            </span>
+            <Link
+              className="text-sm font-bold text-orange-700 underline underline-offset-4"
+              href="/history/writing"
+            >
+              Xem lịch sử làm bài
+            </Link>
           </div>
-
-          <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_11rem]">
-            <label className="block">
-              <span className="sr-only">Tìm đề Writing</span>
-              <input
-                className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Tìm theo mã đề hoặc tên đề..."
-                type="search"
-                value={query}
-              />
-            </label>
-            <label className="block">
-              <span className="sr-only">Lọc theo độ khó</span>
-              <select
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-                onChange={(event) =>
-                  setDifficulty(
-                    event.target.value as WritingDifficulty | "Tất cả",
-                  )
-                }
-                value={difficulty}
-              >
-                {difficultyOptions.map((option) => (
-                  <option key={option} value={option}>
-                    Độ khó: {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {visibleTests.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-              <h3 className="font-bold">Không tìm thấy đề phù hợp</h3>
-              <p className="mt-2 text-sm text-slate-500">
-                Thử đổi từ khóa hoặc chọn lại độ khó.
-              </p>
+          {loading && (
+            <p className="mt-5 rounded-2xl bg-white p-6 text-sm text-slate-500">
+              Đang tải đề Writing…
+            </p>
+          )}
+          {error && (
+            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+              <p>{error}</p>
               <button
-                className="mt-4 text-sm font-bold text-orange-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-orange-600"
-                onClick={() => {
-                  setQuery("");
-                  setDifficulty("Tất cả");
-                }}
+                className="mt-3 font-bold underline underline-offset-4"
+                onClick={() => void load()}
                 type="button"
               >
-                Xóa bộ lọc
+                Thử lại
               </button>
             </div>
-          ) : (
-            <div className="mt-4 grid gap-4 lg:grid-cols-3">
-              {visibleTests.map((test) => (
-                <article
-                  className="flex min-h-72 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-                  key={test.id}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-bold tracking-[0.1em] text-orange-600">
-                      {test.code}
-                    </span>
-                    <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
-                      {test.difficulty}
-                    </span>
-                  </div>
-                  <h3 className="mt-3 text-lg font-bold">{test.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {test.description}
-                  </p>
-                  <dl className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-stone-50 p-3 text-xs">
-                    <div>
-                      <dt className="text-slate-500">Cấu trúc</dt>
-                      <dd className="mt-1 font-bold">
-                        {totalWritingQuestions(test)} câu · 3 Part
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-slate-500">Thời lượng</dt>
-                      <dd className="mt-1 font-bold">
-                        {formatDuration(totalWritingSeconds(test))}
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="mt-4 text-xs text-slate-400">
-                    {test.updatedAtLabel}
-                  </p>
-                  <Link
-                    className="mt-auto inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 px-4 text-sm font-bold text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-orange-600"
-                    href={`/writing/tests/${test.id}?mode=full`}
-                  >
-                    Xem đề và bắt đầu
-                  </Link>
-                </article>
-              ))}
+          )}
+          {!loading && !error && tests.length === 0 && (
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+              <h3 className="font-bold">Chưa có đề Writing được công bố</h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Admin cần tạo và publish một đề đủ 5 câu Part 1, 2 câu Part 2 và
+                1 câu Part 3.
+              </p>
             </div>
           )}
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            {tests.map((test) => (
+              <article
+                className="flex min-h-64 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                key={test.id}
+              >
+                <span className="text-xs font-bold tracking-[0.1em] text-orange-600">
+                  {test.code}
+                </span>
+                <h3 className="mt-3 text-lg font-bold">{test.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {test.description}
+                </p>
+                <dl className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-stone-50 p-3 text-xs">
+                  <div>
+                    <dt className="text-slate-500">Cấu trúc</dt>
+                    <dd className="mt-1 font-bold">
+                      {test.parts.reduce(
+                        (total, part) => total + part.questionCount,
+                        0,
+                      )}{" "}
+                      câu · 3 Part
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Thời lượng</dt>
+                    <dd className="mt-1 font-bold">{duration(test)}</dd>
+                  </div>
+                </dl>
+                <Link
+                  className="mt-auto inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 px-4 text-sm font-bold text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-orange-600"
+                  href={`/writing/tests/${test.id}?mode=full`}
+                >
+                  Xem đề và bắt đầu
+                </Link>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
     </div>
