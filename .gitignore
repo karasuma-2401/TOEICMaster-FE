@@ -11,3 +11,5 @@ next-env.d.ts
 .DS_Store
 .idea/
 local/
+# Local handoff notes (not committed)
+docs/speaking-be-handoff.md

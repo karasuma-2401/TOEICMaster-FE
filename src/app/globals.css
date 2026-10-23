@@ -35,6 +35,11 @@
   --color-foreground: var(--foreground);
   --font-sans: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
 }
+html {
+  /* Reserve the scrollbar so short and long pages share the same edges. */
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

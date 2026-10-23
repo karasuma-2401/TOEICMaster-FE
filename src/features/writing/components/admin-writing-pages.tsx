@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   createAdminTestDraft,
@@ -17,6 +16,11 @@ import {
   type QuestionFilter,
   type WritingQuestionStatus,
 } from "@/features/writing/admin-mock";
+import {
+  AdminNotice,
+  AdminPageHeader,
+} from "@/features/admin/components/content/admin-page-header";
+import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import type { WritingDifficulty, WritingPart } from "@/features/writing/types";
 
 const parts: WritingPart[] = [1, 2, 3];
@@ -37,30 +41,6 @@ const statusLabel: Record<WritingQuestionStatus, string> = {
   DRAFT: "Bản nháp",
   ARCHIVED: "Lưu trữ",
 };
-
-function Tabs({ active }: { active: "content" | "tests" }) {
-  const tabs = [
-    ["/admin/content/writing", "Bài tập", "content"],
-    ["/admin/tests/writing", "Đề Writing", "tests"],
-  ] as const;
-  return (
-    <nav
-      aria-label="Kho dữ liệu Writing"
-      className="flex gap-5 border-b border-[var(--admin-border)]"
-    >
-      {tabs.map(([href, label, id]) => (
-        <Link
-          aria-current={id === active ? "page" : undefined}
-          className={`border-b-2 px-1 py-3 text-sm font-bold ${id === active ? "border-[var(--admin-brand-red)] text-[var(--admin-brand-red)]" : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-ink)]"}`}
-          href={href}
-          key={id}
-        >
-          {label}
-        </Link>
-      ))}
-    </nav>
-  );
-}
 
 type Draft = {
   id: string;
@@ -593,42 +573,31 @@ export function AdminWritingContentPage() {
     setFilter((current) => ({ ...current, ...next, page: 1 }));
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-            QUẢN TRỊ / KHO DỮ LIỆU
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Ngân hàng bài tập Writing
-          </h1>
-          <p className="mt-1.5 text-sm text-[var(--admin-muted)]">
-            Tạo, tìm kiếm, preview và quản lý bài tập theo từng Part.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="h-11 rounded-lg border border-[var(--admin-border)] px-4 text-sm font-bold"
-            onClick={() => setImportOpen(true)}
-            type="button"
-          >
-            ⇧ Import Excel
-          </button>
-          <button
-            className="h-11 rounded-lg px-4 text-sm font-bold text-white"
-            onClick={() => setDrawer(toDraft(undefined, filter.part))}
-            style={{ background: "var(--admin-brand-gradient)" }}
-            type="button"
-          >
-            + Thêm bài tập
-          </button>
-        </div>
-      </div>
-      <Tabs active="content" />
-      {notice && (
-        <output className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
-          {notice}
-        </output>
-      )}
+      <AdminPageHeader
+        actions={
+          <>
+            <button
+              className="h-11 rounded-lg border border-[var(--admin-border)] px-4 text-sm font-bold"
+              onClick={() => setImportOpen(true)}
+              type="button"
+            >
+              ⇧ Import Excel
+            </button>
+            <button
+              className="h-11 rounded-lg px-4 text-sm font-bold text-white"
+              onClick={() => setDrawer(toDraft(undefined, filter.part))}
+              style={{ background: "var(--admin-brand-gradient)" }}
+              type="button"
+            >
+              + Thêm bài tập
+            </button>
+          </>
+        }
+        description="Tạo, tìm kiếm, preview và quản lý bài tập theo từng Part."
+        title="Ngân hàng bài tập Writing"
+      />
+      <ContentTabs section="content" skill="writing" />
+      {notice && <AdminNotice>{notice}</AdminNotice>}
       <div className="mt-6 flex gap-2">
         {parts.map((part) => (
           <button
@@ -1092,33 +1061,22 @@ export function AdminWritingTestsPage() {
   const tests = getAdminWritingTests();
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-            QUẢN TRỊ / KHO DỮ LIỆU
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Đề Writing
-          </h1>
-          <p className="mt-1.5 text-sm text-[var(--admin-muted)]">
-            Lắp đề 5/2/1, dùng timing template và kiểm tra điều kiện xuất bản.
-          </p>
-        </div>
-        <button
-          className="h-11 rounded-lg px-4 text-sm font-bold text-white"
-          onClick={() => setBuilder(createAdminTestDraft())}
-          style={{ background: "var(--admin-brand-gradient)" }}
-          type="button"
-        >
-          + Tạo đề Writing
-        </button>
-      </div>
-      <Tabs active="tests" />
-      {notice && (
-        <output className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
-          {notice}
-        </output>
-      )}
+      <AdminPageHeader
+        actions={
+          <button
+            className="h-11 rounded-lg px-4 text-sm font-bold text-white"
+            onClick={() => setBuilder(createAdminTestDraft())}
+            style={{ background: "var(--admin-brand-gradient)" }}
+            type="button"
+          >
+            + Tạo đề Writing
+          </button>
+        }
+        description="Lắp đề 5/2/1, dùng timing template và kiểm tra điều kiện xuất bản."
+        title="Đề Writing"
+      />
+      <ContentTabs section="tests" skill="writing" />
+      {notice && <AdminNotice>{notice}</AdminNotice>}
       <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px] text-left text-sm">

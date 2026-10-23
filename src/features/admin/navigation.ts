@@ -17,8 +17,9 @@ export const adminNavigation = [
     label: "Kho dữ liệu",
     icon: "▤",
     href: "/admin/content/writing",
-    description: "Quản lý dữ liệu và đề Writing",
+    description: "Quản lý dữ liệu và đề Writing, Speaking",
     enabled: true,
+    matches: ["/admin/content", "/admin/tests"],
   },
   {
     label: "Nhật ký hoạt động",
@@ -37,9 +38,13 @@ export const adminNavigation = [
 ] as const;
 
 export function getAdminNavigationItem(pathname: string) {
+  const isUnder = (path: string) =>
+    pathname === path || pathname.startsWith(`${path}/`);
   return [...adminNavigation]
     .filter(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+      (item) =>
+        isUnder(item.href) ||
+        ("matches" in item && item.matches.some((path) => isUnder(path))),
     )
     .sort((a, b) => b.href.length - a.href.length)[0];
 }

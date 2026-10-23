@@ -11,6 +11,13 @@ const areas = [
     action: "Khám phá Writing",
   },
   {
+    title: "TOEIC Speaking",
+    description:
+      "Luyện 5 Part Speaking với pha chuẩn bị, ghi âm và nghe lại câu trả lời.",
+    href: "/speaking",
+    action: "Khám phá Speaking",
+  },
+  {
     title: "Lịch sử học tập",
     description: "Theo dõi các lượt làm Writing và kết quả khi đã đăng nhập.",
     href: "/history/writing",
@@ -18,7 +25,8 @@ const areas = [
   },
   {
     title: "Khu vực quản trị",
-    description: "Theo dõi dữ liệu và đề Writing trong khu vực quản trị.",
+    description:
+      "Quản lý dữ liệu và đề Writing, Speaking trong khu vực quản trị.",
     href: "/admin/content/writing",
     action: "Mở quản trị",
   },
@@ -58,7 +66,7 @@ export default async function Home(props: {
         </p>
         <section
           aria-label="Các tính năng dự kiến"
-          className="mt-12 grid gap-5 md:grid-cols-3"
+          className="mt-12 grid gap-5 md:grid-cols-2"
         >
           {areas.map((area) => (
             <article

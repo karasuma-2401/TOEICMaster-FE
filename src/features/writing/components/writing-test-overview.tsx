@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -9,6 +8,23 @@ import {
   startWritingAttempt,
   type WritingTestSummaryApi,
 } from "@/features/writing/attempt-api";
+import { RuleList, StructureList } from "@/shared/components/practice/briefing";
+import { BackLink } from "@/shared/components/practice/page-intro";
+import {
+  PracticeColumns,
+  PracticePage,
+} from "@/shared/components/practice/practice-page";
+import { StatGrid } from "@/shared/components/practice/stat-grid";
+import {
+  ErrorPanel,
+  InlineError,
+  LoadingPanel,
+} from "@/shared/components/practice/state-panels";
+import {
+  eyebrow,
+  primaryAction,
+  surfaceCard,
+} from "@/shared/components/practice/styles";
 import { WritingHeader } from "./writing-header";
 
 function formatDuration(seconds: number) {
@@ -71,40 +87,20 @@ export function WritingTestOverview({
 
   if (!test && !error)
     return (
-      <div className="min-h-dvh bg-stone-50">
-        <WritingHeader />
-        <p className="mx-auto max-w-4xl px-5 py-10 text-sm text-slate-500">
-          Đang tải đề Writing…
-        </p>
-      </div>
+      <PracticePage header={<WritingHeader />}>
+        <LoadingPanel label="Đang tải đề Writing…" />
+      </PracticePage>
     );
   if (!test)
     return (
-      <div className="min-h-dvh bg-stone-50">
-        <WritingHeader />
-        <main className="mx-auto max-w-4xl px-5 py-10">
-          <div
-            aria-live="assertive"
-            className="rounded-xl bg-red-50 p-5 text-sm text-red-800"
-            role="alert"
-          >
-            <p>{error}</p>
-            <button
-              className="mt-3 font-bold underline"
-              onClick={() => void load()}
-              type="button"
-            >
-              Thử tải lại
-            </button>
-          </div>
-          <Link
-            className="mt-5 inline-block font-bold text-orange-700 underline"
-            href="/writing"
-          >
-            Quay lại thư viện
-          </Link>
-        </main>
-      </div>
+      <PracticePage header={<WritingHeader />}>
+        <BackLink href="/writing" label="Quay lại thư viện" />
+        <ErrorPanel
+          message={error}
+          onRetry={() => void load()}
+          retryLabel="Thử tải lại"
+        />
+      </PracticePage>
     );
 
   const selectedPart = test.parts.find(
@@ -122,96 +118,70 @@ export function WritingTestOverview({
     0,
   );
   return (
-    <div className="min-h-dvh bg-stone-50 text-slate-900">
-      <WritingHeader />
-      <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8 lg:py-14">
-        <Link
-          className="text-sm font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-orange-600"
-          href="/writing"
-        >
-          ← Quay lại thư viện Writing
-        </Link>
-        <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
-          <p className="text-xs font-extrabold tracking-[0.14em] text-orange-600">
-            {selectedPart ? "LUYỆN THEO PART" : "FULL WRITING TEST"}
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight">
-            {test.title}
-          </h1>
-          <p className="mt-3 max-w-2xl leading-7 text-slate-600">
-            {test.description}
-          </p>
-          <dl className="mt-7 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl bg-stone-50 p-4">
-              <dt className="text-xs font-semibold text-slate-500">Cấu trúc</dt>
-              <dd className="mt-1 text-lg font-bold">{questionCount} câu</dd>
+    <PracticePage header={<WritingHeader />}>
+      <BackLink href="/writing" label="Quay lại thư viện Writing" />
+      <div className="mt-6">
+        <PracticeColumns
+          aside={
+            <div className={`space-y-5 p-5 ${surfaceCard}`}>
+              <RuleList
+                id="test-rules"
+                rules={[
+                  "Mỗi câu có pha chuẩn bị và pha làm bài riêng.",
+                  "Hết thời gian hoặc bấm Next, câu hiện tại sẽ bị khóa.",
+                  "Bài được autosave trên server trong khi làm và tự nộp sau câu cuối.",
+                ]}
+              />
+              {error && <InlineError>{error}</InlineError>}
+              <button
+                className={`w-full ${primaryAction}`}
+                disabled={starting}
+                onClick={() => void start()}
+                type="button"
+              >
+                {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài"}
+              </button>
             </div>
-            <div className="rounded-xl bg-stone-50 p-4">
-              <dt className="text-xs font-semibold text-slate-500">
-                Thời lượng
-              </dt>
-              <dd className="mt-1 text-lg font-bold">
-                {formatDuration(totalSeconds)}
-              </dd>
+          }
+          main={
+            <div className={`overflow-hidden ${surfaceCard}`}>
+              <div className="border-b border-slate-100 bg-gradient-to-br from-orange-50/80 via-white to-white p-6 sm:p-9">
+                <p className={eyebrow}>
+                  {selectedPart ? "LUYỆN THEO PART" : "FULL WRITING TEST"}
+                </p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight">
+                  {test.title}
+                </h1>
+                <p className="mt-3 max-w-prose leading-7 text-slate-600">
+                  {test.description}
+                </p>
+                <div className="mt-7">
+                  <StatGrid
+                    items={[
+                      { label: "Cấu trúc", value: `${questionCount} câu` },
+                      {
+                        label: "Thời lượng",
+                        value: formatDuration(totalSeconds),
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+              <div className="p-6 sm:p-9">
+                <StructureList
+                  id="test-structure"
+                  items={visibleParts.map((part) => ({
+                    key: part.part,
+                    badge: part.part,
+                    title: `Writing Part ${part.part}`,
+                    detail: `${part.questionCount} câu · Chuẩn bị ${part.preparationSeconds}s · Làm bài ${formatDuration(part.responseSeconds)}`,
+                  }))}
+                />
+              </div>
             </div>
-          </dl>
-          <section className="mt-8" aria-labelledby="test-rules">
-            <h2 className="font-bold" id="test-rules">
-              Quy tắc làm bài
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-              <li>Mỗi câu có pha chuẩn bị và pha làm bài riêng.</li>
-              <li>Hết thời gian hoặc bấm Next, câu hiện tại sẽ bị khóa.</li>
-              <li>
-                Bài được autosave trên server trong khi làm và tự nộp sau câu
-                cuối.
-              </li>
-            </ul>
-          </section>
-          <section className="mt-8" aria-labelledby="test-structure">
-            <h2 className="font-bold" id="test-structure">
-              Cấu trúc đề
-            </h2>
-            <ol className="mt-4 space-y-3">
-              {visibleParts.map((part) => (
-                <li
-                  className="flex gap-4 rounded-xl border border-slate-200 p-4"
-                  key={part.part}
-                >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-orange-50 text-sm font-bold text-orange-700">
-                    {part.part}
-                  </span>
-                  <div>
-                    <h3 className="font-semibold">Writing Part {part.part}</h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {part.questionCount} câu · Chuẩn bị{" "}
-                      {part.preparationSeconds}s · Làm bài{" "}
-                      {formatDuration(part.responseSeconds)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-          {error && (
-            <p
-              aria-live="assertive"
-              className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
-          <button
-            className="mt-8 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 px-5 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={starting}
-            onClick={() => void start()}
-            type="button"
-          >
-            {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài"}
-          </button>
-        </div>
-      </main>
-    </div>
+          }
+        />
+      </div>
+    </PracticePage>
   );
 }
