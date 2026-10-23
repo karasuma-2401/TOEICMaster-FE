@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { AuthenticatedUser, AuthSession } from "./session";
 
 type Errors = Record<string, string[]>;
+type SessionRole = "USER" | "ADMIN";
 
 export function problem(status: number, title: string, errors?: Errors) {
   return NextResponse.json(
@@ -147,15 +148,22 @@ export async function authenticationResult(
     typeof user.id !== "string" ||
     !user.id ||
     typeof user.displayName !== "string" ||
-    typeof user.email !== "string"
+    typeof user.email !== "string" ||
+    (user.role !== "USER" && user.role !== "ADMIN")
   )
     throw new Error("Invalid auth response");
+  const authenticatedUser: AuthenticatedUser = {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+  };
   return {
     accessToken: value.accessToken,
     accessTokenExpiresAtUtc: value.accessTokenExpiresAtUtc,
     refreshToken: value.refreshToken,
     refreshTokenExpiresAtUtc: value.refreshTokenExpiresAtUtc,
-    user: user as unknown as AuthenticatedUser,
+    user: authenticatedUser,
+    role: user.role as SessionRole,
     rememberMe,
   };
 }

@@ -13,6 +13,7 @@ export interface AuthSession {
   refreshToken: string;
   refreshTokenExpiresAtUtc: string;
   user: AuthenticatedUser;
+  role: "USER" | "ADMIN";
   rememberMe: boolean;
 }
 
@@ -51,6 +52,7 @@ function isSession(value: unknown): value is AuthSession {
     typeof session.refreshTokenExpiresAtUtc === "string" &&
     Number.isFinite(Date.parse(session.refreshTokenExpiresAtUtc)) &&
     typeof session.rememberMe === "boolean" &&
+    (session.role === "USER" || session.role === "ADMIN") &&
     !!user &&
     typeof user.id === "string" &&
     typeof user.displayName === "string" &&
