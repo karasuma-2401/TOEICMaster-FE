@@ -12,7 +12,7 @@ describe("WritingTestOverview", () => {
   it("shows only the selected Part's timing and structure in practice mode", () => {
     render(<WritingTestOverview mode="part-2" test={writingTests[0]} />);
 
-    expect(screen.getByText("Luyện theo Part")).toBeInTheDocument();
+    expect(screen.getByText("LUYỆN THEO PART")).toBeInTheDocument();
     expect(screen.getByText("2 câu")).toBeInTheDocument();
     expect(screen.getByText("20 phút")).toBeInTheDocument();
     expect(

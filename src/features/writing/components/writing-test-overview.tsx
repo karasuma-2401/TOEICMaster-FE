@@ -13,9 +13,7 @@ interface WritingTestOverviewProps {
 }
 
 export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
-  const selectedPart = test.parts.find(
-    (part) => mode === `part-${part.part}`,
-  );
+  const selectedPart = test.parts.find((part) => mode === `part-${part.part}`);
   const isPartPractice = selectedPart !== undefined;
   const title = isPartPractice ? "Luyện theo Part" : "Full Writing Test";
   const visibleParts = selectedPart ? [selectedPart] : test.parts;
@@ -54,9 +52,7 @@ export function WritingTestOverview({ mode, test }: WritingTestOverviewProps) {
           <dl className="mt-7 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-stone-50 p-4">
               <dt className="text-xs font-semibold text-slate-500">Cấu trúc</dt>
-              <dd className="mt-1 text-lg font-bold">
-                {questionCount} câu
-              </dd>
+              <dd className="mt-1 text-lg font-bold">{questionCount} câu</dd>
             </div>
             <div className="rounded-xl bg-stone-50 p-4">
               <dt className="text-xs font-semibold text-slate-500">
