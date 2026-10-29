@@ -7,6 +7,8 @@ export interface AuthenticatedUser {
   email: string;
 }
 
+export type AuthenticatedRole = "ADMIN" | "USER";
+
 export interface AuthSession {
   accessToken: string;
   accessTokenExpiresAtUtc: string;
@@ -14,6 +16,12 @@ export interface AuthSession {
   refreshTokenExpiresAtUtc: string;
   user: AuthenticatedUser;
   rememberMe: boolean;
+  /**
+   * Role is supplied by the authenticated backend response and is sealed in
+   * the server-only session cookie. Legacy sessions can omit it and therefore
+   * fail closed for admin routes.
+   */
+  role?: AuthenticatedRole;
 }
 
 const cookieName = "toeicmaster_session";
@@ -51,6 +59,9 @@ function isSession(value: unknown): value is AuthSession {
     typeof session.refreshTokenExpiresAtUtc === "string" &&
     Number.isFinite(Date.parse(session.refreshTokenExpiresAtUtc)) &&
     typeof session.rememberMe === "boolean" &&
+    (session.role === undefined ||
+      session.role === "ADMIN" ||
+      session.role === "USER") &&
     !!user &&
     typeof user.id === "string" &&
     typeof user.displayName === "string" &&
@@ -82,10 +93,16 @@ export function readSession(cookie: string | undefined): AuthSession | null {
   }
 }
 
-export function sessionCookie(request: {
-  cookies: { get(name: string): { value: string } | undefined };
-}) {
-  return readSession(request.cookies.get(cookieName)?.value);
+type SessionCookieStore = {
+  get(name: string): { value: string } | undefined;
+};
+
+export function sessionFromCookieStore(cookies: SessionCookieStore) {
+  return readSession(cookies.get(cookieName)?.value);
+}
+
+export function sessionCookie(request: { cookies: SessionCookieStore }) {
+  return sessionFromCookieStore(request.cookies);
 }
 
 export function setSessionCookie(response: NextResponse, session: AuthSession) {

@@ -5,6 +5,7 @@ import { POST as google } from "./google/route";
 import { POST as refresh } from "./refresh/route";
 import { POST as logout } from "./logout/route";
 import { GET as session } from "./session/route";
+import { readSession } from "@/features/auth/server/session";
 
 const user = { id: "user-id", displayName: "Linh", email: "linh@example.com" };
 
@@ -17,7 +18,7 @@ function authBody(refreshToken = "refresh-secret") {
     refreshTokenExpiresAtUtc: new Date(
       Date.now() + 24 * 60 * 60_000,
     ).toISOString(),
-    user,
+    user: { ...user, role: "ADMIN" },
   };
 }
 
@@ -67,6 +68,9 @@ describe("auth BFF", () => {
     expect(cookie).toContain("Max-Age=");
     expect(cookie).not.toContain("refresh-secret");
     expect(cookie).not.toContain("access-secret");
+    expect(readSession(cookie.split(";")[0].split("=")[1])).toMatchObject({
+      role: "ADMIN",
+    });
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
       "http://backend:8080/api/v1/auth/login",
     );

@@ -14,6 +14,13 @@ export const adminNavigation = [
     enabled: true,
   },
   {
+    label: "Kho dữ liệu",
+    icon: "▣",
+    href: "/admin/exams",
+    description: "Quản lý bài tập và đề Listening & Reading",
+    enabled: true,
+  },
+  {
     label: "Nhật ký hoạt động",
     icon: "◷",
     href: "/admin/activity",

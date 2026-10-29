@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #faf8f7;
+  --foreground: #342d2a;
   --admin-brand-red: #ed361c;
   --admin-brand-red-dark: #c70e1a;
   --admin-brand-orange: #ff6c0d;
@@ -39,6 +39,34 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+}
+
+/* Shared admin actions use the TOEICMaster red-to-orange brand gradient. */
+.admin-primary-action {
+  border: 1px solid var(--admin-brand-red-dark);
+  background: var(--admin-brand-gradient);
+  color: #fff;
+  box-shadow: var(--admin-action-shadow);
+  transition:
+    filter 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-primary-action:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.admin-primary-action:active:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.admin-primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-brand-gradient-fill {
+  background: var(--admin-brand-gradient);
 }
 
 .auth-page {

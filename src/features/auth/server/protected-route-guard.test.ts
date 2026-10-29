@@ -82,7 +82,7 @@ describe("protectRoute", () => {
   });
 
   it("redirects a signed-in non-admin away from the admin area", () => {
-    const cookie = adminSessionCookie("Student");
+    const cookie = adminSessionCookie("USER");
     const response = protectRoute(request("/admin/users", cookie));
 
     expect(response.status).toBe(307);
