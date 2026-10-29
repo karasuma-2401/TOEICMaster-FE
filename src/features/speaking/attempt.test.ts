@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { currentQuestion, parseAttempt, phaseSecondsLeft } from "./attempt";
-import { attemptDto } from "./testing/fixtures";
+import { attemptDto, ids } from "./testing/fixtures";
 
 describe("Speaking attempt", () => {
   it("parses unrevealed questions as null and finds the current one", () => {
@@ -12,6 +12,29 @@ describe("Speaking attempt", () => {
       part: 4,
       questions: [null, null, null],
     });
+  });
+
+  it("accepts Part practice attempts that come from one exercise", () => {
+    const attempt = parseAttempt(
+      attemptDto({
+        testId: null,
+        exerciseId: ids.exercise(41),
+        testCode: "SP4-001",
+        testTitle: "Luyện Part 4 · Hội nghị",
+      }),
+    );
+
+    expect(attempt).toMatchObject({
+      testId: null,
+      exerciseId: ids.exercise(41),
+      testTitle: "Luyện Part 4 · Hội nghị",
+    });
+    expect(() =>
+      parseAttempt(attemptDto({ testId: null, exerciseId: null })),
+    ).toThrow(expect.objectContaining({ status: 502 }));
+    expect(parseAttempt(attemptDto({ exerciseId: undefined })).exerciseId).toBe(
+      null,
+    );
   });
 
   it("rejects content whose Part does not match the question", () => {

@@ -19,11 +19,17 @@ const id = "[0-9a-f-]{36}";
 const routes: { pattern: RegExp; methods: Method[]; upload?: boolean }[] = [
   { pattern: /^tests$/, methods: ["GET"] },
   { pattern: new RegExp(`^tests/${id}$`, "i"), methods: ["GET"] },
+  { pattern: /^exercises$/, methods: ["GET"] },
+  { pattern: /^evaluation-availability$/, methods: ["GET"] },
+  { pattern: new RegExp(`^exercises/${id}$`, "i"), methods: ["GET"] },
   { pattern: new RegExp(`^media/${id}$`, "i"), methods: ["GET"] },
   { pattern: /^attempts$/, methods: ["GET", "POST"] },
   { pattern: new RegExp(`^attempts/${id}$`, "i"), methods: ["GET"] },
   {
-    pattern: new RegExp(`^attempts/${id}/(next|submit)$`, "i"),
+    pattern: new RegExp(
+      `^attempts/${id}/(next|submit|evaluation-consent)$`,
+      "i",
+    ),
     methods: ["POST"],
   },
   {

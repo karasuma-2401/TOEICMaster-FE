@@ -11,6 +11,7 @@ import {
   primaryAction,
   secondaryAction,
 } from "@/shared/components/practice/styles";
+import { SpeakingEvaluationPanel } from "./speaking-evaluation-panel";
 import { stepSummary } from "./step-summary";
 
 const uploadLabel: Record<UploadState, string> = {
@@ -44,8 +45,8 @@ export function SessionReview({
       <p className={eyebrow}>SPEAKING REVIEW</p>
       <h1 className="mt-3 text-3xl font-bold">Đã hoàn thành lượt luyện</h1>
       <p className="mt-3 max-w-prose leading-7 text-slate-600">
-        Nghe lại từng câu trả lời và so sánh với tiêu chí chấm, bài mẫu. Chấm
-        điểm AI cho Speaking sẽ được bổ sung ở giai đoạn sau.
+        Nghe lại từng câu trả lời, so sánh với tiêu chí chấm và bài mẫu, hoặc
+        gửi bài nói để AI chấm điểm ước tính.
       </p>
       <div className="mt-7">
         <StatGrid
@@ -55,12 +56,13 @@ export function SessionReview({
             { label: "Đã lưu bản ghi", value: `${saved}/${questions.length}` },
             {
               label: "Trạng thái",
-              value: pending ? "Đang tải bản ghi" : "Tự đánh giá",
+              value: pending ? "Đang tải bản ghi" : "Đã nộp bài",
               accent: true,
             },
           ]}
         />
       </div>
+      <SpeakingEvaluationPanel attempt={attempt} uploading={pending > 0} />
       <div className="mt-8 space-y-6">
         {parts.map((part) => (
           <section aria-labelledby={`review-part-${part}`} key={part}>
@@ -156,16 +158,27 @@ export function SessionReview({
         ))}
       </div>
       <div className="mt-8 flex flex-wrap gap-3 border-t border-slate-100 pt-6">
-        <Link
-          className={primaryAction}
-          href={`/speaking/tests/${encodeURIComponent(attempt.testId)}/practice?mode=${routeFromMode(attempt.mode)}`}
-        >
+        <Link className={primaryAction} href={practiceAgainHref(attempt)}>
           Luyện lại
         </Link>
-        <Link className={secondaryAction} href="/speaking">
-          Làm đề khác
+        <Link
+          className={secondaryAction}
+          href={
+            attempt.exerciseId
+              ? `/speaking/parts/${attempt.questions[0]?.part ?? 1}`
+              : "/speaking"
+          }
+        >
+          {attempt.exerciseId ? "Chọn bài khác" : "Làm đề khác"}
         </Link>
       </div>
     </div>
   );
+}
+
+/** Starts the same exercise again for Part practice, otherwise the same test and mode. */
+function practiceAgainHref(attempt: SpeakingAttempt) {
+  if (attempt.exerciseId)
+    return `/speaking/exercises/${encodeURIComponent(attempt.exerciseId)}/practice`;
+  return `/speaking/tests/${encodeURIComponent(attempt.testId ?? "")}/practice?mode=${routeFromMode(attempt.mode)}`;
 }

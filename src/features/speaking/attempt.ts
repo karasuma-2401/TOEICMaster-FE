@@ -9,6 +9,7 @@ import {
   isString,
   parseContent,
 } from "./parsers";
+import { parseEvaluation, type SpeakingEvaluation } from "./evaluation";
 import type { SpeakingContent, SpeakingMode, SpeakingPart } from "./types";
 
 export type SpeakingAttemptStatus = "IN_PROGRESS" | "SUBMITTED";
@@ -34,7 +35,11 @@ export interface SpeakingReviewQuestion {
 
 export interface SpeakingAttempt {
   id: string;
-  testId: string;
+  /** Published test the attempt runs; null when one exercise is practised on its own. */
+  testId: string | null;
+  /** Exercise practised on its own (Part practice); null for test attempts. */
+  exerciseId: string | null;
+  /** Test code, or the exercise code for Part practice. */
   testCode: string;
   testTitle: string;
   mode: SpeakingMode;
@@ -47,6 +52,8 @@ export interface SpeakingAttempt {
   submittedAtUtc: string | null;
   questions: SpeakingAttemptQuestion[];
   reviewQuestions: SpeakingReviewQuestion[];
+  /** AI evaluation job; null until the learner consents to it. */
+  evaluation: SpeakingEvaluation | null;
 }
 
 const what = "lượt làm Speaking";
@@ -92,7 +99,13 @@ export function parseAttempt(value: unknown): SpeakingAttempt {
   if (
     !isRecord(value) ||
     !isString(value.id) ||
-    !isString(value.testId) ||
+    !(value.testId === null || isString(value.testId)) ||
+    !(
+      value.exerciseId === undefined ||
+      value.exerciseId === null ||
+      isString(value.exerciseId)
+    ) ||
+    (value.testId === null && !isString(value.exerciseId)) ||
     !isString(value.testCode) ||
     !isString(value.testTitle) ||
     !isMode(value.mode) ||
@@ -113,6 +126,7 @@ export function parseAttempt(value: unknown): SpeakingAttempt {
   return {
     id: value.id,
     testId: value.testId,
+    exerciseId: isString(value.exerciseId) ? value.exerciseId : null,
     testCode: value.testCode,
     testTitle: value.testTitle,
     mode: value.mode,
@@ -138,6 +152,7 @@ export function parseAttempt(value: unknown): SpeakingAttempt {
         modelAnswer: item.modelAnswer,
       };
     }),
+    evaluation: parseEvaluation(value.evaluation),
   };
 }
 

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getSpeakingExercises,
   getSpeakingTests,
   nextSpeakingPhase,
   startSpeakingAttempt,
+  startSpeakingExercisePractice,
   uploadSpeakingRecording,
 } from "./api";
 import { attemptDto, ids, pageDto, testSummaryDto } from "./testing/fixtures";
@@ -45,6 +47,44 @@ describe("Speaking learner API", () => {
     expect(fetchMock.mock.calls[1][0]).toBe(
       `/api/speaking/attempts/${ids.attempt}/next`,
     );
+  });
+
+  it("lists published exercises of a Part and practises one of them", async () => {
+    const exercise = {
+      id: ids.exercise(31),
+      code: "SP3-001",
+      part: 3,
+      topic: "Thói quen đọc",
+      difficulty: "MEDIUM",
+      questionCount: 3,
+      durationSeconds: 69,
+      updatedAtUtc: "2026-10-30T09:00:00Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(pageDto([exercise])))
+      .mockResolvedValueOnce(
+        Response.json(attemptDto({ testId: null, exerciseId: exercise.id })),
+      )
+      .mockResolvedValueOnce(
+        Response.json(pageDto([{ ...exercise, part: 9 }])),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const exercises = await getSpeakingExercises(3);
+    const attempt = await startSpeakingExercisePractice(exercise.id);
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/speaking/exercises?part=3&pageNumber=1&pageSize=100",
+    );
+    expect(exercises).toEqual([exercise]);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      exerciseId: exercise.id,
+    });
+    expect(attempt.exerciseId).toBe(exercise.id);
+    await expect(getSpeakingExercises(3)).rejects.toMatchObject({
+      status: 502,
+    });
   });
 
   it("uploads a recording as multipart and surfaces backend titles", async () => {
