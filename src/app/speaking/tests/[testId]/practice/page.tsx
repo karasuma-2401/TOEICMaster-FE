@@ -9,5 +9,5 @@ export default async function SpeakingPracticeRoute({
 }) {
   const { testId } = await params;
   const { mode } = await searchParams;
-  return <SpeakingSession mode={mode} testId={testId} />;
+  return <SpeakingSession source={{ kind: "test", testId, mode }} />;
 }

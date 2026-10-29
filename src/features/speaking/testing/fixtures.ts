@@ -140,6 +140,7 @@ export function attemptDto(overrides: object = {}) {
   return {
     id: ids.attempt,
     testId: ids.test,
+    exerciseId: null,
     testCode: "SPK-2026-01",
     testTitle: "Practice Test 01",
     mode: "PART_4",
@@ -165,6 +166,48 @@ export function attemptDto(overrides: object = {}) {
       },
     })),
     reviewQuestions: [],
+    ...overrides,
+  };
+}
+
+/** A completed AI evaluation of a Part 4 attempt with one silent answer. */
+export function evaluationDto(overrides: object = {}) {
+  return {
+    status: "COMPLETED",
+    estimatedScore: 130,
+    summary: "Bạn trả lời đúng thông tin trong lịch.",
+    strengths: ["Phát âm rõ ràng."],
+    improvements: ["Nói thành câu đầy đủ hơn."],
+    items: [1, 2, 3].map((position) => ({
+      position,
+      part: 4,
+      recognitionStatus: position === 3 ? "NO_SPEECH" : "RECOGNIZED",
+      transcript: position === 3 ? "" : "The conference is at the Grand Hotel.",
+      accuracyScore: 86.5,
+      fluencyScore: 74,
+      completenessScore: null,
+      prosodyScore: 58,
+      pronunciationScore: 79.2,
+      grammarScore: position === 3 ? null : 80,
+      vocabularyScore: position === 3 ? null : 70,
+      relevanceScore: position === 3 ? null : 90,
+      rawScore: position === 3 ? 0 : 2,
+      maxRawScore: 3,
+      feedback: `Nhận xét câu ${position}.`,
+      suggestedResponse:
+        position === 3 ? null : "It is held at the Grand Hotel.",
+      wordIssues:
+        position === 1 ? [{ word: "conference", accuracyScore: 41 }] : [],
+    })),
+    speechProvider: "azure-speech",
+    languageProvider: "gemini",
+    languageModel: "gemini-2.5-flash-lite",
+    rubricVersion: "toeic-speaking-v1",
+    consentAcceptedAtUtc: "2026-10-30T09:00:00Z",
+    queuedAtUtc: "2026-10-30T09:00:00Z",
+    completedAtUtc: "2026-10-30T09:01:00Z",
+    retryCount: 0,
+    failureMessage: null,
     ...overrides,
   };
 }

@@ -9,7 +9,7 @@ import {
   isString,
   parsePage,
 } from "./parsers";
-import type { SpeakingMode, SpeakingPart } from "./types";
+import type { SpeakingDifficulty, SpeakingMode, SpeakingPart } from "./types";
 
 // Learner Speaking API through the same-origin BFF `/api/speaking/*`.
 
@@ -65,6 +65,47 @@ function parseTestSummary(value: unknown): SpeakingTestSummary {
   };
 }
 
+/** Published bank exercise a learner can practise on its own (Part practice). */
+export interface SpeakingExerciseSummary {
+  id: string;
+  code: string;
+  part: SpeakingPart;
+  topic: string;
+  difficulty: SpeakingDifficulty;
+  questionCount: number;
+  durationSeconds: number;
+  updatedAtUtc: string;
+}
+
+const isDifficulty = (value: unknown): value is SpeakingDifficulty =>
+  value === "EASY" || value === "MEDIUM" || value === "HARD";
+
+function parseExerciseSummary(value: unknown): SpeakingExerciseSummary {
+  const what = "bài tập Speaking";
+  if (
+    !isRecord(value) ||
+    !isString(value.id) ||
+    !isString(value.code) ||
+    !isPart(value.part) ||
+    !isString(value.topic) ||
+    !isDifficulty(value.difficulty) ||
+    !isCount(value.questionCount) ||
+    !isCount(value.durationSeconds) ||
+    !isString(value.updatedAtUtc)
+  )
+    invalid(what);
+  return {
+    id: value.id,
+    code: value.code,
+    part: value.part,
+    topic: value.topic,
+    difficulty: value.difficulty,
+    questionCount: value.questionCount,
+    durationSeconds: value.durationSeconds,
+    updatedAtUtc: value.updatedAtUtc,
+  };
+}
+
 const attemptPath = (attemptId: string) =>
   `${base}/attempts/${encodeURIComponent(attemptId)}`;
 
@@ -84,6 +125,43 @@ export async function getSpeakingTest(testId: string, signal?: AbortSignal) {
     await speakingRequest(`${base}/tests/${encodeURIComponent(testId)}`, {
       signal,
       fallback: "Không thể tải đề Speaking.",
+    }),
+  );
+}
+
+export async function getSpeakingExercises(
+  part: SpeakingPart,
+  signal?: AbortSignal,
+) {
+  return parsePage(
+    await speakingRequest(
+      `${base}/exercises?part=${part}&pageNumber=1&pageSize=100`,
+      { signal, fallback: "Không thể tải bài tập Speaking." },
+    ),
+    parseExerciseSummary,
+    "danh sách bài tập Speaking",
+  ).items;
+}
+
+export async function getSpeakingExercise(
+  exerciseId: string,
+  signal?: AbortSignal,
+) {
+  return parseExerciseSummary(
+    await speakingRequest(
+      `${base}/exercises/${encodeURIComponent(exerciseId)}`,
+      { signal, fallback: "Không thể tải bài tập Speaking." },
+    ),
+  );
+}
+
+/** Practises one published exercise on its own; the mode is its Part. */
+export async function startSpeakingExercisePractice(exerciseId: string) {
+  return parseAttempt(
+    await speakingRequest(`${base}/attempts`, {
+      method: "POST",
+      json: { exerciseId },
+      fallback: "Không thể bắt đầu lượt luyện Speaking.",
     }),
   );
 }
@@ -137,6 +215,31 @@ export async function uploadSpeakingRecording(
       method: "PUT",
       form,
       fallback: "Không thể tải bản ghi lên.",
+    }),
+  );
+}
+
+/** Whether the backend has Azure Speech and the language model configured. */
+export async function getSpeakingEvaluationAvailability(signal?: AbortSignal) {
+  const value = await speakingRequest(`${base}/evaluation-availability`, {
+    signal,
+    fallback: "Không thể kiểm tra dịch vụ chấm AI.",
+  });
+  if (!isRecord(value) || typeof value.available !== "boolean")
+    invalid("trạng thái dịch vụ chấm AI");
+  return value.available;
+}
+
+/**
+ * Consents to sending the recordings to Azure Speech and the transcripts to the
+ * language model, and queues the AI evaluation. Retries a failed one.
+ */
+export async function grantSpeakingEvaluationConsent(attemptId: string) {
+  return parseAttempt(
+    await speakingRequest(`${attemptPath(attemptId)}/evaluation-consent`, {
+      method: "POST",
+      json: { accepted: true },
+      fallback: "Không thể yêu cầu chấm AI lúc này.",
     }),
   );
 }

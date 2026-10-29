@@ -21,6 +21,18 @@ describe("Speaking BFF proxy", () => {
       ["tests"],
       "GET",
     );
+    await forwardSpeaking(
+      new NextRequest("http://localhost:3000/api/speaking/exercises?part=2"),
+      ["exercises"],
+      "GET",
+    );
+    await forwardSpeaking(
+      new NextRequest(
+        `http://localhost:3000/api/speaking/exercises/${ids.test}`,
+      ),
+      ["exercises", ids.test],
+      "GET",
+    );
     const response = await forwardSpeaking(
       new NextRequest("http://localhost:3000/api/speaking/attempts", {
         method: "POST",
@@ -34,7 +46,13 @@ describe("Speaking BFF proxy", () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       "http://api:8080/api/v1/speaking/tests?pageSize=50",
     );
-    const headers = fetchMock.mock.calls[1][1].headers as Headers;
+    expect(String(fetchMock.mock.calls[1][0])).toBe(
+      "http://api:8080/api/v1/speaking/exercises?part=2",
+    );
+    expect(String(fetchMock.mock.calls[2][0])).toBe(
+      `http://api:8080/api/v1/speaking/exercises/${ids.test}`,
+    );
+    const headers = fetchMock.mock.calls[3][1].headers as Headers;
     expect(headers.get("X-Speaking-Anonymous-Session")).toMatch(
       /^[0-9a-f-]{36}$/,
     );
@@ -80,6 +98,47 @@ describe("Speaking BFF proxy", () => {
     );
     expect(tooLarge.status).toBe(413);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("forwards AI evaluation consent with the anonymous owner and availability checks", async () => {
+    vi.stubEnv("API_BASE_URL", "http://api:8080");
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await forwardSpeaking(
+      new NextRequest("http://localhost:3000/x"),
+      ["evaluation-availability"],
+      "GET",
+    );
+    await forwardSpeaking(
+      new NextRequest("http://localhost:3000/x", {
+        method: "POST",
+        headers: { ...origin, "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted: true }),
+      }),
+      ["attempts", ids.attempt, "evaluation-consent"],
+      "POST",
+    );
+
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "http://api:8080/api/v1/speaking/evaluation-availability",
+    );
+    expect(String(fetchMock.mock.calls[1][0])).toBe(
+      `http://api:8080/api/v1/speaking/attempts/${ids.attempt}/evaluation-consent`,
+    );
+    const headers = fetchMock.mock.calls[1][1].headers as Headers;
+    expect(headers.get("X-Speaking-Anonymous-Session")).toMatch(
+      /^[0-9a-f-]{36}$/,
+    );
+    expect(
+      (
+        await forwardSpeaking(
+          new NextRequest("http://localhost:3000/x"),
+          ["attempts", ids.attempt, "evaluation-consent"],
+          "GET",
+        )
+      ).status,
+    ).toBe(404);
   });
 
   it("relays audio privately and rejects unknown or cross-origin calls", async () => {
