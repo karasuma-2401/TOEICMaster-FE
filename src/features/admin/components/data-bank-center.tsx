@@ -25,6 +25,7 @@ import {
   type LrExercisePage,
   type LrExerciseSummary,
 } from "@/features/admin/lr-exercise-bank-api";
+import { ContentTabs } from "./content/content-tabs";
 import { ExamIcon } from "./exam-icon";
 
 type BankTab = "exercises" | "tests";
@@ -203,29 +204,13 @@ export function DataBankCenter() {
               Kho dữ liệu
             </h1>
             <p className="mt-2 text-sm leading-6 text-[var(--admin-muted)]">
-              Quản lý ngân hàng bài tập và đề TOEIC Listening &amp; Reading
-              trong hệ thống.
+              Quản lý ngân hàng bài tập và đề thi TOEIC theo từng kỹ năng.
             </p>
           </header>
-
-          <div
-            className="mb-5 flex border-b border-[var(--admin-border)]"
-            role="tablist"
-            aria-label="Kho dữ liệu"
-          >
-            <TabButton
-              active={tab === "exercises"}
-              onClick={() => updateQuery({ tab: null, part: null })}
-            >
-              Bài tập
-            </TabButton>
-            <TabButton
-              active={tab === "tests"}
-              onClick={() => updateQuery({ tab: "tests", part: null })}
-            >
-              Đề thi
-            </TabButton>
-          </div>
+          <ContentTabs
+            section={tab === "tests" ? "tests" : "content"}
+            skill="listening-reading"
+          />
         </>
       )}
 
@@ -248,32 +233,6 @@ export function DataBankCenter() {
         <CompleteTests />
       )}
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  children: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-selected={active}
-      className={`border-b-2 px-4 py-3 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
-        active
-          ? "border-[var(--admin-brand-red)] text-[var(--admin-ink)]"
-          : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-ink)]"
-      }`}
-      onClick={onClick}
-      role="tab"
-      type="button"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -309,19 +268,6 @@ function ExerciseBank({
 
   return (
     <>
-      <section
-        aria-label="Phạm vi ngân hàng dữ liệu"
-        className="mb-4 overflow-hidden rounded-2xl border border-[#ffd2c1] bg-[#fff7f2] p-1"
-      >
-        <div
-          className="rounded-xl px-5 py-4 text-white shadow-[0_8px_20px_rgb(236_37_27/24%)]"
-          style={{ background: "var(--admin-brand-gradient)" }}
-        >
-          <p className="text-sm font-bold">Listening &amp; Reading</p>
-          <p className="mt-0.5 text-xs text-white/80">7 Part cố định</p>
-        </div>
-      </section>
-
       {loading ? (
         <div aria-busy="true" className="space-y-4">
           <div className="h-20 animate-pulse rounded-2xl bg-[var(--admin-skeleton)]" />
