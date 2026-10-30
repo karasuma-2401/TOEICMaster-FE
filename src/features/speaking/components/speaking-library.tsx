@@ -75,24 +75,19 @@ export function SpeakingLibrary() {
       <section className="mt-10" aria-labelledby="speaking-parts">
         <SectionHeading
           aside={<CountBadge>5 Part · 11 câu</CountBadge>}
-          description="Chọn một Part để luyện riêng với đề đã công bố."
+          description="Chọn một Part để luyện từng bài trong ngân hàng bài tập."
           id="speaking-parts"
           title="Luyện theo Part"
         />
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {speakingParts.map((part) => {
             const spec = speakingPartSpecs[part];
-            const available = tests[0];
             return (
               <PartCard
                 actionLabel={`Luyện Part ${part} →`}
                 description={spec.description}
                 eyebrow={`PART ${part}`}
-                href={
-                  available
-                    ? `/speaking/tests/${available.id}?mode=part-${part}`
-                    : undefined
-                }
+                href={`/speaking/parts/${part}`}
                 key={part}
                 meta={`${partQuestionCount(part)} câu · ${partTimingLabel(part)}`}
                 part={part}
