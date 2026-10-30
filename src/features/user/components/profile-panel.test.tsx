@@ -24,7 +24,10 @@ describe("ProfilePanel", () => {
     id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
+    phone: "0912345678",
+    targetScore: 750,
     avatarVersion: null,
+    hasPassword: true,
   };
 
   it("hiển thị ban đầu ở tab Thông tin và cho phép chuyển sang tab Bảo mật", async () => {
@@ -56,6 +59,24 @@ describe("ProfilePanel", () => {
 
     expect(infoTab).toHaveAttribute("aria-current", "page");
     expect(screen.getByLabelText("Tên hiển thị")).toBeInTheDocument();
+  });
+
+  it("không hiện form đổi mật khẩu cho tài khoản chỉ đăng nhập Google", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProfilePanel
+        initialProfile={{ ...sampleProfile, hasPassword: false }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Bảo mật" }));
+
+    expect(
+      screen.getByText("Tài khoản đăng nhập bằng Google, không có mật khẩu."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Mật khẩu hiện tại"),
+    ).not.toBeInTheDocument();
   });
 
   it("hiển thị thẻ thông tin cá nhân rút gọn trên mobile", () => {

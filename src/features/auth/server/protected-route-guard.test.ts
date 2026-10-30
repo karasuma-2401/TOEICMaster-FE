@@ -19,6 +19,7 @@ function sessionCookie(accessExpiresAt: number, refreshExpiresAt: number) {
     refreshToken: "refresh-token",
     refreshTokenExpiresAtUtc: new Date(refreshExpiresAt).toISOString(),
     user: { id: "user-id", displayName: "Linh", email: "linh@example.com" },
+    role: "USER",
     rememberMe: false,
   };
   setSessionCookie(response, session);
@@ -89,12 +90,14 @@ describe("protectRoute", () => {
     expect(response.headers.get("location")).toBe("http://localhost/");
   });
 
-  it("fails closed when the session has no role", () => {
+  it("treats a legacy session without a role as signed out", () => {
     const cookie = adminSessionCookie();
     const response = protectRoute(request("/admin/users", cookie));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/login?next=%2Fadmin%2Fusers",
+    );
   });
 
   it("allows a session with the Admin role", () => {

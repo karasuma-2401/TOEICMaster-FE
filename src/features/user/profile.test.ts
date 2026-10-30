@@ -40,14 +40,60 @@ describe("validateProfile", () => {
   });
 });
 
+describe("validateProfile phone và điểm mục tiêu", () => {
+  it("chấp nhận số điện thoại 0 hoặc +84 và để trống", () => {
+    for (const phone of ["0912345678", "+84912345678", "", null]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", phone }),
+      ).toEqual({});
+    }
+  });
+
+  it("báo lỗi số điện thoại sai định dạng", () => {
+    for (const phone of ["0123456", "09123456789", "abcdefghij"]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", phone }).phone,
+      ).toBe("Số điện thoại không hợp lệ.");
+    }
+  });
+
+  it("kiểm tra khoảng 10-990 và bội số của 5 của điểm mục tiêu", () => {
+    for (const targetScore of [10, 990, "750", ""]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", targetScore }),
+      ).toEqual({});
+    }
+    for (const targetScore of [5, 995, "1e2", "12.5"]) {
+      expect(
+        validateProfile({ displayName: "Linh", email: "x@y.z", targetScore })
+          .targetScore,
+      ).toBe("Điểm TOEIC mục tiêu phải từ 10 đến 990.");
+    }
+    expect(
+      validateProfile({ displayName: "Linh", email: "x@y.z", targetScore: 752 })
+        .targetScore,
+    ).toBe("Điểm TOEIC mục tiêu phải là bội số của 5.");
+  });
+});
+
 describe("toUpdateRequest", () => {
-  it("trim tên hiển thị và không gửi email", () => {
+  it("trim dữ liệu, chuyển chuỗi rỗng thành null và không gửi email", () => {
     expect(
       toUpdateRequest({
         displayName: "  Linh  ",
         email: "private@example.com",
+        phone: "  ",
+        targetScore: "",
       }),
-    ).toEqual({ displayName: "Linh" });
+    ).toEqual({ displayName: "Linh", phone: null, targetScore: null });
+    expect(
+      toUpdateRequest({
+        displayName: "Linh",
+        email: "private@example.com",
+        phone: " 0912345678 ",
+        targetScore: "750",
+      }),
+    ).toEqual({ displayName: "Linh", phone: "0912345678", targetScore: 750 });
   });
 });
 

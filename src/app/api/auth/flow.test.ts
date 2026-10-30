@@ -7,7 +7,12 @@ import { POST as logout } from "./logout/route";
 import { GET as session } from "./session/route";
 import { readSession } from "@/features/auth/server/session";
 
-const user = { id: "user-id", displayName: "Linh", email: "linh@example.com" };
+const user = {
+  id: "user-id",
+  displayName: "Linh",
+  email: "linh@example.com",
+  role: "USER",
+};
 
 function authBody(refreshToken = "refresh-secret") {
   return {
@@ -62,7 +67,9 @@ describe("auth BFF", () => {
     const cookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ user });
+    expect(await response.json()).toEqual({
+      user: { id: user.id, displayName: user.displayName, email: user.email },
+    });
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=lax");
     expect(cookie).toContain("Max-Age=");
@@ -82,7 +89,10 @@ describe("auth BFF", () => {
     const state = await session(
       request("session", undefined, cookie.split(";")[0]),
     );
-    expect(await state.json()).toEqual({ status: "authenticated", user });
+    expect(await state.json()).toEqual({
+      status: "authenticated",
+      user: { id: user.id, displayName: user.displayName, email: user.email },
+    });
   });
 
   it("falls back to the legacy local auth route only when the versioned route is absent", async () => {
@@ -166,7 +176,9 @@ describe("auth BFF", () => {
       }),
     );
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ user });
+    expect(await response.json()).toEqual({
+      user: { id: user.id, displayName: user.displayName, email: user.email },
+    });
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
       "http://backend:8080/api/v1/auth/google",
     );

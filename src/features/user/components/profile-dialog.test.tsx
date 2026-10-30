@@ -14,7 +14,10 @@ describe("ProfileDialog", () => {
     id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
+    phone: "0912345678",
+    targetScore: 750,
     avatarVersion: null,
+    hasPassword: true,
   };
 
   it("không hiển thị khi isOpen = false", () => {

@@ -156,16 +156,17 @@ export async function authenticationResult(
     (role !== "ADMIN" && role !== "USER")
   )
     throw new Error("Invalid auth response");
+  const authenticatedUser: AuthenticatedUser = {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+  };
   return {
     accessToken: value.accessToken,
     accessTokenExpiresAtUtc: value.accessTokenExpiresAtUtc,
     refreshToken: value.refreshToken,
     refreshTokenExpiresAtUtc: value.refreshTokenExpiresAtUtc,
-    user: {
-      id: user.id,
-      displayName: user.displayName,
-      email: user.email,
-    } as AuthenticatedUser,
+    user: authenticatedUser,
     role: role as AuthenticatedRole,
     rememberMe,
   };

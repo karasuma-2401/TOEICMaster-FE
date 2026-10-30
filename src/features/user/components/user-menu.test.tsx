@@ -26,7 +26,10 @@ describe("UserMenu", () => {
     id: "user-1",
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
+    phone: "0912345678",
+    targetScore: 750,
     avatarVersion: null,
+    hasPassword: true,
   };
 
   it("hiển thị icon avatar tròn với chữ cái đầu khi đã đăng nhập", () => {

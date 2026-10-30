@@ -20,8 +20,7 @@ export function protectRoute(
   const session = sessionCookie(request);
   if (session && Date.parse(session.refreshTokenExpiresAtUtc) > Date.now()) {
     if (isAdminPath) {
-      const role = (session as typeof session & { role?: unknown }).role;
-      if (role !== "ADMIN")
+      if (session.role !== "ADMIN")
         return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();

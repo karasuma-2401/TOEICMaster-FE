@@ -16,12 +16,7 @@ export interface AuthSession {
   refreshTokenExpiresAtUtc: string;
   user: AuthenticatedUser;
   rememberMe: boolean;
-  /**
-   * Role is supplied by the authenticated backend response and is sealed in
-   * the server-only session cookie. Legacy sessions can omit it and therefore
-   * fail closed for admin routes.
-   */
-  role?: AuthenticatedRole;
+  role: AuthenticatedRole;
 }
 
 const cookieName = "toeicmaster_session";
@@ -59,9 +54,7 @@ function isSession(value: unknown): value is AuthSession {
     typeof session.refreshTokenExpiresAtUtc === "string" &&
     Number.isFinite(Date.parse(session.refreshTokenExpiresAtUtc)) &&
     typeof session.rememberMe === "boolean" &&
-    (session.role === undefined ||
-      session.role === "ADMIN" ||
-      session.role === "USER") &&
+    (session.role === "USER" || session.role === "ADMIN") &&
     !!user &&
     typeof user.id === "string" &&
     typeof user.displayName === "string" &&

@@ -14,6 +14,7 @@ function cookie() {
     refreshToken: "refresh-token",
     refreshTokenExpiresAtUtc: new Date(Date.now() + 3_600_000).toISOString(),
     user: { id: "user-1", displayName: "Linh", email: "linh@example.com" },
+    role: "USER",
     rememberMe: false,
   };
   setSessionCookie(response, session);

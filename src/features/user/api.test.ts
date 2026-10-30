@@ -17,13 +17,17 @@ const backendProfile = {
   displayName: "Linh",
   email: "linh@example.com",
   avatarUrl: null,
+  hasPassword: true,
 };
 
 const profile = {
   id: "user-1",
   email: "linh@example.com",
   displayName: "Linh",
+  phone: null,
+  targetScore: null,
   avatarVersion: null,
+  hasPassword: true,
 };
 
 afterEach(() => vi.unstubAllGlobals());
@@ -117,17 +121,53 @@ describe("profile API", () => {
     await expect(getProfile()).rejects.toMatchObject({ status: 502 });
   });
 
-  it("sends only the display name and validates the response", async () => {
+  it("maps phone, target score and hasPassword, with defaults for older backends", async () => {
+    const { hasPassword: _omitted, ...withoutHasPassword } = backendProfile;
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            ...backendProfile,
+            phone: "0912345678",
+            targetScore: 750,
+            hasPassword: false,
+          }),
+        )
+        .mockResolvedValueOnce(Response.json(withoutHasPassword))
+        .mockResolvedValueOnce(
+          Response.json({ ...backendProfile, targetScore: "750" }),
+        ),
+    );
+    await expect(getProfile()).resolves.toMatchObject({
+      phone: "0912345678",
+      targetScore: 750,
+      hasPassword: false,
+    });
+    await expect(getProfile()).resolves.toMatchObject({
+      phone: null,
+      targetScore: null,
+      hasPassword: true,
+    });
+    await expect(getProfile()).rejects.toMatchObject({ status: 502 });
+  });
+
+  it("sends name, phone and target score and validates the response", async () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json(backendProfile));
     vi.stubGlobal("fetch", fetchMock);
-    await expect(updateProfile({ displayName: "Linh" })).resolves.toEqual(
-      profile,
-    );
+    await expect(
+      updateProfile({ displayName: "Linh", phone: null, targetScore: null }),
+    ).resolves.toEqual(profile);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/profile",
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({ displayName: "Linh" }),
+        body: JSON.stringify({
+          displayName: "Linh",
+          phone: null,
+          targetScore: null,
+        }),
       }),
     );
   });
