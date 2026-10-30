@@ -1,25 +1,3 @@
-export const ADMIN_EXAM_PAGE_SIZES = [10, 20, 50] as const;
-export const EXAM_STATUSES = ["DRAFT", "PUBLISHED"] as const;
-
-export type ExamKind = "reading" | "writing";
-export type ExamStatus = "ALL" | (typeof EXAM_STATUSES)[number];
-
-export interface ExamListQuery {
-  kind: ExamKind;
-  status: ExamStatus;
-  page: number;
-  pageSize: (typeof ADMIN_EXAM_PAGE_SIZES)[number];
-  q: string;
-}
-
-export const DEFAULT_EXAM_LIST_QUERY: ExamListQuery = {
-  kind: "reading",
-  status: "ALL",
-  page: 1,
-  pageSize: 20,
-  q: "",
-};
-
 export interface ReadingExamListItem {
   examId: string;
   code: string;
@@ -90,69 +68,6 @@ export interface ReadingRevision {
   blocks: ReadingBlock[];
 }
 
-export interface WritingTestQuestion {
-  id: string;
-  exerciseId: string;
-  part: 1 | 2 | 3;
-  sequenceNumber: number;
-  snapshotJson: string | null;
-}
-
-export interface WritingTest {
-  id: string;
-  code: string;
-  title: string;
-  description: string;
-  status: "DRAFT" | "PUBLISHED";
-  version: number;
-  createdAtUtc: string;
-  updatedAtUtc: string;
-  publishedAtUtc: string | null;
-  questions: WritingTestQuestion[];
-}
-
-export interface WritingTestPage {
-  items: WritingTest[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-}
-
-export interface WritingExercise {
-  id: string;
-  part: 1 | 2 | 3;
-  code: string;
-  topic: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-  rubricNotes: string;
-  modelAnswer: string;
-  imageAssetId: string | null;
-  imageAlt: string | null;
-  keywordOne: string | null;
-  keywordTwo: string | null;
-  sender: string | null;
-  recipient: string | null;
-  subject: string | null;
-  emailBody: string | null;
-  directions: string | null;
-  prompt: string | null;
-  minimumWordCount: number | null;
-  outline: string | null;
-  version: number;
-  createdAtUtc: string;
-  updatedAtUtc: string;
-}
-
-export interface WritingExercisePage {
-  items: WritingExercise[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -199,100 +114,6 @@ function isReadingExamListItem(value: unknown): value is ReadingExamListItem {
   );
 }
 
-function isWritingTestQuestion(value: unknown): value is WritingTestQuestion {
-  if (!isRecord(value)) return false;
-  return (
-    isGuid(value.id) &&
-    isGuid(value.exerciseId) &&
-    (value.part === 1 || value.part === 2 || value.part === 3) &&
-    isPositiveInteger(value.sequenceNumber) &&
-    isNullableString(value.snapshotJson)
-  );
-}
-
-function isWritingTest(value: unknown): value is WritingTest {
-  if (!isRecord(value)) return false;
-  return (
-    isGuid(value.id) &&
-    typeof value.code === "string" &&
-    typeof value.title === "string" &&
-    typeof value.description === "string" &&
-    (value.status === "DRAFT" || value.status === "PUBLISHED") &&
-    isPositiveInteger(value.version) &&
-    isDate(value.createdAtUtc) &&
-    isDate(value.updatedAtUtc) &&
-    (value.publishedAtUtc === null || isDate(value.publishedAtUtc)) &&
-    Array.isArray(value.questions) &&
-    value.questions.every(isWritingTestQuestion)
-  );
-}
-
-function isWritingExercise(value: unknown): value is WritingExercise {
-  if (!isRecord(value)) return false;
-  return (
-    isGuid(value.id) &&
-    (value.part === 1 || value.part === 2 || value.part === 3) &&
-    typeof value.code === "string" &&
-    typeof value.topic === "string" &&
-    (value.difficulty === "EASY" ||
-      value.difficulty === "MEDIUM" ||
-      value.difficulty === "HARD") &&
-    (value.status === "DRAFT" ||
-      value.status === "PUBLISHED" ||
-      value.status === "ARCHIVED") &&
-    typeof value.rubricNotes === "string" &&
-    typeof value.modelAnswer === "string" &&
-    isNullableGuid(value.imageAssetId) &&
-    isNullableString(value.imageAlt) &&
-    isNullableString(value.keywordOne) &&
-    isNullableString(value.keywordTwo) &&
-    isNullableString(value.sender) &&
-    isNullableString(value.recipient) &&
-    isNullableString(value.subject) &&
-    isNullableString(value.emailBody) &&
-    isNullableString(value.directions) &&
-    isNullableString(value.prompt) &&
-    (value.minimumWordCount === null ||
-      isPositiveInteger(value.minimumWordCount)) &&
-    isNullableString(value.outline) &&
-    isPositiveInteger(value.version) &&
-    isDate(value.createdAtUtc) &&
-    isDate(value.updatedAtUtc)
-  );
-}
-
-export function parseExamListQuery(params: URLSearchParams): ExamListQuery {
-  const page = Number(params.get("page"));
-  const pageSize = Number(params.get("pageSize"));
-  const requestedStatus = params.get("status");
-  return {
-    kind: params.get("kind") === "writing" ? "writing" : "reading",
-    status:
-      requestedStatus === "DRAFT" || requestedStatus === "PUBLISHED"
-        ? requestedStatus
-        : "ALL",
-    page: Number.isInteger(page) && page > 0 ? Math.min(page, 10_000) : 1,
-    pageSize:
-      Number.isInteger(pageSize) &&
-      pageSize > ADMIN_EXAM_PAGE_SIZES[ADMIN_EXAM_PAGE_SIZES.length - 1]
-        ? ADMIN_EXAM_PAGE_SIZES[ADMIN_EXAM_PAGE_SIZES.length - 1]
-        : (ADMIN_EXAM_PAGE_SIZES.find((value) => value === pageSize) ??
-          DEFAULT_EXAM_LIST_QUERY.pageSize),
-    q: (params.get("q") ?? "").trim().slice(0, 100),
-  };
-}
-
-export function examListQueryString(query: ExamListQuery): string {
-  const params = new URLSearchParams({
-    kind: query.kind,
-    page: String(query.page),
-    pageSize: String(query.pageSize),
-  });
-  if (query.status !== "ALL") params.set("status", query.status);
-  if (query.q) params.set("q", query.q);
-  return params.toString();
-}
-
 export function parseReadingExamPage(value: unknown): ReadingExamPage {
   if (
     !isRecord(value) ||
@@ -307,31 +128,6 @@ export function parseReadingExamPage(value: unknown): ReadingExamPage {
   )
     throw new Error("Phản hồi danh sách đề Reading không hợp lệ.");
   return value as unknown as ReadingExamPage;
-}
-
-export function parseWritingTestPage(value: unknown): WritingTestPage {
-  if (
-    !isRecord(value) ||
-    !Array.isArray(value.items) ||
-    !value.items.every(isWritingTest) ||
-    !isPositiveInteger(value.pageNumber) ||
-    !isPositiveInteger(value.pageSize) ||
-    !isNonNegativeInteger(value.totalCount)
-  )
-    throw new Error("Phản hồi danh sách đề Writing không hợp lệ.");
-  return {
-    items: value.items,
-    pageNumber: value.pageNumber,
-    pageSize: value.pageSize,
-    totalCount: value.totalCount,
-    totalPages: Math.ceil(value.totalCount / value.pageSize),
-  };
-}
-
-export function parseWritingTest(value: unknown): WritingTest {
-  if (!isWritingTest(value))
-    throw new Error("Phản hồi đề Writing không hợp lệ.");
-  return value;
 }
 
 function isReadingQuestion(value: unknown): value is ReadingQuestion {
@@ -408,35 +204,6 @@ export function parseScoreProfiles(value: unknown): ScoreProfile[] {
   )
     throw new Error("Phản hồi barem điểm không hợp lệ.");
   return value as ScoreProfile[];
-}
-
-export function parseWritingExercisePage(value: unknown): WritingExercisePage {
-  if (
-    !isRecord(value) ||
-    !Array.isArray(value.items) ||
-    !value.items.every(isWritingExercise) ||
-    !isPositiveInteger(value.pageNumber) ||
-    !isPositiveInteger(value.pageSize) ||
-    !isNonNegativeInteger(value.totalCount)
-  )
-    throw new Error("Phản hồi ngân hàng bài tập Writing không hợp lệ.");
-  return {
-    items: value.items,
-    pageNumber: value.pageNumber,
-    pageSize: value.pageSize,
-    totalCount: value.totalCount,
-    totalPages: Math.ceil(value.totalCount / value.pageSize),
-  };
-}
-
-export function writingPartLabel(part: 1 | 2 | 3): string {
-  return (
-    {
-      1: "Part 1 · Viết câu theo tranh",
-      2: "Part 2 · Trả lời email",
-      3: "Part 3 · Viết bài luận",
-    } as const
-  )[part];
 }
 
 export function formatAdminDate(value: string): string {

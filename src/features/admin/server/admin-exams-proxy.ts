@@ -39,8 +39,7 @@ export async function forwardAdminExamRequest(
   if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
     return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
 
-  const role = (session as typeof session & { role?: unknown }).role;
-  if (role !== "ADMIN")
+  if (session.role !== "ADMIN")
     return problem(403, "Bạn không có quyền truy cập chức năng này.");
 
   const init: RequestInit = { method };

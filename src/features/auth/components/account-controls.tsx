@@ -80,7 +80,7 @@ export function AccountControls() {
         <div className="flex items-center gap-3">
           <span>Xin chào, {state.user.displayName}</span>
           <button
-            className="rounded-md px-2 py-1 text-[var(--admin-brand-red)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
+            className="rounded-md px-2 py-1 text-blue-700 hover:underline focus-visible:outline-2"
             disabled={pending}
             onClick={signOut}
             type="button"
@@ -90,16 +90,10 @@ export function AccountControls() {
         </div>
       ) : state?.status === "guest" || error ? (
         <div className="flex gap-3">
-          <Link
-            className="text-[var(--admin-brand-red)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
-            href="/login"
-          >
+          <Link className="text-blue-700 hover:underline" href="/login">
             Đăng nhập
           </Link>
-          <Link
-            className="text-[var(--admin-brand-red)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
-            href="/register"
-          >
+          <Link className="text-blue-700 hover:underline" href="/register">
             Đăng ký
           </Link>
         </div>

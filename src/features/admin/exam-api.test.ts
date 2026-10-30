@@ -3,7 +3,6 @@ import { ApiError } from "@/shared/api/client";
 import { refreshSession } from "@/features/auth/api";
 import {
   getReadingExams,
-  getWritingTests,
   uploadReadingMasterAudio,
   updateReadingQuestion,
 } from "./exam-api";
@@ -25,35 +24,21 @@ afterEach(() => {
 });
 
 describe("admin exam API client", () => {
-  it("keeps Reading and Writing list requests on same-origin endpoints", async () => {
-    vi.mocked(getJson)
-      .mockResolvedValueOnce({
-        items: [],
-        pageNumber: 1,
-        pageSize: 20,
-        totalCount: 0,
-        totalPages: 0,
-        hasNextPage: false,
-        hasPreviousPage: false,
-      })
-      .mockResolvedValueOnce({
-        items: [],
-        pageNumber: 1,
-        pageSize: 20,
-        totalCount: 0,
-      });
+  it("keeps Reading list requests on the same-origin endpoint", async () => {
+    vi.mocked(getJson).mockResolvedValueOnce({
+      items: [],
+      pageNumber: 1,
+      pageSize: 20,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
 
     await getReadingExams({ status: "ALL", page: 1, pageSize: 20 });
-    await getWritingTests({ q: "", status: "ALL", page: 1, pageSize: 20 });
 
-    expect(getJson).toHaveBeenNthCalledWith(
-      1,
+    expect(getJson).toHaveBeenCalledWith(
       "/api/admin/exams?status=&pageNumber=1&pageSize=20",
-      undefined,
-    );
-    expect(getJson).toHaveBeenNthCalledWith(
-      2,
-      "/api/admin/writing/tests?query=&status=&pageNumber=1&pageSize=20",
       undefined,
     );
   });

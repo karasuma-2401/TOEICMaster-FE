@@ -4,15 +4,9 @@ import {
   parseReadingExamPage,
   parseReadingRevision,
   parseScoreProfiles,
-  parseWritingExercisePage,
-  parseWritingTest,
-  parseWritingTestPage,
   type ReadingExamPage,
   type ReadingRevision,
   type ScoreProfile,
-  type WritingExercisePage,
-  type WritingTest,
-  type WritingTestPage,
 } from "./exam-management";
 
 export class AdminExamApiError extends Error {
@@ -29,10 +23,6 @@ export interface ReadingListRequest {
   status: "ALL" | "DRAFT" | "PUBLISHED";
   page: number;
   pageSize: number;
-}
-
-export interface WritingTestListRequest extends ReadingListRequest {
-  q: string;
 }
 
 export interface CreateReadingExamInput {
@@ -71,17 +61,6 @@ export interface UpdateReadingContextsInput {
     text: string | null;
     imageAssetId: string | null;
     altText: string | null;
-  }>;
-}
-
-export interface WritingTestInput {
-  code: string;
-  title: string;
-  description: string | null;
-  questions: Array<{
-    exerciseId: string;
-    part: 1 | 2 | 3;
-    sequenceNumber: number;
   }>;
 }
 
@@ -184,28 +163,6 @@ export async function getReadingExams(
   }
 }
 
-export async function getWritingTests(
-  query: WritingTestListRequest,
-  signal?: AbortSignal,
-): Promise<WritingTestPage> {
-  const params = new URLSearchParams({
-    query: query.q,
-    status: query.status === "ALL" ? "" : query.status,
-    pageNumber: String(query.page),
-    pageSize: String(query.pageSize),
-  });
-  try {
-    return parseWritingTestPage(
-      await getJson<unknown>(`/api/admin/writing/tests?${params}`, signal),
-    );
-  } catch (error) {
-    throw normalizeReadError(
-      error,
-      "Dữ liệu danh sách đề Writing không hợp lệ.",
-    );
-  }
-}
-
 function normalizeReadError(
   error: unknown,
   fallback: string,
@@ -242,41 +199,6 @@ export async function getReadingRevision(
     );
   } catch (error) {
     throw normalizeReadError(error, "Dữ liệu đề Reading không hợp lệ.");
-  }
-}
-
-export async function getWritingTest(
-  testId: string,
-  signal?: AbortSignal,
-): Promise<WritingTest> {
-  try {
-    return parseWritingTest(
-      await getJson<unknown>(
-        `/api/admin/writing/tests/${encodeURIComponent(testId)}`,
-        signal,
-      ),
-    );
-  } catch (error) {
-    throw normalizeReadError(error, "Dữ liệu đề Writing không hợp lệ.");
-  }
-}
-
-export async function getPublishedWritingExercises(
-  part: 1 | 2 | 3,
-  signal?: AbortSignal,
-): Promise<WritingExercisePage> {
-  const params = new URLSearchParams({
-    part: String(part),
-    status: "PUBLISHED",
-    pageNumber: "1",
-    pageSize: "50",
-  });
-  try {
-    return parseWritingExercisePage(
-      await getJson<unknown>(`/api/admin/writing/exercises?${params}`, signal),
-    );
-  } catch (error) {
-    throw normalizeReadError(error, "Dữ liệu ngân hàng Writing không hợp lệ.");
   }
 }
 
@@ -324,7 +246,6 @@ export async function updateReadingQuestion(
     input,
   );
 }
-
 export async function updateReadingContexts(
   examId: string,
   revisionId: string,
@@ -384,49 +305,6 @@ export async function publishReadingRevision(
       "Phản hồi xuất bản đề Reading không hợp lệ.",
     );
   return value;
-}
-
-export async function createWritingTest(
-  input: WritingTestInput,
-): Promise<WritingTest> {
-  return parseWrittenResponse(
-    await request<unknown>("/api/admin/writing/tests", "POST", input),
-  );
-}
-
-export async function updateWritingTest(
-  testId: string,
-  version: number,
-  input: WritingTestInput,
-): Promise<WritingTest> {
-  return parseWrittenResponse(
-    await request<unknown>(
-      `/api/admin/writing/tests/${encodeURIComponent(testId)}`,
-      "PUT",
-      { version, test: input },
-    ),
-  );
-}
-
-export async function publishWritingTest(
-  testId: string,
-  version: number,
-): Promise<WritingTest> {
-  return parseWrittenResponse(
-    await request<unknown>(
-      `/api/admin/writing/tests/${encodeURIComponent(testId)}/publish`,
-      "POST",
-      { version },
-    ),
-  );
-}
-
-function parseWrittenResponse(value: unknown): WritingTest {
-  try {
-    return parseWritingTest(value);
-  } catch {
-    throw new AdminExamApiError(502, "Phản hồi đề Writing không hợp lệ.");
-  }
 }
 
 function isGuid(value: unknown): value is string {

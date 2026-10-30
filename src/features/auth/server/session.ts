@@ -7,16 +7,14 @@ export interface AuthenticatedUser {
   email: string;
 }
 
-export type AuthenticatedRole = "ADMIN" | "USER";
-
 export interface AuthSession {
   accessToken: string;
   accessTokenExpiresAtUtc: string;
   refreshToken: string;
   refreshTokenExpiresAtUtc: string;
   user: AuthenticatedUser;
+  role: "USER" | "ADMIN";
   rememberMe: boolean;
-  role: AuthenticatedRole;
 }
 
 const cookieName = "toeicmaster_session";
@@ -86,16 +84,10 @@ export function readSession(cookie: string | undefined): AuthSession | null {
   }
 }
 
-type SessionCookieStore = {
-  get(name: string): { value: string } | undefined;
-};
-
-export function sessionFromCookieStore(cookies: SessionCookieStore) {
-  return readSession(cookies.get(cookieName)?.value);
-}
-
-export function sessionCookie(request: { cookies: SessionCookieStore }) {
-  return sessionFromCookieStore(request.cookies);
+export function sessionCookie(request: {
+  cookies: { get(name: string): { value: string } | undefined };
+}) {
+  return readSession(request.cookies.get(cookieName)?.value);
 }
 
 export function setSessionCookie(response: NextResponse, session: AuthSession) {

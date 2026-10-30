@@ -311,7 +311,7 @@ function ExerciseBank({
     <>
       <section
         aria-label="Phạm vi ngân hàng dữ liệu"
-        className="mb-4 grid overflow-hidden rounded-2xl border border-[#ffd2c1] bg-[#fff7f2] p-1 sm:grid-cols-3"
+        className="mb-4 overflow-hidden rounded-2xl border border-[#ffd2c1] bg-[#fff7f2] p-1"
       >
         <div
           className="rounded-xl px-5 py-4 text-white shadow-[0_8px_20px_rgb(236_37_27/24%)]"
@@ -319,20 +319,6 @@ function ExerciseBank({
         >
           <p className="text-sm font-bold">Listening &amp; Reading</p>
           <p className="mt-0.5 text-xs text-white/80">7 Part cố định</p>
-        </div>
-        <div
-          aria-disabled="true"
-          className="px-5 py-4 text-center text-[var(--admin-muted)]"
-        >
-          <p className="text-sm font-bold">Speaking</p>
-          <p className="mt-0.5 text-xs">5 Part · Chưa thuộc phạm vi</p>
-        </div>
-        <div
-          aria-disabled="true"
-          className="px-5 py-4 text-center text-[var(--admin-muted)]"
-        >
-          <p className="text-sm font-bold">Writing</p>
-          <p className="mt-0.5 text-xs">3 Part · Chưa thuộc phạm vi</p>
         </div>
       </section>
 

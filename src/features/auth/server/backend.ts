@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import type {
-  AuthenticatedRole,
-  AuthenticatedUser,
-  AuthSession,
-} from "./session";
+import type { AuthenticatedUser, AuthSession } from "./session";
 
 type Errors = Record<string, string[]>;
+type SessionRole = "USER" | "ADMIN";
 
 export function problem(status: number, title: string, errors?: Errors) {
   return NextResponse.json(
@@ -137,7 +134,6 @@ export async function authenticationResult(
     throw new Error("Invalid auth response");
   const value = body as Record<string, unknown>;
   const user = value.user as Record<string, unknown> | undefined;
-  const role = user?.role;
   if (
     value.tokenType !== "Bearer" ||
     typeof value.accessToken !== "string" ||
@@ -153,7 +149,7 @@ export async function authenticationResult(
     !user.id ||
     typeof user.displayName !== "string" ||
     typeof user.email !== "string" ||
-    (role !== "ADMIN" && role !== "USER")
+    (user.role !== "USER" && user.role !== "ADMIN")
   )
     throw new Error("Invalid auth response");
   const authenticatedUser: AuthenticatedUser = {
@@ -167,7 +163,7 @@ export async function authenticationResult(
     refreshToken: value.refreshToken,
     refreshTokenExpiresAtUtc: value.refreshTokenExpiresAtUtc,
     user: authenticatedUser,
-    role: role as AuthenticatedRole,
+    role: user.role as SessionRole,
     rememberMe,
   };
 }

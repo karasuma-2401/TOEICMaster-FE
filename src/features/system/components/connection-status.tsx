@@ -20,7 +20,7 @@ export function ConnectionStatus() {
   }, [attempt]);
 
   return (
-    <div className="mt-10 flex items-center gap-4 text-sm text-[var(--admin-ink-soft)]">
+    <div className="mt-10 flex items-center gap-4 text-sm text-slate-600">
       <output aria-live="polite">
         {state === "loading"
           ? "Đang kiểm tra kết nối…"
@@ -30,7 +30,7 @@ export function ConnectionStatus() {
       </output>
       {state === "error" && (
         <button
-          className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-2 font-medium text-[var(--admin-brand-red)] hover:bg-[var(--admin-nav-active)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
+          className="rounded-lg border border-slate-300 px-3 py-2 font-medium hover:bg-white focus-visible:outline-2 focus-visible:outline-blue-600"
           onClick={() => {
             setState("loading");
             setAttempt((value) => value + 1);

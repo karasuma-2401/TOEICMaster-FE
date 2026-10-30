@@ -58,32 +58,33 @@ describe("forwardAdminExamRequest", () => {
     vi.mocked(backendFetch).mockResolvedValueOnce(
       Response.json({ id: "new-test" }, { status: 201 }),
     );
-    const request = new NextRequest(
-      "http://localhost/api/admin/writing/tests",
-      {
-        method: "POST",
-        headers: {
-          Cookie: cookie("ADMIN"),
-          Origin: "http://localhost",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: "WR-1" }),
+    const request = new NextRequest("http://localhost/api/admin/exams", {
+      method: "POST",
+      headers: {
+        Cookie: cookie("ADMIN"),
+        Origin: "http://localhost",
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        code: "LR-1",
+        title: "Placement",
+        scoreProfileId: "2d79f0a4-9b83-4f25-b902-a791eb0063ac",
+      }),
+    });
 
-    await forwardAdminExamRequest(
-      request,
-      "/api/v1/admin/writing/tests",
-      "POST",
-    );
+    await forwardAdminExamRequest(request, "/api/v1/admin/exams", "POST");
 
     expect(backendFetch).toHaveBeenCalledWith(
-      "/api/v1/admin/writing/tests",
+      "/api/v1/admin/exams",
       "access-token",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: "WR-1" }),
+        body: JSON.stringify({
+          code: "LR-1",
+          title: "Placement",
+          scoreProfileId: "2d79f0a4-9b83-4f25-b902-a791eb0063ac",
+        }),
       }),
     );
   });
@@ -92,7 +93,7 @@ describe("forwardAdminExamRequest", () => {
     const form = new FormData();
     form.set("file", new Blob(["workbook"]), "import.xlsx");
     const request = new NextRequest(
-      "http://localhost/api/admin/writing/exercises/imports/validate?part=1",
+      "http://localhost/api/admin/lr-exercise-bank/parts/1/imports",
       {
         method: "POST",
         headers: { Cookie: cookie("ADMIN"), Origin: "http://evil.example" },
@@ -102,7 +103,7 @@ describe("forwardAdminExamRequest", () => {
 
     const response = await forwardAdminExamRequest(
       request,
-      "/api/v1/admin/writing/exercises/imports/validate?part=1",
+      "/api/v1/admin/lr-exercise-bank/parts/1/imports",
       "POST",
     );
 

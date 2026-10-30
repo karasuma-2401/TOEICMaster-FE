@@ -108,8 +108,6 @@ describe("DataBankCenter", () => {
     await waitFor(() =>
       expect(screen.getByText("Listening & Reading")).toBeInTheDocument(),
     );
-    expect(screen.getByText("Speaking")).toBeInTheDocument();
-    expect(screen.getByText("Writing")).toBeInTheDocument();
     expect(screen.getByText("7 Part cố định")).toBeInTheDocument();
   });
 

@@ -1,7 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { sessionFromCookieStore } from "@/features/auth/server/session";
 import { ConnectionStatus } from "@/features/system/components/connection-status";
 import { UserMenu } from "@/features/user/components/user-menu";
 
@@ -38,17 +35,14 @@ const areas = [
 export default async function Home(props: {
   searchParams?: Promise<{ profile?: string }>;
 }) {
-  const session = sessionFromCookieStore(await cookies());
-  if (session?.role === "ADMIN") redirect("/admin/exams");
-
   const searchParams = await props.searchParams;
   const openProfile = searchParams?.profile === "1";
 
   return (
-    <div className="min-h-screen bg-[var(--admin-page)]">
-      <header className="border-b border-[var(--admin-border)] bg-[var(--admin-surface)]">
+    <div className="min-h-screen">
+      <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-          <span className="text-xl font-bold tracking-tight text-[var(--admin-brand-red)]">
+          <span className="text-xl font-bold tracking-tight text-blue-700">
             TOEICMaster
           </span>
           <div className="flex items-center gap-3">
@@ -60,10 +54,10 @@ export default async function Home(props: {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-16">
-        <p className="text-sm font-semibold tracking-wide text-[var(--admin-brand-red)]">
+        <p className="text-sm font-semibold text-blue-700">
           HỌC VÀ LUYỆN THI TOEIC
         </p>
-        <h1 className="mt-4 max-w-2xl text-4xl leading-tight font-bold text-[var(--admin-ink)] sm:text-5xl">
+        <h1 className="mt-4 max-w-2xl text-4xl leading-tight font-bold sm:text-5xl">
           Từng bước tiến tới mục tiêu TOEIC của bạn.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
