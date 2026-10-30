@@ -37,12 +37,12 @@ describe("AdminSidebar", () => {
     expect(props.onToggleCollapsed).toHaveBeenCalledOnce();
   });
 
-  it("keeps available Writing data pages navigable while future pages stay disabled", () => {
+  it("opens Listening and Reading management from the data-bank sidebar item", () => {
     render(<AdminSidebar {...props} />);
 
     expect(screen.getByRole("link", { name: "Kho dữ liệu" })).toHaveAttribute(
       "href",
-      "/admin/content/writing",
+      "/admin/exams",
     );
     expect(
       screen.getByRole("button", { name: /Nhật ký hoạt động/ }),

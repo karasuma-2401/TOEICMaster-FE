@@ -16,10 +16,10 @@ export const adminNavigation = [
   {
     label: "Kho dữ liệu",
     icon: "▤",
-    href: "/admin/content/writing",
-    description: "Quản lý dữ liệu và đề Writing, Speaking",
+    href: "/admin/exams",
+    description: "Quản lý ngân hàng bài tập và đề thi TOEIC",
     enabled: true,
-    matches: ["/admin/content", "/admin/tests"],
+    matches: ["/admin/content", "/admin/exams", "/admin/tests"],
   },
   {
     label: "Nhật ký hoạt động",

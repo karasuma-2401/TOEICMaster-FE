@@ -105,10 +105,22 @@ describe("DataBankCenter", () => {
   it("presents Listening & Reading as the active orange data-bank scope", async () => {
     render(<DataBankCenter />);
 
-    await waitFor(() =>
-      expect(screen.getByText("Listening & Reading")).toBeInTheDocument(),
+    expect(
+      screen.getByRole("heading", { name: "Kho dữ liệu" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Listening & Reading.*7 Part/i }),
+    ).toHaveAttribute("href", "/admin/exams");
+    expect(
+      screen.getByRole("link", { name: /Speaking.*5 Part/i }),
+    ).toHaveAttribute("href", "/admin/content/speaking");
+    expect(
+      screen.getByRole("link", { name: /Writing.*3 Part/i }),
+    ).toHaveAttribute("href", "/admin/content/writing");
+    expect(screen.getByRole("link", { name: "Đề thi" })).toHaveAttribute(
+      "href",
+      "/admin/exams?tab=tests",
     );
-    expect(screen.getByText("7 Part cố định")).toBeInTheDocument();
   });
 
   it("uses the shared red-orange primary action style for creating a complete test", async () => {
@@ -155,10 +167,10 @@ describe("DataBankCenter", () => {
       screen.queryByRole("heading", { name: "Kho dữ liệu" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("tab", { name: "Bài tập" }),
+      screen.queryByRole("link", { name: "Bài tập" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("tab", { name: "Đề thi" }),
+      screen.queryByRole("link", { name: "Đề thi" }),
     ).not.toBeInTheDocument();
   });
 });
