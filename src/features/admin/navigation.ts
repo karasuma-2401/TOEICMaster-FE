@@ -15,9 +15,9 @@ export const adminNavigation = [
   },
   {
     label: "Kho dữ liệu",
-    icon: "▣",
-    href: "/admin/exams",
-    description: "Quản lý bài tập và đề Listening & Reading",
+    icon: "▤",
+    href: "/admin/content/writing",
+    description: "Quản lý dữ liệu và đề Writing, Speaking",
     enabled: true,
     matches: ["/admin/content", "/admin/tests"],
   },
