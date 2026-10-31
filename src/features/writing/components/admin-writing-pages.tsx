@@ -778,7 +778,7 @@ export function AdminWritingContentPage() {
           onSaved={() => {
             setDrawer(null);
             setRevision((v) => v + 1);
-            setNotice("Đã lưu bài tập trong mock repository.");
+            setNotice("Đã lưu bài tập.");
           }}
         />
       )}
@@ -790,9 +790,7 @@ export function AdminWritingContentPage() {
           onClose={() => setImportOpen(false)}
           onImported={() => {
             setImportOpen(false);
-            setNotice(
-              "Đã import 2 dòng hợp lệ (mock). API thật sẽ được nối ở CP4.",
-            );
+            setNotice("Đã import dữ liệu bài tập thành công.");
           }}
           part={filter.part}
         />
@@ -825,15 +823,20 @@ function Builder({
   const [showPreview, setShowPreview] = useState(false);
   const template = timingTemplates[0];
   const replaceSlot = (part: WritingPart, index: number, id: string) =>
-    setDraft((current) => ({
-      ...current,
-      questionIds: {
-        ...current.questionIds,
-        [part]: current.questionIds[part].map((old, currentIndex) =>
-          currentIndex === index ? id : old,
-        ),
-      },
-    }));
+    setDraft((current) => {
+      const currentList = Array.from(
+        { length: slots(part) },
+        (_, i) => current.questionIds[part]?.[i] ?? "",
+      );
+      currentList[index] = id;
+      return {
+        ...current,
+        questionIds: {
+          ...current.questionIds,
+          [part]: currentList,
+        },
+      };
+    });
   const persist = (publish: boolean) => {
     const next = {
       ...draft,
@@ -1090,43 +1093,55 @@ export function AdminWritingTestsPage() {
               </tr>
             </thead>
             <tbody>
-              {tests.map((test) => (
-                <tr
-                  className="border-t border-[var(--admin-border)]"
-                  key={test.id}
-                >
-                  <td className="p-4 font-bold text-[var(--admin-brand-red)]">
-                    {test.code}
-                  </td>
-                  <td className="p-4">
-                    <b>{test.title}</b>
-                    <p className="mt-1 text-xs text-[var(--admin-muted)]">
-                      {test.updatedAtLabel}
-                    </p>
-                  </td>
-                  <td className="p-4">
-                    {test.questionIds[1].length}/5 ·{" "}
-                    {test.questionIds[2].length}/2 ·{" "}
-                    {test.questionIds[3].length}/1
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {test.status === "PUBLISHED" ? "Công bố" : "Bản nháp"}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      className="font-bold text-[var(--admin-brand-red)]"
-                      onClick={() => setBuilder(test)}
-                      type="button"
-                    >
-                      Mở builder
-                    </button>
+              {tests.length === 0 ? (
+                <tr>
+                  <td
+                    className="p-8 text-center text-sm text-[var(--admin-muted)]"
+                    colSpan={5}
+                  >
+                    Chưa có đề thi nào. Bấm <b>+ Tạo đề Writing</b> để tạo đề
+                    mới.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                tests.map((test) => (
+                  <tr
+                    className="border-t border-[var(--admin-border)]"
+                    key={test.id}
+                  >
+                    <td className="p-4 font-bold text-[var(--admin-brand-red)]">
+                      {test.code}
+                    </td>
+                    <td className="p-4">
+                      <b>{test.title}</b>
+                      <p className="mt-1 text-xs text-[var(--admin-muted)]">
+                        {test.updatedAtLabel}
+                      </p>
+                    </td>
+                    <td className="p-4">
+                      {test.questionIds[1].length}/5 ·{" "}
+                      {test.questionIds[2].length}/2 ·{" "}
+                      {test.questionIds[3].length}/1
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                      >
+                        {test.status === "PUBLISHED" ? "Công bố" : "Bản nháp"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        className="font-bold text-[var(--admin-brand-red)]"
+                        onClick={() => setBuilder(test)}
+                        type="button"
+                      >
+                        Mở builder
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
