@@ -15,10 +15,10 @@ Quyết định và lý do được ghi tại
 
 ## Phạm vi và ranh giới
 
-| Trong phạm vi | Ngoài phạm vi |
-| --- | --- |
+| Trong phạm vi                                                       | Ngoài phạm vi                                                        |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Admin L&R, import Excel, quản lý MP3/ảnh, checklist và chặn publish | Migration tệp cũ, learner player/UI, Speaking/Writing, bucket public |
-| Backend/MinIO contract cần cho presigned upload | Đưa MinIO credential hoặc `API_BASE_URL` vào client |
+| Backend/MinIO contract cần cho presigned upload                     | Đưa MinIO credential hoặc `API_BASE_URL` vào client                  |
 
 ## Thiết kế đích
 
