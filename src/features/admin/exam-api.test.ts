@@ -3,6 +3,7 @@ import { ApiError } from "@/shared/api/client";
 import { refreshSession } from "@/features/auth/api";
 import {
   getReadingExams,
+  uploadFileToMediaIntent,
   uploadReadingMasterAudio,
   updateReadingQuestion,
 } from "./exam-api";
@@ -43,6 +44,34 @@ describe("admin exam API client", () => {
     );
   });
 
+  it("uploads workspace bytes directly to the presigned storage URL", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const file = new File(["audio"], "group.mp3", { type: "audio/mpeg" });
+
+    await uploadFileToMediaIntent(
+      {
+        intentId: "00000000-0000-4000-8000-000000000001",
+        uploadUrl: "http://localhost:9000/exam-media/presigned",
+        expiresAtUtc: "2026-11-03T12:00:00.000Z",
+        requiredHeaders: { "Content-Type": "audio/mpeg" },
+      },
+      file,
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:9000/exam-media/presigned",
+      expect.objectContaining({
+        method: "PUT",
+        headers: { "Content-Type": "audio/mpeg" },
+        body: file,
+        credentials: "omit",
+      }),
+    );
+  });
+
   it("retries a save once after refreshing an expired session", async () => {
     const fetchMock = vi
       .fn()
@@ -66,6 +95,7 @@ describe("admin exam API client", () => {
       translation: null,
       explanation: null,
       imageAssetId: null,
+      imageRequired: false,
     });
 
     expect(refreshSession).toHaveBeenCalledOnce();

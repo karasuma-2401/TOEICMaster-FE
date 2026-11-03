@@ -37,6 +37,7 @@ export interface ReadingQuestion {
   translation: string | null;
   explanation: string | null;
   imageAssetId: string | null;
+  imageRequired: boolean;
 }
 
 export interface ReadingContext {
@@ -45,6 +46,7 @@ export interface ReadingContext {
   text: string | null;
   imageAssetId: string | null;
   altText: string | null;
+  imageRequired: boolean;
 }
 
 export interface ReadingBlock {
@@ -52,6 +54,7 @@ export interface ReadingBlock {
   part: number;
   type: string;
   firstQuestionNumber: number;
+  audioAssetId: string | null;
   contextBlocks: ReadingContext[];
   questions: ReadingQuestion[];
 }
@@ -65,6 +68,7 @@ export interface ReadingRevision {
   status: "Draft" | "Published";
   scoreProfileId: string;
   hasMasterAudio: boolean;
+  usesMediaWorkspace: boolean;
   blocks: ReadingBlock[];
 }
 
@@ -143,7 +147,8 @@ function isReadingQuestion(value: unknown): value is ReadingQuestion {
     isNullableString(value.correctKey) &&
     isNullableString(value.translation) &&
     isNullableString(value.explanation) &&
-    isNullableGuid(value.imageAssetId)
+    isNullableGuid(value.imageAssetId) &&
+    typeof value.imageRequired === "boolean"
   );
 }
 
@@ -154,7 +159,8 @@ function isReadingContext(value: unknown): value is ReadingContext {
     (value.type === "Text" || value.type === "Image") &&
     isNullableString(value.text) &&
     isNullableGuid(value.imageAssetId) &&
-    isNullableString(value.altText)
+    isNullableString(value.altText) &&
+    typeof value.imageRequired === "boolean"
   );
 }
 
@@ -165,6 +171,7 @@ function isReadingBlock(value: unknown): value is ReadingBlock {
     isPositiveInteger(value.part) &&
     typeof value.type === "string" &&
     isPositiveInteger(value.firstQuestionNumber) &&
+    isNullableGuid(value.audioAssetId) &&
     Array.isArray(value.contextBlocks) &&
     value.contextBlocks.every(isReadingContext) &&
     Array.isArray(value.questions) &&
@@ -183,6 +190,7 @@ export function parseReadingRevision(value: unknown): ReadingRevision {
     (value.status !== "Draft" && value.status !== "Published") ||
     !isGuid(value.scoreProfileId) ||
     typeof value.hasMasterAudio !== "boolean" ||
+    typeof value.usesMediaWorkspace !== "boolean" ||
     !Array.isArray(value.blocks) ||
     !value.blocks.every(isReadingBlock)
   )

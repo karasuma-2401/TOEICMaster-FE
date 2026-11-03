@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { ChangeEvent, useEffect, useState } from "react";
 import {
+  completeMediaUploadIntent,
+  createMediaUploadIntent,
   getReadingRevision,
   publishReadingRevision,
   updateReadingContexts,
   updateReadingQuestion,
   uploadReadingImage,
   uploadReadingMasterAudio,
+  uploadFileToMediaIntent,
 } from "@/features/admin/exam-api";
 import {
   type ReadingBlock,
@@ -28,6 +31,7 @@ interface QuestionDraft {
   translation: string;
   explanation: string;
   imageAssetId: string | null;
+  imageRequired: boolean;
 }
 
 function toDraft(question: ReadingQuestion): QuestionDraft {
@@ -48,6 +52,7 @@ function toDraft(question: ReadingQuestion): QuestionDraft {
     translation: question.translation ?? "",
     explanation: question.explanation ?? "",
     imageAssetId: question.imageAssetId,
+    imageRequired: question.imageRequired,
   };
 }
 
@@ -171,6 +176,7 @@ export function ReadingExamWorkspace({
           translation: draft.translation.trim() || null,
           explanation: draft.explanation.trim() || null,
           imageAssetId: draft.imageAssetId,
+          imageRequired: draft.imageRequired,
         },
       );
       setNotice(`Đã lưu câu ${selected.question.number}.`);
@@ -206,13 +212,91 @@ export function ReadingExamWorkspace({
 
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file || !draft) return;
+    if (!file || !draft || !selected) return;
     setSaving(true);
     setNotice(null);
     try {
-      const asset = await uploadReadingImage(file);
+      const asset = revision?.usesMediaWorkspace
+        ? await uploadWorkspaceMedia(
+            "QuestionImage",
+            String(selected.question.number),
+            file,
+          )
+        : await uploadReadingImage(file);
       setDraft({ ...draft, imageAssetId: asset.id });
       setNotice("Đã tải ảnh lên. Nhấn “Lưu câu hỏi” để gắn ảnh vào đề.");
+    } catch (reason) {
+      setNotice(
+        reason instanceof Error ? reason.message : "Không thể tải ảnh lên.",
+      );
+    } finally {
+      setSaving(false);
+      event.target.value = "";
+    }
+  }
+
+  async function uploadWorkspaceMedia(
+    ownerKind: "AudioGroup" | "QuestionImage" | "ContextImage",
+    ownerKey: string,
+    file: File,
+  ) {
+    const intent = await createMediaUploadIntent(examId, revisionId, {
+      ownerKind,
+      ownerKey,
+      contentType: file.type,
+      byteSize: file.size,
+    });
+    await uploadFileToMediaIntent(intent, file);
+    return completeMediaUploadIntent(examId, revisionId, intent.intentId);
+  }
+
+  async function chooseAudioGroup(
+    blockKey: string,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSaving(true);
+    setNotice(null);
+    try {
+      await uploadWorkspaceMedia("AudioGroup", blockKey, file);
+      setNotice("Đã hoàn tất tải audio cho nhóm Listening.");
+      setRetry((value) => value + 1);
+    } catch (reason) {
+      setNotice(
+        reason instanceof Error ? reason.message : "Không thể tải audio lên.",
+      );
+    } finally {
+      setSaving(false);
+      event.target.value = "";
+    }
+  }
+
+  async function chooseContextImage(
+    blockKey: string,
+    ordinal: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSaving(true);
+    setNotice(null);
+    try {
+      const asset = await uploadWorkspaceMedia(
+        "ContextImage",
+        `${blockKey}:${ordinal}`,
+        file,
+      );
+      setContextDrafts((current) => ({
+        ...current,
+        [blockKey]: (current[blockKey] ?? []).map((context) =>
+          context.ordinal === ordinal
+            ? { ...context, imageAssetId: asset.id }
+            : context,
+        ),
+      }));
+      setNotice("Đã hoàn tất tải ảnh ngữ cảnh.");
+      setRetry((value) => value + 1);
     } catch (reason) {
       setNotice(
         reason instanceof Error ? reason.message : "Không thể tải ảnh lên.",
@@ -295,6 +379,21 @@ export function ReadingExamWorkspace({
     0,
   );
   const isPublished = revision.status === "Published";
+  const listeningBlocks = revision.blocks.filter(
+    (block) => block.part >= 1 && block.part <= 4,
+  );
+  const mediaReady = revision.usesMediaWorkspace
+    ? listeningBlocks.every((block) => block.audioAssetId) &&
+      revision.blocks.every(
+        (block) =>
+          block.questions.every(
+            (question) => !question.imageRequired || question.imageAssetId,
+          ) &&
+          block.contextBlocks.every(
+            (context) => !context.imageRequired || context.imageAssetId,
+          ),
+      )
+    : revision.hasMasterAudio;
 
   return (
     <div className="mx-auto max-w-[1560px]">
@@ -336,10 +435,10 @@ export function ReadingExamWorkspace({
           </button>
           <button
             className="admin-primary-action h-10 rounded-lg px-4 text-sm font-bold"
-            disabled={isPublished || publishing || !revision.hasMasterAudio}
+            disabled={isPublished || publishing || !mediaReady}
             onClick={() => void publish()}
             title={
-              revision.hasMasterAudio
+              mediaReady
                 ? undefined
                 : "Tải master audio trước khi xuất bản đề L&R."
             }
@@ -381,37 +480,69 @@ export function ReadingExamWorkspace({
               Backend hiện xuất bản toàn bộ đề Listening & Reading. Reading hoàn
               thiện vẫn cần phần Listening hợp lệ trước khi publish thành công.
             </p>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--admin-border)] bg-white p-3">
-              <div className="flex items-center gap-3">
-                <span className="grid size-9 place-items-center rounded-lg bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]">
-                  <ExamIcon className="size-5" name="upload" />
-                </span>
-                <span>
-                  <strong className="block text-sm text-[var(--admin-ink)]">
-                    Master audio L&R
-                  </strong>
-                  <small className="mt-0.5 block text-xs text-[var(--admin-muted)]">
-                    {revision.hasMasterAudio
-                      ? "Đã có file audio. Có thể thay thế khi đề còn Draft."
-                      : "Bắt buộc trước khi publish. Chấp nhận MP3/WAV, tối đa 100 MiB."}
-                  </small>
-                </span>
+            {revision.usesMediaWorkspace ? (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-bold text-[var(--admin-ink)]">
+                  Listening Media
+                </p>
+                {listeningBlocks.map((block) => (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--admin-border)] bg-white p-3"
+                    key={block.key}
+                  >
+                    <span className="text-sm text-[var(--admin-ink-soft)]">
+                      Part {block.part} · câu {block.questions[0]?.number}–
+                      {block.questions.at(-1)?.number}
+                      {block.audioAssetId ? " · Đã có MP3" : " · Chưa có MP3"}
+                    </span>
+                    <label className="cursor-pointer rounded-lg border border-[var(--admin-border)] px-3 py-2 text-xs font-bold disabled:opacity-50">
+                      {block.audioAssetId ? "Thay audio" : "Tải audio"}
+                      <input
+                        accept="audio/mpeg,audio/wav,.mp3,.wav"
+                        className="sr-only"
+                        disabled={isPublished || saving}
+                        onChange={(event) =>
+                          void chooseAudioGroup(block.key, event)
+                        }
+                        type="file"
+                      />
+                    </label>
+                  </div>
+                ))}
               </div>
-              <label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[var(--admin-border)] bg-white px-3 text-xs font-bold text-[var(--admin-ink-soft)] transition hover:border-[var(--admin-brand-orange)] disabled:cursor-not-allowed disabled:opacity-50">
-                {saving
-                  ? "Đang tải..."
-                  : revision.hasMasterAudio
-                    ? "Thay audio"
-                    : "Tải audio"}
-                <input
-                  accept="audio/mpeg,audio/wav,.mp3,.wav"
-                  className="sr-only"
-                  disabled={isPublished || saving}
-                  onChange={chooseMasterAudio}
-                  type="file"
-                />
-              </label>
-            </div>
+            ) : (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--admin-border)] bg-white p-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-9 place-items-center rounded-lg bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]">
+                    <ExamIcon className="size-5" name="upload" />
+                  </span>
+                  <span>
+                    <strong className="block text-sm text-[var(--admin-ink)]">
+                      Master audio L&R
+                    </strong>
+                    <small className="mt-0.5 block text-xs text-[var(--admin-muted)]">
+                      {revision.hasMasterAudio
+                        ? "Đã có file audio. Có thể thay thế khi đề còn Draft."
+                        : "Bắt buộc trước khi publish. Chấp nhận MP3/WAV, tối đa 100 MiB."}
+                    </small>
+                  </span>
+                </div>
+                <label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[var(--admin-border)] bg-white px-3 text-xs font-bold text-[var(--admin-ink-soft)] transition hover:border-[var(--admin-brand-orange)] disabled:cursor-not-allowed disabled:opacity-50">
+                  {saving
+                    ? "Đang tải..."
+                    : revision.hasMasterAudio
+                      ? "Thay audio"
+                      : "Tải audio"}
+                  <input
+                    accept="audio/mpeg,audio/wav,.mp3,.wav"
+                    className="sr-only"
+                    disabled={isPublished || saving}
+                    onChange={chooseMasterAudio}
+                    type="file"
+                  />
+                </label>
+              </div>
+            )}
           </section>
           {notice && (
             <output
@@ -436,6 +567,7 @@ export function ReadingExamWorkspace({
                 })
               }
               onImage={chooseImage}
+              onContextImage={chooseContextImage}
               onSaveContexts={() => void saveContexts()}
             />
           ) : (
@@ -463,6 +595,7 @@ function QuestionEditor({
   onChange,
   onContextChange,
   onImage,
+  onContextImage,
   onSaveContexts,
 }: {
   block: ReadingBlock;
@@ -473,6 +606,11 @@ function QuestionEditor({
   onChange: (draft: QuestionDraft) => void;
   onContextChange: (contexts: ReadingBlock["contextBlocks"]) => void;
   onImage: (event: ChangeEvent<HTMLInputElement>) => void;
+  onContextImage: (
+    blockKey: string,
+    ordinal: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) => void;
   onSaveContexts: () => void;
 }) {
   const contexts = contextDrafts[block.key] ?? [];
@@ -586,6 +724,24 @@ function QuestionEditor({
                     rows={5}
                     value={context.text ?? ""}
                   />
+                  {context.type === "Image" && context.imageRequired && (
+                    <span className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-dashed border-[var(--admin-brand-orange)]/50 p-2 text-xs">
+                      <span>
+                        {context.imageAssetId
+                          ? `Asset ${context.imageAssetId}`
+                          : "Cần tải ảnh trước khi xuất bản"}
+                      </span>
+                      <input
+                        accept="image/png,image/jpeg,image/webp"
+                        aria-label={`Tải ảnh ngữ cảnh ${context.ordinal}`}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          onContextImage(block.key, context.ordinal, event)
+                        }
+                        type="file"
+                      />
+                    </span>
+                  )}
                 </label>
               );
             })}
@@ -657,6 +813,17 @@ function QuestionEditor({
             onChange={onImage}
             type="file"
           />
+          <label className="flex items-center gap-2 text-xs font-medium">
+            <input
+              checked={draft.imageRequired}
+              disabled={disabled}
+              onChange={(event) =>
+                onChange({ ...draft, imageRequired: event.target.checked })
+              }
+              type="checkbox"
+            />
+            Bắt buộc ảnh trước khi xuất bản
+          </label>
         </div>
       </div>
     </section>
