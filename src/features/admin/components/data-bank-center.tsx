@@ -1419,15 +1419,14 @@ function ImportExamModal({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const workbook = data.get("workbook");
-    const masterAudio = data.get("masterAudio");
-    if (!(workbook instanceof File) || !(masterAudio instanceof File)) {
-      setError("Chọn workbook XLSX và master audio trước khi import.");
+    if (!(workbook instanceof File)) {
+      setError("Chọn workbook XLSX trước khi import.");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      onCreated(await importReadingExam(workbook, masterAudio));
+      onCreated(await importReadingExam(workbook));
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Không thể import đề thi.",
@@ -1455,14 +1454,10 @@ function ImportExamModal({
           </Link>
           <p className="-mt-2 text-xs leading-5 text-[var(--admin-muted)]">
             Thay ScoreProfileId, các mã ImageAssetId ở Part 1 và nội dung mẫu
-            trước khi import. Master audio vẫn tải riêng ở bên dưới.
+            trước khi import. Audio Listening và ảnh bắt buộc sẽ được tải trong
+            workspace media sau khi import.
           </p>
           <FileField accept=".xlsx" label="Workbook XLSX" name="workbook" />
-          <FileField
-            accept="audio/mpeg,audio/wav,.mp3,.wav"
-            label="Master audio"
-            name="masterAudio"
-          />
         </div>
         {error && (
           <p

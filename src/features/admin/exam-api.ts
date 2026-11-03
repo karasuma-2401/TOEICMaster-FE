@@ -52,6 +52,7 @@ export interface UpdateReadingQuestionInput {
   translation: string | null;
   explanation: string | null;
   imageAssetId: string | null;
+  imageRequired: boolean;
 }
 
 export interface UpdateReadingContextsInput {
@@ -61,6 +62,7 @@ export interface UpdateReadingContextsInput {
     text: string | null;
     imageAssetId: string | null;
     altText: string | null;
+    imageRequired: boolean;
   }>;
 }
 
@@ -216,11 +218,11 @@ export async function createReadingExam(
 
 export async function importReadingExam(
   workbook: File,
-  masterAudio: File,
+  masterAudio?: File,
 ): Promise<ReadingDraft> {
   const formData = new FormData();
   formData.set("workbook", workbook);
-  formData.set("masterAudio", masterAudio);
+  if (masterAudio) formData.set("masterAudio", masterAudio);
   const value = await request<unknown>(
     "/api/admin/exams/import",
     "POST",
@@ -232,6 +234,87 @@ export async function importReadingExam(
       "Dữ liệu đề Reading vừa import không hợp lệ.",
     );
   return value;
+}
+
+export type MediaOwnerKind = "AudioGroup" | "QuestionImage" | "ContextImage";
+
+export interface MediaUploadIntent {
+  intentId: string;
+  uploadUrl: string;
+  expiresAtUtc: string;
+  requiredHeaders: Record<string, string>;
+}
+
+function isMediaUploadIntent(value: unknown): value is MediaUploadIntent {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    isGuid(record.intentId) &&
+    typeof record.uploadUrl === "string" &&
+    Number.isFinite(Date.parse(record.expiresAtUtc as string)) &&
+    !!record.requiredHeaders &&
+    typeof record.requiredHeaders === "object" &&
+    !Array.isArray(record.requiredHeaders) &&
+    Object.values(record.requiredHeaders).every(
+      (header) => typeof header === "string",
+    )
+  );
+}
+
+export async function createMediaUploadIntent(
+  examId: string,
+  revisionId: string,
+  input: {
+    ownerKind: MediaOwnerKind;
+    ownerKey: string;
+    contentType: string;
+    byteSize: number;
+  },
+): Promise<MediaUploadIntent> {
+  const value = await request<unknown>(
+    `/api/admin/exams/${encodeURIComponent(examId)}/revisions/${encodeURIComponent(revisionId)}/media-upload-intents`,
+    "POST",
+    input,
+  );
+  if (!isMediaUploadIntent(value))
+    throw new AdminExamApiError(502, "Phản hồi upload media không hợp lệ.");
+  return value;
+}
+
+export async function uploadFileToMediaIntent(
+  intent: MediaUploadIntent,
+  file: File,
+): Promise<void> {
+  const response = await fetch(intent.uploadUrl, {
+    method: "PUT",
+    headers: intent.requiredHeaders,
+    body: file,
+    credentials: "omit",
+  });
+  if (!response.ok)
+    throw new AdminExamApiError(
+      response.status,
+      "Không thể tải file lên MinIO.",
+    );
+}
+
+export async function completeMediaUploadIntent(
+  examId: string,
+  revisionId: string,
+  intentId: string,
+): Promise<{ id: string }> {
+  const value = await request<unknown>(
+    `/api/admin/exams/${encodeURIComponent(examId)}/revisions/${encodeURIComponent(revisionId)}/media-upload-intents/${encodeURIComponent(intentId)}/complete`,
+    "POST",
+    {},
+  );
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !isGuid((value as { id?: unknown }).id)
+  )
+    throw new AdminExamApiError(502, "Phản hồi hoàn tất upload không hợp lệ.");
+  return { id: (value as { id: string }).id };
 }
 
 export async function updateReadingQuestion(
