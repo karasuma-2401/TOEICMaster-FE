@@ -1,13 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  archiveWritingExercise,
+  createWritingExercise,
+  exerciseDtoToQuestion,
+  importWritingExerciseFile,
+  listWritingExercises,
+  toApiDifficulty,
+  updateWritingExercise,
+  uploadWritingImage,
+  type WritingExerciseInput,
+  type WritingImportPreview,
+} from "@/features/writing/admin-api";
 import {
   createAdminTestDraft,
   createQuestionId,
-  deleteAdminQuestion,
   getAdminQuestions,
   getAdminWritingTests,
-  saveAdminQuestion,
   saveAdminWritingTest,
   timingTemplates,
   validateTestForPublish,
@@ -22,6 +32,7 @@ import {
 } from "@/features/admin/components/content/admin-page-header";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import type { WritingDifficulty, WritingPart } from "@/features/writing/types";
+import { AdminWritingPrompt } from "./admin-writing-prompt";
 
 const parts: WritingPart[] = [1, 2, 3];
 const difficulties: Array<WritingDifficulty | "ALL"> = [
@@ -42,8 +53,29 @@ const statusLabel: Record<WritingQuestionStatus, string> = {
   ARCHIVED: "Lưu trữ",
 };
 
+function ExerciseThumbnail({ id, alt }: { id?: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!id || failed)
+    return (
+      <span className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-stone-100 text-xs text-stone-500">
+        Không có ảnh
+      </span>
+    );
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- Admin media uses the authenticated proxy.
+    <img
+      alt={alt || "Ảnh đề bài"}
+      className="h-14 w-20 shrink-0 rounded-lg bg-stone-100 object-contain"
+      loading="lazy"
+      onError={() => setFailed(true)}
+      src={`/api/admin/writing/media/${encodeURIComponent(id)}`}
+    />
+  );
+}
+
 type Draft = {
   id: string;
+  version: number | null;
   part: WritingPart;
   code: string;
   topic: string;
@@ -52,6 +84,7 @@ type Draft = {
   rubricNotes: string;
   modelAnswer: string;
   imageName: string;
+  imageAssetId: string | null;
   imageAlt: string;
   keywordOne: string;
   keywordTwo: string;
@@ -71,6 +104,7 @@ function toDraft(
 ): Draft {
   const base = {
     id: question?.id ?? createQuestionId(part),
+    version: question?.version ?? null,
     part: question?.part ?? part,
     code: question?.code ?? `WP${part}-NEW`,
     topic: question?.topic ?? "Công việc",
@@ -79,6 +113,7 @@ function toDraft(
     rubricNotes: question?.rubricNotes ?? "",
     modelAnswer: question?.modelAnswer ?? "",
     imageName: "",
+    imageAssetId: null,
     imageAlt: "",
     keywordOne: "",
     keywordTwo: "",
@@ -96,6 +131,7 @@ function toDraft(
     return {
       ...base,
       imageName: question.imageName,
+      imageAssetId: question.imageAssetId ?? null,
       imageAlt: question.imageAlt,
       keywordOne: question.keywordOne,
       keywordTwo: question.keywordTwo,
@@ -117,7 +153,7 @@ function toDraft(
   };
 }
 
-function saveDraft(draft: Draft) {
+async function saveDraft(draft: Draft, imageFile: File | null) {
   const base = {
     id: draft.id,
     code: draft.code.trim(),
@@ -175,7 +211,30 @@ function saveDraft(draft: Draft) {
     (!question.prompt || question.minimumWordCount < 1)
   )
     return "Part 3 cần đề bài và số từ tối thiểu.";
-  saveAdminQuestion(question);
+  const uploaded = imageFile ? await uploadWritingImage(imageFile) : null;
+  const input: WritingExerciseInput = {
+    part: draft.part,
+    code: base.code,
+    topic: base.topic,
+    difficulty: toApiDifficulty(draft.difficulty),
+    status: draft.status,
+    rubricNotes: base.rubricNotes,
+    modelAnswer: base.modelAnswer,
+    imageAssetId: uploaded?.id ?? draft.imageAssetId,
+    imageAlt: draft.imageAlt || null,
+    keywordOne: draft.keywordOne || null,
+    keywordTwo: draft.keywordTwo || null,
+    sender: draft.sender || null,
+    recipient: draft.recipient || null,
+    subject: draft.subject || null,
+    emailBody: draft.emailBody || null,
+    directions: draft.directions || null,
+    prompt: draft.prompt || null,
+    minimumWordCount: draft.part === 3 ? draft.minimumWordCount : null,
+    outline: draft.outline || null,
+  };
+  if (draft.version === null) await createWritingExercise(input);
+  else await updateWritingExercise(draft.id, draft.version, input);
   return null;
 }
 
@@ -190,6 +249,8 @@ function Drawer({
 }) {
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
   const input = (
@@ -229,7 +290,7 @@ function Drawer({
       <dialog
         aria-label="Form bài tập Writing"
         aria-modal="true"
-        className="flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl"
+        className="relative m-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl"
         open
       >
         <header className="flex justify-between border-b border-[var(--admin-border)] p-6">
@@ -297,11 +358,13 @@ function Drawer({
                   {draft.imageName || "Chọn ảnh JPG/PNG, tối đa 5MB"}
                 </span>
                 <input
-                  accept="image/jpeg,image/png"
+                  accept="image/jpeg,image/png,image/webp"
                   className="sr-only"
-                  onChange={(e) =>
-                    update("imageName", e.target.files?.[0]?.name ?? "")
-                  }
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setImageFile(file);
+                    if (file) update("imageName", file.name);
+                  }}
                   type="file"
                 />
               </label>
@@ -331,7 +394,7 @@ function Drawer({
             </>
           )}
           {input("Rubric", "rubricNotes", true)}
-          {input("Bài mẫu", "modelAnswer", true)}
+          {input("Bài tham khảo nội bộ (không bắt buộc)", "modelAnswer", true)}
           {error && (
             <p
               className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
@@ -351,15 +414,27 @@ function Drawer({
           </button>
           <button
             className="rounded-lg px-4 py-2 text-sm font-bold text-white"
+            disabled={saving}
             onClick={() => {
-              const nextError = saveDraft(draft);
-              if (nextError) setError(nextError);
-              else onSaved();
+              setSaving(true);
+              void saveDraft(draft, imageFile)
+                .then((nextError) => {
+                  if (nextError) setError(nextError);
+                  else onSaved();
+                })
+                .catch((cause: unknown) =>
+                  setError(
+                    cause instanceof Error
+                      ? cause.message
+                      : "Không thể lưu bài tập.",
+                  ),
+                )
+                .finally(() => setSaving(false));
             }}
             style={{ background: "var(--admin-brand-gradient)" }}
             type="button"
           >
-            Lưu bài tập
+            {saving ? "Đang lưu…" : "Lưu bài tập"}
           </button>
         </footer>
       </dialog>
@@ -379,7 +454,7 @@ function Preview({
       <dialog
         aria-label="Preview bài tập"
         aria-modal="true"
-        className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl"
+        className="relative m-0 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
         open
       >
         <div className="flex justify-between">
@@ -394,38 +469,7 @@ function Preview({
           </button>
         </div>
         <div className="mt-5 rounded-xl bg-[var(--admin-surface-muted)] p-5">
-          {question.part === 1 ? (
-            <>
-              <div className="grid h-32 place-items-center rounded-lg bg-orange-100 text-sm">
-                {question.imageName}
-              </div>
-              <p className="mt-4 font-bold">
-                Dùng: {question.keywordOne} · {question.keywordTwo}
-              </p>
-            </>
-          ) : question.part === 2 ? (
-            <>
-              <p>
-                <b>From:</b> {question.sender}
-              </p>
-              <p>
-                <b>To:</b> {question.recipient}
-              </p>
-              <p className="mt-2">
-                <b>Subject:</b> {question.subject}
-              </p>
-              <p className="mt-4 whitespace-pre-line text-sm">
-                {question.emailBody}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="font-bold">{question.prompt}</p>
-              <p className="mt-3 text-sm">
-                Tối thiểu {question.minimumWordCount} từ
-              </p>
-            </>
-          )}
+          <AdminWritingPrompt question={question} />
         </div>
         <button
           className="mt-5 rounded-lg px-4 py-2 text-sm font-bold text-white"
@@ -449,20 +493,56 @@ function ImportDialog({
   onClose: () => void;
   onImported: () => void;
 }) {
-  const [picked, setPicked] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<WritingImportPreview | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [imageId, setImageId] = useState("");
+  const checkFile = async (selected: File) => {
+    setFile(selected);
+    setPreview(null);
+    setBusy(true);
+    try {
+      const result = await importWritingExerciseFile(part, selected, true);
+      if (typeof result === "number")
+        throw new Error("Phản hồi kiểm tra không hợp lệ.");
+      setPreview(result);
+      setError("");
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Không thể kiểm tra file.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const commit = async () => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      await importWritingExerciseFile(part, file, false);
+      onImported();
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Không thể import bài tập.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
       <dialog
         aria-label="Import Excel Writing"
         aria-modal="true"
-        className="w-full max-w-xl rounded-2xl bg-white shadow-2xl"
+        className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
         open
       >
         <header className="flex justify-between border-b border-[var(--admin-border)] p-6">
           <div>
             <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Mỗi Part dùng template Excel riêng.
+              Mỗi Part dùng cấu trúc Excel riêng.
             </p>
           </div>
           <button aria-label="Đóng import" onClick={onClose} type="button">
@@ -470,7 +550,55 @@ function ImportDialog({
           </button>
         </header>
         <div className="p-6">
-          {!picked ? (
+          <p className="mb-3 text-xs text-[var(--admin-muted)]">
+            Chuẩn bị file theo các cột bên dưới
+            {part === 1 ? ", tải ảnh và điền ImageAssetId" : ""}, sau đó chọn
+            file để kiểm tra trước khi import.
+          </p>
+          <p className="mb-3 text-xs text-[var(--admin-muted)]">
+            Cột bắt buộc: Code, Topic, Difficulty, Status,{" "}
+            {part === 1
+              ? "ImageAssetId, ImageAlt, KeywordOne, KeywordTwo"
+              : part === 2
+                ? "Sender, Recipient, Subject, EmailBody, Directions"
+                : "Prompt, MinimumWordCount"}
+            . RubricNotes và ModelAnswer là tùy chọn.
+          </p>
+          {part === 1 && (
+            <label className="mb-4 block text-sm font-semibold">
+              Tải ảnh để lấy ImageAssetId
+              <input
+                className="mt-1 block w-full text-sm"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={busy}
+                onChange={(event) => {
+                  const selected = event.target.files?.[0];
+                  if (!selected) return;
+                  setBusy(true);
+                  void uploadWritingImage(selected)
+                    .then((asset) => {
+                      setImageId(asset.id);
+                      setError("");
+                    })
+                    .catch((cause: unknown) =>
+                      setError(
+                        cause instanceof Error
+                          ? cause.message
+                          : "Không thể tải ảnh.",
+                      ),
+                    )
+                    .finally(() => setBusy(false));
+                }}
+              />
+              {imageId && (
+                <span className="mt-1 block break-all text-xs">
+                  ImageAssetId: {imageId}
+                </span>
+              )}
+            </label>
+          )}
+          {!preview ? (
             <label className="block cursor-pointer rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-10 text-center">
               <b className="text-[var(--admin-brand-red)]">
                 Chọn file .xlsx để preview
@@ -481,37 +609,65 @@ function ImportDialog({
               <input
                 accept=".xlsx"
                 className="sr-only"
-                onChange={() => setPicked(true)}
+                onChange={(event) => {
+                  const selected = event.target.files?.[0];
+                  if (selected) void checkFile(selected);
+                }}
                 type="file"
               />
             </label>
           ) : (
-            <table className="w-full overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
-              <thead className="bg-[var(--admin-surface-muted)]">
-                <tr>
-                  <th className="p-3">Dòng</th>
-                  <th className="p-3">Mã bài</th>
-                  <th className="p-3">Kết quả</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="p-3">2</td>
-                  <td>WP{part}-IMPORT-01</td>
-                  <td className="text-emerald-700">Hợp lệ</td>
-                </tr>
-                <tr>
-                  <td className="border-t p-3">3</td>
-                  <td className="border-t">—</td>
-                  <td className="border-t text-red-700">Thiếu mã bài</td>
-                </tr>
-                <tr>
-                  <td className="border-t p-3">4</td>
-                  <td className="border-t">WP{part}-IMPORT-02</td>
-                  <td className="border-t text-emerald-700">Hợp lệ</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="space-y-3">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
+                  <thead className="bg-[var(--admin-surface-muted)]">
+                    <tr>
+                      <th className="p-3">Dòng</th>
+                      <th className="p-3">Mã bài</th>
+                      <th className="p-3">Kết quả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.rows.map((row) => (
+                      <tr key={row.rowNumber}>
+                        <td className="border-t border-[var(--admin-border)] p-3">
+                          {row.rowNumber}
+                        </td>
+                        <td className="border-t border-[var(--admin-border)]">
+                          {row.code ?? "—"}
+                        </td>
+                        <td
+                          className={
+                            row.isValid
+                              ? "border-t border-[var(--admin-border)] text-emerald-700"
+                              : "border-t border-[var(--admin-border)] text-red-700"
+                          }
+                        >
+                          {row.isValid ? "Hợp lệ" : row.errors.join(" ")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                className="text-sm font-semibold text-orange-700 underline underline-offset-4"
+                onClick={() => {
+                  setFile(null);
+                  setPreview(null);
+                  setError("");
+                }}
+              >
+                Chọn file khác
+              </button>
+            </div>
+          )}
+          {busy && <p className="mt-3 text-sm">Đang xử lý file…</p>}
+          {error && (
+            <p className="mt-3 text-sm text-red-700" role="alert">
+              {error}
+            </p>
           )}
         </div>
         <footer className="flex justify-end gap-3 border-t border-[var(--admin-border)] p-5">
@@ -524,12 +680,17 @@ function ImportDialog({
           </button>
           <button
             className="rounded-lg px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-            disabled={!picked}
-            onClick={onImported}
+            disabled={
+              !preview ||
+              preview.invalidRowCount > 0 ||
+              preview.validRowCount === 0 ||
+              busy
+            }
+            onClick={() => void commit()}
             style={{ background: "var(--admin-brand-gradient)" }}
             type="button"
           >
-            Import dòng hợp lệ
+            Import bài tập
           </button>
         </footer>
       </dialog>
@@ -538,7 +699,7 @@ function ImportDialog({
 }
 
 export function AdminWritingContentPage() {
-  const [, setRevision] = useState(0);
+  const [revision, setRevision] = useState(0);
   const [filter, setFilter] = useState<QuestionFilter>({
     part: 1,
     query: "",
@@ -551,24 +712,52 @@ export function AdminWritingContentPage() {
   const [preview, setPreview] = useState<AdminWritingQuestion | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [notice, setNotice] = useState("");
-  const list = getAdminQuestions();
-  const matches = useMemo(
-    () =>
-      list.filter(
-        (item) =>
-          item.part === filter.part &&
-          (filter.difficulty === "ALL" ||
-            item.difficulty === filter.difficulty) &&
-          (filter.status === "ALL" || item.status === filter.status) &&
-          `${item.code} ${item.topic}`
-            .toLocaleLowerCase("vi-VN")
-            .includes(filter.query.toLocaleLowerCase("vi-VN")),
-      ),
-    [filter, list],
+  const [items, setItems] = useState<AdminWritingQuestion[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      try {
+        const result = await listWritingExercises(
+          {
+            part: filter.part,
+            query: filter.query,
+            difficulty:
+              filter.difficulty === "ALL"
+                ? undefined
+                : toApiDifficulty(filter.difficulty),
+            status: filter.status,
+            pageNumber: filter.page,
+            pageSize: filter.pageSize,
+          },
+          signal,
+        );
+        setItems(result.items.map(exerciseDtoToQuestion));
+        setTotal(result.totalCount);
+        setLoadError("");
+      } catch (cause) {
+        if (!signal?.aborted)
+          setLoadError(
+            cause instanceof Error ? cause.message : "Không thể tải bài tập.",
+          );
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [filter],
   );
-  const pages = Math.max(1, Math.ceil(matches.length / 5));
-  const page = Math.min(filter.page, pages);
-  const items = matches.slice((page - 1) * 5, page * 5);
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => void load(controller.signal), 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [load, revision]);
+  const pages = Math.max(1, Math.ceil(total / filter.pageSize));
+  const page = filter.page;
   const resetPage = (next: Partial<QuestionFilter>) =>
     setFilter((current) => ({ ...current, ...next, page: 1 }));
   return (
@@ -598,6 +787,11 @@ export function AdminWritingContentPage() {
       />
       <ContentTabs section="content" skill="writing" />
       {notice && <AdminNotice>{notice}</AdminNotice>}
+      {loadError && (
+        <p className="mt-4 text-sm text-red-700" role="alert">
+          {loadError}
+        </p>
+      )}
       <div className="mt-6 flex gap-2">
         {parts.map((part) => (
           <button
@@ -650,7 +844,9 @@ export function AdminWritingContentPage() {
             ))}
           </select>
         </div>
-        {items.length ? (
+        {loading ? (
+          <p className="p-8 text-center text-sm">Đang tải bài tập…</p>
+        ) : items.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
@@ -660,7 +856,7 @@ export function AdminWritingContentPage() {
                   <th className="p-4">CHỦ ĐỀ</th>
                   <th className="p-4">ĐỘ KHÓ</th>
                   <th className="p-4">TRẠNG THÁI</th>
-                  <th className="p-4 text-right">THAO TÁC</th>
+                  <th className="whitespace-nowrap p-4 text-right">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
@@ -673,46 +869,82 @@ export function AdminWritingContentPage() {
                       {question.code}
                     </td>
                     <td className="p-4 font-semibold">
-                      {question.part === 1
-                        ? `${question.keywordOne} / ${question.keywordTwo}`
-                        : question.part === 2
-                          ? question.subject
-                          : question.prompt}
+                      {question.part === 1 ? (
+                        <div className="flex items-center gap-3">
+                          <ExerciseThumbnail
+                            key={question.imageAssetId}
+                            id={question.imageAssetId}
+                            alt={question.imageAlt}
+                          />
+                          <div className="flex flex-wrap gap-1.5">
+                            {[question.keywordOne, question.keywordTwo].map(
+                              (word, index) => (
+                                <span
+                                  className="rounded-full bg-orange-50 px-2.5 py-1 text-xs text-orange-800"
+                                  key={index}
+                                >
+                                  {word}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      ) : question.part === 2 ? (
+                        question.subject
+                      ) : (
+                        question.prompt
+                      )}
                     </td>
                     <td className="p-4">{question.topic}</td>
                     <td className="p-4">{question.difficulty}</td>
                     <td className="p-4">
-                      <span className="rounded-full bg-[var(--admin-nav-active)] px-2 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
+                      <span
+                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${question.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : question.status === "DRAFT" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                      >
                         {statusLabel[question.status]}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="whitespace-nowrap p-4 text-right">
                       <button
-                        className="px-2"
+                        className="min-h-9 rounded-md px-2 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-orange-600"
                         onClick={() => setPreview(question)}
                         type="button"
                       >
                         Xem
                       </button>
                       <button
-                        className="px-2 text-[var(--admin-brand-red)]"
+                        className="min-h-9 rounded-md px-2 text-[var(--admin-brand-red)] hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-orange-600"
                         onClick={() => setDrawer(toDraft(question))}
                         type="button"
                       >
                         Sửa
                       </button>
                       <button
-                        className="px-2 text-red-700"
+                        className="min-h-9 rounded-md px-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-700"
                         onClick={() => {
-                          if (window.confirm(`Xóa ${question.code}?`)) {
-                            deleteAdminQuestion(question.id);
-                            setRevision((v) => v + 1);
-                            setNotice("Đã xóa bài tập.");
-                          }
+                          if (
+                            question.version &&
+                            window.confirm(`Lưu trữ ${question.code}?`)
+                          )
+                            void archiveWritingExercise(
+                              question.id,
+                              question.version,
+                            )
+                              .then(() => {
+                                setRevision((v) => v + 1);
+                                setNotice("Đã lưu trữ bài tập.");
+                              })
+                              .catch((cause: unknown) =>
+                                setLoadError(
+                                  cause instanceof Error
+                                    ? cause.message
+                                    : "Không thể lưu trữ bài tập.",
+                                ),
+                              );
                         }}
                         type="button"
                       >
-                        Xóa
+                        Lưu trữ
                       </button>
                     </td>
                   </tr>
@@ -741,11 +973,11 @@ export function AdminWritingContentPage() {
           </div>
         )}
         <footer className="flex items-center justify-between border-t border-[var(--admin-border)] p-4 text-xs text-[var(--admin-muted)]">
-          <span>{matches.length} bài tập</span>
+          <span>{total} bài tập</span>
           <div className="flex gap-2">
             <button
               aria-label="Trang trước"
-              className="size-8 rounded border disabled:opacity-40"
+              className="size-8 rounded border border-[var(--admin-border)] disabled:opacity-40"
               disabled={page <= 1}
               onClick={() =>
                 setFilter((current) => ({ ...current, page: page - 1 }))
@@ -759,7 +991,7 @@ export function AdminWritingContentPage() {
             </span>
             <button
               aria-label="Trang sau"
-              className="size-8 rounded border disabled:opacity-40"
+              className="size-8 rounded border border-[var(--admin-border)] disabled:opacity-40"
               disabled={page >= pages}
               onClick={() =>
                 setFilter((current) => ({ ...current, page: page + 1 }))
@@ -790,6 +1022,7 @@ export function AdminWritingContentPage() {
           onClose={() => setImportOpen(false)}
           onImported={() => {
             setImportOpen(false);
+            setRevision((value) => value + 1);
             setNotice("Đã import dữ liệu bài tập thành công.");
           }}
           part={filter.part}
@@ -859,7 +1092,7 @@ function Builder({
       <dialog
         aria-label="Test builder Writing"
         aria-modal="true"
-        className="flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
+        className="relative m-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
         open
       >
         <header className="flex justify-between border-b border-[var(--admin-border)] p-6">

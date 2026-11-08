@@ -41,7 +41,7 @@ export function ConfirmDialog({
       <dialog
         aria-labelledby={id}
         aria-modal="true"
-        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl"
+        className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl"
         open
       >
         <h2 className="text-xl font-bold text-slate-900" id={id}>

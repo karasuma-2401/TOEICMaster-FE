@@ -47,8 +47,13 @@ export function WritingAttemptPlaceholder({
   const [now, setNow] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [hasPendingSave, setHasPendingSave] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const refreshInFlight = useRef(false);
+  const mutationRevision = useRef(0);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const queuedSaves = useRef(0);
   const autosaveTimer = useRef<number | null>(null);
   const pendingAutosave = useRef<{ position: number; answer: string } | null>(
     null,
@@ -58,7 +63,22 @@ export function WritingAttemptPlaceholder({
     (value: WritingAttemptApi) => {
       setServerOffset(Date.parse(value.serverNowUtc) - Date.now());
       setNow(Date.now());
-      setAttempt(value);
+      const pending = pendingAutosave.current;
+      setAttempt(
+        pending &&
+          value.status === "IN_PROGRESS" &&
+          value.currentPhase === "ANSWERING" &&
+          value.currentQuestionPosition === pending.position
+          ? {
+              ...value,
+              questions: value.questions.map((question) =>
+                question.position === pending.position && !question.lockedAtUtc
+                  ? { ...question, answer: pending.answer }
+                  : question,
+              ),
+            }
+          : value,
+      );
       if (value.status === "SUBMITTED_AWAITING_EVALUATION")
         router.replace(
           `/writing/attempts/${encodeURIComponent(value.id)}/result`,
@@ -69,8 +89,11 @@ export function WritingAttemptPlaceholder({
   const refresh = useCallback(async () => {
     if (refreshInFlight.current) return;
     refreshInFlight.current = true;
+    const revision = mutationRevision.current;
     try {
-      acceptAttempt(await getWritingAttempt(attemptId));
+      const result = await getWritingAttempt(attemptId);
+      if (revision !== mutationRevision.current) return;
+      acceptAttempt(result);
       setError(null);
     } catch (cause) {
       setError(
@@ -125,25 +148,37 @@ export function WritingAttemptPlaceholder({
   const closeConfirm = useCallback(() => setConfirming(false), []);
   const persistAnswer = useCallback(
     async (position: number, answer: string) => {
+      queuedSaves.current++;
       setSaving(true);
+      const save = saveQueue.current.then(async () => {
+        try {
+          const result = await saveWritingAnswer(attemptId, position, answer);
+          mutationRevision.current++;
+          acceptAttempt(result);
+          if (
+            pendingAutosave.current?.position === position &&
+            pendingAutosave.current.answer === answer
+          ) {
+            pendingAutosave.current = null;
+            setHasPendingSave(false);
+          }
+          setError(null);
+          return true;
+        } catch (cause) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Không thể autosave bài viết.",
+          );
+          return false;
+        }
+      });
+      saveQueue.current = save.then(() => undefined);
       try {
-        acceptAttempt(await saveWritingAnswer(attemptId, position, answer));
-        if (
-          pendingAutosave.current?.position === position &&
-          pendingAutosave.current.answer === answer
-        )
-          pendingAutosave.current = null;
-        setError(null);
-        return true;
-      } catch (cause) {
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Không thể autosave bài viết.",
-        );
-        return false;
+        return await save;
       } finally {
-        setSaving(false);
+        queuedSaves.current--;
+        if (queuedSaves.current === 0) setSaving(false);
       }
     },
     [acceptAttempt, attemptId],
@@ -208,16 +243,19 @@ export function WritingAttemptPlaceholder({
     );
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
     pendingAutosave.current = { position: current.position, answer };
+    setHasPendingSave(true);
     autosaveTimer.current = window.setTimeout(() => {
       void persistAnswer(current.position, answer);
     }, 800);
   };
   const next = async () => {
+    setTransitioning(true);
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
-    if (!(await persistAnswer(current.position, current.answer))) return;
-    setSaving(true);
     try {
-      acceptAttempt(await nextWritingQuestion(attemptId));
+      if (!(await persistAnswer(current.position, current.answer))) return;
+      const result = await nextWritingQuestion(attemptId);
+      mutationRevision.current++;
+      acceptAttempt(result);
       setError(null);
     } catch (cause) {
       setError(
@@ -227,20 +265,26 @@ export function WritingAttemptPlaceholder({
       );
       await refresh();
     } finally {
-      setSaving(false);
+      setTransitioning(false);
     }
   };
   const submit = async () => {
+    setConfirming(false);
+    setTransitioning(true);
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
-    if (!preparing && !(await persistAnswer(current.position, current.answer)))
-      return;
-    setSaving(true);
     try {
-      acceptAttempt(await submitWritingAttempt(attemptId));
+      if (
+        !preparing &&
+        !(await persistAnswer(current.position, current.answer))
+      )
+        return;
+      const result = await submitWritingAttempt(attemptId);
+      mutationRevision.current++;
+      acceptAttempt(result);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể nộp bài.");
     } finally {
-      setSaving(false);
+      setTransitioning(false);
     }
   };
 
@@ -279,71 +323,84 @@ export function WritingAttemptPlaceholder({
                   Writing Part {current.part}
                 </p>
               </div>
-              <PhaseTimer
-                label={preparing ? "Chuẩn bị" : "Làm bài"}
-                seconds={seconds}
-                tone={preparing ? "prepare" : "active"}
-              />
+              {attempt.isPractice ? (
+                <span className="text-sm text-slate-600">
+                  Luyện tập không giới hạn thời gian
+                </span>
+              ) : (
+                <PhaseTimer
+                  label={preparing ? "Chuẩn bị" : "Làm bài"}
+                  seconds={seconds}
+                  tone={preparing ? "prepare" : "active"}
+                />
+              )}
             </div>
             {error && (
               <div className="mt-5">
                 <InlineError>{error}</InlineError>
               </div>
             )}
-            <div className="mt-6">
-              <WritingQuestionPrompt question={current} />
-            </div>
-            <div className="mt-6">
-              <label className="text-sm font-bold" htmlFor="writing-answer">
-                Bài làm của bạn
-              </label>
-              <textarea
-                className="mt-2 min-h-52 w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 shadow-inner shadow-slate-100 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-                disabled={preparing || saving}
-                id="writing-answer"
-                spellCheck={false}
-                onChange={(event) => saveLocalAnswer(event.target.value)}
-                placeholder={
-                  preparing
-                    ? "Editor sẽ mở khi hết thời gian chuẩn bị."
-                    : current.part === 1
-                      ? "Viết một câu tiếng Anh…"
-                      : current.part === 2
-                        ? "Dear …"
-                        : "Write your essay here…"
-                }
-                value={current.answer}
-              />
-              <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
-                <span
-                  aria-live="polite"
-                  className={`inline-flex items-center gap-1.5 ${
+            <div className="mt-6 grid gap-6 xl:grid-cols-2">
+              <div className="min-w-0">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Đề bài
+                </p>
+                <WritingQuestionPrompt question={current} />
+              </div>
+              <div className="min-w-0 rounded-2xl border border-slate-200 bg-stone-50/60 p-4 sm:p-5">
+                <label className="text-sm font-bold" htmlFor="writing-answer">
+                  Bài làm của bạn
+                </label>
+                <textarea
+                  className="mt-2 min-h-64 w-full rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 xl:min-h-80"
+                  disabled={preparing || transitioning}
+                  id="writing-answer"
+                  spellCheck={false}
+                  onChange={(event) => saveLocalAnswer(event.target.value)}
+                  placeholder={
                     preparing
-                      ? "font-semibold text-amber-700"
-                      : "text-emerald-700"
-                  }`}
-                >
+                      ? "Editor sẽ mở khi hết thời gian chuẩn bị."
+                      : current.part === 1
+                        ? "Viết một câu tiếng Anh…"
+                        : current.part === 2
+                          ? "Dear …"
+                          : "Write your essay here…"
+                  }
+                  value={current.answer}
+                />
+                <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
                   <span
-                    aria-hidden="true"
-                    className={`size-1.5 rounded-full ${preparing ? "bg-amber-500" : saving ? "animate-pulse bg-orange-500" : "bg-emerald-500"}`}
-                  />
-                  {preparing
-                    ? "Editor đang khóa trong pha chuẩn bị."
-                    : saving
-                      ? "Đang autosave…"
-                      : "Đã autosave trên server"}
-                </span>
-                {current.part === 3 && (
-                  <span
-                    className={
-                      words >= (current.minimumWordCount ?? 0)
-                        ? "font-bold text-emerald-700"
-                        : "font-semibold text-orange-700"
-                    }
+                    aria-live="polite"
+                    className={`inline-flex items-center gap-1.5 ${
+                      preparing
+                        ? "font-semibold text-amber-700"
+                        : "text-emerald-700"
+                    }`}
                   >
-                    {words}/{current.minimumWordCount} từ
+                    <span
+                      aria-hidden="true"
+                      className={`size-1.5 rounded-full ${preparing ? "bg-amber-500" : saving ? "animate-pulse bg-orange-500" : "bg-emerald-500"}`}
+                    />
+                    {preparing
+                      ? "Editor đang khóa trong pha chuẩn bị."
+                      : saving
+                        ? "Đang autosave…"
+                        : hasPendingSave
+                          ? "Chưa lưu trên server"
+                          : "Đã autosave trên server"}
                   </span>
-                )}
+                  {current.part === 3 && (
+                    <span
+                      className={
+                        words >= (current.minimumWordCount ?? 0)
+                          ? "font-bold text-emerald-700"
+                          : "font-semibold text-orange-700"
+                      }
+                    >
+                      {words}/{current.minimumWordCount} từ
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-5">
@@ -354,7 +411,7 @@ export function WritingAttemptPlaceholder({
               ) : (
                 <button
                   className={primaryAction}
-                  disabled={saving}
+                  disabled={saving || transitioning}
                   onClick={() => (isLast ? setConfirming(true) : void next())}
                   type="button"
                 >

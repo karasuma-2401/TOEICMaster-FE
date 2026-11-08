@@ -2,7 +2,7 @@
 
 This file applies to the entire frontend repository, including when cloned alone. Read `README.md` and the actual configuration files before working. If this guidance differs from the manifests or CI, follow the manifests and CI, then update this file. In the two-repository workspace, also read `../AGENTS.md`.
 
-For feature work, read `docs/feature-development.md` for an implementation map, existing examples, local setup, and testing guidance. The backend API contract is in `../TOEICMaster-BE/docs/api-contract.md` when both repositories are present. When cloned alone, use the running backend's OpenAPI document and the contract in the issue.
+For feature work, read `docs/feature-development.md` for an implementation map, existing examples, local setup, and testing guidance. The backend API contract is in `../TOEICMaster-BE/docs/contracts/api-contract.md` when both repositories are present. When cloned alone, use the running backend's OpenAPI document and the contract in the issue.
 
 ## Stack and versions
 

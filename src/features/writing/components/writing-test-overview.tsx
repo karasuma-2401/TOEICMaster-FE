@@ -28,7 +28,10 @@ import {
 import { WritingHeader } from "./writing-header";
 
 function formatDuration(seconds: number) {
-  return `${Math.ceil(seconds / 60)} phút`;
+  const minutes = Math.floor(seconds / 60);
+  return seconds % 60
+    ? `${minutes} phút ${seconds % 60} giây`
+    : `${minutes} phút`;
 }
 
 export function WritingTestOverview({
