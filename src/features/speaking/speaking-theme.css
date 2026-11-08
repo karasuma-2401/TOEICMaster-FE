@@ -1,0 +1,274 @@
+/*
+ * Design tokens and primitives of the Speaking UI. Every rule is scoped under
+ * .sp-theme so other features keep their own look on the same page bundle.
+ */
+.sp-theme {
+  --sp-amber: #e89c24;
+  --sp-brand: #df5a28;
+  --sp-brand-flat: #e0602a;
+  --sp-crimson: #a21d1e;
+  --sp-crimson-link: #aa1620;
+  --sp-gradient: linear-gradient(90deg, #cc2f20 0%, #e36a22 100%);
+  --sp-avatar: linear-gradient(135deg, #e89c24, #df5a28);
+  --sp-page: #f5f0eb;
+  --sp-surface: #fff;
+  --sp-subtle: #f4f1ee;
+  --sp-cream: #fdf7ed;
+  --sp-orange-soft: #fbf0e6;
+  --sp-line: #dacfc5;
+  --sp-input-line: #d3c8bd;
+  --sp-outline-line: #c9bdb1;
+  --sp-ink: #2b2724;
+  --sp-ink-2: #5f5953;
+  --sp-ink-3: #948d86;
+  --sp-disabled-bg: #ece8e5;
+  --sp-disabled-fg: #8f8984;
+  --sp-disabled-cta: #f2b8a6;
+  --sp-success-bg: #ebf8ed;
+  --sp-success: #3f7a52;
+  --sp-success-line: #5e9b70;
+  --sp-success-solid: #5fa97a;
+  --sp-success-border-soft: #9fcbac;
+  --sp-warning-bg: #fbf3c8;
+  --sp-warning: #a16207;
+  --sp-warning-line: #d9a43a;
+  --sp-timer: #c2761e;
+  --sp-timer-chip: #8a5a12;
+  --sp-danger-bg: #f6e1e1;
+  --sp-danger: #bd2a2a;
+  --sp-danger-line: #d9544f;
+  --sp-danger-solid: #d9534f;
+  --sp-rec: #c0262d;
+  --sp-lr-bg: #f1f6ff;
+  --sp-lr: #2f55d4;
+  --sp-speak-bg: #f8f5ff;
+  --sp-speak: #7c3aed;
+  --sp-speak-line: #a78bfa;
+  --sp-write-bg: #f1fdf5;
+  --sp-write: #2f7d4f;
+  --sp-neutral-bg: #f1efed;
+  --sp-track: #e9e4df;
+  --sp-row-hover: #fbf9f8;
+  --sp-hero-line: #e9c6a4;
+  --sp-shadow-card: 0 1px 3px rgb(62 44 30 / 8%);
+  --sp-shadow-cta: 0 6px 16px -6px rgb(204 47 32 / 45%);
+  --sp-shadow-modal: 0 24px 64px -12px rgb(0 0 0 / 25%);
+
+  color: var(--sp-ink);
+  font-family: var(--sp-font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sp-font {
+  font-family: var(--sp-font-sans), system-ui, sans-serif;
+}
+
+@layer components {
+  .sp-page {
+    min-height: 100dvh;
+    background: var(--sp-page);
+  }
+  .sp-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1280px;
+    padding-inline: 16px;
+  }
+  .sp-container-narrow {
+    max-width: 1180px;
+  }
+  @media (min-width: 768px) {
+    .sp-container {
+      padding-inline: 40px;
+    }
+  }
+
+  .sp-card {
+    border: 1px solid var(--sp-line);
+    border-radius: 16px;
+    background: var(--sp-surface);
+    box-shadow: var(--sp-shadow-card);
+  }
+
+  .sp-mono {
+    font-family: var(--sp-font-mono, "JetBrains Mono"), monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sp-overline {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 16px;
+    text-transform: uppercase;
+  }
+
+  .sp-focus:focus-visible,
+  .sp-btn:focus-visible,
+  .sp-input:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--sp-brand) 40%, transparent);
+    outline-offset: 2px;
+  }
+
+  .sp-btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding-inline: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    cursor: pointer;
+    transition:
+      filter 150ms ease,
+      background-color 150ms ease;
+  }
+  .sp-btn:hover:not(:disabled, [aria-disabled="true"]) {
+    filter: brightness(0.95);
+  }
+  .sp-btn:disabled,
+  .sp-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  .sp-btn-sm {
+    min-height: 36px;
+    padding-inline: 12px;
+    font-size: 13px;
+  }
+  .sp-btn-lg {
+    min-height: 52px;
+    padding-inline: 24px;
+    font-size: 15px;
+  }
+  .sp-btn-cta {
+    background: var(--sp-gradient);
+    box-shadow: var(--sp-shadow-cta);
+    color: #fff;
+  }
+  .sp-btn-cta:disabled {
+    background: var(--sp-disabled-cta);
+    box-shadow: none;
+  }
+  .sp-btn-solid {
+    background: var(--sp-brand-flat);
+    color: #fff;
+  }
+  .sp-btn-solid:disabled {
+    background: var(--sp-disabled-bg);
+    color: var(--sp-disabled-fg);
+  }
+  .sp-btn-outline {
+    border-color: var(--sp-outline-line);
+    background: var(--sp-surface);
+    color: var(--sp-ink);
+  }
+  .sp-btn-outline:disabled {
+    color: var(--sp-disabled-fg);
+  }
+  .sp-btn-ghost {
+    background: transparent;
+    color: var(--sp-ink);
+  }
+  .sp-btn-ghost:disabled {
+    color: var(--sp-ink-3);
+  }
+  .sp-btn-locked:disabled {
+    background: var(--sp-disabled-bg);
+    box-shadow: none;
+    color: var(--sp-disabled-fg);
+  }
+
+  .sp-input {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid var(--sp-input-line);
+    border-radius: 10px;
+    background: var(--sp-surface);
+    padding: 0 14px;
+    font-size: 14px;
+  }
+  textarea.sp-input {
+    padding-block: 12px;
+  }
+  .sp-input::placeholder {
+    color: var(--sp-ink-3);
+  }
+  .sp-input:disabled {
+    background: var(--sp-subtle);
+    color: var(--sp-ink-2);
+    cursor: not-allowed;
+  }
+
+  .sp-chip {
+    border: 1px solid color-mix(in srgb, currentcolor 28%, transparent);
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  .sp-chip-orange {
+    background: var(--sp-orange-soft);
+    color: var(--sp-brand);
+  }
+  .sp-chip-success {
+    background: var(--sp-success-bg);
+    color: var(--sp-success);
+  }
+  .sp-chip-warning {
+    background: var(--sp-warning-bg);
+    color: var(--sp-warning);
+  }
+  .sp-chip-danger {
+    background: var(--sp-danger-bg);
+    color: var(--sp-danger);
+  }
+  .sp-chip-speak {
+    background: var(--sp-speak-bg);
+    color: var(--sp-speak);
+  }
+  .sp-chip-neutral {
+    background: var(--sp-neutral-bg);
+    color: var(--sp-ink-2);
+  }
+
+  .sp-wave-bar {
+    display: block;
+    width: 4px;
+    flex: none;
+    border-radius: 9999px;
+    background: currentcolor;
+    transition: height 100ms linear;
+  }
+  .sp-wave-live .sp-wave-bar {
+    animation: sp-wave 900ms ease-in-out infinite alternate;
+  }
+
+  .sp-word-issue {
+    color: var(--sp-brand);
+    text-decoration: underline 2px var(--sp-brand);
+    text-underline-offset: 3px;
+  }
+}
+
+@keyframes sp-wave {
+  to {
+    transform: scaleY(0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-theme .sp-wave-live .sp-wave-bar {
+    animation: none;
+  }
+}

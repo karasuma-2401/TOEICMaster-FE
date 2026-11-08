@@ -2,15 +2,29 @@ import {
   difficultyLabel,
   exerciseHeadline,
   exerciseStatusLabel,
-  formatUpdatedAt,
 } from "@/features/speaking/admin-labels";
-import type { SpeakingExercise } from "@/features/speaking/types";
+import { speakingPartSpecs } from "@/features/speaking/part-specs";
+import type {
+  SpeakingDifficulty,
+  SpeakingExercise,
+} from "@/features/speaking/types";
+import { ArchiveIcon, PencilIcon } from "../ui/icons";
+import { Chip, type ChipTone } from "../ui/primitives";
 
-const statusTone: Record<SpeakingExercise["status"], string> = {
-  PUBLISHED: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
-  DRAFT: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",
-  ARCHIVED: "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]",
+const statusTone: Record<SpeakingExercise["status"], ChipTone> = {
+  PUBLISHED: "success",
+  DRAFT: "warning",
+  ARCHIVED: "neutral",
 };
+const difficultyTone: Record<SpeakingDifficulty, ChipTone> = {
+  EASY: "success",
+  MEDIUM: "warning",
+  HARD: "danger",
+};
+const head = "sp-overline px-4 py-3 font-semibold text-(--sp-ink-3)";
+
+const seconds = (values: number[]) =>
+  [...new Set(values)].map((value) => `${value} giây`).join(" / ");
 
 export function SpeakingExerciseTable({
   items,
@@ -23,63 +37,77 @@ export function SpeakingExerciseTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[850px] text-left text-sm">
-        <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
+      <table className="w-full min-w-[900px] text-left text-sm">
+        <thead className="bg-(--sp-subtle)">
           <tr>
-            <th className="p-4">MÃ BÀI</th>
-            <th className="p-4">NỘI DUNG</th>
-            <th className="p-4">CHỦ ĐỀ</th>
-            <th className="p-4">ĐỘ KHÓ</th>
-            <th className="p-4">TRẠNG THÁI</th>
-            <th className="p-4 text-right">THAO TÁC</th>
+            <th className={head}>MÃ ID</th>
+            <th className={head}>NỘI DUNG (TRÍCH DẪN)</th>
+            <th className={head}>CHỦ ĐỀ</th>
+            <th className={head}>THỜI GIAN CHUẨN BỊ</th>
+            <th className={head}>THỜI GIAN NÓI</th>
+            <th className={head}>ĐỘ KHÓ</th>
+            <th className={head}>TRẠNG THÁI</th>
+            <th className={head}>THAO TÁC</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((exercise) => (
-            <tr
-              className="border-t border-[var(--admin-border)] transition hover:bg-[var(--admin-row-hover)]"
-              key={exercise.id}
-            >
-              <td className="p-4 font-bold text-[var(--admin-brand-red)]">
-                {exercise.code}
-              </td>
-              <td className="max-w-sm p-4">
-                <p className="line-clamp-2 font-semibold" lang="en">
-                  {exerciseHeadline(exercise)}
-                </p>
-                <p className="mt-1 text-xs text-[var(--admin-muted)]">
-                  {formatUpdatedAt(exercise.updatedAtUtc)}
-                </p>
-              </td>
-              <td className="p-4">{exercise.topic}</td>
-              <td className="p-4">{difficultyLabel[exercise.difficulty]}</td>
-              <td className="p-4">
-                <span
-                  className={`rounded-full px-2 py-1 text-xs font-bold ${statusTone[exercise.status]}`}
-                >
-                  {exerciseStatusLabel[exercise.status]}
-                </span>
-              </td>
-              <td className="whitespace-nowrap p-4 text-right">
-                <button
-                  className="px-2 font-semibold text-[var(--admin-brand-red)]"
-                  onClick={() => onEdit(exercise)}
-                  type="button"
-                >
-                  Mở
-                </button>
-                {exercise.status !== "ARCHIVED" && (
+          {items.map((exercise) => {
+            const spec = speakingPartSpecs[exercise.part];
+            return (
+              <tr
+                className="border-t border-(--sp-line) hover:bg-(--sp-row-hover)"
+                key={exercise.id}
+              >
+                <td className="px-4 py-3 font-semibold text-(--sp-crimson)">
+                  {exercise.code}
+                </td>
+                <td className="max-w-sm px-4 py-3">
+                  <p className="line-clamp-2" lang="en">
+                    {exerciseHeadline(exercise)}
+                  </p>
+                </td>
+                <td className="px-4 py-3">
+                  <Chip tone="neutral">{exercise.topic}</Chip>
+                </td>
+                <td className="px-4 py-3">
+                  <Chip tone="orange">{seconds(spec.preparationSeconds)}</Chip>
+                </td>
+                <td className="px-4 py-3">
+                  <Chip tone="orange">{seconds(spec.responseSeconds)}</Chip>
+                </td>
+                <td className="px-4 py-3">
+                  <Chip tone={difficultyTone[exercise.difficulty]}>
+                    {difficultyLabel[exercise.difficulty]}
+                  </Chip>
+                </td>
+                <td className="px-4 py-3">
+                  <Chip dot tone={statusTone[exercise.status]}>
+                    {exerciseStatusLabel[exercise.status]}
+                  </Chip>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3">
                   <button
-                    className="px-2 font-semibold text-[var(--admin-danger)]"
-                    onClick={() => onArchive(exercise)}
+                    aria-label={`Mở ${exercise.code}`}
+                    className="sp-focus cursor-pointer p-1 text-(--sp-ink-2) hover:text-(--sp-brand)"
+                    onClick={() => onEdit(exercise)}
                     type="button"
                   >
-                    Lưu trữ
+                    <PencilIcon size={18} />
                   </button>
-                )}
-              </td>
-            </tr>
-          ))}
+                  {exercise.status !== "ARCHIVED" && (
+                    <button
+                      aria-label={`Lưu trữ ${exercise.code}`}
+                      className="sp-focus ml-1 cursor-pointer p-1 text-(--sp-ink-2) hover:text-(--sp-danger)"
+                      onClick={() => onArchive(exercise)}
+                      type="button"
+                    >
+                      <ArchiveIcon size={18} />
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
