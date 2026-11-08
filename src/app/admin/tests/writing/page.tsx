@@ -1,5 +1,5 @@
-import { AdminWritingTestsPage } from "@/features/writing/components/admin-writing-pages";
+import { AdminWritingTestsLive } from "@/features/writing/components/admin-writing-tests-live";
 
 export default function AdminWritingTestsRoute() {
-  return <AdminWritingTestsPage />;
+  return <AdminWritingTestsLive />;
 }

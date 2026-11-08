@@ -7,6 +7,8 @@ const anonymousCookieName = "toeicmaster_writing_anonymous";
 const anonymousHeaderName = "X-Writing-Anonymous-Session";
 const knownPaths = [
   /^tests$/,
+  /^exercises$/,
+  /^exercises\/[0-9a-f-]{36}\/attempts$/i,
   /^tests\/[0-9a-f-]{36}$/i,
   /^media\/[0-9a-f-]{36}$/i,
   /^attempts$/,
@@ -15,6 +17,7 @@ const knownPaths = [
   /^attempts\/[0-9a-f-]{36}\/submit$/i,
   /^attempts\/[0-9a-f-]{36}\/evaluation-consent$/i,
   /^attempts\/[0-9a-f-]{36}\/answers\/[1-9]\d*$/i,
+  /^attempts\/[0-9a-f-]{36}\/media\/[0-9a-f-]{36}$/i,
 ];
 
 function validPath(segments: string[]) {
@@ -63,7 +66,10 @@ export async function forwardWriting(
     return problem(403, "Yêu cầu không hợp lệ.");
 
   const path = segments.join("/");
-  const isAttemptPath = path === "attempts" || path.startsWith("attempts/");
+  const isAttemptPath =
+    path === "attempts" ||
+    path.startsWith("attempts/") ||
+    /^exercises\/[0-9a-f-]{36}\/attempts$/i.test(path);
   const session = sessionCookie(request);
   const accessToken =
     session && Date.parse(session.refreshTokenExpiresAtUtc) > Date.now()
@@ -87,20 +93,33 @@ export async function forwardWriting(
     signal: AbortSignal.timeout(5000),
   };
   if (method !== "GET") {
-    if (!request.headers.get("content-type")?.startsWith("application/json"))
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
-    const body: unknown = await request.json().catch(() => null);
-    if (!body || typeof body !== "object" || Array.isArray(body))
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
-    headers.set("Content-Type", "application/json");
-    init.body = JSON.stringify(body);
+    const raw = await request.text();
+    const acceptsEmptyBody = /^attempts\/[0-9a-f-]{36}\/(next|submit)$/i.test(
+      path,
+    );
+    if (!raw) {
+      if (!acceptsEmptyBody)
+        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+    } else {
+      if (!request.headers.get("content-type")?.startsWith("application/json"))
+        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      let body: unknown;
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      }
+      if (!body || typeof body !== "object" || Array.isArray(body))
+        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      headers.set("Content-Type", "application/json");
+      init.body = JSON.stringify(body);
+    }
   }
 
   try {
-    return upstreamResponse(
-      await fetch(backendUrl(path), init),
-      anonymousSession,
-    );
+    const url = backendUrl(path);
+    url.search = new URL(request.url).search;
+    return upstreamResponse(await fetch(url, init), anonymousSession);
   } catch {
     return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
   }

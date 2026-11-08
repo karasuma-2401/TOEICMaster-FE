@@ -79,13 +79,16 @@ export function WritingHistoryPlaceholder() {
                   <div className="flex min-w-0 items-center gap-4">
                     <span
                       aria-hidden="true"
-                      className={`grid size-11 shrink-0 place-items-center rounded-2xl text-sm font-black ${submitted && score !== null ? "bg-gradient-to-br from-red-600 to-orange-500 text-white" : "bg-stone-100 text-slate-500"}`}
+                      className={`grid size-11 shrink-0 place-items-center rounded-2xl text-sm font-black ${submitted && score !== null && !attempt.isPractice ? "bg-gradient-to-br from-red-600 to-orange-500 text-white" : "bg-stone-100 text-slate-500"}`}
                     >
-                      {submitted && score !== null ? score : "W"}
+                      {submitted && score !== null && !attempt.isPractice
+                        ? score
+                        : "W"}
                     </span>
                     <div className="min-w-0">
                       <p className="truncate font-bold">{attempt.testTitle}</p>
                       <p className="mt-1 text-sm text-slate-500">
+                        {attempt.isPractice ? "Luyện bài tập · " : ""}
                         {displayMode(attempt.mode)} · {attempt.questionCount}{" "}
                         câu ·{" "}
                         {new Date(attempt.createdAtUtc).toLocaleString("vi-VN")}
@@ -97,11 +100,13 @@ export function WritingHistoryPlaceholder() {
                       className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${submitted ? "bg-orange-50 text-orange-700 ring-orange-100" : "bg-amber-50 text-amber-700 ring-amber-100"}`}
                     >
                       {submitted
-                        ? score !== null
-                          ? `AI ước tính ${score}/200`
-                          : attempt.evaluationStatus === "FAILED"
-                            ? "Cần chấm lại"
-                            : "Chờ chấm AI"
+                        ? score !== null && attempt.isPractice
+                          ? "Đã chấm AI"
+                          : score !== null
+                            ? `AI ước tính ${score}/200`
+                            : attempt.evaluationStatus === "FAILED"
+                              ? "Cần chấm lại"
+                              : "Chờ chấm AI"
                         : "Đang làm"}
                     </span>
                     <Link

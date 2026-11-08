@@ -1,7 +1,8 @@
 import type {
-  WritingAttemptApi,
+  WritingAttemptQuestionApi,
   WritingEvaluationApi,
 } from "@/features/writing/attempt-api";
+import { WritingQuestionPrompt } from "./writing-question-prompt";
 
 function FeedbackList({
   title,
@@ -30,11 +31,15 @@ function FeedbackList({
 
 export function WritingEvaluationReport({
   evaluation,
-  reviewQuestions,
+  practicePart,
+  questions,
 }: {
   evaluation: WritingEvaluationApi;
-  reviewQuestions: WritingAttemptApi["reviewQuestions"];
+  practicePart?: 1 | 2 | 3;
+  questions: WritingAttemptQuestionApi[];
 }) {
+  const rawScore = evaluation.feedback[0]?.criterionScore;
+  const maximumScore = practicePart === 1 ? 3 : practicePart === 2 ? 4 : 5;
   return (
     <section className="mt-7 space-y-5">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-600 to-orange-500 p-6 text-white shadow-[0_16px_40px_-20px_rgb(234_88_12/0.8)]">
@@ -43,14 +48,16 @@ export function WritingEvaluationReport({
           className="absolute -right-10 -top-10 size-40 rounded-full bg-white/10"
         />
         <p className="text-sm font-bold uppercase tracking-wide">
-          Điểm TOEIC Writing ước tính bởi AI
+          {practicePart
+            ? "Điểm bài tập theo tiêu chí AI"
+            : "Điểm TOEIC Writing ước tính bởi AI"}
         </p>
         <p className="mt-2 text-5xl font-black">
-          {evaluation.estimatedScore}
-          <span className="text-2xl">/200</span>
+          {practicePart ? (rawScore ?? "—") : evaluation.estimatedScore}
+          <span className="text-2xl">/{practicePart ? maximumScore : 200}</span>
         </p>
         <p className="mt-3 text-sm text-orange-50">
-          Không phải kết quả ETS chính thức.
+          Điểm AI phục vụ luyện tập, không phải kết quả ETS chính thức.
         </p>
       </div>
       <div className="rounded-2xl border border-slate-200 p-5">
@@ -91,27 +98,27 @@ export function WritingEvaluationReport({
                   <span className="font-bold">Gợi ý ngắn: </span>
                   {item.suggestedRevision}
                 </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      )}
-      {reviewQuestions.length > 0 && (
-        <div className="rounded-2xl border border-slate-200 p-5">
-          <h2 className="font-bold">Bài mẫu tham khảo</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            Đây là một cách triển khai tham khảo, không phải đáp án duy nhất.
-          </p>
-          <div className="mt-4 space-y-4">
-            {reviewQuestions.map((question) => (
-              <article
-                className="rounded-xl bg-stone-50 p-4"
-                key={question.position}
-              >
-                <h3 className="font-bold">Câu {question.position}</h3>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                  {question.modelAnswer}
-                </p>
+                {questions
+                  .filter(
+                    (question) => question.position === item.questionPosition,
+                  )
+                  .map((question) => (
+                    <details
+                      className="mt-4 rounded-xl bg-white p-4"
+                      key={question.position}
+                    >
+                      <summary className="cursor-pointer font-semibold">
+                        Xem đề và bài đã nộp
+                      </summary>
+                      <div className="mt-4">
+                        <WritingQuestionPrompt question={question} />
+                      </div>
+                      <h4 className="mt-4 font-semibold">Bài đã nộp</h4>
+                      <p className="mt-2 whitespace-pre-wrap text-sm">
+                        {question.answer || "Không có câu trả lời."}
+                      </p>
+                    </details>
+                  ))}
               </article>
             ))}
           </div>

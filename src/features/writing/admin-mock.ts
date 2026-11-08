@@ -1,10 +1,11 @@
 import type { WritingDifficulty, WritingPart } from "./types";
 
 export type WritingQuestionStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-export type AdminWritingTestStatus = "DRAFT" | "PUBLISHED";
+export type AdminWritingTestStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export interface WritingQuestionBase {
   id: string;
+  version?: number;
   code: string;
   topic: string;
   difficulty: WritingDifficulty;
@@ -16,6 +17,7 @@ export interface WritingQuestionBase {
 
 export interface Part1Question extends WritingQuestionBase {
   part: 1;
+  imageAssetId?: string;
   imageName: string;
   imageAlt: string;
   keywordOne: string;
@@ -53,6 +55,7 @@ export interface WritingTimingTemplate {
 
 export interface AdminWritingTest {
   id: string;
+  version?: number;
   code: string;
   title: string;
   description: string;

@@ -107,7 +107,9 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
                     ? "Đã có kết quả"
                     : needsConsent
                       ? "Chờ xác nhận"
-                      : "Đang chấm AI",
+                      : evaluationStatus === "FAILED"
+                        ? "Chấm bài thất bại"
+                        : "Đang chấm AI",
                   accent: true,
                 },
               ]}
@@ -126,10 +128,10 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
           <section className="mt-7 rounded-2xl border border-orange-200 bg-orange-50 p-5">
             <h2 className="font-bold">Gửi bài để AI chấm ước tính</h2>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              Khi xác nhận, nội dung đề và bài viết của bạn sẽ được gửi đến
-              Gemini để tạo điểm ước tính và phản hồi. Với Gemini Free Tier, nội
-              dung có thể được dùng để cải thiện sản phẩm của nhà cung cấp.
-              Không gửi thông tin cá nhân vào bài làm.
+              Khi xác nhận, nội dung đề, ảnh đề bài và bài viết của bạn sẽ được
+              gửi đến Gemini để tạo điểm ước tính và phản hồi. Với Gemini Free
+              Tier, nội dung có thể được dùng để cải thiện sản phẩm của nhà cung
+              cấp. Không gửi thông tin cá nhân vào bài làm.
             </p>
             <label className="mt-4 flex gap-3 rounded-xl bg-white/70 p-3 text-sm leading-6 text-slate-800 ring-1 ring-orange-100">
               <input
@@ -186,7 +188,10 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
         {attempt && isComplete && evaluation && (
           <WritingEvaluationReport
             evaluation={evaluation}
-            reviewQuestions={attempt.reviewQuestions}
+            practicePart={
+              attempt.isPractice ? attempt.questions[0]?.part : undefined
+            }
+            questions={attempt.questions}
           />
         )}
         <div className="mt-8 flex flex-wrap gap-3 border-t border-slate-100 pt-6">

@@ -47,8 +47,13 @@ export function WritingAttemptPlaceholder({
   const [now, setNow] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [hasPendingSave, setHasPendingSave] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const refreshInFlight = useRef(false);
+  const mutationRevision = useRef(0);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const queuedSaves = useRef(0);
   const autosaveTimer = useRef<number | null>(null);
   const pendingAutosave = useRef<{ position: number; answer: string } | null>(
     null,
@@ -58,7 +63,22 @@ export function WritingAttemptPlaceholder({
     (value: WritingAttemptApi) => {
       setServerOffset(Date.parse(value.serverNowUtc) - Date.now());
       setNow(Date.now());
-      setAttempt(value);
+      const pending = pendingAutosave.current;
+      setAttempt(
+        pending &&
+          value.status === "IN_PROGRESS" &&
+          value.currentPhase === "ANSWERING" &&
+          value.currentQuestionPosition === pending.position
+          ? {
+              ...value,
+              questions: value.questions.map((question) =>
+                question.position === pending.position && !question.lockedAtUtc
+                  ? { ...question, answer: pending.answer }
+                  : question,
+              ),
+            }
+          : value,
+      );
       if (value.status === "SUBMITTED_AWAITING_EVALUATION")
         router.replace(
           `/writing/attempts/${encodeURIComponent(value.id)}/result`,
@@ -69,8 +89,11 @@ export function WritingAttemptPlaceholder({
   const refresh = useCallback(async () => {
     if (refreshInFlight.current) return;
     refreshInFlight.current = true;
+    const revision = mutationRevision.current;
     try {
-      acceptAttempt(await getWritingAttempt(attemptId));
+      const result = await getWritingAttempt(attemptId);
+      if (revision !== mutationRevision.current) return;
+      acceptAttempt(result);
       setError(null);
     } catch (cause) {
       setError(
@@ -125,25 +148,37 @@ export function WritingAttemptPlaceholder({
   const closeConfirm = useCallback(() => setConfirming(false), []);
   const persistAnswer = useCallback(
     async (position: number, answer: string) => {
+      queuedSaves.current++;
       setSaving(true);
+      const save = saveQueue.current.then(async () => {
+        try {
+          const result = await saveWritingAnswer(attemptId, position, answer);
+          mutationRevision.current++;
+          acceptAttempt(result);
+          if (
+            pendingAutosave.current?.position === position &&
+            pendingAutosave.current.answer === answer
+          ) {
+            pendingAutosave.current = null;
+            setHasPendingSave(false);
+          }
+          setError(null);
+          return true;
+        } catch (cause) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Không thể autosave bài viết.",
+          );
+          return false;
+        }
+      });
+      saveQueue.current = save.then(() => undefined);
       try {
-        acceptAttempt(await saveWritingAnswer(attemptId, position, answer));
-        if (
-          pendingAutosave.current?.position === position &&
-          pendingAutosave.current.answer === answer
-        )
-          pendingAutosave.current = null;
-        setError(null);
-        return true;
-      } catch (cause) {
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Không thể autosave bài viết.",
-        );
-        return false;
+        return await save;
       } finally {
-        setSaving(false);
+        queuedSaves.current--;
+        if (queuedSaves.current === 0) setSaving(false);
       }
     },
     [acceptAttempt, attemptId],
@@ -208,16 +243,19 @@ export function WritingAttemptPlaceholder({
     );
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
     pendingAutosave.current = { position: current.position, answer };
+    setHasPendingSave(true);
     autosaveTimer.current = window.setTimeout(() => {
       void persistAnswer(current.position, answer);
     }, 800);
   };
   const next = async () => {
+    setTransitioning(true);
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
-    if (!(await persistAnswer(current.position, current.answer))) return;
-    setSaving(true);
     try {
-      acceptAttempt(await nextWritingQuestion(attemptId));
+      if (!(await persistAnswer(current.position, current.answer))) return;
+      const result = await nextWritingQuestion(attemptId);
+      mutationRevision.current++;
+      acceptAttempt(result);
       setError(null);
     } catch (cause) {
       setError(
@@ -227,20 +265,26 @@ export function WritingAttemptPlaceholder({
       );
       await refresh();
     } finally {
-      setSaving(false);
+      setTransitioning(false);
     }
   };
   const submit = async () => {
+    setConfirming(false);
+    setTransitioning(true);
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
-    if (!preparing && !(await persistAnswer(current.position, current.answer)))
-      return;
-    setSaving(true);
     try {
-      acceptAttempt(await submitWritingAttempt(attemptId));
+      if (
+        !preparing &&
+        !(await persistAnswer(current.position, current.answer))
+      )
+        return;
+      const result = await submitWritingAttempt(attemptId);
+      mutationRevision.current++;
+      acceptAttempt(result);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể nộp bài.");
     } finally {
-      setSaving(false);
+      setTransitioning(false);
     }
   };
 
@@ -279,11 +323,17 @@ export function WritingAttemptPlaceholder({
                   Writing Part {current.part}
                 </p>
               </div>
-              <PhaseTimer
-                label={preparing ? "Chuẩn bị" : "Làm bài"}
-                seconds={seconds}
-                tone={preparing ? "prepare" : "active"}
-              />
+              {attempt.isPractice ? (
+                <span className="text-sm text-slate-600">
+                  Luyện tập không giới hạn thời gian
+                </span>
+              ) : (
+                <PhaseTimer
+                  label={preparing ? "Chuẩn bị" : "Làm bài"}
+                  seconds={seconds}
+                  tone={preparing ? "prepare" : "active"}
+                />
+              )}
             </div>
             {error && (
               <div className="mt-5">
@@ -299,7 +349,7 @@ export function WritingAttemptPlaceholder({
               </label>
               <textarea
                 className="mt-2 min-h-52 w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 shadow-inner shadow-slate-100 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-                disabled={preparing || saving}
+                disabled={preparing || transitioning}
                 id="writing-answer"
                 spellCheck={false}
                 onChange={(event) => saveLocalAnswer(event.target.value)}
@@ -331,7 +381,9 @@ export function WritingAttemptPlaceholder({
                     ? "Editor đang khóa trong pha chuẩn bị."
                     : saving
                       ? "Đang autosave…"
-                      : "Đã autosave trên server"}
+                      : hasPendingSave
+                        ? "Chưa lưu trên server"
+                        : "Đã autosave trên server"}
                 </span>
                 {current.part === 3 && (
                   <span
@@ -354,7 +406,7 @@ export function WritingAttemptPlaceholder({
               ) : (
                 <button
                   className={primaryAction}
-                  disabled={saving}
+                  disabled={saving || transitioning}
                   onClick={() => (isLast ? setConfirming(true) : void next())}
                   type="button"
                 >

@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { WritingTestOverview } from "./writing-test-overview";
+
+afterEach(cleanup);
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("./writing-header", () => ({
@@ -41,6 +43,11 @@ vi.mock("@/features/writing/attempt-api", () => ({
 }));
 
 describe("WritingTestOverview", () => {
+  it("shows the precise full-test duration", async () => {
+    render(<WritingTestOverview mode="full" testId="test-1" />);
+    expect(await screen.findByText("57 phút 30 giây")).toBeInTheDocument();
+  });
+
   it("shows only the selected Part's timing and structure in practice mode", async () => {
     render(<WritingTestOverview mode="part-2" testId="test-1" />);
 

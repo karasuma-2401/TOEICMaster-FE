@@ -1,4 +1,4 @@
-import { getJson } from "@/shared/api/client";
+import { WritingApiError, writingRequest } from "./http";
 
 export type AttemptMode = "FULL" | "PART_1" | "PART_2" | "PART_3";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED_AWAITING_EVALUATION";
@@ -33,6 +33,21 @@ export interface WritingTestPageApi {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+}
+
+export interface WritingPracticeExerciseApi {
+  id: string;
+  part: 1 | 2 | 3;
+  code: string;
+  topic: string;
+  difficulty: string;
+}
+
+export interface WritingPracticeExercisePageApi {
+  items: WritingPracticeExerciseApi[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
 }
 
 export interface WritingAttemptQuestionApi {
@@ -88,7 +103,8 @@ export interface WritingEvaluationApi {
 
 export interface WritingAttemptApi {
   id: string;
-  testId: string;
+  testId: string | null;
+  isPractice: boolean;
   testCode: string;
   testTitle: string;
   mode: AttemptMode;
@@ -106,7 +122,8 @@ export interface WritingAttemptApi {
 
 export interface WritingAttemptSummaryApi {
   id: string;
-  testId: string;
+  testId: string | null;
+  isPractice: boolean;
   testCode: string;
   testTitle: string;
   mode: AttemptMode;
@@ -284,7 +301,7 @@ function parseAttempt(value: unknown): WritingAttemptApi {
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
-    typeof value.testId !== "string" ||
+    !(value.testId === null || typeof value.testId === "string") ||
     typeof value.testCode !== "string" ||
     typeof value.testTitle !== "string" ||
     !isMode(value.mode) ||
@@ -308,6 +325,7 @@ function parseAttempt(value: unknown): WritingAttemptApi {
     throw new Error("Phản hồi lượt làm Writing không hợp lệ.");
   return {
     ...value,
+    isPractice: value.isPractice === true,
     questions: value.questions.map(parseQuestion),
     evaluation: parseEvaluation(value.evaluation),
     reviewQuestions: value.reviewQuestions.map((item) => {
@@ -322,31 +340,41 @@ function parseAttempt(value: unknown): WritingAttemptApi {
   } as WritingAttemptApi;
 }
 
-async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const body: unknown = await response.json().catch(() => null);
-    const title =
-      isRecord(body) && typeof body.title === "string"
-        ? body.title
-        : "Không thể xử lý lượt làm Writing.";
-    throw new Error(title);
+async function requestJson(
+  path: string,
+  init?: { method?: "POST" | "PUT"; body?: string; signal?: AbortSignal },
+): Promise<unknown> {
+  try {
+    return await writingRequest(path, {
+      method: init?.method ?? "GET",
+      json: typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
+      signal: init?.signal ?? undefined,
+      refresh: true,
+      fallback: "Không thể xử lý yêu cầu Writing.",
+    });
+  } catch (cause) {
+    if (
+      cause instanceof WritingApiError &&
+      cause.message === "One or more validation errors occurred."
+    )
+      throw new Error(
+        "Thông tin yêu cầu không hợp lệ. Vui lòng tải lại trang và thử lại.",
+      );
+    throw cause;
   }
-  return response.json() as Promise<unknown>;
 }
 
 export async function getWritingTests(
   signal?: AbortSignal,
+  query = "",
+  pageNumber = 1,
 ): Promise<WritingTestPageApi> {
-  const value = await getJson<unknown>("/api/writing/tests", signal);
+  const params = new URLSearchParams({
+    pageNumber: String(pageNumber),
+    pageSize: "20",
+  });
+  if (query.trim()) params.set("query", query.trim());
+  const value = await requestJson(`/api/writing/tests?${params}`, { signal });
   if (
     !isRecord(value) ||
     !Array.isArray(value.items) ||
@@ -361,10 +389,9 @@ export async function getWritingTests(
 
 export async function getWritingTest(testId: string, signal?: AbortSignal) {
   return parseTest(
-    await getJson<unknown>(
-      `/api/writing/tests/${encodeURIComponent(testId)}`,
+    await requestJson(`/api/writing/tests/${encodeURIComponent(testId)}`, {
       signal,
-    ),
+    }),
   );
 }
 
@@ -377,14 +404,58 @@ export async function startWritingAttempt(testId: string, mode: AttemptMode) {
   );
 }
 
+export async function getWritingPracticeExercises(
+  part: number,
+  pageNumber = 1,
+  signal?: AbortSignal,
+) {
+  const value = await requestJson(
+    `/api/writing/exercises?part=${part}&pageNumber=${pageNumber}&pageSize=20`,
+    { signal },
+  );
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.items) ||
+    !Number.isInteger(value.pageNumber) ||
+    !Number.isInteger(value.pageSize) ||
+    !Number.isInteger(value.totalCount)
+  )
+    throw new Error("Phản hồi danh sách bài tập Writing không hợp lệ.");
+  const items = value.items.map((item) => {
+    if (
+      !isRecord(item) ||
+      typeof item.id !== "string" ||
+      !isPart(item.part) ||
+      typeof item.code !== "string" ||
+      typeof item.topic !== "string" ||
+      typeof item.difficulty !== "string"
+    )
+      throw new Error("Phản hồi bài tập Writing không hợp lệ.");
+    return item as unknown as WritingPracticeExerciseApi;
+  });
+  return { ...value, items } as WritingPracticeExercisePageApi;
+}
+
+export async function startWritingPractice(exerciseId: string) {
+  return parseAttempt(
+    await requestJson(
+      `/api/writing/exercises/${encodeURIComponent(exerciseId)}/attempts`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
+      },
+    ),
+  );
+}
+
 export async function getWritingAttempt(
   attemptId: string,
   signal?: AbortSignal,
 ) {
   return parseAttempt(
-    await getJson<unknown>(
+    await requestJson(
       `/api/writing/attempts/${encodeURIComponent(attemptId)}`,
-      signal,
+      { signal },
     ),
   );
 }
@@ -463,14 +534,14 @@ export async function grantWritingEvaluationConsent(attemptId: string) {
 export async function getWritingHistory(
   signal?: AbortSignal,
 ): Promise<WritingAttemptSummaryApi[]> {
-  const value = await getJson<unknown>("/api/writing/attempts", signal);
+  const value = await requestJson("/api/writing/attempts", { signal });
   if (!isRecord(value) || !Array.isArray(value.items))
     throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
   return value.items.map((item) => {
     if (
       !isRecord(item) ||
       typeof item.id !== "string" ||
-      typeof item.testId !== "string" ||
+      !(item.testId === null || typeof item.testId === "string") ||
       typeof item.testCode !== "string" ||
       typeof item.testTitle !== "string" ||
       !isMode(item.mode) ||
@@ -490,7 +561,10 @@ export async function getWritingHistory(
       !(item.estimatedScore === null || Number.isInteger(item.estimatedScore))
     )
       throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
-    return item as unknown as WritingAttemptSummaryApi;
+    return {
+      ...item,
+      isPractice: item.isPractice === true,
+    } as unknown as WritingAttemptSummaryApi;
   });
 }
 

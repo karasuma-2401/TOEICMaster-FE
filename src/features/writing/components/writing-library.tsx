@@ -48,28 +48,38 @@ function duration(test: WritingTestSummaryApi) {
       part.questionCount * (part.preparationSeconds + part.responseSeconds),
     0,
   );
-  return `${Math.ceil(seconds / 60)} phút`;
+  const minutes = Math.floor(seconds / 60);
+  return seconds % 60
+    ? `${minutes} phút ${seconds % 60} giây`
+    : `${minutes} phút`;
 }
 
 export function WritingLibrary() {
   const [tests, setTests] = useState<WritingTestSummaryApi[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const page = await getWritingTests(signal);
-      setTests(page.items);
-    } catch (cause) {
-      if (signal?.aborted) return;
-      setError(
-        cause instanceof Error ? cause.message : "Không thể tải đề Writing.",
-      );
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, []);
+  const [query, setQuery] = useState("");
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const page = await getWritingTests(signal, query, pageNumber);
+        setTests(page.items);
+        setTotalPages(page.totalPages);
+      } catch (cause) {
+        if (signal?.aborted) return;
+        setError(
+          cause instanceof Error ? cause.message : "Không thể tải đề Writing.",
+        );
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [query, pageNumber],
+  );
   useEffect(() => {
     const controller = new AbortController();
     const task = window.setTimeout(() => void load(controller.signal), 0);
@@ -82,7 +92,7 @@ export function WritingLibrary() {
   return (
     <PracticePage header={<WritingHeader />}>
       <PageIntro
-        description="Mỗi câu có pha chuẩn bị và làm bài riêng. Đồng hồ được tính ở máy chủ, nên tải lại trang hoặc đổi tab không làm thay đổi thời gian."
+        description="Luyện bài tập theo Part hoặc làm đề thi với thời gian được tính ở máy chủ."
         eyebrow="TOEIC WRITING"
         title="Luyện Writing theo đúng nhịp thi"
       />
@@ -90,23 +100,18 @@ export function WritingLibrary() {
       <section className="mt-10" aria-labelledby="writing-parts">
         <SectionHeading
           aside={<CountBadge>3 Part</CountBadge>}
-          description="Chọn một đề đã công bố rồi luyện riêng phần bạn cần."
+          description="Chọn Part để luyện bài tập trong ngân hàng."
           id="writing-parts"
           title="Luyện theo Part"
         />
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           {parts.map((part) => {
-            const available = tests[0];
             return (
               <PartCard
                 actionLabel={`Luyện Part ${part.part} →`}
                 description={part.description}
                 eyebrow={`WRITING PART ${part.part}`}
-                href={
-                  available
-                    ? `/writing/tests/${available.id}?mode=part-${part.part}`
-                    : undefined
-                }
+                href={`/writing/practice/${part.part}`}
                 key={part.part}
                 part={part.part}
                 title={part.subtitle}
@@ -128,12 +133,32 @@ export function WritingLibrary() {
           id="writing-tests"
           title="Đề Writing"
         />
+        <label className="mt-5 block max-w-md text-sm font-semibold">
+          Tìm đề Writing
+          <input
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white p-3 font-normal"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPageNumber(1);
+            }}
+            placeholder="Mã hoặc tên đề"
+          />
+        </label>
         {loading && <LoadingPanel label="Đang tải đề Writing…" />}
         {error && <ErrorPanel message={error} onRetry={() => void load()} />}
         {!loading && !error && tests.length === 0 && (
           <EmptyPanel
-            description="Admin cần tạo và publish một đề đủ 5 câu Part 1, 2 câu Part 2 và 1 câu Part 3."
-            title="Chưa có đề Writing được công bố"
+            description={
+              query
+                ? "Hãy thử từ khóa khác."
+                : "Admin cần tạo và publish một đề đủ 5 câu Part 1, 2 câu Part 2 và 1 câu Part 3."
+            }
+            title={
+              query
+                ? "Không tìm thấy đề phù hợp"
+                : "Chưa có đề Writing được công bố"
+            }
           />
         )}
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
@@ -158,6 +183,29 @@ export function WritingLibrary() {
             />
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className="mt-5 flex items-center gap-3 text-sm">
+            <button
+              className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40"
+              disabled={pageNumber <= 1 || loading}
+              onClick={() => setPageNumber(pageNumber - 1)}
+              type="button"
+            >
+              Trang trước
+            </button>
+            <span>
+              Trang {pageNumber}/{totalPages}
+            </span>
+            <button
+              className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40"
+              disabled={pageNumber >= totalPages || loading}
+              onClick={() => setPageNumber(pageNumber + 1)}
+              type="button"
+            >
+              Trang sau
+            </button>
+          </div>
+        )}
       </section>
     </PracticePage>
   );
