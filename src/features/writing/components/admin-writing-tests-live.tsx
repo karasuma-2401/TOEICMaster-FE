@@ -193,9 +193,10 @@ function ImportTest({
         className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
       >
         <h2 className="text-xl font-bold">Import Excel đề Writing</h2>
-        <p className="mt-2 text-sm">
-          File gồm 4 sheet: Manifest, Part1, Part2 và Part3. Ảnh Part 1 cần được
-          tải lên trước.
+        <p className="mt-2 text-sm text-slate-600">
+          1. Tải file mẫu và điền 4 sheet: Manifest, Part1, Part2 và Part3. 2.
+          Tải ảnh Part 1 lên và điền ImageAssetId vào file. 3. Chọn file để kiểm
+          tra trước khi import.
         </p>
         <a
           className="mt-3 inline-block text-sm font-semibold text-orange-700 underline"
@@ -204,7 +205,7 @@ function ImportTest({
         >
           Tải file mẫu
         </a>
-        <label className="mt-4 block text-sm font-semibold">
+        <label className="mt-4 block rounded-xl border border-[var(--admin-border)] bg-stone-50 p-4 text-sm font-semibold">
           Tải ảnh Part 1 để lấy ImageAssetId
           <input
             className={inputClass}
@@ -239,7 +240,7 @@ function ImportTest({
         <p className="mt-2 text-xs text-slate-600">
           SequenceNumber: 1–5 cho Part 1, 6–7 cho Part 2 và 8 cho Part 3.
         </p>
-        <label className="mt-4 block text-sm font-semibold">
+        <label className="mt-4 block rounded-xl border-2 border-dashed border-orange-200 bg-orange-50/50 p-4 text-sm font-semibold">
           Chọn file .xlsx
           <input
             className={inputClass}
@@ -430,82 +431,131 @@ function TestBuilder({
             Có thể lưu bản nháp chưa đủ câu; mỗi câu đã nhập cần đầy đủ trường
             bắt buộc.
           </p>
+          <nav
+            aria-label="Đi tới câu hỏi"
+            className="rounded-xl border border-[var(--admin-border)] bg-stone-50 p-4"
+          >
+            <p className="text-sm font-bold">Cấu trúc đề · 8 câu</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {questions.map((question, index) => (
+                <button
+                  className="rounded-lg border border-[var(--admin-border)] bg-white px-3 py-2 text-xs font-semibold hover:border-orange-400 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-orange-600"
+                  key={`${question.part}-${question.sequenceNumber}`}
+                  type="button"
+                  onClick={() => {
+                    const target = document.getElementById(
+                      `writing-builder-question-${index}`,
+                    );
+                    if (target instanceof HTMLDetailsElement) {
+                      target.open = true;
+                      target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                      target.querySelector("summary")?.focus();
+                    }
+                  }}
+                >
+                  Part {question.part} · Câu {question.sequenceNumber}
+                </button>
+              ))}
+            </div>
+          </nav>
           {questions.map((question, index) => (
-            <section
-              className="space-y-3 rounded-xl border border-[var(--admin-border)] p-4"
+            <details
+              id={`writing-builder-question-${index}`}
+              open={index === 0 ? true : undefined}
+              className="scroll-mt-4 rounded-xl border border-[var(--admin-border)] p-4"
               key={`${question.part}-${question.sequenceNumber}`}
             >
-              <h3 className="font-bold">
+              <summary className="cursor-pointer font-bold">
                 Part {question.part} · Câu {question.sequenceNumber}
-              </h3>
-              {question.part === 1 && (
-                <label className="block text-sm font-semibold">
-                  Ảnh đề bài *
-                  <input
-                    className={inputClass}
-                    accept="image/jpeg,image/png,image/webp"
-                    type="file"
-                    disabled={busy}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void upload(index, file);
-                    }}
-                  />
-                  {question.imageAssetId && (
-                    <span className="text-xs text-green-700">
-                      Ảnh đã tải lên
-                    </span>
-                  )}
-                </label>
-              )}
-              {fields[question.part].map((field) => (
-                <label className="block text-sm font-semibold" key={field.key}>
-                  {field.label}
-                  {field.area ? (
-                    <textarea
-                      className={inputClass}
-                      value={String(question[field.key])}
-                      onChange={(event) =>
-                        change(index, field.key, event.target.value)
-                      }
-                    />
-                  ) : (
+              </summary>
+              <div className="mt-4 space-y-3">
+                {question.part === 1 && (
+                  <label className="block text-sm font-semibold">
+                    Ảnh đề bài *
                     <input
                       className={inputClass}
-                      type={
-                        field.key === "minimumWordCount" ? "number" : "text"
-                      }
-                      value={question[field.key]}
-                      onChange={(event) =>
-                        change(
-                          index,
-                          field.key,
-                          field.key === "minimumWordCount"
-                            ? Number(event.target.value)
-                            : event.target.value,
-                        )
-                      }
+                      accept="image/jpeg,image/png,image/webp"
+                      type="file"
+                      disabled={busy}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void upload(index, file);
+                      }}
                     />
-                  )}
+                    {question.imageAssetId && (
+                      <span className="text-xs text-green-700">
+                        Ảnh đã tải lên
+                      </span>
+                    )}
+                  </label>
+                )}
+                {fields[question.part].map((field) => (
+                  <label
+                    className="block text-sm font-semibold"
+                    key={field.key}
+                  >
+                    {field.label}
+                    {field.area ? (
+                      <textarea
+                        className={inputClass}
+                        value={String(question[field.key])}
+                        onChange={(event) =>
+                          change(index, field.key, event.target.value)
+                        }
+                      />
+                    ) : (
+                      <input
+                        className={inputClass}
+                        type={
+                          field.key === "minimumWordCount" ? "number" : "text"
+                        }
+                        value={question[field.key]}
+                        onChange={(event) =>
+                          change(
+                            index,
+                            field.key,
+                            field.key === "minimumWordCount"
+                              ? Number(event.target.value)
+                              : event.target.value,
+                          )
+                        }
+                      />
+                    )}
+                  </label>
+                ))}
+                <label className="block text-sm font-semibold">
+                  Tiêu chí chấm
+                  <textarea
+                    className={inputClass}
+                    value={question.rubricNotes}
+                    onChange={(e) =>
+                      change(index, "rubricNotes", e.target.value)
+                    }
+                  />
                 </label>
-              ))}
-              <label className="block text-sm font-semibold">
-                Tiêu chí chấm
-                <textarea
-                  className={inputClass}
-                  value={question.rubricNotes}
-                  onChange={(e) => change(index, "rubricNotes", e.target.value)}
-                />
-              </label>
-              <label className="block text-sm font-semibold">
-                Bài tham khảo nội bộ (không bắt buộc)
-                <textarea
-                  className={inputClass}
-                  value={question.modelAnswer}
-                  onChange={(e) => change(index, "modelAnswer", e.target.value)}
-                />
-              </label>
-            </section>
+                <label className="block text-sm font-semibold">
+                  Bài tham khảo nội bộ (không bắt buộc)
+                  <textarea
+                    className={inputClass}
+                    value={question.modelAnswer}
+                    onChange={(e) =>
+                      change(index, "modelAnswer", e.target.value)
+                    }
+                  />
+                </label>
+                <details className="rounded-xl bg-stone-50 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold">
+                    Xem trước đề bài
+                  </summary>
+                  <div className="mt-4">
+                    <AdminWritingPrompt question={question} />
+                  </div>
+                </details>
+              </div>
+            </details>
           ))}
           {error && (
             <p
@@ -815,7 +865,13 @@ export function AdminWritingTestsLive() {
                 <td className="p-4">{test.code}</td>
                 <td>{test.title}</td>
                 <td>{test.questions.length}/8</td>
-                <td>{testStatusLabel[test.status]}</td>
+                <td>
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : test.status === "DRAFT" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                  >
+                    {testStatusLabel[test.status]}
+                  </span>
+                </td>
                 <td>
                   <button
                     className="mr-4 font-semibold text-[var(--admin-ink-soft)]"

@@ -97,7 +97,7 @@ export function WritingHistoryPlaceholder() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${submitted ? "bg-orange-50 text-orange-700 ring-orange-100" : "bg-amber-50 text-amber-700 ring-amber-100"}`}
+                      className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${!submitted ? "bg-amber-50 text-amber-700 ring-amber-100" : attempt.evaluationStatus === "FAILED" ? "bg-red-50 text-red-700 ring-red-100" : score !== null ? "bg-emerald-50 text-emerald-700 ring-emerald-100" : "bg-orange-50 text-orange-700 ring-orange-100"}`}
                     >
                       {submitted
                         ? score !== null && attempt.isPractice

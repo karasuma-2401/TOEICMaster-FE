@@ -78,15 +78,23 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {data.items.map((exercise) => (
               <article
-                className="rounded-2xl border border-slate-200 bg-white p-5"
+                className="flex flex-col rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md"
                 key={exercise.id}
               >
-                <p className="text-sm font-semibold text-orange-700">
-                  {exercise.code} · {exercise.difficulty}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-bold tracking-wide text-orange-700">
+                    {exercise.code}
+                  </p>
+                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600">
+                    {exercise.difficulty}
+                  </span>
+                </div>
+                <h2 className="mt-4 text-lg font-bold">{exercise.topic}</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Writing Part {part} · Phản hồi từ AI
                 </p>
-                <h2 className="mt-2 text-lg font-bold">{exercise.topic}</h2>
                 <button
-                  className={`mt-5 ${primaryAction}`}
+                  className={`mt-5 self-start ${primaryAction}`}
                   disabled={starting !== null}
                   onClick={() => void start(exercise.id)}
                   type="button"

@@ -97,6 +97,35 @@ it("loads a legacy draft question into the independent editor without saving it 
   expect(screen.getByDisplayValue("Internal reference")).toBeInTheDocument();
 });
 
+it("opens a question from the builder navigation and keeps edits when switching", async () => {
+  mocks.list.mockResolvedValue({ items: [], totalPages: 0 });
+  const scroll = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scroll,
+  });
+  render(<AdminWritingTestsLive />);
+  fireEvent.click(screen.getByRole("button", { name: "+ Tạo đề Writing" }));
+  const dialog = screen.getByRole("dialog", { name: "Soạn đề Writing" });
+  const navigation = within(dialog).getByRole("navigation", {
+    name: "Đi tới câu hỏi",
+  });
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Part 2 · Câu 1" }),
+  );
+  const target = dialog.querySelector<HTMLDetailsElement>(
+    "#writing-builder-question-5",
+  );
+  expect(target?.open).toBe(true);
+  expect(scroll).toHaveBeenCalled();
+  const sender = within(target!).getByLabelText("Người gửi *");
+  fireEvent.change(sender, { target: { value: "Alex" } });
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Part 3 · Câu 1" }),
+  );
+  expect(sender).toHaveValue("Alex");
+});
+
 it.each([
   {
     status: "DRAFT",

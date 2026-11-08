@@ -53,6 +53,26 @@ const statusLabel: Record<WritingQuestionStatus, string> = {
   ARCHIVED: "Lưu trữ",
 };
 
+function ExerciseThumbnail({ id, alt }: { id?: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!id || failed)
+    return (
+      <span className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-stone-100 text-xs text-stone-500">
+        Không có ảnh
+      </span>
+    );
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- Admin media uses the authenticated proxy.
+    <img
+      alt={alt || "Ảnh đề bài"}
+      className="h-14 w-20 shrink-0 rounded-lg bg-stone-100 object-contain"
+      loading="lazy"
+      onError={() => setFailed(true)}
+      src={`/api/admin/writing/media/${encodeURIComponent(id)}`}
+    />
+  );
+}
+
 type Draft = {
   id: string;
   version: number | null;
@@ -522,7 +542,7 @@ function ImportDialog({
           <div>
             <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Mỗi Part dùng template Excel riêng.
+              Mỗi Part dùng cấu trúc Excel riêng.
             </p>
           </div>
           <button aria-label="Đóng import" onClick={onClose} type="button">
@@ -530,6 +550,11 @@ function ImportDialog({
           </button>
         </header>
         <div className="p-6">
+          <p className="mb-3 text-xs text-[var(--admin-muted)]">
+            Chuẩn bị file theo các cột bên dưới
+            {part === 1 ? ", tải ảnh và điền ImageAssetId" : ""}, sau đó chọn
+            file để kiểm tra trước khi import.
+          </p>
           <p className="mb-3 text-xs text-[var(--admin-muted)]">
             Cột bắt buộc: Code, Topic, Difficulty, Status,{" "}
             {part === 1
@@ -592,36 +617,51 @@ function ImportDialog({
               />
             </label>
           ) : (
-            <table className="w-full overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
-              <thead className="bg-[var(--admin-surface-muted)]">
-                <tr>
-                  <th className="p-3">Dòng</th>
-                  <th className="p-3">Mã bài</th>
-                  <th className="p-3">Kết quả</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.rows.map((row) => (
-                  <tr key={row.rowNumber}>
-                    <td className="border-t border-[var(--admin-border)] p-3">
-                      {row.rowNumber}
-                    </td>
-                    <td className="border-t border-[var(--admin-border)]">
-                      {row.code ?? "—"}
-                    </td>
-                    <td
-                      className={
-                        row.isValid
-                          ? "border-t border-[var(--admin-border)] text-emerald-700"
-                          : "border-t border-[var(--admin-border)] text-red-700"
-                      }
-                    >
-                      {row.isValid ? "Hợp lệ" : row.errors.join(" ")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="space-y-3">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
+                  <thead className="bg-[var(--admin-surface-muted)]">
+                    <tr>
+                      <th className="p-3">Dòng</th>
+                      <th className="p-3">Mã bài</th>
+                      <th className="p-3">Kết quả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.rows.map((row) => (
+                      <tr key={row.rowNumber}>
+                        <td className="border-t border-[var(--admin-border)] p-3">
+                          {row.rowNumber}
+                        </td>
+                        <td className="border-t border-[var(--admin-border)]">
+                          {row.code ?? "—"}
+                        </td>
+                        <td
+                          className={
+                            row.isValid
+                              ? "border-t border-[var(--admin-border)] text-emerald-700"
+                              : "border-t border-[var(--admin-border)] text-red-700"
+                          }
+                        >
+                          {row.isValid ? "Hợp lệ" : row.errors.join(" ")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                className="text-sm font-semibold text-orange-700 underline underline-offset-4"
+                onClick={() => {
+                  setFile(null);
+                  setPreview(null);
+                  setError("");
+                }}
+              >
+                Chọn file khác
+              </button>
+            </div>
           )}
           {busy && <p className="mt-3 text-sm">Đang xử lý file…</p>}
           {error && (
@@ -816,7 +856,7 @@ export function AdminWritingContentPage() {
                   <th className="p-4">CHỦ ĐỀ</th>
                   <th className="p-4">ĐỘ KHÓ</th>
                   <th className="p-4">TRẠNG THÁI</th>
-                  <th className="p-4 text-right">THAO TÁC</th>
+                  <th className="whitespace-nowrap p-4 text-right">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
@@ -829,36 +869,58 @@ export function AdminWritingContentPage() {
                       {question.code}
                     </td>
                     <td className="p-4 font-semibold">
-                      {question.part === 1
-                        ? `${question.keywordOne} / ${question.keywordTwo}`
-                        : question.part === 2
-                          ? question.subject
-                          : question.prompt}
+                      {question.part === 1 ? (
+                        <div className="flex items-center gap-3">
+                          <ExerciseThumbnail
+                            key={question.imageAssetId}
+                            id={question.imageAssetId}
+                            alt={question.imageAlt}
+                          />
+                          <div className="flex flex-wrap gap-1.5">
+                            {[question.keywordOne, question.keywordTwo].map(
+                              (word, index) => (
+                                <span
+                                  className="rounded-full bg-orange-50 px-2.5 py-1 text-xs text-orange-800"
+                                  key={index}
+                                >
+                                  {word}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      ) : question.part === 2 ? (
+                        question.subject
+                      ) : (
+                        question.prompt
+                      )}
                     </td>
                     <td className="p-4">{question.topic}</td>
                     <td className="p-4">{question.difficulty}</td>
                     <td className="p-4">
-                      <span className="rounded-full bg-[var(--admin-nav-active)] px-2 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
+                      <span
+                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${question.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : question.status === "DRAFT" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                      >
                         {statusLabel[question.status]}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="whitespace-nowrap p-4 text-right">
                       <button
-                        className="px-2"
+                        className="min-h-9 rounded-md px-2 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-orange-600"
                         onClick={() => setPreview(question)}
                         type="button"
                       >
                         Xem
                       </button>
                       <button
-                        className="px-2 text-[var(--admin-brand-red)]"
+                        className="min-h-9 rounded-md px-2 text-[var(--admin-brand-red)] hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-orange-600"
                         onClick={() => setDrawer(toDraft(question))}
                         type="button"
                       >
                         Sửa
                       </button>
                       <button
-                        className="px-2 text-red-700"
+                        className="min-h-9 rounded-md px-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-700"
                         onClick={() => {
                           if (
                             question.version &&

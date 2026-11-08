@@ -340,62 +340,67 @@ export function WritingAttemptPlaceholder({
                 <InlineError>{error}</InlineError>
               </div>
             )}
-            <div className="mt-6">
-              <WritingQuestionPrompt question={current} />
-            </div>
-            <div className="mt-6">
-              <label className="text-sm font-bold" htmlFor="writing-answer">
-                Bài làm của bạn
-              </label>
-              <textarea
-                className="mt-2 min-h-52 w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 shadow-inner shadow-slate-100 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-                disabled={preparing || transitioning}
-                id="writing-answer"
-                spellCheck={false}
-                onChange={(event) => saveLocalAnswer(event.target.value)}
-                placeholder={
-                  preparing
-                    ? "Editor sẽ mở khi hết thời gian chuẩn bị."
-                    : current.part === 1
-                      ? "Viết một câu tiếng Anh…"
-                      : current.part === 2
-                        ? "Dear …"
-                        : "Write your essay here…"
-                }
-                value={current.answer}
-              />
-              <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
-                <span
-                  aria-live="polite"
-                  className={`inline-flex items-center gap-1.5 ${
+            <div className="mt-6 grid gap-6 xl:grid-cols-2">
+              <div className="min-w-0">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Đề bài
+                </p>
+                <WritingQuestionPrompt question={current} />
+              </div>
+              <div className="min-w-0 rounded-2xl border border-slate-200 bg-stone-50/60 p-4 sm:p-5">
+                <label className="text-sm font-bold" htmlFor="writing-answer">
+                  Bài làm của bạn
+                </label>
+                <textarea
+                  className="mt-2 min-h-64 w-full rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 xl:min-h-80"
+                  disabled={preparing || transitioning}
+                  id="writing-answer"
+                  spellCheck={false}
+                  onChange={(event) => saveLocalAnswer(event.target.value)}
+                  placeholder={
                     preparing
-                      ? "font-semibold text-amber-700"
-                      : "text-emerald-700"
-                  }`}
-                >
+                      ? "Editor sẽ mở khi hết thời gian chuẩn bị."
+                      : current.part === 1
+                        ? "Viết một câu tiếng Anh…"
+                        : current.part === 2
+                          ? "Dear …"
+                          : "Write your essay here…"
+                  }
+                  value={current.answer}
+                />
+                <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
                   <span
-                    aria-hidden="true"
-                    className={`size-1.5 rounded-full ${preparing ? "bg-amber-500" : saving ? "animate-pulse bg-orange-500" : "bg-emerald-500"}`}
-                  />
-                  {preparing
-                    ? "Editor đang khóa trong pha chuẩn bị."
-                    : saving
-                      ? "Đang autosave…"
-                      : hasPendingSave
-                        ? "Chưa lưu trên server"
-                        : "Đã autosave trên server"}
-                </span>
-                {current.part === 3 && (
-                  <span
-                    className={
-                      words >= (current.minimumWordCount ?? 0)
-                        ? "font-bold text-emerald-700"
-                        : "font-semibold text-orange-700"
-                    }
+                    aria-live="polite"
+                    className={`inline-flex items-center gap-1.5 ${
+                      preparing
+                        ? "font-semibold text-amber-700"
+                        : "text-emerald-700"
+                    }`}
                   >
-                    {words}/{current.minimumWordCount} từ
+                    <span
+                      aria-hidden="true"
+                      className={`size-1.5 rounded-full ${preparing ? "bg-amber-500" : saving ? "animate-pulse bg-orange-500" : "bg-emerald-500"}`}
+                    />
+                    {preparing
+                      ? "Editor đang khóa trong pha chuẩn bị."
+                      : saving
+                        ? "Đang autosave…"
+                        : hasPendingSave
+                          ? "Chưa lưu trên server"
+                          : "Đã autosave trên server"}
                   </span>
-                )}
+                  {current.part === 3 && (
+                    <span
+                      className={
+                        words >= (current.minimumWordCount ?? 0)
+                          ? "font-bold text-emerald-700"
+                          : "font-semibold text-orange-700"
+                      }
+                    >
+                      {words}/{current.minimumWordCount} từ
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-5">

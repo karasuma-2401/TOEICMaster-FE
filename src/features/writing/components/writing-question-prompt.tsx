@@ -18,7 +18,7 @@ function PictureSentencePrompt({
         // eslint-disable-next-line @next/next/no-img-element -- remote media is proxied through the application.
         <img
           alt={question.imageAlt ?? "Ảnh đề bài"}
-          className="h-64 w-full rounded-2xl object-cover ring-1 ring-slate-200"
+          className="max-h-96 min-h-48 w-full rounded-2xl bg-stone-50 object-contain ring-1 ring-slate-200"
           src={question.imageUrl.replace(/^\/api\/v1\/writing/, "/api/writing")}
         />
       ) : (
