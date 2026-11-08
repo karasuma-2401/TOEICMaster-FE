@@ -1,7 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AdminNotice } from "@/features/admin/components/content/admin-page-header";
+import {
+  AdminNotice,
+  AdminPageHeader,
+} from "@/features/admin/components/content/admin-page-header";
+import {
+  adminGradient,
+  adminPrimary,
+} from "@/features/admin/components/content/admin-styles";
+import { AdminStat } from "@/features/admin/components/content/admin-workspace";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import {
   archiveSpeakingExercise,
@@ -13,7 +21,6 @@ import {
   toSpeakingDraft,
   type SpeakingDraft,
 } from "@/features/speaking/admin-draft";
-import { speakingPartSpecs } from "@/features/speaking/part-specs";
 import type { Page, SpeakingExercise } from "@/features/speaking/types";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { SpeakingExerciseEditor } from "./speaking-exercise-editor";
@@ -123,32 +130,41 @@ export function AdminSpeakingContentPage() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-medium leading-9">
-            Speaking Part {filter.part}: {speakingPartSpecs[filter.part].title}{" "}
-            ({speakingPartSpecs[filter.part].subtitle})
-          </h1>
-          <p className="mt-1 text-[13px] text-(--sp-ink-2)">
-            Quản lý {summary?.exercises.total ?? "…"} bài tập Speaking trên 5
-            Part.
-          </p>
-        </div>
-        <button
-          className="sp-btn sp-btn-cta"
-          onClick={() => setEditor(toSpeakingDraft(undefined, filter.part))}
-          type="button"
-        >
-          + Thêm bài tập
-        </button>
-      </div>
+      <AdminPageHeader
+        actions={
+          <button
+            className={adminPrimary}
+            onClick={() => setEditor(toSpeakingDraft(undefined, filter.part))}
+            style={adminGradient}
+            type="button"
+          >
+            + Thêm bài tập
+          </button>
+        }
+        description="Tạo, tìm kiếm, preview và quản lý bài tập Speaking theo 5 Part."
+        title="Ngân hàng bài tập Speaking"
+      />
       <ContentTabs section="content" skill="speaking" />
       {notice && <AdminNotice>{notice}</AdminNotice>}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStat
+          hint="Trên 5 Part"
+          label="Tổng bài tập"
+          value={summary?.exercises.total ?? "—"}
+        />
+        <AdminStat
+          hint="Có thể chọn khi lắp đề"
+          label="Hiển thị"
+          value={summary?.exercises.published ?? "—"}
+        />
+        <AdminStat label="Bản nháp" value={summary?.exercises.draft ?? "—"} />
+        <AdminStat label="Lưu trữ" value={summary?.exercises.archived ?? "—"} />
+      </div>
       <SpeakingPartTabs
         onChange={(part) => resetPage({ part })}
         value={filter.part}
       />
-      <section className="sp-card mt-4 overflow-hidden">
+      <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <SpeakingExerciseFilters
           filter={{ ...filter, query }}
           onChange={resetPage}

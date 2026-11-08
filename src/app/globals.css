@@ -11,13 +11,13 @@
   --admin-highlight: #ffd361;
   --admin-avatar-border: #ffd49e;
   --admin-avatar-orange: #f17939;
-  --admin-page: #f5f0eb;
-  --admin-surface: #ffffff;
+  --admin-page: #faf8f7;
+  --admin-surface: #fffdfc;
   --admin-surface-muted: #f5f1ef;
-  --admin-ink: #2b2724;
+  --admin-ink: #342d2a;
   --admin-ink-soft: #4e4542;
-  --admin-muted: #80756e;
-  --admin-border: #dacfc5;
+  --admin-muted: #a89f9b;
+  --admin-border: #e7deda;
   --admin-nav-active: #fff0e6;
   --admin-success: #16834a;
   --admin-success-soft: #e8f5ed;
@@ -44,23 +44,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
-}
-
-/* Admin type scale: titles carry the weight, everything else stays light. */
-.admin-type {
-  --font-weight-semibold: 500;
-  --font-weight-bold: 500;
-  --font-weight-extrabold: 500;
-  --font-weight-black: 600;
-}
-
-.admin-type :is(h1, h2) {
-  --font-weight-semibold: 600;
-  --font-weight-bold: 600;
-}
-
-.admin-type :is(th, .sp-overline, .sp-chip, .sp-btn) {
-  font-weight: 500;
 }
 
 /* Shared admin actions use the TOEICMaster red-to-orange brand gradient. */

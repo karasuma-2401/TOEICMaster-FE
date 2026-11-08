@@ -28,8 +28,6 @@ export function useVoiceRecorder() {
   const [recordingKey, setRecordingKey] = useState<number | null>(null);
   const [level, setLevel] = useState(0);
   const [recordings, setRecordings] = useState<Record<number, Recording>>({});
-  const [micLost, setMicLost] = useState(false);
-  const [deviceLabel, setDeviceLabel] = useState("");
   const stream = useRef<MediaStream | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
@@ -54,20 +52,6 @@ export function useVoiceRecorder() {
       context.createMediaStreamSource(stream.current).connect(node);
       audioContext.current = context;
       analyser.current = node;
-      const track = stream.current.getAudioTracks()[0];
-      setDeviceLabel(track?.label ?? "");
-      track?.addEventListener("ended", () => {
-        // The device is gone: the next requestAccess opens a fresh stream.
-        stream.current = null;
-        recorder.current = null;
-        if (frame.current !== null) cancelAnimationFrame(frame.current);
-        frame.current = null;
-        void audioContext.current?.close();
-        setRecordingKey(null);
-        setLevel(0);
-        setMicLost(true);
-      });
-      setMicLost(false);
       setStatus("ready");
       return true;
     } catch {
@@ -84,7 +68,7 @@ export function useVoiceRecorder() {
 
   const startMeter = useCallback(() => {
     const node = analyser.current;
-    if (!node || frame.current !== null) return;
+    if (!node) return;
     const samples = new Uint8Array(node.frequencyBinCount);
     const read = () => {
       node.getByteTimeDomainData(samples);
@@ -149,13 +133,10 @@ export function useVoiceRecorder() {
 
   return {
     status,
-    micLost,
-    deviceLabel,
     level,
     recordingKey,
     recordings,
     requestAccess,
-    monitor: startMeter,
     start,
     stop,
   };

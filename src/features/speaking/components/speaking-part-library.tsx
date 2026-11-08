@@ -1,68 +1,57 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { difficultyLabel } from "@/features/speaking/admin-labels";
 import {
   getSpeakingExercises,
   type SpeakingExerciseSummary,
 } from "@/features/speaking/api";
-import { speakingPartSpecs } from "@/features/speaking/part-specs";
 import {
-  speakingParts,
-  type SpeakingDifficulty,
-  type SpeakingPart,
-} from "@/features/speaking/types";
+  partTimingLabel,
+  speakingPartSpecs,
+} from "@/features/speaking/part-specs";
+import type { SpeakingPart } from "@/features/speaking/types";
+import {
+  BackLink,
+  CountBadge,
+  PageIntro,
+  SectionHeading,
+} from "@/shared/components/practice/page-intro";
+import { PracticePage } from "@/shared/components/practice/practice-page";
+import {
+  EmptyPanel,
+  ErrorPanel,
+  LoadingPanel,
+} from "@/shared/components/practice/state-panels";
+import { TestCard } from "@/shared/components/practice/test-card";
 import { formatMinutes } from "@/shared/ui/format-time";
-import { FilterPills, SearchField } from "./ui/filters";
-import { ArrowRightIcon } from "./ui/icons";
-import { SpPage } from "./ui/page";
-import { Pagination } from "./ui/pagination";
-import { SpEmpty, SpError, SpLoading } from "./ui/primitives";
-
-const pageSize = 8;
-const difficultyDot: Record<SpeakingDifficulty, string> = {
-  EASY: "bg-(--sp-success-solid)",
-  MEDIUM: "bg-(--sp-warning-line)",
-  HARD: "bg-(--sp-danger-solid)",
-};
-
-const unique = (values: number[]) =>
-  [...new Set(values)].map((value) => `${value}s`).join(" / ");
+import { SpeakingHeader } from "./speaking-header";
 
 /** Published exercises of one Part; each can be practised on its own. */
 export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
   const spec = speakingPartSpecs[part];
-  const [lists, setLists] = useState<SpeakingExerciseSummary[][]>([]);
+  const [exercises, setExercises] = useState<SpeakingExerciseSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [topic, setTopic] = useState("ALL");
-  const [difficulty, setDifficulty] = useState<"ALL" | SpeakingDifficulty>(
-    "ALL",
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      setError(null);
+      try {
+        setExercises(await getSpeakingExercises(part, signal));
+      } catch (cause) {
+        if (signal?.aborted) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể tải bài tập Speaking.",
+        );
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [part],
   );
-  const [page, setPage] = useState(1);
-
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      setLists(
-        await Promise.all(
-          speakingParts.map((item) => getSpeakingExercises(item, signal)),
-        ),
-      );
-    } catch (cause) {
-      if (signal?.aborted) return;
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể tải bài tập Speaking.",
-      );
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, []);
   useEffect(() => {
     const controller = new AbortController();
     const task = window.setTimeout(() => void load(controller.signal), 0);
@@ -72,176 +61,57 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
     };
   }, [load]);
 
-  const exercises = lists[part - 1] ?? [];
-  const topics = [...new Set(exercises.map((item) => item.topic))];
-  const needle = query.trim().toLocaleLowerCase("vi-VN");
-  const filtered = exercises.filter(
-    (item) =>
-      `${item.code} ${item.topic}`
-        .toLocaleLowerCase("vi-VN")
-        .includes(needle) &&
-      (topic === "ALL" || item.topic === topic) &&
-      (difficulty === "ALL" || item.difficulty === difficulty),
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const current = Math.min(page, pages);
-  const visible = filtered.slice((current - 1) * pageSize, current * pageSize);
-  const offset = (current - 1) * pageSize;
-  const resetting =
-    <T,>(set: (value: T) => void) =>
-    (value: T) => {
-      set(value);
-      setPage(1);
-    };
-  const stats = [
-    ...(spec.readingSeconds
-      ? [{ value: `${spec.readingSeconds}s`, label: "Đọc tài liệu" }]
-      : []),
-    { value: unique(spec.preparationSeconds), label: "Chuẩn bị" },
-    { value: unique(spec.responseSeconds), label: "Trả lời" },
-    { value: lists.length ? String(exercises.length) : "…", label: "Bài tập" },
-  ];
-
   return (
-    <SpPage>
-      <section className="relative overflow-hidden rounded-[20px] bg-(--sp-ink) text-white">
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-16 right-4 text-[260px] font-extrabold leading-none text-white/[0.06]"
-        >
-          {part}
-        </span>
-        <div className="relative p-8 md:p-10">
-          <p className="sp-overline text-(--sp-amber)">
-            SPEAKING · PART {part} / 5
-          </p>
-          <h1 className="mt-2 text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] md:text-[52px]">
-            {spec.title}
-          </h1>
-          <p className="mt-3 max-w-xl text-lg text-white/70">
-            {spec.description}
-          </p>
-          <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <dd className="text-2xl font-bold">{stat.value}</dd>
-                <dt className="text-[13px] text-white/60">{stat.label}</dt>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <nav
-          aria-label="Chọn Part"
-          className="relative grid grid-cols-5 border-t border-white/15"
-        >
-          {speakingParts.map((item) => {
-            const active = item === part;
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={`sp-focus border-r border-white/15 px-3 py-3.5 text-center text-sm last:border-r-0 md:text-left md:px-6 ${active ? "bg-(--sp-brand) font-semibold" : "text-white/70 hover:bg-white/10"}`}
-                href={`/speaking/parts/${item}`}
-                key={item}
-              >
-                <span className="md:hidden">{item}</span>
-                <span className="hidden md:inline">
-                  {item}. {speakingPartSpecs[item].subtitle}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </section>
+    <PracticePage header={<SpeakingHeader />}>
+      <BackLink href="/speaking" label="Quay lại thư viện Speaking" />
+      <PageIntro
+        description={`${spec.description} ${partTimingLabel(part)}.`}
+        eyebrow={`TOEIC SPEAKING · PART ${part}`}
+        title={`${spec.subtitle} (${spec.title})`}
+      />
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <SearchField
-          label="Tìm bài tập"
-          onChange={resetting(setQuery)}
-          placeholder="Tìm theo mã bài hoặc chủ đề…"
-          value={query}
+      <section aria-labelledby="speaking-part-exercises" className="mt-10">
+        <SectionHeading
+          aside={
+            !loading && !error ? (
+              <CountBadge>{exercises.length} bài</CountBadge>
+            ) : undefined
+          }
+          description="Mỗi bài có pha chuẩn bị và pha trả lời tính giờ như bài thi thật."
+          id="speaking-part-exercises"
+          title="Chọn bài để luyện"
         />
-        <FilterPills
-          label="Độ khó"
-          onChange={resetting(setDifficulty)}
-          options={[
-            { value: "ALL", label: "Tất cả" },
-            { value: "EASY", label: "Dễ" },
-            { value: "MEDIUM", label: "Trung bình" },
-            { value: "HARD", label: "Khó" },
-          ]}
-          value={difficulty}
-        />
-        {topics.length > 1 && (
-          <select
-            aria-label="Chủ đề"
-            className="sp-input min-h-11! w-auto! rounded-full!"
-            onChange={(event) => resetting(setTopic)(event.target.value)}
-            value={topic}
-          >
-            <option value="ALL">Tất cả chủ đề</option>
-            {topics.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <div className="mt-4">
-        {loading && <SpLoading label="Đang tải bài tập…" />}
-        {error && <SpError message={error} onRetry={() => void load()} />}
-        {!loading && !error && filtered.length === 0 && (
-          <SpEmpty
-            description="Thử đổi từ khóa hoặc bộ lọc."
-            title={`Chưa có bài tập phù hợp ở Part ${part}`}
+        {loading && <LoadingPanel label="Đang tải bài tập…" />}
+        {error && <ErrorPanel message={error} onRetry={() => void load()} />}
+        {!loading && !error && exercises.length === 0 && (
+          <EmptyPanel
+            description="Admin cần tạo và hiển thị bài tập cho Part này."
+            title={`Chưa có bài tập Part ${part}`}
           />
         )}
-        {visible.length > 0 && (
-          <ul className="sp-card divide-y divide-(--sp-line) overflow-hidden">
-            {visible.map((exercise, index) => (
-              <li key={exercise.id}>
-                <Link
-                  className="sp-focus group flex flex-wrap items-center gap-x-6 gap-y-1 px-6 py-4 transition hover:bg-(--sp-cream)"
-                  href={`/speaking/exercises/${encodeURIComponent(exercise.id)}/practice`}
-                >
-                  <span className="w-10 text-2xl font-extrabold text-(--sp-ink-3)">
-                    {String(offset + index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="min-w-52 flex-1">
-                    <span className="block text-lg font-semibold">
-                      {exercise.topic}
-                    </span>
-                    <span className="text-xs text-(--sp-ink-3)">
-                      {exercise.code}
-                    </span>
-                  </span>
-                  <span className="inline-flex w-28 items-center gap-2 text-[13px]">
-                    <span
-                      className={`size-2 rounded-full ${difficultyDot[exercise.difficulty]}`}
-                    />
-                    {difficultyLabel[exercise.difficulty]}
-                  </span>
-                  <span className="w-24 text-[13px] text-(--sp-ink-2)">
-                    {formatMinutes(exercise.durationSeconds)}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--sp-brand)">
-                    Luyện
-                    <ArrowRightIcon
-                      className="transition group-hover:translate-x-1"
-                      size={16}
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {filtered.length > pageSize && (
-        <div className="mt-5 flex justify-end">
-          <Pagination onPage={setPage} page={current} pages={pages} />
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {exercises.map((exercise) => (
+            <TestCard
+              actionLabel="Bắt đầu luyện"
+              code={exercise.code}
+              description={spec.description}
+              href={`/speaking/exercises/${encodeURIComponent(exercise.id)}/practice`}
+              key={exercise.id}
+              stats={[
+                {
+                  label: "Độ khó",
+                  value: difficultyLabel[exercise.difficulty],
+                },
+                {
+                  label: "Thời lượng",
+                  value: `${exercise.questionCount} câu · ${formatMinutes(exercise.durationSeconds)}`,
+                },
+              ]}
+              title={exercise.topic}
+            />
+          ))}
         </div>
-      )}
-    </SpPage>
+      </section>
+    </PracticePage>
   );
 }

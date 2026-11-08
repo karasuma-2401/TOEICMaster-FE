@@ -8,7 +8,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const sidebar = useAdminSidebarState();
 
   return (
-    <div className="admin-type min-h-dvh bg-[var(--admin-page)] text-[var(--admin-ink)]">
+    <div className="min-h-dvh bg-[var(--admin-page)] text-[var(--admin-ink)]">
       <AdminSidebar
         isCollapsed={sidebar.isCollapsed}
         isMobileOpen={sidebar.isMobileOpen}

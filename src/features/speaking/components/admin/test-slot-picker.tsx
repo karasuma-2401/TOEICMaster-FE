@@ -1,23 +1,20 @@
-import { speakingPartSpecs } from "@/features/speaking/part-specs";
+import { adminFocus } from "@/features/admin/components/content/admin-styles";
+import { AdminPanel } from "@/features/admin/components/content/admin-workspace";
+import { exerciseHeadline } from "@/features/speaking/admin-labels";
+import {
+  partQuestionCount,
+  partTimingLabel,
+  speakingPartSpecs,
+} from "@/features/speaking/part-specs";
 import type { SpeakingExercise, SpeakingPart } from "@/features/speaking/types";
 
-/** Question labels of each slot, in test order. */
-export const slotLabels: Record<SpeakingPart, string[]> = {
-  1: ["Q1", "Q2"],
-  2: ["Q3", "Q4"],
-  3: ["Q5–7"],
-  4: ["Q8–10"],
-  5: ["Q11"],
-};
-
-/** One Part of the builder: a row per slot. */
+/** Exercise selectors for one Part of the Speaking test editor. */
 export function TestSlotPicker({
   part,
   options,
   lookup,
   disabled,
   selected,
-  duplicates,
   focusedId,
   onChange,
   onFocus,
@@ -28,95 +25,80 @@ export function TestSlotPicker({
   lookup: (id: string) => SpeakingExercise | undefined;
   disabled: boolean;
   selected: string[];
-  duplicates: Set<string>;
   focusedId: string | null;
   onChange: (index: number, id: string) => void;
   onFocus: (id: string) => void;
 }) {
   const spec = speakingPartSpecs[part];
+  const filled = selected.filter(Boolean).length;
   return (
-    <section className="sp-card overflow-hidden">
-      <header className="flex items-center justify-between gap-3 border-b border-(--sp-line) px-4 py-3 text-[13px]">
-        <p>
-          <b className="font-semibold">Part {part}</b>
-          <span className="ml-3">{spec.title}</span>
-        </p>
-        <span className="text-(--sp-ink-3)">
-          {slotLabels[part].length} slot
+    <AdminPanel
+      aside={
+        <span
+          className={`rounded-full px-2 py-1 text-xs font-bold ${filled === spec.slots ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
+        >
+          {filled}/{spec.slots}
         </span>
-      </header>
-      {Array.from({ length: spec.slots }, (_, index) => {
-        const id = selected[index] ?? "";
-        const exercise = id ? lookup(id) : undefined;
-        const duplicate = Boolean(id) && duplicates.has(id);
-        const focused = Boolean(id) && id === focusedId;
-        const label = slotLabels[part][index];
-        const badge = duplicate
-          ? "bg-(--sp-danger-bg) text-(--sp-danger)"
-          : id
-            ? "bg-(--sp-success-bg) text-(--sp-success)"
-            : "bg-(--sp-subtle) text-(--sp-ink-3)";
-        return (
-          <div
-            className={`flex flex-wrap items-center gap-3 border-t border-(--sp-line) p-3 first-of-type:border-t-0 ${focused ? "bg-(--sp-cream) outline-[1.5px] -outline-offset-[1.5px] outline-(--sp-brand)" : ""}`}
-            key={index}
-          >
-            <span
-              className={`grid h-10 w-[70px] shrink-0 place-items-center rounded-md text-[13px] font-semibold ${badge}`}
+      }
+      description={`${partQuestionCount(part)} câu · ${partTimingLabel(part)}`}
+      title={`Part ${part} · ${spec.subtitle}`}
+    >
+      <div className="space-y-3">
+        {Array.from({ length: spec.slots }, (_, index) => {
+          const id = selected[index] ?? "";
+          return (
+            <div
+              className={`rounded-xl border p-3 transition ${id && id === focusedId ? "border-[var(--admin-brand-orange)] bg-[var(--admin-nav-active)]" : "border-[var(--admin-border)]"}`}
+              key={index}
             >
-              {label}
-            </span>
-            <div className="min-w-40 flex-1">
-              <p className="flex flex-wrap items-center gap-2">
-                {exercise?.topic ?? "Chưa chọn bài tập"}
-                {duplicate && (
-                  <span className="sp-chip sp-chip-danger">Trùng bài</span>
-                )}
-                {focused && !duplicate && (
-                  <span className="text-xs text-(--sp-brand)">Đang xem</span>
-                )}
-              </p>
-              <p
-                className={`text-xs ${duplicate ? "text-(--sp-danger)" : "text-(--sp-ink-3)"}`}
+              <label
+                className="block text-xs font-bold text-[var(--admin-muted)]"
+                htmlFor={`slot-${part}-${index}`}
               >
-                {exercise ? exercise.code : "Chọn 1 bài từ ngân hàng bài tập"}
-              </p>
+                BÀI {index + 1}
+              </label>
+              <div className="mt-1.5 flex gap-2">
+                <select
+                  disabled={disabled}
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--admin-border)] bg-white px-3 text-sm"
+                  id={`slot-${part}-${index}`}
+                  onChange={(event) => onChange(index, event.target.value)}
+                  value={id}
+                >
+                  <option value="">Chọn bài tập</option>
+                  {id && !options.some((exercise) => exercise.id === id) && (
+                    <option value={id}>
+                      {lookup(id)?.code ?? "Bài không còn khả dụng"}
+                    </option>
+                  )}
+                  {options.map((exercise) => (
+                    <option key={exercise.id} value={exercise.id}>
+                      {exercise.code} · {exercise.topic}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  aria-label={`Xem trước bài ${index + 1} Part ${part}`}
+                  className={`h-10 shrink-0 rounded-lg border border-[var(--admin-border)] px-3 text-sm font-bold text-[var(--admin-brand-red)] hover:bg-[var(--admin-surface-muted)] disabled:opacity-40 ${adminFocus}`}
+                  disabled={!id}
+                  onClick={() => onFocus(id)}
+                  type="button"
+                >
+                  Xem
+                </button>
+              </div>
+              {id && lookup(id) && (
+                <p
+                  className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--admin-ink-soft)]"
+                  lang="en"
+                >
+                  {exerciseHeadline(lookup(id)!)}
+                </p>
+              )}
             </div>
-            <select
-              aria-label={`Chọn bài cho ${label}`}
-              className="sp-btn sp-btn-outline sp-btn-sm w-[104px]"
-              disabled={disabled}
-              onChange={(event) => onChange(index, event.target.value)}
-              value=""
-            >
-              <option value="">Chọn bài</option>
-              {options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.code} · {option.topic}
-                </option>
-              ))}
-            </select>
-            <button
-              aria-label={`Xem ${label}`}
-              className="sp-btn sp-btn-ghost sp-btn-sm"
-              disabled={!id}
-              onClick={() => onFocus(id)}
-              type="button"
-            >
-              Xem
-            </button>
-            <button
-              aria-label={`Gỡ ${label}`}
-              className="sp-btn sp-btn-ghost sp-btn-sm"
-              disabled={!id || disabled}
-              onClick={() => onChange(index, "")}
-              type="button"
-            >
-              Gỡ
-            </button>
-          </div>
-        );
-      })}
-    </section>
+          );
+        })}
+      </div>
+    </AdminPanel>
   );
 }

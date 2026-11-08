@@ -3,7 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getSpeakingAttempt,
-  getSpeakingAttempts,
   getSpeakingEvaluationAvailability,
   grantSpeakingEvaluationConsent,
 } from "@/features/speaking/api";
@@ -15,12 +14,8 @@ import {
 } from "@/features/speaking/testing/fixtures";
 import { SpeakingEvaluationPanel } from "./speaking-evaluation-panel";
 
-vi.mock("../speaking-header", () => ({
-  SpeakingHeader: () => <header>Speaking header</header>,
-}));
 vi.mock("@/features/speaking/api", () => ({
   getSpeakingAttempt: vi.fn(),
-  getSpeakingAttempts: vi.fn().mockResolvedValue([]),
   getSpeakingEvaluationAvailability: vi.fn(),
   grantSpeakingEvaluationConsent: vi.fn(),
 }));
@@ -62,7 +57,7 @@ describe("SpeakingEvaluationPanel", () => {
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     const button = await screen.findByRole("button", {
-      name: "Đồng ý & Bắt đầu chấm AI →",
+      name: "Đồng ý và chấm bài",
     });
     expect(button).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox"));
@@ -80,18 +75,15 @@ describe("SpeakingEvaluationPanel", () => {
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     fireEvent.click(await screen.findByRole("checkbox"));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Đồng ý và chấm bài" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Bản ghi cuối vẫn đang được tải lên.",
     );
   });
 
-  it("renders the completed report with criteria averages", async () => {
+  it("renders the completed report per question", async () => {
     vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
-    vi.mocked(getSpeakingAttempts).mockResolvedValue([]);
     render(
       <SpeakingEvaluationPanel
         attempt={submitted({ evaluation: evaluationDto() })}
@@ -99,12 +91,18 @@ describe("SpeakingEvaluationPanel", () => {
       />,
     );
 
-    expect(screen.getByText("130 / 200")).toBeInTheDocument();
+    expect(screen.getByText("130")).toBeInTheDocument();
     expect(
       screen.getByText("Bạn trả lời đúng thông tin trong lịch."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Phát âm")).toBeInTheDocument();
-    expect(screen.getByText("79/100")).toBeInTheDocument();
+    expect(screen.getAllByText("2/3 điểm")).toHaveLength(2);
+    expect(screen.getByText("conference")).toBeInTheDocument();
+    expect(
+      screen.getByText("Không nhận diện được giọng nói trong bản ghi."),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("It is held at the Grand Hotel.")).toHaveLength(
+      2,
+    );
     expect(getSpeakingAttempt).not.toHaveBeenCalled();
   });
 

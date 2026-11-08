@@ -15,9 +15,20 @@ import {
   modeFromRoute,
   modeParts,
 } from "@/features/speaking/practice";
-import { SpPage } from "../ui/page";
-import { SpError, SpLoading } from "../ui/primitives";
+import { BackLink } from "@/shared/components/practice/page-intro";
+import {
+  PracticeColumns,
+  PracticePage,
+} from "@/shared/components/practice/practice-page";
+import {
+  ErrorPanel,
+  InlineError,
+  LoadingPanel,
+} from "@/shared/components/practice/state-panels";
+import { surfaceCard } from "@/shared/components/practice/styles";
+import { SpeakingHeader } from "../speaking-header";
 import { MicCheckPanel } from "./mic-check-panel";
+import { SessionProgress } from "./session-progress";
 
 /** What the session runs: a published test in a mode, or one exercise (Part practice). */
 export type SpeakingSessionSource =
@@ -127,53 +138,69 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
     }
   };
 
-  const { status, monitor, requestAccess } = recorder;
-  useEffect(() => {
-    const task = window.setTimeout(() => void requestAccess(), 0);
-    return () => window.clearTimeout(task);
-  }, [requestAccess]);
-  useEffect(() => {
-    if (status === "ready") monitor();
-  }, [monitor, status]);
-
   if (!info)
     return (
-      <SpPage narrow>
+      <PracticePage header={<SpeakingHeader />}>
         {error ? (
-          <SpError message={error} onRetry={() => void load()} />
+          <>
+            <BackLink href="/speaking" label="Quay lại thư viện" />
+            <ErrorPanel
+              message={error}
+              onRetry={() => void load()}
+              retryLabel="Thử tải lại"
+            />
+          </>
         ) : (
-          <SpLoading label="Đang chuẩn bị lượt luyện Speaking…" />
+          <LoadingPanel label="Đang chuẩn bị lượt luyện Speaking…" />
         )}
-      </SpPage>
+      </PracticePage>
     );
 
+  const { parts } = info;
+  const questionCount = parts.reduce(
+    (sum, part) => sum + part.questionCount,
+    0,
+  );
+  let position = 0;
+  const placeholders = parts.flatMap((part) =>
+    Array.from({ length: part.questionCount }, () => ({
+      position: ++position,
+      part: part.part,
+      lockedAtUtc: null,
+    })),
+  );
   return (
-    <SpPage narrow>
-      <div className="mx-auto max-w-[640px] pt-4 text-center">
-        <p className="sp-overline text-(--sp-brand)">
-          {info.code} · {info.label}
-        </p>
-        <h1 className="mt-2 text-[32px] font-bold leading-10 tracking-[-0.01em]">
-          {info.title}
-        </h1>
-        <p className="mb-6 mt-1 text-(--sp-ink-2)">
-          Kiểm tra micro một lần rồi vào bài ngay.
-        </p>
-      </div>
-      {startError && (
-        <div className="mb-4">
-          <SpError message={startError} />
-        </div>
-      )}
-      <MicCheckPanel
-        deviceLabel={recorder.deviceLabel}
-        level={recorder.level}
-        onRequestAccess={() => void recorder.requestAccess()}
-        onStart={() => void start()}
-        requireDevices={source.kind === "test"}
-        starting={starting}
-        status={recorder.status}
+    <PracticePage header={<SpeakingHeader />}>
+      <PracticeColumns
+        aside={
+          <SessionProgress currentPosition={null} questions={placeholders} />
+        }
+        main={
+          <section className={`p-5 sm:p-7 ${surfaceCard}`}>
+            <div className="border-b border-slate-100 pb-5">
+              <BackLink href={info.backHref} label="Quay lại" />
+              <p className="mt-3 text-xs font-extrabold tracking-[0.14em] text-orange-600">
+                {info.code} · {info.label.toUpperCase()}
+              </p>
+              <h1 className="mt-2 text-xl font-bold">{info.title}</h1>
+            </div>
+            <div className="mt-6 space-y-4">
+              {startError && <InlineError>{startError}</InlineError>}
+              <MicCheckPanel
+                onRequestAccess={() => void recorder.requestAccess()}
+                onStart={() => void start()}
+                questionCount={questionCount}
+                starting={starting}
+                status={recorder.status}
+                totalSeconds={parts.reduce(
+                  (sum, part) => sum + part.durationSeconds,
+                  0,
+                )}
+              />
+            </div>
+          </section>
+        }
       />
-    </SpPage>
+    </PracticePage>
   );
 }

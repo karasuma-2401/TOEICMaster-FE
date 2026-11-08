@@ -8,7 +8,6 @@ import {
   adminNavigation,
   getAdminNavigationItem,
 } from "@/features/admin/navigation";
-import { AdminNavIcon } from "./admin-nav-icon";
 
 interface AdminSidebarProps {
   isCollapsed: boolean;
@@ -38,7 +37,7 @@ export function AdminSidebar({
       )}
       <aside
         aria-label="Thanh điều hướng quản trị"
-        className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col bg-[var(--admin-surface)] transition-transform [--admin-border:#3d3530] [--admin-brand-red:#ff9a5c] [--admin-ink-soft:#d8cfc8] [--admin-ink:#ffffff] [--admin-muted:#a3978f] [--admin-nav-active:rgb(255_122_40/16%)] [--admin-surface-muted:#37302b] [--admin-surface:#26211e] duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)] transition-transform duration-200 lg:translate-x-0 ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "lg:w-[72px]" : "lg:w-[264px]"}`}
       >
@@ -76,7 +75,7 @@ export function AdminSidebar({
               return item.enabled ? (
                 <Link
                   aria-current={current ? "page" : undefined}
-                  className={`relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
+                  className={`relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
                     current
                       ? "bg-[var(--admin-nav-active)] font-semibold text-[var(--admin-brand-red)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-[var(--admin-brand-red)] before:to-[var(--admin-brand-orange)]"
                       : "font-medium text-[var(--admin-ink-soft)] hover:bg-[var(--admin-surface-muted)]"
@@ -86,7 +85,12 @@ export function AdminSidebar({
                   onClick={onCloseMobile}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <AdminNavIcon href={item.href} />
+                  <span
+                    aria-hidden="true"
+                    className="grid size-6 place-items-center text-base"
+                  >
+                    {item.icon}
+                  </span>
                   {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               ) : (
@@ -97,7 +101,12 @@ export function AdminSidebar({
                   title="Tính năng sắp có"
                   type="button"
                 >
-                  <AdminNavIcon href={item.href} />
+                  <span
+                    aria-hidden="true"
+                    className="grid size-6 place-items-center text-base"
+                  >
+                    {item.icon}
+                  </span>
                   {!isCollapsed && (
                     <>
                       <span className="flex-1">{item.label}</span>

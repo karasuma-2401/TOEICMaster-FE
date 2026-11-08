@@ -15,7 +15,7 @@ export function AdminPageHeader({
         <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
           QUẢN TRỊ / KHO DỮ LIỆU
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-[34px]">
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
           {title}
         </h1>
         <p className="mt-1.5 text-sm text-[var(--admin-muted)]">

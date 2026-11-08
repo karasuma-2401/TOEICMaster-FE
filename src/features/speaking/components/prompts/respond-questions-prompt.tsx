@@ -16,7 +16,7 @@ export function RespondQuestionsPrompt({
   return (
     <div className="space-y-4">
       <p
-        className="rounded-2xl border border-(--sp-line) bg-(--sp-subtle) p-5 leading-7 text-(--sp-ink-2)"
+        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 leading-7 text-slate-700"
         lang="en"
       >
         {content.context}

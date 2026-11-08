@@ -176,50 +176,6 @@ export async function startSpeakingAttempt(testId: string, mode: SpeakingMode) {
   );
 }
 
-/** One finished or running attempt of the current learner. */
-export interface SpeakingAttemptSummary {
-  id: string;
-  testId: string | null;
-  status: string;
-  createdAtUtc: string;
-  estimatedScore: number | null;
-}
-
-function parseAttemptSummary(value: unknown): SpeakingAttemptSummary {
-  const what = "lịch sử Speaking";
-  if (
-    !isRecord(value) ||
-    !isString(value.id) ||
-    !(value.testId === null || isString(value.testId)) ||
-    !isString(value.status) ||
-    !isString(value.createdAtUtc) ||
-    !(
-      value.estimatedScore === undefined ||
-      value.estimatedScore === null ||
-      isCount(value.estimatedScore)
-    )
-  )
-    invalid(what);
-  return {
-    id: value.id,
-    testId: value.testId,
-    status: value.status,
-    createdAtUtc: value.createdAtUtc,
-    estimatedScore: value.estimatedScore ?? null,
-  };
-}
-
-export async function getSpeakingAttempts(signal?: AbortSignal) {
-  return parsePage(
-    await speakingRequest(`${base}/attempts`, {
-      signal,
-      fallback: "Không thể tải lịch sử Speaking.",
-    }),
-    parseAttemptSummary,
-    "lịch sử Speaking",
-  ).items;
-}
-
 export async function getSpeakingAttempt(
   attemptId: string,
   signal?: AbortSignal,

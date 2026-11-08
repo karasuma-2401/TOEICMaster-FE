@@ -12,47 +12,33 @@ describe("MicCheckPanel", () => {
       <MicCheckPanel
         onRequestAccess={onRequestAccess}
         onStart={vi.fn()}
+        questionCount={11}
         status="idle"
+        totalSeconds={1060}
       />,
     );
 
     expect(
-      screen.getByRole("button", { name: "Bắt đầu làm bài →" }),
+      screen.getByRole("button", { name: "Bắt đầu làm bài" }),
     ).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Cho phép micro" }));
     expect(onRequestAccess).toHaveBeenCalledOnce();
   });
 
-  it("unlocks a test once the microphone picks up a voice", () => {
-    const panel = (level: number) => (
-      <MicCheckPanel
-        level={level}
-        onRequestAccess={vi.fn()}
-        onStart={vi.fn()}
-        status="ready"
-      />
-    );
-    const { rerender } = render(panel(0));
-    const start = screen.getByRole("button", { name: "Bắt đầu làm bài →" });
-
-    expect(start).toBeDisabled();
-    rerender(panel(0.5));
-    return vi.waitFor(() => expect(start).toBeEnabled());
-  });
-
-  it("lets Part practice run on timers when the microphone is denied", () => {
+  it("lets learners practise on timers when the microphone is denied", () => {
     const onStart = vi.fn();
     render(
       <MicCheckPanel
         onRequestAccess={vi.fn()}
         onStart={onStart}
-        requireDevices={false}
+        questionCount={3}
         status="denied"
+        totalSeconds={120}
       />,
     );
 
-    expect(screen.getByText("Micro đang bị chặn")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu làm bài →" }));
+    expect(screen.getByText("Không có quyền micro")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu làm bài" }));
     expect(onStart).toHaveBeenCalledOnce();
   });
 });

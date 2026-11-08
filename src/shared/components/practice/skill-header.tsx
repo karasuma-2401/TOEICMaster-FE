@@ -1,7 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BrandMark } from "@/features/user/components/brand-mark";
-import { PageNavButtons } from "./page-nav-buttons";
 import { focusRing, pageContainer } from "./styles";
 
 const navigation = [
@@ -28,10 +26,14 @@ export function SkillHeader({
           className={`flex items-center gap-2 text-lg font-extrabold tracking-tight text-slate-900 ${focusRing}`}
           href="/"
         >
-          <BrandMark className="h-8 w-8" />
+          <span
+            aria-hidden="true"
+            className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-red-600 to-orange-500 text-sm font-black text-white"
+          >
+            T
+          </span>
           TOEICMaster
         </Link>
-        <PageNavButtons />
         <nav
           aria-label="Luyện tập"
           className="order-last -mx-1 flex w-full gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto"

@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  adminGradient,
+  adminPrimary,
+  adminSecondary,
+} from "@/features/admin/components/content/admin-styles";
+import { AdminWorkspace } from "@/features/admin/components/content/admin-workspace";
+import {
   createSpeakingTest,
   getSpeakingTestDetail,
   listSpeakingExercises,
@@ -10,11 +16,7 @@ import {
   type SpeakingTestInput,
 } from "@/features/speaking/admin-api";
 import { SpeakingApiError } from "@/features/speaking/http";
-import {
-  partQuestionCount,
-  questionsPerExercise,
-  speakingPartSpecs,
-} from "@/features/speaking/part-specs";
+import { speakingPartSpecs } from "@/features/speaking/part-specs";
 import { publishChecklist } from "@/features/speaking/publish-checklist";
 import {
   speakingParts,
@@ -26,9 +28,7 @@ import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { PublishChecklistPanel } from "./publish-checklist-panel";
 import { TestInfoPanel } from "./test-info-panel";
 import { TestPreviewPanel } from "./test-preview-panel";
-import { slotLabels, TestSlotPicker } from "./test-slot-picker";
-import { ArrowLeftIcon } from "../ui/icons";
-import { Chip, SpeakingLogo } from "../ui/primitives";
+import { TestSlotPicker } from "./test-slot-picker";
 
 const emptyDraft: SpeakingTestInput = {
   code: "",
@@ -47,23 +47,6 @@ function compact(draft: SpeakingTestInput): SpeakingTestInput {
       ]),
     ) as SpeakingTestInput["exerciseIds"],
   };
-}
-
-const firstQuestion: Record<SpeakingPart, number> = {
-  1: 1,
-  2: 3,
-  3: 5,
-  4: 8,
-  5: 11,
-};
-
-/** Question numbers of a Part with the exercise that covers each one. */
-function questionCells(part: SpeakingPart, selected: string[]) {
-  const perSlot = questionsPerExercise(part);
-  return Array.from({ length: partQuestionCount(part) }, (_, offset) => ({
-    number: firstQuestion[part] + offset,
-    id: selected[Math.floor(offset / perSlot)] || "",
-  }));
 }
 
 function saveError(cause: unknown) {
@@ -198,86 +181,20 @@ export function SpeakingTestWorkspace({
     }
   };
 
-  useEffect(() => {
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = overflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [onClose]);
-
-  const input = compact(draft);
-  const checklist = publishChecklist(input, lookup);
-  const canPublish = checklist.every((item) => item.done);
-  const filledIds = speakingParts.flatMap((part) => input.exerciseIds[part]);
-  const duplicates = new Set(
-    filledIds.filter((id, index) => filledIds.indexOf(id) !== index),
-  );
-  const slotCount = speakingParts.reduce(
-    (sum, part) => sum + slotLabels[part].length,
-    0,
-  );
-  const questionsFilled = speakingParts
-    .flatMap((part) => questionCells(part, draft.exerciseIds[part]))
-    .filter((cell) => cell.id).length;
-  const inspect = () =>
-    setErrors(
-      canPublish
-        ? []
-        : ["Hoàn thành mọi điều kiện xuất bản trước khi công bố."],
-    );
-
   return (
-    <dialog
-      aria-label="Test builder Speaking"
-      aria-modal="true"
-      className="fixed inset-0 z-[70] m-0 flex h-dvh max-h-none w-full max-w-none flex-col bg-(--sp-page) p-0 text-(--sp-ink)"
-      open
-    >
-      <header className="flex min-h-16 flex-wrap items-center gap-4 border-b border-(--sp-line) bg-(--sp-surface) px-5 py-2">
-        <SpeakingLogo />
-        <span className="rounded-md bg-(--sp-danger-bg) px-2 py-0.5 text-[11px] font-semibold text-(--sp-danger)">
-          ADMIN
-        </span>
-        <p className="text-[13px] text-(--sp-ink-3)">
-          Kho dữ liệu / Đề thi / Speaking / Trình tạo đề
-        </p>
-      </header>
-      <div className="flex min-h-[88px] flex-wrap items-center gap-4 border-b border-(--sp-line) bg-(--sp-surface) px-5 py-3">
-        <button
-          aria-label="Đóng test builder speaking"
-          className="sp-focus cursor-pointer p-1"
-          onClick={onClose}
-          type="button"
-        >
-          <ArrowLeftIcon />
-        </button>
-        <div className="min-w-0 flex-1">
-          <h2 className="flex flex-wrap items-center gap-2 text-[28px] font-semibold leading-9">
-            Trình tạo đề thi <Chip tone="speak">Speaking</Chip>
-          </h2>
-          <p className="text-[13px] text-(--sp-ink-2)">
-            {draft.title || "Đề Speaking mới"}
-            {draft.code && ` / ${draft.code}`}
-          </p>
-        </div>
-        {readOnly ? (
-          <button
-            className="sp-btn sp-btn-outline"
-            onClick={onClose}
-            type="button"
-          >
+    <AdminWorkspace
+      actions={
+        readOnly ? (
+          <button className={adminSecondary} onClick={onClose} type="button">
             Đóng
           </button>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <>
+            <button className={adminSecondary} onClick={onClose} type="button">
+              Hủy
+            </button>
             <button
-              className="sp-btn sp-btn-outline"
+              className={adminSecondary}
               disabled={busy || loading}
               onClick={() => void persist(false)}
               type="button"
@@ -285,138 +202,85 @@ export function SpeakingTestWorkspace({
               Lưu bản nháp
             </button>
             <button
-              className="sp-btn sp-btn-solid"
+              className={adminPrimary}
               disabled={busy || loading}
-              onClick={inspect}
-              type="button"
-            >
-              Kiểm tra đề
-            </button>
-            <button
-              className="sp-btn sp-btn-cta"
-              disabled={busy || loading || !canPublish}
               onClick={() => void persist(true)}
+              style={adminGradient}
               type="button"
             >
-              {busy ? "Đang lưu…" : "Công bố"}
+              {busy ? "Đang lưu…" : "Xuất bản đề"}
             </button>
-          </div>
-        )}
-      </div>
-      <div className="flex-1 overflow-y-auto p-6">
-        {loading || loadError ? (
-          <div className="sp-card">
-            <AdminLoadState
-              error={loadError}
-              loading={loading}
-              onRetry={() => setAttempt((value) => value + 1)}
-            />
-          </div>
-        ) : (
-          <>
-            {readOnly && (
-              <p className="mb-4 rounded-xl bg-(--sp-success-bg) p-3 text-sm font-semibold text-(--sp-success)">
-                Đề đã công bố và được khóa chỉnh sửa. Nội dung hiển thị là bản
-                chụp lúc công bố.
-              </p>
-            )}
-            <div className="grid items-start gap-5 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_400px]">
-              <div className="space-y-4">
-                <TestInfoPanel
-                  disabled={readOnly}
-                  onChange={(next) => {
-                    setDraft((current) => ({ ...current, ...next }));
-                    setErrors([]);
-                  }}
-                  published={readOnly}
-                  value={draft}
-                />
-                <section className="sp-card p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold">Sơ đồ 11 câu</h3>
-                    <span className="text-xs text-(--sp-ink-3)">
-                      {questionsFilled}/11 câu
-                    </span>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {speakingParts.map((part) => (
-                      <div className="flex items-center gap-3" key={part}>
-                        <span className="w-12 text-xs text-(--sp-ink-2)">
-                          Part {part}
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {questionCells(part, draft.exerciseIds[part]).map(
-                            (cell) => (
-                              <button
-                                aria-label={`Xem câu ${cell.number}`}
-                                className={`sp-focus grid size-9 cursor-pointer place-items-center rounded-md text-xs font-semibold disabled:cursor-default ${cell.id && duplicates.has(cell.id) ? "bg-(--sp-danger-solid) text-white" : cell.id ? "bg-(--sp-success-solid) text-white" : "border border-(--sp-line) bg-(--sp-subtle)"} ${cell.id && cell.id === focusedId ? "outline-2 outline-(--sp-brand)" : ""}`}
-                                disabled={!cell.id}
-                                key={cell.number}
-                                onClick={() => setFocusedId(cell.id)}
-                                type="button"
-                              >
-                                {cell.number}
-                              </button>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-3 flex gap-3 text-xs text-(--sp-ink-2)">
-                    <span>
-                      <span className="text-(--sp-success-solid)">●</span> Đủ
-                      bài
-                    </span>
-                    <span>
-                      <span className="text-(--sp-danger-solid)">●</span> Trùng
-                    </span>
-                    <span>
-                      <span className="text-(--sp-ink-3)">●</span> Trống
-                    </span>
-                  </p>
-                </section>
-                <PublishChecklistPanel errors={errors} items={checklist} />
-              </div>
-              <div className="min-w-0 space-y-3">
-                <div className="flex flex-wrap items-end justify-between gap-2">
-                  <div>
-                    <h3 className="text-lg font-semibold">Cấu trúc đề thi</h3>
-                    <p className="text-[13px] text-(--sp-ink-2)">
-                      Chọn bài cho từng slot. Nhóm câu hỏi luôn được thêm cùng
-                      nhau.
-                    </p>
-                  </div>
-                  <p className="text-xs text-(--sp-ink-3)">
-                    5 Parts · {slotCount} slot · 11 câu
-                  </p>
-                </div>
-                {speakingParts.map((part) => (
-                  <TestSlotPicker
-                    disabled={readOnly}
-                    duplicates={duplicates}
-                    focusedId={focusedId}
-                    key={part}
-                    lookup={lookup}
-                    onChange={(index, id) => replaceSlot(part, index, id)}
-                    onFocus={setFocusedId}
-                    options={bank.filter((exercise) => exercise.part === part)}
-                    part={part}
-                    selected={draft.exerciseIds[part]}
-                  />
-                ))}
-                <p className="text-xs text-(--sp-ink-2)">
-                  Part 3: Q5–7 là 1 nhóm. Part 4: tài liệu chung gắn với nhóm
-                  Q8–10, không tạo slot riêng.
-                </p>
-              </div>
-              <div className="min-w-0 lg:col-span-2 xl:col-span-1">
-                <TestPreviewPanel focusedId={focusedId} lookup={lookup} />
-              </div>
-            </div>
           </>
-        )}
-      </div>
-    </dialog>
+        )
+      }
+      badge={
+        <span
+          className={`rounded-full px-2 py-1 text-xs font-bold ${readOnly ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
+        >
+          {readOnly ? "Công bố" : saved ? "Bản nháp" : "Chưa lưu"}
+        </span>
+      }
+      eyebrow="TEST BUILDER · 2/2/3/3/1 CÂU"
+      label="Test builder Speaking"
+      onClose={onClose}
+      title={draft.code || "Đề Speaking mới"}
+    >
+      {loading || loadError ? (
+        <div className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
+          <AdminLoadState
+            error={loadError}
+            loading={loading}
+            onRetry={() => setAttempt((value) => value + 1)}
+          />
+        </div>
+      ) : (
+        <>
+          {readOnly && (
+            <p className="mb-6 rounded-xl bg-[var(--admin-success-soft)] p-3 text-sm font-semibold text-[var(--admin-success)]">
+              Đề đã công bố và được khóa chỉnh sửa. Nội dung hiển thị là bản
+              chụp lúc công bố.
+            </p>
+          )}
+          <div className="grid gap-6 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)_minmax(22rem,28rem)]">
+            <div className="space-y-6">
+              <TestInfoPanel
+                disabled={readOnly}
+                onChange={(next) => {
+                  setDraft((current) => ({ ...current, ...next }));
+                  setErrors([]);
+                }}
+                value={draft}
+              />
+              <PublishChecklistPanel
+                errors={errors}
+                items={publishChecklist(compact(draft), lookup)}
+              />
+            </div>
+            <div className="grid content-start gap-6 2xl:grid-cols-2">
+              {speakingParts.map((part) => (
+                <TestSlotPicker
+                  disabled={readOnly}
+                  focusedId={focusedId}
+                  key={part}
+                  lookup={lookup}
+                  onChange={(index, id) => replaceSlot(part, index, id)}
+                  onFocus={setFocusedId}
+                  options={bank.filter((exercise) => exercise.part === part)}
+                  part={part}
+                  selected={draft.exerciseIds[part]}
+                />
+              ))}
+            </div>
+            <div className="lg:col-span-2 xl:col-span-1">
+              <TestPreviewPanel
+                focusedId={focusedId}
+                lookup={lookup}
+                test={draft}
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </AdminWorkspace>
   );
 }

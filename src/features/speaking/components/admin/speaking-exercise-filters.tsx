@@ -24,7 +24,8 @@ export interface ExerciseFilter {
   pageNumber: number;
 }
 
-const control = "sp-input";
+const control =
+  "h-11 rounded-xl border border-[var(--admin-border)] bg-white px-3 text-sm";
 
 export function SpeakingPartTabs({
   value,
@@ -62,12 +63,12 @@ export function SpeakingExerciseFilters({
   onChange: (next: Partial<ExerciseFilter>) => void;
 }) {
   return (
-    <div className="grid gap-3 p-4 lg:grid-cols-[1fr_11rem_11rem]">
+    <div className="grid gap-3 border-b border-[var(--admin-border)] p-4 lg:grid-cols-[1fr_11rem_11rem]">
       <input
         aria-label="Tìm bài tập Speaking"
         className={control}
         onChange={(event) => onChange({ query: event.target.value })}
-        placeholder="Tìm kiếm theo đoạn văn hoặc mã bài tập…"
+        placeholder="Tìm mã bài hoặc chủ đề..."
         value={filter.query}
       />
       <select
