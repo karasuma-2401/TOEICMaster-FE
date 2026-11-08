@@ -1,9 +1,21 @@
-export function BrandMark() {
+/** TOEICMaster logo: a speech bubble carrying the letter T. */
+export function BrandMark({ className = "h-9 w-9" }: { className?: string }) {
   return (
-    <svg aria-hidden="true" className="h-9 w-9" viewBox="0 0 38 38">
-      <path d="m3 12 27-8-6.8 28.3-8.2-13L3 12Z" fill="#ff9f25" />
-      <path d="m3 12 12.2 7.3L30 4 3 12Z" fill="#ffbd44" />
-      <path d="m15.2 19.3 8 12.7 3.1-13.2-11.1.5Z" fill="#b31322" />
+    <svg aria-hidden="true" className={className} viewBox="0 0 38 38">
+      <defs>
+        <linearGradient id="brand-mark-fill" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#b31322" />
+          <stop offset="1" stopColor="#ef6a1f" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M8 2h22a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H18l-8 6v-6H8a6 6 0 0 1-6-6V8a6 6 0 0 1 6-6Z"
+        fill="url(#brand-mark-fill)"
+      />
+      <path
+        d="M11 8h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-5v11a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V13h-5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"
+        fill="#fff"
+      />
     </svg>
   );
 }

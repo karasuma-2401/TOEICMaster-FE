@@ -44,7 +44,7 @@ describe("AdminSpeakingContentPage", () => {
     render(<AdminSpeakingContentPage />);
 
     expect(await screen.findByText("SP1-001")).toBeInTheDocument();
-    expect(screen.getByText("9")).toBeInTheDocument();
+    expect(screen.getByText(/Quản lý 12 bài tập/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Part 4/ }));
 
     expect(await screen.findByText("SP4-001")).toBeInTheDocument();

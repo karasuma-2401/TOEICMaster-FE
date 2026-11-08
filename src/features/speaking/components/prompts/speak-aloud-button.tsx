@@ -37,7 +37,7 @@ export function SpeakAloudButton({
   return (
     <button
       aria-pressed={speaking}
-      className={`inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-orange-700 ring-1 ring-orange-200 transition hover:bg-orange-50 ${focusRing}`}
+      className={`inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-(--sp-brand) ring-1 ring-(--sp-hero-line) transition hover:bg-(--sp-cream) ${focusRing}`}
       onClick={play}
       type="button"
     >

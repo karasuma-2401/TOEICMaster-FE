@@ -17,10 +17,7 @@ import {
 } from "@/features/speaking/practice";
 import { RuleList, StructureList } from "@/shared/components/practice/briefing";
 import { BackLink } from "@/shared/components/practice/page-intro";
-import {
-  PracticeColumns,
-  PracticePage,
-} from "@/shared/components/practice/practice-page";
+import { PracticeColumns } from "@/shared/components/practice/practice-page";
 import { StatGrid } from "@/shared/components/practice/stat-grid";
 import {
   ErrorPanel,
@@ -32,7 +29,7 @@ import {
   surfaceCard,
 } from "@/shared/components/practice/styles";
 import { formatMinutes } from "@/shared/ui/format-time";
-import { SpeakingHeader } from "./speaking-header";
+import { SpPage } from "./ui/page";
 
 export function SpeakingTestOverview({
   testId,
@@ -71,20 +68,20 @@ export function SpeakingTestOverview({
 
   if (!test && !error)
     return (
-      <PracticePage header={<SpeakingHeader />}>
+      <SpPage>
         <LoadingPanel label="Đang tải đề Speaking…" />
-      </PracticePage>
+      </SpPage>
     );
   if (!test)
     return (
-      <PracticePage header={<SpeakingHeader />}>
+      <SpPage>
         <BackLink href="/speaking" label="Quay lại thư viện" />
         <ErrorPanel
           message={error}
           onRetry={() => void load()}
           retryLabel="Thử tải lại"
         />
-      </PracticePage>
+      </SpPage>
     );
 
   const parts = modeParts(selectedMode);
@@ -98,7 +95,7 @@ export function SpeakingTestOverview({
     0,
   );
   return (
-    <PracticePage header={<SpeakingHeader />}>
+    <SpPage>
       <BackLink href="/speaking" label="Quay lại thư viện Speaking" />
       <div className="mt-6">
         <PracticeColumns
@@ -164,6 +161,6 @@ export function SpeakingTestOverview({
           }
         />
       </div>
-    </PracticePage>
+    </SpPage>
   );
 }
