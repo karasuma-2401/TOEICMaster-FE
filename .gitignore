@@ -13,3 +13,5 @@ next-env.d.ts
 local/
 # Local handoff notes (not committed)
 docs/speaking-be-handoff.md
+/test-results/
+/playwright-report/

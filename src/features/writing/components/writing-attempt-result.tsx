@@ -12,6 +12,7 @@ import { PracticePage } from "@/shared/components/practice/practice-page";
 import { StatGrid } from "@/shared/components/practice/stat-grid";
 import {
   ErrorPanel,
+  InlineError,
   LoadingPanel,
 } from "@/shared/components/practice/state-panels";
 import {
@@ -152,6 +153,11 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
             >
               {submittingConsent ? "Đang gửi yêu cầu…" : "Đồng ý và chấm bài"}
             </button>
+            {error && (
+              <div className="mt-4">
+                <InlineError>{error}</InlineError>
+              </div>
+            )}
           </section>
         )}
         {attempt && shouldPoll && (
