@@ -91,8 +91,11 @@ describe("AdminSpeakingTestsPage", () => {
     expect(
       await within(workspace).findByDisplayValue("SPK-2026-03"),
     ).toBeInTheDocument();
+    expect(
+      within(workspace).getByRole("button", { name: "Công bố" }),
+    ).toBeDisabled();
     fireEvent.click(
-      within(workspace).getByRole("button", { name: "Xuất bản đề" }),
+      within(workspace).getByRole("button", { name: "Kiểm tra đề" }),
     );
 
     expect(within(workspace).getByRole("alert")).toHaveTextContent(
