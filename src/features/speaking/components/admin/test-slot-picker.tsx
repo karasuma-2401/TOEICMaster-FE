@@ -1,3 +1,4 @@
+import { AdminFilterSelect } from "@/features/admin/components/content/admin-filters";
 import { speakingPartSpecs } from "@/features/speaking/part-specs";
 import type { SpeakingExercise, SpeakingPart } from "@/features/speaking/types";
 
@@ -82,20 +83,20 @@ export function TestSlotPicker({
                 {exercise ? exercise.code : "Chọn 1 bài từ ngân hàng bài tập"}
               </p>
             </div>
-            <select
-              aria-label={`Chọn bài cho ${label}`}
-              className="sp-btn sp-btn-outline sp-btn-sm w-[104px]"
+            <AdminFilterSelect
+              allLabel="Chọn bài"
+              allValue=""
+              ariaLabel={`Chọn bài cho ${label}`}
               disabled={disabled}
-              onChange={(event) => onChange(index, event.target.value)}
+              onChange={(next) => {
+                if (next) onChange(index, next);
+              }}
+              options={options.map((option) => ({
+                value: option.id,
+                label: `${option.code} · ${option.topic}`,
+              }))}
               value=""
-            >
-              <option value="">Chọn bài</option>
-              {options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.code} · {option.topic}
-                </option>
-              ))}
-            </select>
+            />
             <button
               aria-label={`Xem ${label}`}
               className="sp-btn sp-btn-ghost sp-btn-sm"

@@ -97,6 +97,15 @@ export const PlayIcon = icon(<path d="m6 3 14 9-14 9V3Z" />);
 export const SquareIcon = icon(
   <rect height="14" rx="2" width="14" x="5" y="5" />,
 );
+export const EyeIcon = icon(
+  <>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
+  </>,
+);
+export const TrashIcon = icon(
+  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6m5 5v6m4-6v6" />,
+);
 export const PencilIcon = icon(
   <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" />,
 );

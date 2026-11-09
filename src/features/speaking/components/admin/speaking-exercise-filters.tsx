@@ -1,3 +1,9 @@
+import {
+  AdminFilterBar,
+  AdminFilterSelect,
+  AdminSearchField,
+  type SearchSuggestion,
+} from "@/features/admin/components/content/admin-filters";
 import { adminFocus } from "@/features/admin/components/content/admin-styles";
 import {
   difficultyLabel,
@@ -23,8 +29,6 @@ export interface ExerciseFilter {
   status: SpeakingExerciseStatus | "ALL";
   pageNumber: number;
 }
-
-const control = "sp-input";
 
 export function SpeakingPartTabs({
   value,
@@ -57,51 +61,45 @@ export function SpeakingPartTabs({
 export function SpeakingExerciseFilters({
   filter,
   onChange,
+  suggestions,
 }: {
   filter: ExerciseFilter;
   onChange: (next: Partial<ExerciseFilter>) => void;
+  suggestions?: SearchSuggestion[];
 }) {
   return (
-    <div className="grid gap-3 p-4 lg:grid-cols-[1fr_11rem_11rem]">
-      <input
-        aria-label="Tìm bài tập Speaking"
-        className={control}
-        onChange={(event) => onChange({ query: event.target.value })}
-        placeholder="Tìm kiếm theo đoạn văn hoặc mã bài tập…"
+    <AdminFilterBar className="border-b border-(--sp-line) p-3">
+      <AdminSearchField
+        label="Tìm bài tập Speaking"
+        onChange={(query) => onChange({ query })}
+        placeholder="Tìm theo chủ đề hoặc mã bài tập"
+        suggestions={suggestions}
         value={filter.query}
       />
-      <select
-        aria-label="Lọc độ khó"
-        className={control}
-        onChange={(event) =>
-          onChange({
-            difficulty: event.target.value as ExerciseFilter["difficulty"],
-          })
+      <AdminFilterSelect
+        allValue="ALL"
+        ariaLabel="Lọc độ khó"
+        label="Độ khó"
+        onChange={(difficulty: ExerciseFilter["difficulty"]) =>
+          onChange({ difficulty })
         }
+        options={difficultyOptions.map((value) => ({
+          value,
+          label: difficultyLabel[value],
+        }))}
         value={filter.difficulty}
-      >
-        <option value="ALL">Độ khó: Tất cả</option>
-        {difficultyOptions.map((item) => (
-          <option key={item} value={item}>
-            {difficultyLabel[item]}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label="Lọc trạng thái"
-        className={control}
-        onChange={(event) =>
-          onChange({ status: event.target.value as ExerciseFilter["status"] })
-        }
+      />
+      <AdminFilterSelect
+        allValue="ALL"
+        ariaLabel="Lọc trạng thái"
+        label="Trạng thái"
+        onChange={(status: ExerciseFilter["status"]) => onChange({ status })}
+        options={exerciseStatusOptions.map((value) => ({
+          value,
+          label: exerciseStatusLabel[value],
+        }))}
         value={filter.status}
-      >
-        <option value="ALL">Trạng thái: Tất cả</option>
-        {exerciseStatusOptions.map((item) => (
-          <option key={item} value={item}>
-            {exerciseStatusLabel[item]}
-          </option>
-        ))}
-      </select>
-    </div>
+      />
+    </AdminFilterBar>
   );
 }

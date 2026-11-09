@@ -12,12 +12,7 @@ export function AdminPageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-          QUẢN TRỊ / KHO DỮ LIỆU
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-[34px]">
-          {title}
-        </h1>
+        <h1>{title}</h1>
         <p className="mt-1.5 text-sm text-[var(--admin-muted)]">
           {description}
         </p>

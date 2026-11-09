@@ -125,7 +125,7 @@ export function AdminSpeakingContentPage() {
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-medium leading-9">
+          <h1>
             Speaking Part {filter.part}: {speakingPartSpecs[filter.part].title}{" "}
             ({speakingPartSpecs[filter.part].subtitle})
           </h1>

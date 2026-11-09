@@ -8,22 +8,15 @@ export type ChipTone =
 
 export function Chip({
   tone,
-  dot = false,
   className = "",
   children,
 }: {
   tone: ChipTone;
-  dot?: boolean;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <span className={`sp-chip sp-chip-${tone} ${className}`}>
-      {dot && (
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
-      )}
-      {children}
-    </span>
+    <span className={`sp-chip sp-chip-${tone} ${className}`}>{children}</span>
   );
 }
 

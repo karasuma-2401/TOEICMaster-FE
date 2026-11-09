@@ -30,6 +30,21 @@ import {
   AdminNotice,
   AdminPageHeader,
 } from "@/features/admin/components/content/admin-page-header";
+import {
+  AdminBadge,
+  AdminDifficulty,
+} from "@/features/admin/components/content/admin-badges";
+import {
+  AdminFilterBar,
+  AdminFilterSelect,
+  AdminSearchField,
+} from "@/features/admin/components/content/admin-filters";
+import {
+  ExcelFileSlot,
+  ExcelImportDialog,
+  ImportImageId,
+  ImportSpec,
+} from "@/features/admin/components/content/admin-excel-import";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import type { WritingDifficulty, WritingPart } from "@/features/writing/types";
 import { AdminWritingPrompt } from "./admin-writing-prompt";
@@ -530,171 +545,91 @@ function ImportDialog({
       setBusy(false);
     }
   };
+  const invalidRows = preview?.rows.filter((row) => !row.isValid) ?? [];
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
-      <dialog
-        aria-label="Import Excel Writing"
-        aria-modal="true"
-        className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-        open
-      >
-        <header className="flex justify-between border-b border-[var(--admin-border)] p-6">
-          <div>
-            <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
-            <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Mỗi Part dùng cấu trúc Excel riêng.
-            </p>
-          </div>
-          <button aria-label="Đóng import" onClick={onClose} type="button">
-            ×
-          </button>
-        </header>
-        <div className="p-6">
-          <p className="mb-3 text-xs text-[var(--admin-muted)]">
-            Chuẩn bị file theo các cột bên dưới
-            {part === 1 ? ", tải ảnh và điền ImageAssetId" : ""}, sau đó chọn
-            file để kiểm tra trước khi import.
-          </p>
-          <p className="mb-3 text-xs text-[var(--admin-muted)]">
-            Cột bắt buộc: Code, Topic, Difficulty, Status,{" "}
-            {part === 1
-              ? "ImageAssetId, ImageAlt, KeywordOne, KeywordTwo"
-              : part === 2
-                ? "Sender, Recipient, Subject, EmailBody, Directions"
-                : "Prompt, MinimumWordCount"}
-            . RubricNotes và ModelAnswer là tùy chọn.
-          </p>
-          {part === 1 && (
-            <label className="mb-4 block text-sm font-semibold">
-              Tải ảnh để lấy ImageAssetId
-              <input
-                className="mt-1 block w-full text-sm"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={busy}
-                onChange={(event) => {
-                  const selected = event.target.files?.[0];
-                  if (!selected) return;
-                  setBusy(true);
-                  void uploadWritingImage(selected)
-                    .then((asset) => {
-                      setImageId(asset.id);
-                      setError("");
-                    })
-                    .catch((cause: unknown) =>
-                      setError(
-                        cause instanceof Error
-                          ? cause.message
-                          : "Không thể tải ảnh.",
-                      ),
-                    )
-                    .finally(() => setBusy(false));
-                }}
-              />
-              {imageId && (
-                <span className="mt-1 block break-all text-xs">
-                  ImageAssetId: {imageId}
-                </span>
-              )}
-            </label>
+    <ExcelImportDialog
+      ariaLabel="Import Excel Writing"
+      busy={busy}
+      canSubmit={preview?.invalidRowCount === 0 && preview.validRowCount > 0}
+      closeLabel="Đóng import"
+      error={error}
+      onClose={onClose}
+      onSubmit={() => void commit()}
+      submitLabel="Import bài tập"
+      summary="Kiểm tra từng dòng trước khi lưu."
+      title={`Import Writing Part ${part}`}
+    >
+      <ExcelFileSlot
+        busy={busy}
+        file={file}
+        maxMb={10}
+        onReject={(message) => {
+          setFile(null);
+          setPreview(null);
+          setError(message);
+        }}
+        onSelect={(selected) => void checkFile(selected)}
+      />
+      {preview && (
+        <output className="block text-[13px]">
+          <span className="text-[var(--admin-success)]">
+            {preview.validRowCount} dòng hợp lệ
+          </span>
+          {preview.invalidRowCount > 0 && (
+            <span className="text-[var(--admin-danger)]">
+              {" "}
+              · {preview.invalidRowCount} dòng lỗi
+            </span>
           )}
-          {!preview ? (
-            <label className="block cursor-pointer rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-10 text-center">
-              <b className="text-[var(--admin-brand-red)]">
-                Chọn file .xlsx để preview
-              </b>
-              <span className="mt-2 block text-sm text-[var(--admin-muted)]">
-                Tối đa 10MB
-              </span>
-              <input
-                accept=".xlsx"
-                className="sr-only"
-                onChange={(event) => {
-                  const selected = event.target.files?.[0];
-                  if (selected) void checkFile(selected);
-                }}
-                type="file"
-              />
-            </label>
-          ) : (
-            <div className="space-y-3">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[420px] overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
-                  <thead className="bg-[var(--admin-surface-muted)]">
-                    <tr>
-                      <th className="p-3">Dòng</th>
-                      <th className="p-3">Mã bài</th>
-                      <th className="p-3">Kết quả</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.rows.map((row) => (
-                      <tr key={row.rowNumber}>
-                        <td className="border-t border-[var(--admin-border)] p-3">
-                          {row.rowNumber}
-                        </td>
-                        <td className="border-t border-[var(--admin-border)]">
-                          {row.code ?? "—"}
-                        </td>
-                        <td
-                          className={
-                            row.isValid
-                              ? "border-t border-[var(--admin-border)] text-emerald-700"
-                              : "border-t border-[var(--admin-border)] text-red-700"
-                          }
-                        >
-                          {row.isValid ? "Hợp lệ" : row.errors.join(" ")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <button
-                type="button"
-                className="text-sm font-semibold text-orange-700 underline underline-offset-4"
-                onClick={() => {
-                  setFile(null);
-                  setPreview(null);
-                  setError("");
-                }}
-              >
-                Chọn file khác
-              </button>
-            </div>
+          {invalidRows.length > 0 && (
+            <ul className="mt-1.5 max-h-40 space-y-1 overflow-y-auto text-xs text-[var(--admin-danger)]">
+              {invalidRows.map((row) => (
+                <li key={row.rowNumber}>
+                  Dòng {row.rowNumber}
+                  {row.code ? ` · ${row.code}` : ""}: {row.errors.join(" ")}
+                </li>
+              ))}
+            </ul>
           )}
-          {busy && <p className="mt-3 text-sm">Đang xử lý file…</p>}
-          {error && (
-            <p className="mt-3 text-sm text-red-700" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
-        <footer className="flex justify-end gap-3 border-t border-[var(--admin-border)] p-5">
-          <button
-            className="rounded-lg border border-[var(--admin-border)] px-4 py-2 text-sm font-bold"
-            onClick={onClose}
-            type="button"
-          >
-            Hủy
-          </button>
-          <button
-            className="rounded-lg px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-            disabled={
-              !preview ||
-              preview.invalidRowCount > 0 ||
-              preview.validRowCount === 0 ||
-              busy
-            }
-            onClick={() => void commit()}
-            style={{ background: "var(--admin-brand-gradient)" }}
-            type="button"
-          >
-            Import bài tập
-          </button>
-        </footer>
-      </dialog>
-    </div>
+        </output>
+      )}
+      <ImportSpec
+        rows={[
+          [
+            "Cột",
+            `Code, Topic, Difficulty, Status, ${
+              part === 1
+                ? "ImageAssetId, ImageAlt, KeywordOne, KeywordTwo"
+                : part === 2
+                  ? "Sender, Recipient, Subject, EmailBody, Directions"
+                  : "Prompt, MinimumWordCount"
+            }`,
+          ],
+          ["Tùy chọn", "RubricNotes, ModelAnswer"],
+        ]}
+      />
+      {part === 1 && (
+        <ImportImageId
+          disabled={busy}
+          id={imageId}
+          label="Ảnh cần ImageAssetId"
+          onSelect={(selected) => {
+            setBusy(true);
+            void uploadWritingImage(selected)
+              .then((asset) => {
+                setImageId(asset.id);
+                setError("");
+              })
+              .catch((cause: unknown) =>
+                setError(
+                  cause instanceof Error ? cause.message : "Không thể tải ảnh.",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+        />
+      )}
+    </ExcelImportDialog>
   );
 }
 
@@ -805,45 +740,43 @@ export function AdminWritingContentPage() {
         ))}
       </div>
       <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
-        <div className="grid gap-3 border-b border-[var(--admin-border)] p-4 lg:grid-cols-[1fr_11rem_11rem]">
-          <input
-            aria-label="Tìm bài tập Writing"
-            className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
-            onChange={(e) => resetPage({ query: e.target.value })}
-            placeholder="Tìm mã bài hoặc chủ đề..."
+        <AdminFilterBar className="border-b border-[var(--admin-border)] p-3">
+          <AdminSearchField
+            label="Tìm bài tập Writing"
+            onChange={(query) => resetPage({ query })}
+            placeholder="Tìm theo mã bài hoặc chủ đề"
+            suggestions={items.map((question) => ({
+              value: question.code,
+              label: question.topic,
+              hint: question.code,
+            }))}
             value={filter.query}
           />
-          <select
-            aria-label="Lọc độ khó"
-            className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
-            onChange={(e) =>
-              resetPage({
-                difficulty: e.target.value as QuestionFilter["difficulty"],
-              })
+          <AdminFilterSelect
+            allValue="ALL"
+            ariaLabel="Lọc độ khó"
+            label="Độ khó"
+            onChange={(difficulty: QuestionFilter["difficulty"]) =>
+              resetPage({ difficulty })
             }
+            options={difficulties.flatMap((item) =>
+              item === "ALL" ? [] : [{ value: item, label: item }],
+            )}
             value={filter.difficulty}
-          >
-            {difficulties.map((item) => (
-              <option key={item} value={item}>
-                {item === "ALL" ? "Độ khó: Tất cả" : item}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Lọc trạng thái"
-            className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
-            onChange={(e) =>
-              resetPage({ status: e.target.value as QuestionFilter["status"] })
+          />
+          <AdminFilterSelect
+            allValue="ALL"
+            ariaLabel="Lọc trạng thái"
+            label="Trạng thái"
+            onChange={(status: QuestionFilter["status"]) =>
+              resetPage({ status })
             }
+            options={statuses.flatMap((item) =>
+              item === "ALL" ? [] : [{ value: item, label: statusLabel[item] }],
+            )}
             value={filter.status}
-          >
-            {statuses.map((item) => (
-              <option key={item} value={item}>
-                {item === "ALL" ? "Trạng thái: Tất cả" : statusLabel[item]}
-              </option>
-            ))}
-          </select>
-        </div>
+          />
+        </AdminFilterBar>
         {loading ? (
           <p className="p-8 text-center text-sm">Đang tải bài tập…</p>
         ) : items.length ? (
@@ -851,12 +784,12 @@ export function AdminWritingContentPage() {
             <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
                 <tr>
-                  <th className="p-4">MÃ BÀI</th>
-                  <th className="p-4">NỘI DUNG</th>
-                  <th className="p-4">CHỦ ĐỀ</th>
-                  <th className="p-4">ĐỘ KHÓ</th>
-                  <th className="p-4">TRẠNG THÁI</th>
-                  <th className="whitespace-nowrap p-4 text-right">THAO TÁC</th>
+                  <th className="p-4">Mã bài</th>
+                  <th className="p-4">Nội dung</th>
+                  <th className="p-4">Chủ đề</th>
+                  <th className="p-4">Độ khó</th>
+                  <th className="p-4">Trạng thái</th>
+                  <th className="whitespace-nowrap p-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -865,7 +798,7 @@ export function AdminWritingContentPage() {
                     className="border-t border-[var(--admin-border)]"
                     key={question.id}
                   >
-                    <td className="p-4 font-bold text-[var(--admin-brand-red)]">
+                    <td className="whitespace-nowrap p-4 text-[13px] font-medium tabular-nums text-[var(--admin-ink-soft)]">
                       {question.code}
                     </td>
                     <td className="p-4 font-semibold">
@@ -880,7 +813,7 @@ export function AdminWritingContentPage() {
                             {[question.keywordOne, question.keywordTwo].map(
                               (word, index) => (
                                 <span
-                                  className="rounded-full bg-orange-50 px-2.5 py-1 text-xs text-orange-800"
+                                  className="rounded bg-[var(--admin-surface-muted)] px-1.5 py-0.5 text-xs font-normal text-[var(--admin-ink-soft)]"
                                   key={index}
                                 >
                                   {word}
@@ -896,13 +829,21 @@ export function AdminWritingContentPage() {
                       )}
                     </td>
                     <td className="p-4">{question.topic}</td>
-                    <td className="p-4">{question.difficulty}</td>
                     <td className="p-4">
-                      <span
-                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${question.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : question.status === "DRAFT" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                      <AdminDifficulty value={question.difficulty} />
+                    </td>
+                    <td className="p-4">
+                      <AdminBadge
+                        tone={
+                          question.status === "PUBLISHED"
+                            ? "success"
+                            : question.status === "DRAFT"
+                              ? "warning"
+                              : "neutral"
+                        }
                       >
                         {statusLabel[question.status]}
-                      </span>
+                      </AdminBadge>
                     </td>
                     <td className="whitespace-nowrap p-4 text-right">
                       <button
@@ -1318,11 +1259,11 @@ export function AdminWritingTestsPage() {
           <table className="w-full min-w-[700px] text-left text-sm">
             <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
               <tr>
-                <th className="p-4">MÃ ĐỀ</th>
-                <th className="p-4">TÊN ĐỀ</th>
-                <th className="p-4">CẤU TRÚC</th>
-                <th className="p-4">TRẠNG THÁI</th>
-                <th className="p-4 text-right">THAO TÁC</th>
+                <th className="p-4">Mã đề</th>
+                <th className="p-4">Tên đề</th>
+                <th className="p-4">Cấu trúc</th>
+                <th className="p-4">Trạng thái</th>
+                <th className="p-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -1342,7 +1283,7 @@ export function AdminWritingTestsPage() {
                     className="border-t border-[var(--admin-border)]"
                     key={test.id}
                   >
-                    <td className="p-4 font-bold text-[var(--admin-brand-red)]">
+                    <td className="whitespace-nowrap p-4 text-[13px] font-medium tabular-nums text-[var(--admin-ink-soft)]">
                       {test.code}
                     </td>
                     <td className="p-4">
@@ -1357,11 +1298,13 @@ export function AdminWritingTestsPage() {
                       {test.questionIds[3].length}/1
                     </td>
                     <td className="p-4">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                      <AdminBadge
+                        tone={
+                          test.status === "PUBLISHED" ? "success" : "warning"
+                        }
                       >
                         {test.status === "PUBLISHED" ? "Công bố" : "Bản nháp"}
-                      </span>
+                      </AdminBadge>
                     </td>
                     <td className="p-4 text-right">
                       <button

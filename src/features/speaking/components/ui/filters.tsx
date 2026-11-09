@@ -1,3 +1,9 @@
+"use client";
+
+import {
+  SearchSuggestions,
+  type SearchSuggestion,
+} from "@/features/admin/components/content/admin-filters";
 import { SearchIcon } from "./icons";
 
 /** Search box with a leading icon, shared by the Speaking list toolbars. */
@@ -6,27 +12,39 @@ export function SearchField({
   placeholder,
   value,
   onChange,
+  suggestions,
 }: {
   label: string;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  suggestions?: SearchSuggestion[];
 }) {
   return (
-    <div className="relative min-w-60 flex-1">
-      <SearchIcon
-        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-(--sp-ink-3)"
-        size={18}
-      />
-      <input
-        aria-label={label}
-        className="sp-input min-h-11! rounded-full! pl-10!"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        type="search"
-        value={value}
-      />
-    </div>
+    <SearchSuggestions
+      className="relative min-w-60 flex-1"
+      onChange={onChange}
+      suggestions={suggestions}
+      value={value}
+    >
+      {(input) => (
+        <>
+          <SearchIcon
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-(--sp-ink-3)"
+            size={18}
+          />
+          <input
+            {...input}
+            aria-label={label}
+            className="sp-input min-h-11! rounded-full! pl-10!"
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder}
+            type="search"
+            value={value}
+          />
+        </>
+      )}
+    </SearchSuggestions>
   );
 }
 

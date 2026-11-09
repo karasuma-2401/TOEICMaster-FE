@@ -54,12 +54,44 @@ body {
   --font-weight-black: 600;
 }
 
-.admin-type :is(h1, h2) {
+.admin-type :is(h1, h2, h3) {
+  --font-weight-medium: 600;
   --font-weight-semibold: 600;
   --font-weight-bold: 600;
 }
 
-.admin-type :is(th, .sp-overline, .sp-chip, .sp-btn) {
+/* One heading scale for every admin screen, whatever the markup asks for. */
+.admin-type h1 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 32px;
+}
+
+.admin-type h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 26px;
+}
+
+.admin-type h3 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 22px;
+}
+
+.admin-type th {
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 16px;
+  text-transform: none;
+}
+
+.admin-type :is(.sp-overline, .sp-chip, .sp-btn) {
   font-weight: 500;
 }
 

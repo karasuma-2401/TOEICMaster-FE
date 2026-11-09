@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   MockWritingAdminBackend,
   FIXTURES_DIR,
+  chooseFilter,
   loginAsAdmin,
 } from "./admin-writing-helpers";
 
@@ -35,18 +36,17 @@ test.describe("Admin Writing - Quản lý Đề thi Writing độc lập (/admin
 
     // Lọc theo trạng thái Đã công bố
     await searchInput.clear();
-    const statusSelect = page.getByLabel("Lọc trạng thái đề");
-    await statusSelect.selectOption("PUBLISHED");
+    await chooseFilter(page, /^Lọc trạng thái đề/, "Đã công bố");
     await expect(page.getByText("WT-PUB-01")).toBeVisible();
     await expect(page.getByText("WT-DRAFT-01")).not.toBeVisible();
 
     // Lọc theo trạng thái Bản nháp
-    await statusSelect.selectOption("DRAFT");
+    await chooseFilter(page, /^Lọc trạng thái đề/, "Bản nháp");
     await expect(page.getByText("WT-DRAFT-01")).toBeVisible();
     await expect(page.getByText("WT-PUB-01")).not.toBeVisible();
 
     // Lọc theo trạng thái Đã lưu trữ
-    await statusSelect.selectOption("ARCHIVED");
+    await chooseFilter(page, /^Lọc trạng thái đề/, "Đã lưu trữ");
     await expect(page.getByText("WT-ARC-01")).toBeVisible();
   });
 

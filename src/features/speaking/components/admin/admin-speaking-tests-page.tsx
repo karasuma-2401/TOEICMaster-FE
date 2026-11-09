@@ -1,14 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminFilterBar,
+  AdminFilterSelect,
+  AdminSearchField,
+} from "@/features/admin/components/content/admin-filters";
 import { AdminNotice } from "@/features/admin/components/content/admin-page-header";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
-import { listSpeakingTests } from "@/features/speaking/admin-api";
+import {
+  deleteSpeakingTest,
+  listSpeakingTests,
+} from "@/features/speaking/admin-api";
+import { SpeakingApiError } from "@/features/speaking/http";
+import { ConfirmDialog } from "@/shared/components/practice/confirm-dialog";
 import type { SpeakingTestListItem } from "@/features/speaking/parsers";
 import type { Page, SpeakingTestStatus } from "@/features/speaking/types";
 import { Chip } from "../ui/primitives";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { CreateTestModal } from "./create-test-modal";
+import { ImportTestModal } from "./import-test-modal";
 import { SpeakingTestWorkspace } from "./speaking-test-workspace";
 import { SpeakingTestsTable } from "./speaking-tests-table";
 import { TablePagination } from "./table-pagination";
@@ -27,6 +38,10 @@ export function AdminSpeakingTestsPage() {
   /** `undefined` = closed, `null` = new test, string = existing test id. */
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
+  const [deleting, setDeleting] = useState<SpeakingTestListItem | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -73,15 +88,44 @@ export function AdminSpeakingTestsPage() {
 
   const reload = () => setRevision((value) => value + 1);
   const items = page?.items ?? [];
+  const open = (testId: string | null, view = false) => {
+    setViewOnly(view);
+    setEditing(testId);
+  };
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    const target = deleting;
+    setDeleting(null);
+    setActionError(null);
+    try {
+      await deleteSpeakingTest(target);
+      setNotice(`Đã xóa ${target.code}.`);
+      reload();
+    } catch (cause) {
+      setNotice("");
+      setActionError(
+        cause instanceof SpeakingApiError && cause.status === 405
+          ? "Máy chủ chưa hỗ trợ xóa đề Speaking."
+          : errorMessage(cause, "Không thể xóa đề Speaking."),
+      );
+    }
+  };
 
   return (
     <div>
-      <h1 className="text-[32px] font-semibold leading-10">Kho dữ liệu</h1>
-      <p className="mb-4 text-(--sp-ink-2)">
+      <h1>Kho dữ liệu</h1>
+      <p className="mb-5 mt-1 text-sm text-(--sp-ink-2)">
         Quản lý ngân hàng bài tập và đề thi TOEIC trong hệ thống.
       </p>
       <ContentTabs section="tests" skill="speaking" />
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <button
+          className="sp-btn sp-btn-outline"
+          onClick={() => setImporting(true)}
+          type="button"
+        >
+          Import Excel
+        </button>
         <button
           className="sp-btn sp-btn-cta"
           onClick={() => setCreating(true)}
@@ -91,33 +135,43 @@ export function AdminSpeakingTestsPage() {
         </button>
       </div>
       {notice && <AdminNotice>{notice}</AdminNotice>}
+      {actionError && (
+        <p className="mt-4 text-sm font-medium text-(--sp-danger)" role="alert">
+          {actionError}
+        </p>
+      )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[22px] font-semibold">Danh sách đề Speaking</h2>
         <Chip tone="speak">11 câu · ~20 phút · Thang 200</Chip>
       </div>
       <section className="sp-card mt-3 overflow-hidden">
-        <div className="grid gap-3 p-4 md:grid-cols-[1fr_14rem]">
-          <input
-            aria-label="Tìm đề Speaking"
-            className="sp-input"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm kiếm tên đề Speaking…"
+        <AdminFilterBar className="border-b border-(--sp-line) p-3">
+          <AdminSearchField
+            label="Tìm đề Speaking"
+            onChange={setQuery}
+            placeholder="Tìm theo tên hoặc mã đề Speaking"
+            suggestions={items.map((test) => ({
+              value: test.code,
+              label: test.title,
+              hint: test.code,
+            }))}
             value={query}
           />
-          <select
-            aria-label="Lọc trạng thái đề"
-            className="sp-input"
-            onChange={(event) => {
-              setStatus(event.target.value as SpeakingTestStatus | "ALL");
+          <AdminFilterSelect
+            allValue="ALL"
+            ariaLabel="Lọc trạng thái đề"
+            label="Trạng thái"
+            onChange={(next: SpeakingTestStatus | "ALL") => {
+              setStatus(next);
               setPageNumber(1);
             }}
+            options={[
+              { value: "PUBLISHED", label: "Chính thức" },
+              { value: "DRAFT", label: "Bản nháp" },
+            ]}
             value={status}
-          >
-            <option value="ALL">Trạng thái: Tất cả</option>
-            <option value="PUBLISHED">Chính thức</option>
-            <option value="DRAFT">Bản nháp</option>
-          </select>
-        </div>
+          />
+        </AdminFilterBar>
         <AdminLoadState
           error={error}
           loading={loading && !page}
@@ -125,7 +179,9 @@ export function AdminSpeakingTestsPage() {
         />
         {!error && page && items.length > 0 && (
           <SpeakingTestsTable
-            onOpen={(test) => setEditing(test.id)}
+            onDelete={setDeleting}
+            onOpen={(test) => open(test.id)}
+            onView={(test) => open(test.id, true)}
             tests={items}
           />
         )}
@@ -147,7 +203,18 @@ export function AdminSpeakingTestsPage() {
           onClose={() => setCreating(false)}
           onCreated={(testId) => {
             setCreating(false);
-            setEditing(testId);
+            open(testId);
+            reload();
+          }}
+        />
+      )}
+      {importing && (
+        <ImportTestModal
+          onClose={() => setImporting(false)}
+          onImported={(testId) => {
+            setImporting(false);
+            setNotice("Đã import đề Speaking ở trạng thái nháp.");
+            open(testId);
             reload();
           }}
         />
@@ -161,7 +228,20 @@ export function AdminSpeakingTestsPage() {
             reload();
           }}
           testId={editing}
+          viewOnly={viewOnly}
         />
+      )}
+      {deleting && (
+        <ConfirmDialog
+          confirmLabel="Xóa đề"
+          id="delete-speaking-test"
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => void confirmDelete()}
+          title={`Xóa ${deleting.code}?`}
+        >
+          Bản nháp “{deleting.title}” sẽ bị xóa vĩnh viễn và không thể khôi
+          phục.
+        </ConfirmDialog>
       )}
     </div>
   );

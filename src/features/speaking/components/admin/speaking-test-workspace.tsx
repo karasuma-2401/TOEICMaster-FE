@@ -81,11 +81,14 @@ function saveError(cause: unknown) {
 
 export function SpeakingTestWorkspace({
   testId,
+  viewOnly = false,
   onClose,
   onSaved,
 }: {
   /** `null` creates a new draft. */
   testId: string | null;
+  /** Opens the test without any way to change it. */
+  viewOnly?: boolean;
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {
@@ -149,7 +152,7 @@ export function SpeakingTestWorkspace({
     );
     return (id: string) => byId.get(id);
   }, [bank, linked]);
-  const readOnly = saved?.status === "PUBLISHED";
+  const readOnly = viewOnly || saved?.status === "PUBLISHED";
 
   const replaceSlot = (part: SpeakingPart, index: number, id: string) => {
     setDraft((current) => {

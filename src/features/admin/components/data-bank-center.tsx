@@ -25,6 +25,17 @@ import {
   type LrExercisePage,
   type LrExerciseSummary,
 } from "@/features/admin/lr-exercise-bank-api";
+import { AdminBadge, AdminDifficulty } from "./content/admin-badges";
+import {
+  AdminFilterBar,
+  AdminFilterSelect,
+  AdminSearchField,
+} from "./content/admin-filters";
+import {
+  ExcelFileSlot,
+  ExcelImportDialog,
+  ImportSpec,
+} from "./content/admin-excel-import";
 import { ContentTabs } from "./content/content-tabs";
 import { ExamIcon } from "./exam-icon";
 
@@ -116,24 +127,26 @@ function selectedPart(params: URLSearchParams): number | null {
 }
 
 function statusLabel(status: string) {
-  return status === "PUBLISHED" || status === "Published"
-    ? "Hiển thị"
+  if (status === "PUBLISHED" || status === "Published") return "Hiển thị";
+  return status === "ARCHIVED" || status === "Archived"
+    ? "Lưu trữ"
     : "Bản nháp";
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const published = status === "PUBLISHED" || status === "Published";
+  const label = statusLabel(status);
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
-        published
-          ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]"
-          : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"
-      }`}
+    <AdminBadge
+      tone={
+        label === "Hiển thị"
+          ? "success"
+          : label === "Lưu trữ"
+            ? "neutral"
+            : "warning"
+      }
     >
-      <i className="size-1.5 rounded-full bg-current" />
-      {statusLabel(status)}
-    </span>
+      {label}
+    </AdminBadge>
   );
 }
 
@@ -197,10 +210,7 @@ export function DataBankCenter() {
       {!viewingPartWorkspace && (
         <>
           <header className="mb-7">
-            <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-              QUẢN TRỊ / KHO DỮ LIỆU
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--admin-ink)]">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--admin-ink)]">
               Kho dữ liệu
             </h1>
             <p className="mt-2 text-sm leading-6 text-[var(--admin-muted)]">
@@ -466,30 +476,43 @@ function PartWorkspace({
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_42px_rgb(73_43_31/4%)]">
-        <div className="flex flex-wrap gap-3 border-b border-[var(--admin-border)] bg-[linear-gradient(100deg,#fffdfc,#fff8f3)] p-4">
-          <label className="flex h-10 min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-white px-3 text-[var(--admin-muted)] focus-within:border-[var(--admin-brand-orange)] focus-within:ring-2 focus-within:ring-orange-100">
-            <ExamIcon className="size-4" name="search" />
-            <input
-              aria-label="Tìm kiếm bài tập"
-              className="min-w-0 flex-1 bg-transparent text-sm text-[var(--admin-ink)] outline-none placeholder:text-[var(--admin-muted)]"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm theo mã hoặc nội dung câu hỏi..."
-              value={query}
-            />
-          </label>
-          <FilterSelect
+        <AdminFilterBar className="border-b border-[var(--admin-border)] p-3">
+          <AdminSearchField
+            label="Tìm kiếm bài tập"
+            onChange={setQuery}
+            placeholder="Tìm theo mã hoặc nội dung câu hỏi"
+            suggestions={(items?.items ?? []).map((item) => ({
+              value: item.code,
+              label: item.topic,
+              hint: item.code,
+            }))}
+            value={query}
+          />
+          <AdminFilterSelect
+            allValue=""
+            ariaLabel="Lọc độ khó"
             label="Độ khó"
             onChange={setDifficulty}
+            options={[
+              { value: "EASY", label: "Dễ" },
+              { value: "MEDIUM", label: "Trung bình" },
+              { value: "HARD", label: "Khó" },
+            ]}
             value={difficulty}
-            values={["EASY", "MEDIUM", "HARD"]}
           />
-          <FilterSelect
+          <AdminFilterSelect
+            allValue=""
+            ariaLabel="Lọc trạng thái"
             label="Trạng thái"
             onChange={setStatus}
+            options={[
+              { value: "DRAFT", label: "Bản nháp" },
+              { value: "PUBLISHED", label: "Hiển thị" },
+              { value: "ARCHIVED", label: "Lưu trữ" },
+            ]}
             value={status}
-            values={["DRAFT", "PUBLISHED", "ARCHIVED"]}
           />
-        </div>
+        </AdminFilterBar>
         {loading ? (
           <div aria-busy="true" className="space-y-3 p-5">
             {Array.from({ length: 4 }, (_, index) => (
@@ -547,34 +570,6 @@ function PartWorkspace({
   );
 }
 
-function FilterSelect({
-  label,
-  onChange,
-  value,
-  values,
-}: {
-  label: string;
-  onChange: (value: string) => void;
-  value: string;
-  values: string[];
-}) {
-  return (
-    <select
-      aria-label={label}
-      className="h-10 rounded-lg border border-[var(--admin-border)] bg-white px-3 text-sm font-medium text-[var(--admin-ink-soft)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
-      onChange={(event) => onChange(event.target.value)}
-      value={value}
-    >
-      <option value="">{label}: Tất cả</option>
-      {values.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function EmptyPart({ definition }: { definition: (typeof parts)[number] }) {
   return (
     <div className="px-6 py-20 text-center">
@@ -606,13 +601,13 @@ function ItemTable({
       <table className="min-w-[920px] w-full text-left">
         <thead className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[10px] font-bold tracking-[0.11em] text-[var(--admin-muted)]">
           <tr>
-            <th className="px-5 py-3">MÃ</th>
-            <th className="px-5 py-3">NỘI DUNG</th>
-            <th className="px-5 py-3">DỮ LIỆU CHUNG</th>
-            <th className="px-5 py-3">SỐ CÂU</th>
-            <th className="px-5 py-3">CHỦ ĐỀ</th>
-            <th className="px-5 py-3">ĐỘ KHÓ</th>
-            <th className="px-5 py-3">TRẠNG THÁI</th>
+            <th className="px-5 py-3">Mã</th>
+            <th className="px-5 py-3">Nội dung</th>
+            <th className="px-5 py-3">Dữ liệu chung</th>
+            <th className="px-5 py-3">Số câu</th>
+            <th className="px-5 py-3">Chủ đề</th>
+            <th className="px-5 py-3">Độ khó</th>
+            <th className="px-5 py-3">Trạng thái</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--admin-border)]">
@@ -620,7 +615,7 @@ function ItemTable({
             const first = item.questions[0];
             return (
               <tr className="hover:bg-[var(--admin-row-hover)]" key={item.id}>
-                <td className="px-5 py-4 text-sm font-bold text-[var(--admin-brand-red)]">
+                <td className="whitespace-nowrap px-5 py-4 text-[13px] font-medium tabular-nums text-[var(--admin-ink-soft)]">
                   {item.code}
                 </td>
                 <td className="max-w-[380px] px-5 py-4">
@@ -640,17 +635,17 @@ function ItemTable({
                   {item.imageUrl ? " · Hình ảnh" : ""}
                 </td>
                 <td className="px-5 py-4">
-                  <span className="rounded-full bg-[var(--admin-nav-active)] px-2.5 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
+                  <span className="text-[13px] text-[var(--admin-ink-soft)]">
                     {item.questions.length} câu
                   </span>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="rounded-full bg-[var(--admin-surface-muted)] px-2.5 py-1 text-xs font-bold text-[var(--admin-ink-soft)]">
+                  <span className="text-[13px] text-[var(--admin-ink-soft)]">
                     {item.topic}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-xs font-bold text-[var(--admin-ink-soft)]">
-                  {item.difficulty}
+                <td className="px-5 py-4">
+                  <AdminDifficulty value={item.difficulty} />
                 </td>
                 <td className="px-5 py-4">
                   <StatusBadge status={item.status} />
@@ -680,12 +675,8 @@ function ImportPartModal({
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!file) {
-      setError("Hãy chọn file Excel .xlsx trước khi import.");
-      return;
-    }
+  async function submit() {
+    if (!file) return;
     setBusy(true);
     setError(null);
     try {
@@ -701,51 +692,32 @@ function ImportPartModal({
     }
   }
   return (
-    <Modal
+    <ExcelImportDialog
+      busy={busy}
+      canSubmit={Boolean(file)}
+      error={error}
       onClose={onClose}
-      subtitle="Workbook sẽ được kiểm tra theo cấu trúc của Part này trước khi lưu toàn bộ dữ liệu."
-      title={`Import Part ${definition.part} từ Excel`}
+      onSubmit={() => void submit()}
+      submitLabel={busy ? "Đang import…" : "Import"}
+      summary="File được kiểm tra theo cấu trúc của Part trước khi lưu."
+      templateHref={`/api/admin/lr-exercise-bank/templates/${definition.part}`}
+      title={`Import Part ${definition.part}`}
     >
-      <form onSubmit={submit}>
-        <a
-          className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--admin-brand-red)]/25 bg-[var(--admin-danger-soft)] px-3 py-3 text-sm font-bold text-[var(--admin-brand-red)] hover:underline"
-          href={`/api/admin/lr-exercise-bank/templates/${definition.part}`}
-        >
-          <ExamIcon className="size-4" name="file" /> Tải file mẫu Excel (.xlsx)
-        </a>
-        <label className="grid min-h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--admin-brand-orange)] bg-[var(--admin-surface-muted)] px-4 text-center">
-          <span>
-            <ExamIcon
-              className="mx-auto size-6 text-[var(--admin-brand-red)]"
-              name="upload"
-            />
-            <span className="mt-3 block text-sm font-bold text-[var(--admin-ink)]">
-              {file ? file.name : "Chọn file Excel (.xlsx)"}
-            </span>
-            <span className="mt-1 block text-xs text-[var(--admin-muted)]">
-              Dung lượng tối đa 10MB
-            </span>
-          </span>
-          <input
-            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            className="sr-only"
-            onChange={(event) =>
-              setFile(event.currentTarget.files?.[0] ?? null)
-            }
-            type="file"
-          />
-        </label>
-        {error && (
-          <p
-            className="mt-3 rounded-lg bg-[var(--admin-danger-soft)] p-3 text-sm text-[var(--admin-danger)]"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        <ModalFooter busy={busy} label="Tải lên và import" onClose={onClose} />
-      </form>
-    </Modal>
+      <ExcelFileSlot
+        busy={busy}
+        busyLabel="Đang import…"
+        file={file}
+        maxMb={10}
+        onReject={(message) => {
+          setFile(null);
+          setError(message);
+        }}
+        onSelect={(selected) => {
+          setFile(selected);
+          setError(null);
+        }}
+      />
+    </ExcelImportDialog>
   );
 }
 
@@ -1228,11 +1200,11 @@ function CompleteTests() {
             <table className="min-w-[800px] w-full text-left">
               <thead className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[10px] font-bold tracking-[0.11em] text-[var(--admin-muted)]">
                 <tr>
-                  <th className="px-5 py-3">MÃ ĐỀ</th>
-                  <th className="px-5 py-3">TÊN ĐỀ</th>
-                  <th className="px-5 py-3">PHẠM VI</th>
-                  <th className="px-5 py-3">CẬP NHẬT</th>
-                  <th className="px-5 py-3">TRẠNG THÁI</th>
+                  <th className="px-5 py-3">Mã đề</th>
+                  <th className="px-5 py-3">Tên đề</th>
+                  <th className="px-5 py-3">Phạm vi</th>
+                  <th className="px-5 py-3">Cập nhật</th>
+                  <th className="px-5 py-3">Trạng thái</th>
                   <th aria-label="Thao tác" className="px-5 py-3" />
                 </tr>
               </thead>
@@ -1242,7 +1214,7 @@ function CompleteTests() {
                     className="hover:bg-[var(--admin-row-hover)]"
                     key={item.revisionId}
                   >
-                    <td className="px-5 py-4 text-sm font-bold text-[var(--admin-brand-red)]">
+                    <td className="whitespace-nowrap px-5 py-4 text-[13px] font-medium tabular-nums text-[var(--admin-ink-soft)]">
                       {item.code}
                     </td>
                     <td className="px-5 py-4">
@@ -1254,7 +1226,7 @@ function CompleteTests() {
                       </p>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="rounded-full bg-[var(--admin-nav-active)] px-2.5 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
+                      <span className="text-[13px] text-[var(--admin-ink-soft)]">
                         Listening &amp; Reading
                       </span>
                     </td>
@@ -1415,18 +1387,13 @@ function ImportExamModal({
 }) {
   const [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const workbook = data.get("workbook");
-    if (!(workbook instanceof File)) {
-      setError("Chọn workbook XLSX trước khi import.");
-      return;
-    }
+  const [file, setFile] = useState<File | null>(null);
+  async function submit() {
+    if (!file) return;
     setBusy(true);
     setError(null);
     try {
-      onCreated(await importReadingExam(workbook));
+      onCreated(await importReadingExam(file));
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Không thể import đề thi.",
@@ -1436,67 +1403,39 @@ function ImportExamModal({
     }
   }
   return (
-    <Modal
+    <ExcelImportDialog
+      busy={busy}
+      canSubmit={Boolean(file)}
+      error={error}
       onClose={onClose}
-      subtitle="Workbook cần có Manifest, Blocks, ContextBlocks và Questions; master audio là bắt buộc."
-      title="Import đề thi hoàn chỉnh"
+      onSubmit={() => void submit()}
+      submitLabel={busy ? "Đang import…" : "Import và mở bản nháp"}
+      summary="Đề TOEIC hoàn chỉnh 200 câu từ một file."
+      templateHref="/api/admin/exams/import-template"
+      title="Import đề thi"
     >
-      <form onSubmit={submit}>
-        <div className="space-y-4">
-          <Link
-            className="flex items-center gap-2 rounded-lg border border-[var(--admin-brand-red)]/25 bg-[var(--admin-danger-soft)] px-3 py-3 text-sm font-bold text-[var(--admin-brand-red)] transition hover:bg-[var(--admin-nav-active)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
-            download
-            href="/api/admin/exams/import-template"
-            prefetch={false}
-          >
-            <ExamIcon className="size-4" name="file" /> Tải file Excel mẫu 200
-            câu
-          </Link>
-          <p className="-mt-2 text-xs leading-5 text-[var(--admin-muted)]">
-            Thay ScoreProfileId, các mã ImageAssetId ở Part 1 và nội dung mẫu
-            trước khi import. Audio Listening và ảnh bắt buộc sẽ được tải trong
-            workspace media sau khi import.
-          </p>
-          <FileField accept=".xlsx" label="Workbook XLSX" name="workbook" />
-        </div>
-        {error && (
-          <p
-            className="mt-3 rounded-lg bg-[var(--admin-danger-soft)] p-3 text-sm text-[var(--admin-danger)]"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        <ModalFooter
-          busy={busy}
-          label="Import và mở bản nháp"
-          onClose={onClose}
-        />
-      </form>
-    </Modal>
-  );
-}
-
-function FileField({
-  accept,
-  label,
-  name,
-}: {
-  accept: string;
-  label: string;
-  name: string;
-}) {
-  return (
-    <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
-      {label}
-      <input
-        accept={accept}
-        className="mt-2 block w-full rounded-lg border border-[var(--admin-border)] bg-white p-2 text-sm font-normal"
-        name={name}
-        required
-        type="file"
+      <ExcelFileSlot
+        busy={busy}
+        busyLabel="Đang import…"
+        file={file}
+        maxMb={10}
+        onReject={(message) => {
+          setFile(null);
+          setError(message);
+        }}
+        onSelect={(selected) => {
+          setFile(selected);
+          setError(null);
+        }}
       />
-    </label>
+      <ImportSpec
+        rows={[
+          ["Sheet", "Manifest, Blocks, ContextBlocks, Questions"],
+          ["Cần thay", "ScoreProfileId, ImageAssetId Part 1, nội dung mẫu"],
+          ["Audio, ảnh", "Tải trong workspace sau khi import"],
+        ]}
+      />
+    </ExcelImportDialog>
   );
 }
 

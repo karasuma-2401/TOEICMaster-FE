@@ -18,9 +18,7 @@ export function TestPreviewPanel({
         <h3 className="flex items-center gap-2 font-semibold">
           <MonitorIcon size={18} /> Live Preview
         </h3>
-        <Chip dot tone="success">
-          Đồng bộ
-        </Chip>
+        <Chip tone="success">Đồng bộ</Chip>
       </div>
       <section className="overflow-hidden rounded-[14px] border border-(--sp-line) bg-(--sp-surface)">
         <header className="flex justify-between border-b border-(--sp-line) px-4 py-2.5 text-xs">

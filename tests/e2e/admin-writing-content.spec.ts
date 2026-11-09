@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   MockWritingAdminBackend,
   FIXTURES_DIR,
+  chooseFilter,
   loginAsAdmin,
 } from "./admin-writing-helpers";
 
@@ -53,13 +54,12 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
 
     // Xóa tìm kiếm và lọc trạng thái
     await searchInput.clear();
-    const statusSelect = page.getByLabel("Lọc trạng thái");
-    await statusSelect.selectOption("DRAFT");
+    await chooseFilter(page, /^Lọc trạng thái/, "Bản nháp");
     await expect(
       page.getByText("Không tìm thấy bài tập phù hợp"),
     ).toBeVisible();
 
-    await statusSelect.selectOption("PUBLISHED");
+    await chooseFilter(page, /^Lọc trạng thái/, "Hiển thị");
     await expect(page.getByText("WP1-SEED-01")).toBeVisible();
   });
 

@@ -751,3 +751,9 @@ export class MockWritingAdminBackend {
 }
 
 export const FIXTURES_DIR = path.resolve(__dirname, "../fixtures/writing");
+
+/** Picks a value from a custom admin filter dropdown. */
+export async function chooseFilter(page: Page, name: RegExp, option: string) {
+  await page.getByRole("button", { name }).click();
+  await page.getByRole("button", { name: option, exact: true }).click();
+}

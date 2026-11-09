@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { difficultyLabel } from "@/features/speaking/admin-labels";
+import { AdminDifficulty } from "@/features/admin/components/content/admin-badges";
+import { AdminFilterSelect } from "@/features/admin/components/content/admin-filters";
 import {
   getSpeakingExercises,
   type SpeakingExerciseSummary,
@@ -21,11 +22,6 @@ import { Pagination } from "./ui/pagination";
 import { SpEmpty, SpError, SpLoading } from "./ui/primitives";
 
 const pageSize = 8;
-const difficultyDot: Record<SpeakingDifficulty, string> = {
-  EASY: "bg-(--sp-success-solid)",
-  MEDIUM: "bg-(--sp-warning-line)",
-  HARD: "bg-(--sp-danger-solid)",
-};
 
 const unique = (values: number[]) =>
   [...new Set(values)].map((value) => `${value}s`).join(" / ");
@@ -158,6 +154,11 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
           label="Tìm bài tập"
           onChange={resetting(setQuery)}
           placeholder="Tìm theo mã bài hoặc chủ đề…"
+          suggestions={exercises.map((item) => ({
+            value: item.code,
+            label: item.topic,
+            hint: item.code,
+          }))}
           value={query}
         />
         <FilterPills
@@ -172,17 +173,14 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
           value={difficulty}
         />
         {topics.length > 1 && (
-          <select
-            aria-label="Chủ đề"
-            className="sp-input min-h-11! w-auto! rounded-full!"
-            onChange={(event) => resetting(setTopic)(event.target.value)}
+          <AdminFilterSelect
+            allValue="ALL"
+            ariaLabel="Chủ đề"
+            label="Chủ đề"
+            onChange={resetting(setTopic)}
+            options={topics.map((item) => ({ value: item, label: item }))}
             value={topic}
-          >
-            <option value="ALL">Tất cả chủ đề</option>
-            {topics.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
+          />
         )}
       </div>
 
@@ -214,11 +212,8 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
                       {exercise.code}
                     </span>
                   </span>
-                  <span className="inline-flex w-28 items-center gap-2 text-[13px]">
-                    <span
-                      className={`size-2 rounded-full ${difficultyDot[exercise.difficulty]}`}
-                    />
-                    {difficultyLabel[exercise.difficulty]}
+                  <span className="w-28">
+                    <AdminDifficulty value={exercise.difficulty} />
                   </span>
                   <span className="w-24 text-[13px] text-(--sp-ink-2)">
                     {formatMinutes(exercise.durationSeconds)}

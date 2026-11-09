@@ -1,27 +1,22 @@
 import {
-  difficultyLabel,
   exerciseHeadline,
   exerciseStatusLabel,
 } from "@/features/speaking/admin-labels";
 import { speakingPartSpecs } from "@/features/speaking/part-specs";
-import type {
-  SpeakingDifficulty,
-  SpeakingExercise,
-} from "@/features/speaking/types";
+import type { SpeakingExercise } from "@/features/speaking/types";
+import {
+  AdminBadge,
+  AdminDifficulty,
+  type AdminBadgeTone,
+} from "@/features/admin/components/content/admin-badges";
 import { ArchiveIcon, PencilIcon } from "../ui/icons";
-import { Chip, type ChipTone } from "../ui/primitives";
 
-const statusTone: Record<SpeakingExercise["status"], ChipTone> = {
+const statusTone: Record<SpeakingExercise["status"], AdminBadgeTone> = {
   PUBLISHED: "success",
   DRAFT: "warning",
   ARCHIVED: "neutral",
 };
-const difficultyTone: Record<SpeakingDifficulty, ChipTone> = {
-  EASY: "success",
-  MEDIUM: "warning",
-  HARD: "danger",
-};
-const head = "sp-overline px-4 py-3 font-semibold text-(--sp-ink-3)";
+const head = "px-4 py-2.5";
 
 const seconds = (values: number[]) =>
   [...new Set(values)].map((value) => `${value} giây`).join(" / ");
@@ -40,14 +35,14 @@ export function SpeakingExerciseTable({
       <table className="w-full min-w-[900px] text-left text-sm">
         <thead className="bg-(--sp-subtle)">
           <tr>
-            <th className={head}>MÃ ID</th>
-            <th className={head}>NỘI DUNG (TRÍCH DẪN)</th>
-            <th className={head}>CHỦ ĐỀ</th>
-            <th className={head}>THỜI GIAN CHUẨN BỊ</th>
-            <th className={head}>THỜI GIAN NÓI</th>
-            <th className={head}>ĐỘ KHÓ</th>
-            <th className={head}>TRẠNG THÁI</th>
-            <th className={head}>THAO TÁC</th>
+            <th className={head}>Mã</th>
+            <th className={head}>Nội dung</th>
+            <th className={head}>Thời gian</th>
+            <th className={head}>Độ khó</th>
+            <th className={head}>Trạng thái</th>
+            <th className={head}>
+              <span className="sr-only">Thao tác</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -58,32 +53,30 @@ export function SpeakingExerciseTable({
                 className="border-t border-(--sp-line) hover:bg-(--sp-row-hover)"
                 key={exercise.id}
               >
-                <td className="px-4 py-3 font-semibold text-(--sp-crimson)">
+                <td className="whitespace-nowrap px-4 py-3 text-[13px] font-medium tabular-nums text-(--sp-ink-2)">
                   {exercise.code}
                 </td>
-                <td className="max-w-sm px-4 py-3">
+                <td className="max-w-md px-4 py-3">
                   <p className="line-clamp-2" lang="en">
                     {exerciseHeadline(exercise)}
                   </p>
+                  <p className="mt-0.5 text-xs text-(--sp-ink-3)">
+                    {exercise.topic}
+                  </p>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-[13px] text-(--sp-ink-2)">
+                  Chuẩn bị {seconds(spec.preparationSeconds)}
+                  <span className="block text-xs text-(--sp-ink-3)">
+                    Nói {seconds(spec.responseSeconds)}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
-                  <Chip tone="neutral">{exercise.topic}</Chip>
+                  <AdminDifficulty value={exercise.difficulty} />
                 </td>
                 <td className="px-4 py-3">
-                  <Chip tone="orange">{seconds(spec.preparationSeconds)}</Chip>
-                </td>
-                <td className="px-4 py-3">
-                  <Chip tone="orange">{seconds(spec.responseSeconds)}</Chip>
-                </td>
-                <td className="px-4 py-3">
-                  <Chip tone={difficultyTone[exercise.difficulty]}>
-                    {difficultyLabel[exercise.difficulty]}
-                  </Chip>
-                </td>
-                <td className="px-4 py-3">
-                  <Chip dot tone={statusTone[exercise.status]}>
+                  <AdminBadge tone={statusTone[exercise.status]}>
                     {exerciseStatusLabel[exercise.status]}
-                  </Chip>
+                  </AdminBadge>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">
                   <button

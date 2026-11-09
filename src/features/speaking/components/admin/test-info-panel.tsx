@@ -18,7 +18,7 @@ export function TestInfoPanel({
     <section className="sp-card p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold">Thông tin đề</h3>
-        <Chip dot tone={published ? "success" : "neutral"}>
+        <Chip tone={published ? "success" : "neutral"}>
           {published ? "Chính thức" : "Bản nháp"}
         </Chip>
       </div>

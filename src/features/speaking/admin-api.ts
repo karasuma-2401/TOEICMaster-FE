@@ -213,6 +213,33 @@ export async function createSpeakingTest(input: SpeakingTestInput) {
   );
 }
 
+export async function deleteSpeakingTest(
+  test: Pick<SpeakingTest, "id" | "version">,
+) {
+  await speakingRequest(
+    `${base}/tests/${encodeURIComponent(test.id)}?version=${test.version}`,
+    {
+      method: "DELETE",
+      refresh: true,
+      fallback: "Không thể xóa đề Speaking.",
+    },
+  );
+}
+
+/** Creates seven exercises and one draft test from an `.xlsx` workbook. */
+export async function importSpeakingTest(file: File) {
+  const form = new FormData();
+  form.set("file", file);
+  return parseTestDetail(
+    await speakingRequest(`${base}/tests/import`, {
+      method: "POST",
+      form,
+      refresh: true,
+      fallback: "Không thể import đề Speaking.",
+    }),
+  );
+}
+
 export async function updateSpeakingTest(
   id: string,
   version: number,

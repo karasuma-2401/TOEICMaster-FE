@@ -205,6 +205,11 @@ export function SpeakingLibrary() {
               setPage(1);
             }}
             placeholder="Tìm theo tên hoặc mã đề…"
+            suggestions={tests.map((test) => ({
+              value: test.code,
+              label: test.title,
+              hint: test.code,
+            }))}
             value={query}
           />
           <FilterPills

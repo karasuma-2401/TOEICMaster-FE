@@ -109,14 +109,16 @@ describe("DataBankCenter", () => {
       screen.getByRole("heading", { name: "Kho dữ liệu" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Listening & Reading.*7 Part/i }),
+      screen.getByRole("link", { name: /Listening & Reading/i }),
     ).toHaveAttribute("href", "/admin/exams");
-    expect(
-      screen.getByRole("link", { name: /Speaking.*5 Part/i }),
-    ).toHaveAttribute("href", "/admin/content/speaking");
-    expect(
-      screen.getByRole("link", { name: /Writing.*3 Part/i }),
-    ).toHaveAttribute("href", "/admin/content/writing");
+    expect(screen.getByRole("link", { name: /Speaking/i })).toHaveAttribute(
+      "href",
+      "/admin/content/speaking",
+    );
+    expect(screen.getByRole("link", { name: /Writing/i })).toHaveAttribute(
+      "href",
+      "/admin/content/writing",
+    );
     expect(screen.getByRole("link", { name: "Đề thi" })).toHaveAttribute(
       "href",
       "/admin/exams?tab=tests",
@@ -151,7 +153,7 @@ describe("DataBankCenter", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Import đề" }));
 
     expect(
-      await screen.findByRole("link", { name: /Tải file Excel mẫu/i }),
+      await screen.findByRole("link", { name: /Tải file mẫu/i }),
     ).toHaveAttribute("href", "/api/admin/exams/import-template");
   });
 
