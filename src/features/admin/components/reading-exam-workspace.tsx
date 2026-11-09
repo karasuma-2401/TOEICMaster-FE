@@ -63,7 +63,7 @@ function hasQuestionContent(question: ReadingQuestion) {
     question.optionA &&
     question.optionB &&
     question.optionC &&
-    question.optionD &&
+    (question.optionD || (question.number >= 7 && question.number <= 31)) &&
     question.correctKey,
   );
 }
@@ -76,7 +76,7 @@ export function ReadingExamWorkspace({
   revisionId: string;
 }) {
   const [revision, setRevision] = useState<ReadingRevision | null>(null);
-  const [selectedNumber, setSelectedNumber] = useState(101);
+  const [selectedNumber, setSelectedNumber] = useState(1);
   const [draft, setDraft] = useState<QuestionDraft | null>(null);
   const [contextDrafts, setContextDrafts] = useState<
     Record<string, ReadingBlock["contextBlocks"]>
@@ -101,13 +101,12 @@ export function ReadingExamWorkspace({
       .then((loaded) => {
         if (!active) return;
         setRevision(loaded);
-        const firstReadingQuestion = loaded.blocks
-          .filter((block) => block.part >= 5)
+        const firstExamQuestion = loaded.blocks
           .flatMap((block) => block.questions)
           .find(Boolean);
-        if (firstReadingQuestion) {
-          setSelectedNumber(firstReadingQuestion.number);
-          setDraft(toDraft(firstReadingQuestion));
+        if (firstExamQuestion) {
+          setSelectedNumber(firstExamQuestion.number);
+          setDraft(toDraft(firstExamQuestion));
         }
         setContextDrafts(
           Object.fromEntries(
@@ -136,10 +135,9 @@ export function ReadingExamWorkspace({
     };
   }, [examId, requestKey, revisionId]);
 
-  const readingBlocks =
-    revision?.blocks.filter((block) => block.part >= 5) ?? [];
+  const examBlocks = revision?.blocks ?? [];
   const selected = (() => {
-    for (const block of readingBlocks) {
+    for (const block of examBlocks) {
       const question = block.questions.find(
         (item) => item.number === selectedNumber,
       );
@@ -150,7 +148,7 @@ export function ReadingExamWorkspace({
 
   function selectQuestion(number: number) {
     setSelectedNumber(number);
-    const question = readingBlocks
+    const question = examBlocks
       .flatMap((block) => block.questions)
       .find((item) => item.number === number);
     if (question) setDraft(toDraft(question));
@@ -371,10 +369,10 @@ export function ReadingExamWorkspace({
       </div>
     );
 
-  const completeCount = readingBlocks
+  const completeCount = examBlocks
     .flatMap((block) => block.questions)
     .filter(hasQuestionContent).length;
-  const totalReading = readingBlocks.reduce(
+  const totalQuestions = examBlocks.reduce(
     (total, block) => total + block.questions.length,
     0,
   );
@@ -396,7 +394,7 @@ export function ReadingExamWorkspace({
     : revision.hasMasterAudio;
 
   return (
-    <div className="mx-auto max-w-[1560px]">
+    <div className="w-full">
       <Link
         className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--admin-muted)] transition hover:text-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
         href="/admin/exams"
@@ -404,11 +402,11 @@ export function ReadingExamWorkspace({
         <ExamIcon className="size-4" name="arrow-left" />
         Quay lại kho đề
       </Link>
-      <header className="mt-5 rounded-2xl border border-[var(--admin-border)] bg-[linear-gradient(110deg,#fffdfc,#fff5ee)] p-5 shadow-[0_15px_36px_rgb(73_43_31/4%)] lg:flex lg:items-center lg:justify-between lg:gap-6">
+      <header className="mt-4 border-b border-[var(--admin-border)] bg-white px-5 py-4 lg:flex lg:items-center lg:justify-between lg:gap-6">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-              READING · PART 5–7
+              EXAM BUILDER · LISTENING & READING
             </p>
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-bold ${isPublished ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
@@ -420,8 +418,8 @@ export function ReadingExamWorkspace({
             {revision.code}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-muted)]">
-            {revision.title} · Revision {revision.versionNumber} · quản lý riêng
-            100 câu Reading trong đề L&R.
+            {revision.title} · Revision {revision.versionNumber} · quản lý 200
+            câu và media của đề L&R.
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2 lg:mt-0">
@@ -448,23 +446,23 @@ export function ReadingExamWorkspace({
           </button>
         </div>
       </header>
-      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <main className="min-w-0 space-y-4">
-          <section className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
+      <div className="grid gap-0 border border-t-0 border-[var(--admin-border)] bg-white xl:grid-cols-[minmax(0,1fr)_330px]">
+        <main className="min-w-0 space-y-4 bg-[#f8fafc] p-5">
+          <section className="rounded-lg border border-[var(--admin-border)] bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold tracking-[0.12em] text-[var(--admin-brand-red)]">
-                  TIẾN ĐỘ READING
+                  TIẾN ĐỘ BIÊN SOẠN
                 </p>
                 <p className="mt-1 text-sm text-[var(--admin-muted)]">
-                  {completeCount}/{totalReading} câu Part 5–7 có nội dung và đáp
-                  án đầy đủ.
+                  {completeCount}/{totalQuestions} câu có nội dung và đáp án đầy
+                  đủ.
                 </p>
               </div>
               <strong className="text-xl text-[var(--admin-ink)]">
-                {totalReading === 0
+                {totalQuestions === 0
                   ? 0
-                  : Math.round((completeCount / totalReading) * 100)}
+                  : Math.round((completeCount / totalQuestions) * 100)}
                 %
               </strong>
             </div>
@@ -472,13 +470,13 @@ export function ReadingExamWorkspace({
               <div
                 className="admin-brand-gradient-fill h-full rounded-full"
                 style={{
-                  width: `${totalReading === 0 ? 0 : (completeCount / totalReading) * 100}%`,
+                  width: `${totalQuestions === 0 ? 0 : (completeCount / totalQuestions) * 100}%`,
                 }}
               />
             </div>
             <p className="mt-3 rounded-lg bg-[var(--admin-warning-soft)] px-3 py-2 text-xs leading-5 text-[var(--admin-warning)]">
-              Backend hiện xuất bản toàn bộ đề Listening & Reading. Reading hoàn
-              thiện vẫn cần phần Listening hợp lệ trước khi publish thành công.
+              Xuất bản chỉ khả dụng khi toàn bộ câu hỏi, barem và media bắt buộc
+              của đề L&R hợp lệ.
             </p>
             {revision.usesMediaWorkspace ? (
               <div className="mt-4 space-y-2">
@@ -571,13 +569,13 @@ export function ReadingExamWorkspace({
               onSaveContexts={() => void saveContexts()}
             />
           ) : (
-            <div className="rounded-2xl border border-dashed border-[var(--admin-border)] p-10 text-center text-sm text-[var(--admin-muted)]">
-              Revision chưa có câu Reading để chỉnh sửa.
+            <div className="rounded-lg border border-dashed border-[var(--admin-border)] p-10 text-center text-sm text-[var(--admin-muted)]">
+              Revision chưa có câu hỏi để chỉnh sửa.
             </div>
           )}
         </main>
         <QuestionMatrix
-          blocks={readingBlocks}
+          blocks={examBlocks}
           selectedNumber={selectedNumber}
           onSelect={selectQuestion}
         />
@@ -840,19 +838,19 @@ function QuestionMatrix({
   onSelect: (number: number) => void;
 }) {
   return (
-    <aside className="h-fit rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 xl:sticky xl:top-24">
+    <aside className="h-full border-l border-[var(--admin-border)] bg-white p-4 xl:sticky xl:top-[55px]">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold text-[var(--admin-ink)]">Ma trận Reading</h2>
+          <h2 className="font-bold text-[var(--admin-ink)]">Ma trận 200 câu</h2>
           <p className="mt-1 text-xs text-[var(--admin-muted)]">
-            100 câu · Part 5–7
+            Listening 1–100 · Reading 101–200
           </p>
         </div>
         <span className="grid size-9 place-items-center rounded-xl bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]">
           <ExamIcon className="size-5" name="spark" />
         </span>
       </div>
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-3">
         {blocks.map((block) => (
           <section key={block.key}>
             <div className="mb-2 flex items-center justify-between text-xs">
@@ -863,7 +861,7 @@ function QuestionMatrix({
                 {block.questions[0]?.number}–{block.questions.at(-1)?.number}
               </span>
             </div>
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-8 gap-1">
               {block.questions.map((question) => (
                 <button
                   aria-label={`Mở câu ${question.number}`}

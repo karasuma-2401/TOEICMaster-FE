@@ -51,29 +51,31 @@ export function ContentTabs({
           );
         })}
       </nav>
-      <nav
-        aria-label="Kỹ năng TOEIC"
-        className="mt-5 grid overflow-hidden rounded-2xl border border-[#f1d8ce] bg-[#fff7f2] p-1 sm:grid-cols-3"
-      >
-        {skills.map((item) => {
-          const active = item.id === skill;
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${adminFocus} ${active ? "admin-brand-gradient-fill text-white shadow-[0_8px_20px_rgb(236_37_27/22%)]" : "text-[var(--admin-muted)] hover:bg-white hover:text-[var(--admin-ink-soft)]"}`}
-              href={href(item.id, section)}
-              key={item.id}
-            >
-              <span>{item.label}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? "bg-white/20 text-white" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
+      {(section === "content" || skill !== "listening-reading") && (
+        <nav
+          aria-label="Kỹ năng TOEIC"
+          className="mt-5 grid overflow-hidden rounded-2xl border border-[#f1d8ce] bg-[#fff7f2] p-1 sm:grid-cols-3"
+        >
+          {skills.map((item) => {
+            const active = item.id === skill;
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${adminFocus} ${active ? "admin-brand-gradient-fill text-white shadow-[0_8px_20px_rgb(236_37_27/22%)]" : "text-[var(--admin-muted)] hover:bg-white hover:text-[var(--admin-ink-soft)]"}`}
+                href={href(item.id, section)}
+                key={item.id}
               >
-                {item.parts}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+                <span>{item.label}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? "bg-white/20 text-white" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
+                >
+                  {item.parts}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
