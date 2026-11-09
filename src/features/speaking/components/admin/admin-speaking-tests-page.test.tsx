@@ -8,7 +8,6 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  deleteSpeakingTest,
   getSpeakingAdminSummary,
   getSpeakingTestDetail,
   importSpeakingTest,
@@ -34,7 +33,6 @@ import { AdminSpeakingTestsPage } from "./admin-speaking-tests-page";
 
 vi.mock("@/features/speaking/admin-api", () => ({
   createSpeakingTest: vi.fn(),
-  deleteSpeakingTest: vi.fn(),
   getSpeakingAdminSummary: vi.fn(),
   getSpeakingTestDetail: vi.fn(),
   importSpeakingTest: vi.fn(),
@@ -81,6 +79,16 @@ function chooseFile(dialog: HTMLElement, file: File) {
 }
 
 describe("AdminSpeakingTestsPage", () => {
+  it("offers no way to delete a test", async () => {
+    render(<AdminSpeakingTestsPage />);
+    await screen.findByText("Practice Test 03");
+
+    expect(screen.getByRole("button", { name: /^Xem / })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: /^Xóa / }),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens a test read-only from the view action", async () => {
     render(<AdminSpeakingTestsPage />);
     fireEvent.click(await screen.findByRole("button", { name: /^Xem SPK/ }));
@@ -96,19 +104,6 @@ describe("AdminSpeakingTestsPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("deletes a draft after confirmation and reloads the list", async () => {
-    vi.mocked(deleteSpeakingTest).mockResolvedValue(undefined);
-    render(<AdminSpeakingTestsPage />);
-    fireEvent.click(await screen.findByRole("button", { name: /^Xóa / }));
-    expect(deleteSpeakingTest).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Xóa đề" }));
-
-    await vi.waitFor(() => expect(listSpeakingTests).toHaveBeenCalledTimes(2));
-    expect(deleteSpeakingTest).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText(/^Đã xóa /)).toBeInTheDocument();
-  });
-
   it("suggests matching tests while searching", async () => {
     render(<AdminSpeakingTestsPage />);
     await screen.findByText("Practice Test 03");
@@ -121,7 +116,7 @@ describe("AdminSpeakingTestsPage", () => {
     expect(search).not.toHaveValue("");
   });
 
-  it("keeps edit and delete locked on published tests", async () => {
+  it("locks editing on published tests", async () => {
     vi.mocked(listSpeakingTests).mockResolvedValue(
       pageDto([
         parseTestListItem(
@@ -132,7 +127,6 @@ describe("AdminSpeakingTestsPage", () => {
     render(<AdminSpeakingTestsPage />);
 
     expect(await screen.findByRole("button", { name: /^Sửa / })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Xóa / })).toBeDisabled();
     expect(screen.getByRole("button", { name: /^Xem / })).toBeEnabled();
   });
 

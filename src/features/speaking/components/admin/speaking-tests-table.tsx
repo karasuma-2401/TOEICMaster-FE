@@ -1,6 +1,6 @@
 import { AdminBadge } from "@/features/admin/components/content/admin-badges";
 import { formatDate } from "../ui/format";
-import { EyeIcon, PencilIcon, TrashIcon } from "../ui/icons";
+import { EyeIcon, PencilIcon } from "../ui/icons";
 import type { SpeakingTestListItem } from "@/features/speaking/parsers";
 
 const head = "px-4 py-2.5";
@@ -11,12 +11,10 @@ export function SpeakingTestsTable({
   tests,
   onOpen,
   onView,
-  onDelete,
 }: {
   tests: SpeakingTestListItem[];
   onOpen: (test: SpeakingTestListItem) => void;
   onView: (test: SpeakingTestListItem) => void;
-  onDelete: (test: SpeakingTestListItem) => void;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -87,16 +85,6 @@ export function SpeakingTestsTable({
                     type="button"
                   >
                     <PencilIcon size={18} />
-                  </button>
-                  <button
-                    aria-label={`Xóa ${test.code}`}
-                    className={`${action} ml-1 enabled:hover:text-(--sp-danger)`}
-                    disabled={published}
-                    onClick={() => onDelete(test)}
-                    title={published ? "Đề đã công bố không thể xóa" : "Xóa đề"}
-                    type="button"
-                  >
-                    <TrashIcon size={18} />
                   </button>
                 </td>
               </tr>

@@ -8,12 +8,7 @@ import {
 } from "@/features/admin/components/content/admin-filters";
 import { AdminNotice } from "@/features/admin/components/content/admin-page-header";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
-import {
-  deleteSpeakingTest,
-  listSpeakingTests,
-} from "@/features/speaking/admin-api";
-import { SpeakingApiError } from "@/features/speaking/http";
-import { ConfirmDialog } from "@/shared/components/practice/confirm-dialog";
+import { listSpeakingTests } from "@/features/speaking/admin-api";
 import type { SpeakingTestListItem } from "@/features/speaking/parsers";
 import type { Page, SpeakingTestStatus } from "@/features/speaking/types";
 import { Chip } from "../ui/primitives";
@@ -40,8 +35,6 @@ export function AdminSpeakingTestsPage() {
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
-  const [deleting, setDeleting] = useState<SpeakingTestListItem | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -92,24 +85,6 @@ export function AdminSpeakingTestsPage() {
     setViewOnly(view);
     setEditing(testId);
   };
-  const confirmDelete = async () => {
-    if (!deleting) return;
-    const target = deleting;
-    setDeleting(null);
-    setActionError(null);
-    try {
-      await deleteSpeakingTest(target);
-      setNotice(`Đã xóa ${target.code}.`);
-      reload();
-    } catch (cause) {
-      setNotice("");
-      setActionError(
-        cause instanceof SpeakingApiError && cause.status === 405
-          ? "Máy chủ chưa hỗ trợ xóa đề Speaking."
-          : errorMessage(cause, "Không thể xóa đề Speaking."),
-      );
-    }
-  };
 
   return (
     <div>
@@ -135,11 +110,6 @@ export function AdminSpeakingTestsPage() {
         </button>
       </div>
       {notice && <AdminNotice>{notice}</AdminNotice>}
-      {actionError && (
-        <p className="mt-4 text-sm font-medium text-(--sp-danger)" role="alert">
-          {actionError}
-        </p>
-      )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[22px] font-semibold">Danh sách đề Speaking</h2>
         <Chip tone="speak">11 câu · ~20 phút · Thang 200</Chip>
@@ -179,7 +149,6 @@ export function AdminSpeakingTestsPage() {
         />
         {!error && page && items.length > 0 && (
           <SpeakingTestsTable
-            onDelete={setDeleting}
             onOpen={(test) => open(test.id)}
             onView={(test) => open(test.id, true)}
             tests={items}
@@ -230,18 +199,6 @@ export function AdminSpeakingTestsPage() {
           testId={editing}
           viewOnly={viewOnly}
         />
-      )}
-      {deleting && (
-        <ConfirmDialog
-          confirmLabel="Xóa đề"
-          id="delete-speaking-test"
-          onCancel={() => setDeleting(null)}
-          onConfirm={() => void confirmDelete()}
-          title={`Xóa ${deleting.code}?`}
-        >
-          Bản nháp “{deleting.title}” sẽ bị xóa vĩnh viễn và không thể khôi
-          phục.
-        </ConfirmDialog>
       )}
     </div>
   );
