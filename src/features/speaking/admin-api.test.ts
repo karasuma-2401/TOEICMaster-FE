@@ -75,7 +75,11 @@ describe("Speaking admin API", () => {
   it("sends direct test content without creating exercise-bank references", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       Response.json(
-        testDetailDto({ contentMode: "DIRECT", exercises: [], questions: [] }),
+        testDetailDto({
+          contentMode: "DIRECT",
+          exercises: [],
+          questions: [],
+        }),
       ),
     );
     vi.stubGlobal("fetch", fetchMock);
