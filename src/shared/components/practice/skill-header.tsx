@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandMark } from "@/features/user/components/brand-mark";
+import { HeaderMenu } from "./header-menu";
 import { focusRing, pageContainer, wideContainer } from "./styles";
 
 // Each skill page has its own switch between tests and exercises.
@@ -38,15 +39,25 @@ export function SkillHeader({
           <BrandMark className="h-8 w-8" />
           TOEICMaster
         </Link>
-        <div className="order-last col-span-2 min-w-0 lg:order-none lg:col-span-1">
-          {center ?? (
-            <nav aria-label="Luyện tập" className="flex gap-1 overflow-x-auto">
+        {center && (
+          <div className="order-last col-span-2 min-w-0 lg:order-none lg:col-span-1">
+            {center}
+          </div>
+        )}
+        <HeaderMenu>
+          <div
+            className={`min-w-0 md:order-last md:col-span-2 lg:order-none lg:col-span-1 ${center ? "md:hidden" : ""}`}
+          >
+            <nav
+              aria-label="Luyện tập"
+              className="flex flex-col gap-1 md:flex-row md:overflow-x-auto"
+            >
               {navigation.map((item) => {
                 const current = item.id === active;
                 return (
                   <Link
                     aria-current={current ? "page" : undefined}
-                    className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-[15px] transition hover:text-[#df5a28] ${focusRing} ${current ? "font-semibold text-[#df5a28]" : "text-[#4a4541]"}`}
+                    className={`whitespace-nowrap rounded-lg px-3.5 py-3 text-base transition hover:text-[#df5a28] md:py-2 md:text-[15px] ${focusRing} ${current ? "bg-[#fff1ea] font-semibold text-[#df5a28] md:bg-transparent" : "text-[#4a4541]"}`}
                     href={item.href}
                     key={item.id}
                   >
@@ -55,9 +66,11 @@ export function SkillHeader({
                 );
               })}
             </nav>
-          )}
-        </div>
-        <div className="justify-self-end">{account}</div>
+          </div>
+          <div className="border-t border-[#ece9e5] pt-5 md:justify-self-end md:border-0 md:pt-0">
+            {account}
+          </div>
+        </HeaderMenu>
       </div>
     </header>
   );
