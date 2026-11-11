@@ -1,44 +1,72 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { difficultyLabel } from "@/features/speaking/admin-labels";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  getSpeakingAttempts,
   getSpeakingExercises,
+  type SpeakingAttemptSummary,
   type SpeakingExerciseSummary,
 } from "@/features/speaking/api";
+import { speakingPartSpecs } from "@/features/speaking/part-specs";
+import { speakingParts, type SpeakingPart } from "@/features/speaking/types";
 import {
-  partTimingLabel,
-  speakingPartSpecs,
-} from "@/features/speaking/part-specs";
-import type { SpeakingPart } from "@/features/speaking/types";
+  ExamLibrary,
+  type ExamLibrarySkill,
+} from "@/shared/components/practice/exam-library";
 import {
-  BackLink,
-  CountBadge,
-  PageIntro,
-  SectionHeading,
-} from "@/shared/components/practice/page-intro";
-import { PracticePage } from "@/shared/components/practice/practice-page";
-import {
-  EmptyPanel,
-  ErrorPanel,
-  LoadingPanel,
-} from "@/shared/components/practice/state-panels";
-import { TestCard } from "@/shared/components/practice/test-card";
+  difficultyLabels,
+  summarizeExamAttempts,
+} from "@/shared/components/practice/exam-library-model";
 import { formatMinutes } from "@/shared/ui/format-time";
 import { SpeakingHeader } from "./speaking-header";
 
+const unique = (values: number[]) =>
+  [...new Set(values)].map((value) => `${value}s`).join(" / ");
+
+const partLinks = (part: SpeakingPart) =>
+  speakingParts.map((item) => ({
+    href: `/speaking/parts/${item}`,
+    label: `Part ${item} · ${speakingPartSpecs[item].subtitle}`,
+    active: item === part,
+  }));
+
+function skillFor(part: SpeakingPart): ExamLibrarySkill {
+  const spec = speakingPartSpecs[part];
+  return {
+    id: "speaking",
+    name: "Speaking",
+    tagline: spec.description,
+    format: [
+      ...(spec.readingSeconds ? [`Đọc tài liệu ${spec.readingSeconds}s`] : []),
+      `Chuẩn bị ${unique(spec.preparationSeconds)}`,
+      `Trả lời ${unique(spec.responseSeconds)}`,
+      `Part ${part}`,
+    ].join(" · "),
+    maxScore: 200,
+    examHref: "/speaking",
+    exerciseHref: "/speaking/parts/1",
+  };
+}
+
 /** Published exercises of one Part; each can be practised on its own. */
 export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
-  const spec = speakingPartSpecs[part];
   const [exercises, setExercises] = useState<SpeakingExerciseSummary[]>([]);
+  const [attempts, setAttempts] = useState<SpeakingAttemptSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   const load = useCallback(
     async (signal?: AbortSignal) => {
       setLoading(true);
       setError(null);
       try {
-        setExercises(await getSpeakingExercises(part, signal));
+        const [nextExercises, nextAttempts] = await Promise.all([
+          getSpeakingExercises(part, signal),
+          // Results are an extra: the list stays usable without them.
+          getSpeakingAttempts(signal).catch(() => []),
+        ]);
+        setExercises(nextExercises);
+        setAttempts(nextAttempts);
       } catch (cause) {
         if (signal?.aborted) return;
         setError(
@@ -61,57 +89,45 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
     };
   }, [load]);
 
-  return (
-    <PracticePage header={<SpeakingHeader />}>
-      <BackLink href="/speaking" label="Quay lại thư viện Speaking" />
-      <PageIntro
-        description={`${spec.description} ${partTimingLabel(part)}.`}
-        eyebrow={`TOEIC SPEAKING · PART ${part}`}
-        title={`${spec.subtitle} (${spec.title})`}
-      />
+  const items = useMemo(() => {
+    // Opening a practice page creates an attempt with no recording; those are not real tries.
+    const results = summarizeExamAttempts(
+      attempts.flatMap((attempt) =>
+        attempt.exerciseId &&
+        attempt.status === "SUBMITTED" &&
+        attempt.recordedCount !== 0
+          ? [{ id: attempt.exerciseId, score: attempt.estimatedScore }]
+          : [],
+      ),
+    );
+    return exercises.map((exercise) => ({
+      id: exercise.id,
+      code: exercise.code,
+      title: exercise.topic,
+      badge: `Part ${part} · ${difficultyLabels[exercise.difficulty]}`,
+      meta: `${exercise.questionCount} câu · ~${formatMinutes(exercise.durationSeconds)} · 0–200 điểm`,
+      action: {
+        href: `/speaking/exercises/${encodeURIComponent(exercise.id)}/practice`,
+      },
+      sortKey: exercise.updatedAtUtc,
+      difficulty: exercise.difficulty,
+      attemptCount: results.get(exercise.id)?.attemptCount ?? 0,
+      bestScore: results.get(exercise.id)?.bestScore ?? null,
+    }));
+  }, [exercises, attempts, part]);
 
-      <section aria-labelledby="speaking-part-exercises" className="mt-10">
-        <SectionHeading
-          aside={
-            !loading && !error ? (
-              <CountBadge>{exercises.length} bài</CountBadge>
-            ) : undefined
-          }
-          description="Mỗi bài có pha chuẩn bị và pha trả lời tính giờ như bài thi thật."
-          id="speaking-part-exercises"
-          title="Chọn bài để luyện"
-        />
-        {loading && <LoadingPanel label="Đang tải bài tập…" />}
-        {error && <ErrorPanel message={error} onRetry={() => void load()} />}
-        {!loading && !error && exercises.length === 0 && (
-          <EmptyPanel
-            description="Admin cần tạo và hiển thị bài tập cho Part này."
-            title={`Chưa có bài tập Part ${part}`}
-          />
-        )}
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          {exercises.map((exercise) => (
-            <TestCard
-              actionLabel="Bắt đầu luyện"
-              code={exercise.code}
-              description={spec.description}
-              href={`/speaking/exercises/${encodeURIComponent(exercise.id)}/practice`}
-              key={exercise.id}
-              stats={[
-                {
-                  label: "Độ khó",
-                  value: difficultyLabel[exercise.difficulty],
-                },
-                {
-                  label: "Thời lượng",
-                  value: `${exercise.questionCount} câu · ${formatMinutes(exercise.durationSeconds)}`,
-                },
-              ]}
-              title={exercise.topic}
-            />
-          ))}
-        </div>
-      </section>
-    </PracticePage>
+  return (
+    <ExamLibrary
+      emptyDescription="Admin cần công bố bài tập cho Part này."
+      emptyTitle={`Chưa có bài tập ở Part ${part}`}
+      error={error}
+      header={<SpeakingHeader wide />}
+      items={items}
+      kind="exercise"
+      loading={loading}
+      onRetry={() => void load()}
+      partLinks={partLinks(part)}
+      skill={skillFor(part)}
+    />
   );
 }

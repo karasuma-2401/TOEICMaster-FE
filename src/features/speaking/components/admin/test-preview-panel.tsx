@@ -1,68 +1,57 @@
-import { AdminPanel } from "@/features/admin/components/content/admin-workspace";
-import {
-  partQuestionCount,
-  speakingPartSpecs,
-} from "@/features/speaking/part-specs";
-import {
-  speakingParts,
-  type SpeakingExercise,
-  type SpeakingTest,
-} from "@/features/speaking/types";
+import type { SpeakingExercise } from "@/features/speaking/types";
 import { SpeakingPrompt } from "../prompts/speaking-prompt";
+import { LinkIcon, MonitorIcon } from "../ui/icons";
+import { Chip } from "../ui/primitives";
 
-/** Right column of the test editor: test outline plus the focused exercise. */
+/** Right column of the builder: the focused exercise as learners see it. */
 export function TestPreviewPanel({
-  test,
   focusedId,
   lookup,
 }: {
-  test: Pick<SpeakingTest, "title" | "description" | "exerciseIds">;
   focusedId: string | null;
   lookup: (id: string) => SpeakingExercise | undefined;
 }) {
   const exercise = focusedId ? lookup(focusedId) : undefined;
   return (
-    <div className="space-y-6 xl:sticky xl:top-0">
-      <AdminPanel
-        description={test.description || "Chưa có mô tả cho đề Speaking này."}
-        title={test.title || "Chưa đặt tên đề"}
-      >
-        <ol className="space-y-2">
-          {speakingParts.map((part) => (
-            <li
-              className="flex items-center justify-between gap-3 rounded-xl bg-[var(--admin-surface-muted)] px-3 py-2 text-sm"
-              key={part}
-            >
-              <span className="font-semibold">
-                Part {part} · {speakingPartSpecs[part].subtitle}
-              </span>
-              <span className="text-xs text-[var(--admin-muted)]">
-                {test.exerciseIds[part].filter(Boolean).length}/
-                {speakingPartSpecs[part].slots} bài · {partQuestionCount(part)}{" "}
-                câu
-              </span>
-            </li>
-          ))}
-        </ol>
-      </AdminPanel>
-      <AdminPanel
-        description={
-          exercise
-            ? `${exercise.code} · ${exercise.topic}`
-            : "Bấm “Xem” ở một vị trí để xem bài như User nhìn thấy."
-        }
-        title="Góc nhìn User"
-      >
-        {exercise ? (
-          <div className="rounded-xl bg-stone-50 p-4 text-slate-900">
-            <SpeakingPrompt content={exercise} showAllQuestions />
+    <div className="space-y-3 xl:sticky xl:top-0">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 font-semibold">
+          <MonitorIcon size={18} /> Live Preview
+        </h3>
+        <Chip tone="success">Đồng bộ</Chip>
+      </div>
+      <section className="overflow-hidden rounded-[14px] border border-(--sp-line) bg-(--sp-surface)">
+        <header className="flex justify-between border-b border-(--sp-line) px-4 py-2.5 text-xs">
+          <b className="font-semibold">TOEICMaster</b>
+          <span className="text-(--sp-ink-3)">Góc nhìn thí sinh</span>
+        </header>
+        <div className="p-4">
+          {exercise ? (
+            <SpeakingPrompt
+              content={exercise}
+              showAllQuestions
+              showDirections={false}
+            />
+          ) : (
+            <p className="p-8 text-center text-[13px] text-(--sp-ink-3)">
+              Chưa chọn bài để xem trước.
+            </p>
+          )}
+        </div>
+      </section>
+      {exercise && (
+        <div className="sp-card flex items-center gap-2 p-3 text-[13px]">
+          <LinkIcon className="text-(--sp-brand)" size={16} />
+          <div>
+            <p>
+              {exercise.code} · {exercise.topic}
+            </p>
+            <p className="text-xs text-(--sp-ink-3)">
+              Bản xem trước tĩnh · Không ghi âm thật
+            </p>
           </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-[var(--admin-border)] p-8 text-center text-sm text-[var(--admin-muted)]">
-            Chưa chọn bài để xem trước.
-          </p>
-        )}
-      </AdminPanel>
+        </div>
+      )}
     </div>
   );
 }

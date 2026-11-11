@@ -12,7 +12,7 @@ export function PracticePage({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-[radial-gradient(ellipse_at_top,rgb(255_237_213/0.55),transparent_60%)] bg-stone-50 text-slate-900">
+    <div className="min-h-dvh bg-[#f7f6f4] text-slate-900">
       {header}
       <main className={`${pageContainer} ${className}`}>{children}</main>
     </div>

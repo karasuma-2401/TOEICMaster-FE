@@ -5,6 +5,18 @@ import {
   AdminNotice,
   AdminPageHeader,
 } from "@/features/admin/components/content/admin-page-header";
+import { AdminBadge } from "@/features/admin/components/content/admin-badges";
+import {
+  AdminFilterBar,
+  AdminFilterSelect,
+  AdminSearchField,
+} from "@/features/admin/components/content/admin-filters";
+import {
+  ExcelFileSlot,
+  ExcelImportDialog,
+  ImportImageId,
+  ImportSpec,
+} from "@/features/admin/components/content/admin-excel-import";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import {
   createWritingTest,
@@ -185,111 +197,70 @@ function ImportTest({
     }
   };
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/40 p-4">
-      <dialog
-        open
-        aria-modal="true"
-        aria-label="Import đề Writing"
-        className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
-      >
-        <h2 className="text-xl font-bold">Import Excel đề Writing</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          1. Tải file mẫu và điền 4 sheet: Manifest, Part1, Part2 và Part3. 2.
-          Tải ảnh Part 1 lên và điền ImageAssetId vào file. 3. Chọn file để kiểm
-          tra trước khi import.
-        </p>
-        <a
-          className="mt-3 inline-block text-sm font-semibold text-orange-700 underline"
-          href="/api/admin/writing/tests/import-template"
-          download="writing-test-template.xlsx"
-        >
-          Tải file mẫu
-        </a>
-        <label className="mt-4 block rounded-xl border border-[var(--admin-border)] bg-stone-50 p-4 text-sm font-semibold">
-          Tải ảnh Part 1 để lấy ImageAssetId
-          <input
-            className={inputClass}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            disabled={busy}
-            onChange={(event) => {
-              const selected = event.target.files?.[0];
-              if (!selected) return;
-              setBusy(true);
-              void uploadWritingImage(selected)
-                .then((asset) => {
-                  setImageId(asset.id);
-                  setError("");
-                })
-                .catch((cause: unknown) =>
-                  setError(
-                    cause instanceof Error
-                      ? cause.message
-                      : "Không thể tải ảnh.",
-                  ),
-                )
-                .finally(() => setBusy(false));
-            }}
-          />
-        </label>
-        {imageId && (
-          <p className="mt-2 break-all text-sm">
-            ImageAssetId: <code>{imageId}</code>
-          </p>
-        )}
-        <p className="mt-2 text-xs text-slate-600">
-          SequenceNumber: 1–5 cho Part 1, 6–7 cho Part 2 và 8 cho Part 3.
-        </p>
-        <label className="mt-4 block rounded-xl border-2 border-dashed border-orange-200 bg-orange-50/50 p-4 text-sm font-semibold">
-          Chọn file .xlsx
-          <input
-            className={inputClass}
-            type="file"
-            accept=".xlsx"
-            disabled={busy}
-            onChange={(event) => {
-              const selected = event.target.files?.[0];
-              if (selected) void validate(selected);
-            }}
-          />
-        </label>
-        {preview && (
-          <output className="mt-4 block rounded-lg bg-slate-50 p-3 text-sm">
-            {preview.isValid ? (
-              "File hợp lệ, sẵn sàng tạo bản nháp."
-            ) : (
-              <ul className="list-disc pl-5">
-                {preview.errors.map((message) => (
-                  <li key={message}>{message}</li>
-                ))}
-              </ul>
-            )}
-          </output>
-        )}
-        {error && (
-          <p className="mt-3 text-sm text-red-700" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="mt-5 flex justify-end gap-3">
-          <button
-            className="rounded-lg border border-[var(--admin-border)] px-4 py-2"
-            onClick={onClose}
-            type="button"
-          >
-            Hủy
-          </button>
-          <button
-            className="rounded-lg bg-orange-600 px-4 py-2 font-bold text-white disabled:opacity-50"
-            disabled={!preview?.isValid || busy}
-            onClick={() => void commit()}
-            type="button"
-          >
-            Import bản nháp
-          </button>
-        </div>
-      </dialog>
-    </div>
+    <ExcelImportDialog
+      ariaLabel="Import đề Writing"
+      busy={busy}
+      canSubmit={Boolean(preview?.isValid)}
+      error={error}
+      onClose={onClose}
+      onSubmit={() => void commit()}
+      submitLabel="Import bản nháp"
+      summary="Kiểm tra file trước khi tạo đề nháp."
+      templateHref="/api/admin/writing/tests/import-template"
+      title="Import Excel đề Writing"
+    >
+      <ExcelFileSlot
+        busy={busy}
+        file={file}
+        maxMb={10}
+        onReject={(message) => {
+          setFile(null);
+          setPreview(null);
+          setError(message);
+        }}
+        onSelect={(selected) => void validate(selected)}
+      />
+      {preview && (
+        <output className="block text-[13px]">
+          {preview.isValid ? (
+            <span className="text-[var(--admin-success)]">
+              File hợp lệ, sẵn sàng tạo bản nháp.
+            </span>
+          ) : (
+            <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-[var(--admin-danger)]">
+              {preview.errors.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          )}
+        </output>
+      )}
+      <ImportSpec
+        rows={[
+          ["Sheet", "Manifest, Part1, Part2, Part3"],
+          ["Thứ tự câu", "Part 1: 1–5 · Part 2: 6–7 · Part 3: 8"],
+        ]}
+      />
+      <ImportImageId
+        disabled={busy}
+        id={imageId}
+        label="Ảnh Part 1 cần ImageAssetId"
+        onSelect={(selected) => {
+          setBusy(true);
+          void uploadWritingImage(selected)
+            .then((asset) => {
+              setImageId(asset.id);
+              setError("");
+            })
+            .catch((cause: unknown) =>
+              setError(
+                cause instanceof Error ? cause.message : "Không thể tải ảnh.",
+              ),
+            )
+            .finally(() => setBusy(false));
+        }}
+      />
+    </ExcelImportDialog>
   );
 }
 
@@ -819,32 +790,37 @@ export function AdminWritingTestsLive() {
           {error}
         </p>
       )}
-      <div className="mt-5 flex flex-wrap gap-3">
-        <input
-          aria-label="Tìm đề Writing"
-          className="rounded-lg border border-[var(--admin-border)] bg-white p-2"
-          placeholder="Tìm mã hoặc tên đề"
+      <AdminFilterBar className="mt-5">
+        <AdminSearchField
+          label="Tìm đề Writing"
+          onChange={(next) => {
+            setQuery(next);
+            setPage(1);
+          }}
+          placeholder="Tìm theo mã hoặc tên đề"
+          suggestions={tests.map((test) => ({
+            value: test.code,
+            label: test.title,
+            hint: test.code,
+          }))}
           value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(1);
-          }}
         />
-        <select
-          aria-label="Lọc trạng thái đề"
-          className="rounded-lg border border-[var(--admin-border)] bg-white p-2"
-          value={status}
-          onChange={(event) => {
-            setStatus(event.target.value);
+        <AdminFilterSelect
+          allValue=""
+          ariaLabel="Lọc trạng thái đề"
+          label="Trạng thái"
+          onChange={(next) => {
+            setStatus(next);
             setPage(1);
           }}
-        >
-          <option value="">Tất cả trạng thái</option>
-          <option value="DRAFT">Bản nháp</option>
-          <option value="PUBLISHED">Đã công bố</option>
-          <option value="ARCHIVED">Đã lưu trữ</option>
-        </select>
-      </div>
+          options={[
+            { value: "DRAFT", label: "Bản nháp" },
+            { value: "PUBLISHED", label: "Đã công bố" },
+            { value: "ARCHIVED", label: "Đã lưu trữ" },
+          ]}
+          value={status}
+        />
+      </AdminFilterBar>
       <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <table className="w-full min-w-[600px] text-left text-sm">
           <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
@@ -866,11 +842,17 @@ export function AdminWritingTestsLive() {
                 <td>{test.title}</td>
                 <td>{test.questions.length}/8</td>
                 <td>
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : test.status === "DRAFT" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                  <AdminBadge
+                    tone={
+                      test.status === "PUBLISHED"
+                        ? "success"
+                        : test.status === "DRAFT"
+                          ? "warning"
+                          : "neutral"
+                    }
                   >
                     {testStatusLabel[test.status]}
-                  </span>
+                  </AdminBadge>
                 </td>
                 <td>
                   <button

@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminFilterSelect } from "@/features/admin/components/content/admin-filters";
 import { useState } from "react";
 import {
   adminGradient,
@@ -137,44 +138,36 @@ export function SpeakingExerciseEditor({
                   value={draft.topic}
                 />
               </label>
-              <label className="text-sm font-semibold">
+              <div className="text-sm font-semibold">
                 Độ khó
-                <select
-                  className={adminInput}
-                  onChange={(event) =>
-                    update(
-                      "difficulty",
-                      event.target.value as SpeakingDraft["difficulty"],
-                    )
+                <AdminFilterSelect
+                  ariaLabel="Độ khó"
+                  onChange={(value: SpeakingDraft["difficulty"]) =>
+                    update("difficulty", value)
                   }
+                  options={difficultyOptions.map((value) => ({
+                    value,
+                    label: difficultyLabel[value],
+                  }))}
                   value={draft.difficulty}
-                >
-                  {difficultyOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {difficultyLabel[item]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-semibold">
+                  variant="field"
+                />
+              </div>
+              <div className="text-sm font-semibold">
                 Trạng thái
-                <select
-                  className={adminInput}
-                  onChange={(event) =>
-                    update(
-                      "status",
-                      event.target.value as SpeakingDraft["status"],
-                    )
+                <AdminFilterSelect
+                  ariaLabel="Trạng thái"
+                  onChange={(value: SpeakingDraft["status"]) =>
+                    update("status", value)
                   }
+                  options={exerciseStatusOptions.map((value) => ({
+                    value,
+                    label: exerciseStatusLabel[value],
+                  }))}
                   value={draft.status}
-                >
-                  {exerciseStatusOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {exerciseStatusLabel[item]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  variant="field"
+                />
+              </div>
             </div>
           </AdminPanel>
           <AdminPanel description={spec.description} title="Nội dung đề">

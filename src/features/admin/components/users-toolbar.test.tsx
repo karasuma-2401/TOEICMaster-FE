@@ -25,9 +25,8 @@ describe("UsersToolbar", () => {
     fireEvent.change(screen.getByRole("searchbox"), {
       target: { value: "Mai" },
     });
-    fireEvent.change(screen.getByLabelText("Lọc theo vai trò"), {
-      target: { value: "ADMIN" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: /^Lọc theo vai trò/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Admin" }));
     act(() => vi.advanceTimersByTime(299));
     expect(onSearch).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));

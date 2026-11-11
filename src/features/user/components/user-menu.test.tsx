@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { UserMenu } from "./user-menu";
@@ -61,8 +67,8 @@ describe("UserMenu", () => {
 
     await user.click(avatarBtn);
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Nguyễn Văn A")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Nguyễn Văn A")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Đóng" }));
 

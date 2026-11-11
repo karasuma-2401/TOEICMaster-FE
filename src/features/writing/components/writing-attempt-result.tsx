@@ -204,6 +204,14 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
           <Link className={primaryAction} href="/history/writing">
             Xem lịch sử
           </Link>
+          {attempt && (
+            <Link
+              className={secondaryAction}
+              href={`/writing/attempts/${encodeURIComponent(attemptId)}/review`}
+            >
+              Xem lại bài viết
+            </Link>
+          )}
           <Link className={secondaryAction} href="/writing">
             Làm đề khác
           </Link>

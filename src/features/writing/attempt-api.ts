@@ -368,10 +368,11 @@ export async function getWritingTests(
   signal?: AbortSignal,
   query = "",
   pageNumber = 1,
+  pageSize = 20,
 ): Promise<WritingTestPageApi> {
   const params = new URLSearchParams({
     pageNumber: String(pageNumber),
-    pageSize: "20",
+    pageSize: String(pageSize),
   });
   if (query.trim()) params.set("query", query.trim());
   const value = await requestJson(`/api/writing/tests?${params}`, { signal });
@@ -408,9 +409,10 @@ export async function getWritingPracticeExercises(
   part: number,
   pageNumber = 1,
   signal?: AbortSignal,
+  pageSize = 20,
 ) {
   const value = await requestJson(
-    `/api/writing/exercises?part=${part}&pageNumber=${pageNumber}&pageSize=20`,
+    `/api/writing/exercises?part=${part}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
     { signal },
   );
   if (

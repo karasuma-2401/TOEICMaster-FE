@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getAdminNavigationItem } from "@/features/admin/navigation";
 
@@ -44,6 +45,14 @@ export function AdminTopbar({ onOpenMenu }: AdminTopbarProps) {
         </ol>
         <p className="sr-only">{description}</p>
       </nav>
+      <Link
+        aria-label="Về trang luyện đề"
+        className="inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-lg border border-[var(--admin-border)] px-3 text-[13px] font-medium text-[var(--admin-ink)] transition hover:border-[var(--admin-brand-red)] hover:text-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+        href="/#home-skills"
+      >
+        ← <span className="ml-1.5 sm:hidden">Luyện đề</span>
+        <span className="ml-1.5 hidden sm:inline">Về trang luyện đề</span>
+      </Link>
       <button
         aria-label="Admin notifications"
         className="grid size-9 place-items-center rounded-full bg-[var(--admin-surface-muted)] text-[var(--admin-muted)] transition hover:text-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"

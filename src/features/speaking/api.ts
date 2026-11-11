@@ -176,6 +176,58 @@ export async function startSpeakingAttempt(testId: string, mode: SpeakingMode) {
   );
 }
 
+/** One finished or running attempt of the current learner. */
+export interface SpeakingAttemptSummary {
+  id: string;
+  testId: string | null;
+  /** Exercise practised on its own; null for test attempts. */
+  exerciseId: string | null;
+  mode: string | null;
+  /** Answers with a saved recording; null when the backend omits it. */
+  recordedCount: number | null;
+  status: string;
+  createdAtUtc: string;
+  estimatedScore: number | null;
+}
+
+function parseAttemptSummary(value: unknown): SpeakingAttemptSummary {
+  const what = "lịch sử Speaking";
+  if (
+    !isRecord(value) ||
+    !isString(value.id) ||
+    !(value.testId === null || isString(value.testId)) ||
+    !isString(value.status) ||
+    !isString(value.createdAtUtc) ||
+    !(
+      value.estimatedScore === undefined ||
+      value.estimatedScore === null ||
+      isCount(value.estimatedScore)
+    )
+  )
+    invalid(what);
+  return {
+    id: value.id,
+    testId: value.testId,
+    exerciseId: isString(value.exerciseId) ? value.exerciseId : null,
+    mode: isString(value.mode) ? value.mode : null,
+    recordedCount: isCount(value.recordedCount) ? value.recordedCount : null,
+    status: value.status,
+    createdAtUtc: value.createdAtUtc,
+    estimatedScore: value.estimatedScore ?? null,
+  };
+}
+
+export async function getSpeakingAttempts(signal?: AbortSignal) {
+  return parsePage(
+    await speakingRequest(`${base}/attempts`, {
+      signal,
+      fallback: "Không thể tải lịch sử Speaking.",
+    }),
+    parseAttemptSummary,
+    "lịch sử Speaking",
+  ).items;
+}
+
 export async function getSpeakingAttempt(
   attemptId: string,
   signal?: AbortSignal,
@@ -195,6 +247,17 @@ export async function nextSpeakingPhase(attemptId: string) {
       method: "POST",
       json: {},
       fallback: "Không thể chuyển sang bước tiếp theo.",
+    }),
+  );
+}
+
+/** Submits the attempt now; idempotent once it is submitted. */
+export async function submitSpeakingAttempt(attemptId: string) {
+  return parseAttempt(
+    await speakingRequest(`${attemptPath(attemptId)}/submit`, {
+      method: "POST",
+      json: {},
+      fallback: "Không thể nộp bài Speaking.",
     }),
   );
 }

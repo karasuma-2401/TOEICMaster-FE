@@ -1,51 +1,48 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  getSpeakingAttempts,
   getSpeakingTests,
+  type SpeakingAttemptSummary,
   type SpeakingTestSummary,
 } from "@/features/speaking/api";
 import {
-  partQuestionCount,
-  partTimingLabel,
-  speakingPartSpecs,
-} from "@/features/speaking/part-specs";
-import { speakingParts } from "@/features/speaking/types";
-import {
-  CountBadge,
-  PageIntro,
-  SectionHeading,
-} from "@/shared/components/practice/page-intro";
-import { PartCard } from "@/shared/components/practice/part-card";
-import { PracticePage } from "@/shared/components/practice/practice-page";
-import {
-  EmptyPanel,
-  ErrorPanel,
-  LoadingPanel,
-} from "@/shared/components/practice/state-panels";
-import { TestCard } from "@/shared/components/practice/test-card";
+  ExamLibrary,
+  type ExamLibrarySkill,
+} from "@/shared/components/practice/exam-library";
+import { summarizeExamAttempts } from "@/shared/components/practice/exam-library-model";
 import { formatMinutes } from "@/shared/ui/format-time";
 import { SpeakingHeader } from "./speaking-header";
 
-function totals(test: SpeakingTestSummary) {
-  return test.parts.reduce(
-    (sum, part) => ({
-      questions: sum.questions + part.questionCount,
-      seconds: sum.seconds + part.durationSeconds,
-    }),
-    { questions: 0, seconds: 0 },
-  );
-}
+const skill: ExamLibrarySkill = {
+  id: "speaking",
+  name: "Speaking",
+  tagline:
+    "Luyện phản xạ nói trong phòng thi hai pha và nhận đánh giá theo 5 tiêu chí.",
+  format: "11 câu · ~20 phút · 0–200 điểm · 5 Parts",
+  maxScore: 200,
+  examHref: "/speaking",
+  exerciseHref: "/speaking/parts/1",
+};
 
 export function SpeakingLibrary() {
   const [tests, setTests] = useState<SpeakingTestSummary[]>([]);
+  const [attempts, setAttempts] = useState<SpeakingAttemptSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      setTests(await getSpeakingTests(signal));
+      const [nextTests, nextAttempts] = await Promise.all([
+        getSpeakingTests(signal),
+        // Results are an extra: the list stays usable without them.
+        getSpeakingAttempts(signal).catch(() => []),
+      ]);
+      setTests(nextTests);
+      setAttempts(nextAttempts);
     } catch (cause) {
       if (signal?.aborted) return;
       setError(
@@ -64,75 +61,52 @@ export function SpeakingLibrary() {
     };
   }, [load]);
 
+  const items = useMemo(() => {
+    const results = summarizeExamAttempts(
+      attempts.flatMap((attempt) =>
+        attempt.testId &&
+        attempt.status === "SUBMITTED" &&
+        attempt.mode === "FULL"
+          ? [{ id: attempt.testId, score: attempt.estimatedScore }]
+          : [],
+      ),
+    );
+    return tests.map((test) => {
+      const questions = test.parts.reduce(
+        (sum, part) => sum + part.questionCount,
+        0,
+      );
+      const seconds = test.parts.reduce(
+        (sum, part) => sum + part.durationSeconds,
+        0,
+      );
+      return {
+        id: test.id,
+        code: test.code,
+        title: test.title,
+        badge: `${test.parts.length} Parts`,
+        meta: `${questions} câu · ~${formatMinutes(seconds)} · 0–200 điểm`,
+        action: {
+          href: `/speaking/tests/${encodeURIComponent(test.id)}/practice?mode=full`,
+        },
+        sortKey: test.publishedAtUtc ?? "",
+        difficulty: null,
+        attemptCount: results.get(test.id)?.attemptCount ?? 0,
+        bestScore: results.get(test.id)?.bestScore ?? null,
+      };
+    });
+  }, [tests, attempts]);
+
   return (
-    <PracticePage header={<SpeakingHeader />}>
-      <PageIntro
-        description="Mỗi câu có pha chuẩn bị và pha trả lời riêng như bài thi thật. Bạn trả lời bằng micro, nghe lại bản ghi và tự đánh giá sau mỗi lượt luyện."
-        eyebrow="TOEIC SPEAKING"
-        title="Luyện Speaking theo đúng nhịp thi"
-      />
-
-      <section className="mt-10" aria-labelledby="speaking-parts">
-        <SectionHeading
-          aside={<CountBadge>5 Part · 11 câu</CountBadge>}
-          description="Chọn một Part để luyện từng bài trong ngân hàng bài tập."
-          id="speaking-parts"
-          title="Luyện theo Part"
-        />
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {speakingParts.map((part) => {
-            const spec = speakingPartSpecs[part];
-            return (
-              <PartCard
-                actionLabel={`Luyện Part ${part} →`}
-                description={spec.description}
-                eyebrow={`PART ${part}`}
-                href={`/speaking/parts/${part}`}
-                key={part}
-                meta={`${partQuestionCount(part)} câu · ${partTimingLabel(part)}`}
-                part={part}
-                title={spec.subtitle}
-                unavailableLabel="Chưa có đề công bố"
-              />
-            );
-          })}
-        </div>
-      </section>
-
-      <section aria-labelledby="speaking-tests" className="mt-12">
-        <SectionHeading
-          description="Chỉ hiển thị đề được Admin công bố."
-          id="speaking-tests"
-          title="Đề Speaking"
-        />
-        {loading && <LoadingPanel label="Đang tải đề Speaking…" />}
-        {error && <ErrorPanel message={error} onRetry={() => void load()} />}
-        {!loading && !error && tests.length === 0 && (
-          <EmptyPanel
-            description="Admin cần tạo và công bố một đề đủ 11 câu cho 5 Part."
-            title="Chưa có đề Speaking được công bố"
-          />
-        )}
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          {tests.map((test) => {
-            const sum = totals(test);
-            return (
-              <TestCard
-                actionLabel="Xem đề và bắt đầu"
-                code={test.code}
-                description={test.description}
-                href={`/speaking/tests/${test.id}?mode=full`}
-                key={test.id}
-                stats={[
-                  { label: "Cấu trúc", value: `${sum.questions} câu · 5 Part` },
-                  { label: "Thời lượng", value: formatMinutes(sum.seconds) },
-                ]}
-                title={test.title}
-              />
-            );
-          })}
-        </div>
-      </section>
-    </PracticePage>
+    <ExamLibrary
+      emptyDescription="Admin cần tạo và công bố một đề đủ 11 câu cho 5 Part."
+      emptyTitle="Chưa có đề Speaking được công bố"
+      error={error}
+      header={<SpeakingHeader wide />}
+      items={items}
+      loading={loading}
+      onRetry={() => void load()}
+      skill={skill}
+    />
   );
 }

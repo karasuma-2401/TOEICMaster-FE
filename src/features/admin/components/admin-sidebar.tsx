@@ -48,10 +48,10 @@ export function AdminSidebar({
           </span>
           {!isCollapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold tracking-[-0.04em] text-[var(--admin-ink)]">
+              <p className="truncate text-lg font-bold tracking-[-0.04em] text-[var(--admin-ink)]">
                 TOEICMaster
               </p>
-              <p className="mt-0.5 w-fit rounded-sm bg-[var(--admin-brand-red)] px-1 py-px text-[6px] font-bold tracking-[0.08em] text-white">
+              <p className="mt-0.5 w-fit rounded-sm bg-[var(--admin-brand-red)] px-1.5 py-px text-[10px] font-bold tracking-[0.08em] text-white">
                 QUẢN TRỊ
               </p>
             </div>
@@ -66,9 +66,9 @@ export function AdminSidebar({
           </button>
         </div>
 
-        <nav aria-label="Quản trị" className="flex-1 px-4 py-2">
+        <nav aria-label="Quản trị" className="flex-1 px-3 py-2">
           {!isCollapsed && (
-            <p className="mb-2 px-2 text-[9px] font-medium tracking-[0.1em] text-[var(--admin-muted)]">
+            <p className="mb-2 px-2 text-xs font-medium tracking-[0.1em] text-[var(--admin-muted)]">
               QUẢN TRỊ
             </p>
           )}
@@ -78,7 +78,7 @@ export function AdminSidebar({
               return item.enabled ? (
                 <Link
                   aria-current={current ? "page" : undefined}
-                  className={`relative flex min-h-9 items-center gap-2 rounded-md px-2 text-[11px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
+                  className={`relative flex min-h-10 items-center gap-2 rounded-md px-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] ${
                     current
                       ? "bg-[var(--admin-nav-active)] font-semibold text-[var(--admin-ink)]"
                       : "font-normal text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)] hover:text-[var(--admin-ink)]"
@@ -90,7 +90,7 @@ export function AdminSidebar({
                 >
                   <span
                     aria-hidden="true"
-                    className="grid size-5 place-items-center text-sm"
+                    className="grid size-5 place-items-center text-base"
                   >
                     {item.icon}
                   </span>
@@ -98,7 +98,7 @@ export function AdminSidebar({
                 </Link>
               ) : (
                 <button
-                  className="flex min-h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[11px] font-normal text-[var(--admin-muted)] opacity-70"
+                  className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-normal text-[var(--admin-muted)] opacity-70"
                   disabled
                   key={item.label}
                   title="Tính năng sắp có"
@@ -106,14 +106,16 @@ export function AdminSidebar({
                 >
                   <span
                     aria-hidden="true"
-                    className="grid size-5 place-items-center text-sm"
+                    className="grid size-5 place-items-center text-base"
                   >
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <>
-                      <span className="flex-1">{item.label}</span>
-                      <span className="rounded-full bg-[var(--admin-surface-muted)] px-2 py-0.5 text-[9px] font-semibold">
+                      <span className="flex-1 whitespace-nowrap">
+                        {item.label}
+                      </span>
+                      <span className="rounded-full bg-[var(--admin-surface-muted)] whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold">
                         Sắp có
                       </span>
                     </>
@@ -125,20 +127,20 @@ export function AdminSidebar({
         </nav>
 
         <div className="p-4">
-          <div className="mb-3 flex items-center gap-2 px-1 text-[10px] text-[var(--admin-muted)]">
+          <div className="mb-3 flex items-center gap-2 px-1 text-[13px] text-[var(--admin-muted)]">
             <span aria-hidden="true">⇱</span>
             {!isCollapsed && <span>Thu nhỏ</span>}
           </div>
           <div className="flex items-center gap-2 px-1">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--admin-brand-orange)] text-[10px] font-bold text-white">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--admin-brand-orange)] text-xs font-bold text-white">
               M
             </span>
             {!isCollapsed && (
               <div className="min-w-0">
-                <p className="truncate text-[10px] font-semibold text-[var(--admin-ink)]">
+                <p className="truncate text-sm font-semibold text-[var(--admin-ink)]">
                   Quản trị viên
                 </p>
-                <p className="truncate text-[8px] text-[var(--admin-muted)]">
+                <p className="truncate text-xs text-[var(--admin-muted)]">
                   Admin
                 </p>
               </div>

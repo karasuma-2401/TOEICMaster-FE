@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getSpeakingAttempt,
+  getSpeakingAttempts,
   getSpeakingEvaluationAvailability,
   grantSpeakingEvaluationConsent,
 } from "@/features/speaking/api";
@@ -11,15 +12,23 @@ import { SpeakingApiError } from "@/features/speaking/http";
 import {
   attemptDto,
   evaluationDto,
+  ids,
 } from "@/features/speaking/testing/fixtures";
 import { SpeakingEvaluationPanel } from "./speaking-evaluation-panel";
 
+vi.mock("../speaking-header", () => ({
+  SpeakingHeader: () => <header>Speaking header</header>,
+}));
 vi.mock("@/features/speaking/api", () => ({
   getSpeakingAttempt: vi.fn(),
+  getSpeakingAttempts: vi.fn().mockResolvedValue([]),
   getSpeakingEvaluationAvailability: vi.fn(),
   grantSpeakingEvaluationConsent: vi.fn(),
 }));
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 function submitted(overrides: object = {}) {
   const dto = attemptDto({
@@ -57,7 +66,7 @@ describe("SpeakingEvaluationPanel", () => {
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     const button = await screen.findByRole("button", {
-      name: "Đồng ý và chấm bài",
+      name: "Đồng ý & Bắt đầu chấm AI →",
     });
     expect(button).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox"));
@@ -75,15 +84,44 @@ describe("SpeakingEvaluationPanel", () => {
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     fireEvent.click(await screen.findByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Đồng ý và chấm bài" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
+    );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Bản ghi cuối vẫn đang được tải lên.",
     );
   });
 
-  it("renders the completed report per question", async () => {
+  it("offers login when a guest has used the daily evaluation", async () => {
     vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
+    vi.mocked(grantSpeakingEvaluationConsent).mockRejectedValue(
+      new SpeakingApiError(
+        409,
+        "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua. Hãy đăng nhập hoặc thử lại sau.",
+      ),
+    );
+    render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
+
+    fireEvent.click(await screen.findByRole("checkbox"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
+    );
+
+    expect(
+      await screen.findByRole("link", {
+        name: "Đăng nhập để nhận thêm lượt →",
+      }),
+    ).toHaveAttribute(
+      "href",
+      `/login?next=${encodeURIComponent(`/speaking/tests/${ids.test}`)}`,
+    );
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("renders the completed report with criteria averages", async () => {
+    vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
+    vi.mocked(getSpeakingAttempts).mockResolvedValue([]);
     render(
       <SpeakingEvaluationPanel
         attempt={submitted({ evaluation: evaluationDto() })}
@@ -91,18 +129,12 @@ describe("SpeakingEvaluationPanel", () => {
       />,
     );
 
-    expect(screen.getByText("130")).toBeInTheDocument();
+    expect(screen.getByText("130 / 200")).toBeInTheDocument();
     expect(
       screen.getByText("Bạn trả lời đúng thông tin trong lịch."),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("2/3 điểm")).toHaveLength(2);
-    expect(screen.getByText("conference")).toBeInTheDocument();
-    expect(
-      screen.getByText("Không nhận diện được giọng nói trong bản ghi."),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("It is held at the Grand Hotel.")).toHaveLength(
-      2,
-    );
+    expect(screen.getByText("Phát âm")).toBeInTheDocument();
+    expect(screen.getByText("79/100")).toBeInTheDocument();
     expect(getSpeakingAttempt).not.toHaveBeenCalled();
   });
 

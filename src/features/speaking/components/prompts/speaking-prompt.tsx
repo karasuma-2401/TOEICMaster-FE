@@ -16,16 +16,21 @@ export function SpeakingPrompt({
   revealQuestion = true,
   showAllQuestions = false,
   showDirections = true,
+  recording = false,
 }: {
   content: SpeakingContent;
   questionIndex?: number;
   revealQuestion?: boolean;
   showAllQuestions?: boolean;
   showDirections?: boolean;
+  /** Whether the answer is being recorded right now (exam room). */
+  recording?: boolean;
 }) {
   return (
     <PromptFrame part={content.part} showDirections={showDirections}>
-      {content.part === 1 && <ReadAloudPrompt content={content} />}
+      {content.part === 1 && (
+        <ReadAloudPrompt content={content} recording={recording} />
+      )}
       {content.part === 2 && <DescribePicturePrompt content={content} />}
       {content.part === 3 && (
         <RespondQuestionsPrompt

@@ -144,42 +144,45 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
   // Khách vẫn có thể mở trang hồ sơ cùng các lựa chọn đăng nhập/đăng ký.
   if (!user) {
     return (
-      <div className="flex flex-col items-end gap-1">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-col gap-1 md:items-end">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2.5">
           <Link
             aria-label="Hồ sơ cá nhân"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+            className="flex items-center gap-3 rounded-full text-sm font-semibold text-[#4e4542] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/profile"
           >
-            <svg
-              aria-hidden="true"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                cx="12"
-                cy="8"
-                r="3.5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M4.8 20c.6-3.3 3.4-5.2 7.2-5.2s6.6 1.9 7.2 5.2"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.8"
-              />
-            </svg>
+            <span className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md">
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M4.8 20c.6-3.3 3.4-5.2 7.2-5.2s6.6 1.9 7.2 5.2"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.8"
+                />
+              </svg>
+            </span>
+            <span className="md:hidden">Hồ sơ cá nhân</span>
           </Link>
           <Link
-            className="cursor-pointer text-sm font-semibold text-[#4e4542] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+            className="flex h-11 cursor-pointer items-center justify-center rounded-xl border border-[#ece9e5] text-sm font-semibold md:h-auto md:rounded-none md:border-0 text-[#4e4542] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/login"
           >
             Đăng nhập
           </Link>
           <Link
-            className="flex h-9 cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-3.5 text-xs font-bold text-white shadow-[0_6px_14px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+            className="flex h-11 cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-3.5 text-sm font-bold md:h-9 md:text-xs text-white shadow-[0_6px_14px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
             href="/register"
           >
             Đăng ký
@@ -199,25 +202,30 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
 
   return (
     <>
-      <button
-        aria-label="Mở hồ sơ cá nhân"
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-sm font-bold text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-        onClick={() => setIsOpen(true)}
-        type="button"
-      >
-        {imageUrl ? (
-          <Image
-            alt={`Ảnh đại diện của ${user.displayName}`}
-            className="absolute inset-0 h-full w-full rounded-full object-cover"
-            fill
-            sizes="40px"
-            src={imageUrl}
-            unoptimized
-          />
-        ) : (
-          initials
-        )}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          aria-label="Mở hồ sơ cá nhân"
+          className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-sm font-bold text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+          onClick={() => setIsOpen(true)}
+          type="button"
+        >
+          {imageUrl ? (
+            <Image
+              alt={`Ảnh đại diện của ${user.displayName}`}
+              className="absolute inset-0 h-full w-full rounded-full object-cover"
+              fill
+              sizes="40px"
+              src={imageUrl}
+              unoptimized
+            />
+          ) : (
+            initials
+          )}
+        </button>
+        <span className="truncate text-sm font-semibold text-[#2f2b28] md:hidden">
+          {user.displayName}
+        </span>
+      </div>
 
       <ProfileDialog
         isOpen={isOpen}

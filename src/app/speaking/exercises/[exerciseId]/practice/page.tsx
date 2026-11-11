@@ -1,4 +1,4 @@
-import { SpeakingSession } from "@/features/speaking/components/session/speaking-session";
+import { SpeakingPracticeEntry } from "@/features/speaking/components/session/speaking-practice";
 
 export default async function SpeakingExercisePracticeRoute({
   params,
@@ -6,5 +6,5 @@ export default async function SpeakingExercisePracticeRoute({
   params: Promise<{ exerciseId: string }>;
 }) {
   const { exerciseId } = await params;
-  return <SpeakingSession source={{ kind: "exercise", exerciseId }} />;
+  return <SpeakingPracticeEntry exerciseId={exerciseId} key={exerciseId} />;
 }

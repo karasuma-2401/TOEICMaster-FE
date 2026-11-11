@@ -18,39 +18,51 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
   }) => {
     await page.goto("/writing");
     await expect(
-      page.getByRole("heading", { name: "Luyện Writing theo đúng nhịp thi" }),
+      page.getByRole("heading", { name: "Đề thi Writing", level: 1 }),
     ).toBeVisible();
 
     // Hiển thị các đề thi Full test
-    await expect(page.getByText("WT-PUB-FULL-01")).toBeVisible();
     await expect(
       page.getByText("TOEIC Writing Simulation Test 01"),
     ).toBeVisible();
-    await expect(page.getByText("WT-PUB-FULL-02")).toBeVisible();
+    await expect(
+      page.getByText("TOEIC Writing Simulation Test 02"),
+    ).toBeVisible();
 
-    // Tìm kiếm đề thi
-    const searchInput = page.getByPlaceholder("Mã hoặc tên đề");
-    await searchInput.fill("01");
-    await expect(page.getByText("WT-PUB-FULL-01")).toBeVisible();
-    await expect(page.getByText("WT-PUB-FULL-02")).not.toBeVisible();
+    // Tìm kiếm đề thi theo mã
+    const searchInput = page.getByPlaceholder("Tìm kiếm tên đề Writing...");
+    await searchInput.fill("WT-PUB-FULL-01");
+    await expect(
+      page.getByText("TOEIC Writing Simulation Test 01"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("TOEIC Writing Simulation Test 02"),
+    ).not.toBeVisible();
   });
 
-  test("TC-LEARN-02: Thư viện đề thi Writing (/writing) - Hiển thị 3 thẻ Part 1, 2, 3 và chuyển đến trang luyện tập", async ({
+  test("TC-LEARN-02: Thư viện đề thi Writing (/writing) - Mở trang luyện tập và chuyển giữa các Part", async ({
     page,
   }) => {
     await page.goto("/writing");
 
-    // Kiểm tra 3 thẻ Part
-    await expect(page.getByText("Viết câu theo tranh")).toBeVisible();
-    await expect(page.getByText("Viết email phản hồi")).toBeVisible();
-    await expect(page.getByText("Viết bài luận quan điểm")).toBeVisible();
-
-    // Click vào thẻ Part 1
-    await page.getByRole("link", { name: "Luyện Part 1 →" }).click();
+    await page.getByRole("link", { name: "Bài tập", exact: true }).click();
     await expect(page).toHaveURL(/\/writing\/practice\/1/);
     await expect(
-      page.getByRole("heading", { name: "Luyện bài tập Writing" }),
+      page.getByRole("heading", { name: "Bài tập Writing", level: 1 }),
     ).toBeVisible();
+
+    // Kiểm tra 3 Part
+    await expect(
+      page.getByRole("link", { name: "Part 1 · Viết câu theo tranh" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Part 3 · Viết bài luận quan điểm" }),
+    ).toBeVisible();
+
+    await page
+      .getByRole("link", { name: "Part 2 · Viết email phản hồi" })
+      .click();
+    await expect(page).toHaveURL(/\/writing\/practice\/2/);
   });
 
   test("TC-LEARN-03: Hướng dẫn thi (/writing/tests/[id]) - Xem tổng quan bài thi, thời gian chi tiết từng phần trước khi bắt đầu", async ({
@@ -65,13 +77,16 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
     await expect(page.getByText("8 câu", { exact: true })).toBeVisible();
 
     // Hiển thị cấu trúc từng phần
-    await expect(page.getByText("Writing Part 1")).toBeVisible();
-    await expect(page.getByText("Writing Part 2")).toBeVisible();
-    await expect(page.getByText("Writing Part 3")).toBeVisible();
+    await expect(page.getByText("Part 1 · Viết câu theo tranh")).toBeVisible();
+    await expect(page.getByText("Part 2 · Phản hồi email")).toBeVisible();
+    await expect(page.getByText("Part 3 · Bài luận quan điểm")).toBeVisible();
 
     // Nút bắt đầu làm bài
-    const startBtn = page.getByRole("button", { name: "Bắt đầu làm bài" });
-    await expect(startBtn).toBeVisible();
+    const startBtn = page.getByRole("button", {
+      name: "BẮT ĐẦU LÀM BÀI WRITING",
+    });
+    await expect(startBtn).toBeDisabled();
+    await page.getByRole("checkbox").check();
     await expect(startBtn).toBeEnabled();
   });
 
@@ -80,7 +95,8 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
   }) => {
     await page.goto("/writing/tests/test-pub-01");
 
-    await page.getByRole("button", { name: "Bắt đầu làm bài" }).click();
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "BẮT ĐẦU LÀM BÀI WRITING" }).click();
 
     // Chuyển hướng sang phòng thi ảo /writing/attempts/[id]
     await expect(page).toHaveURL(/\/writing\/attempts\/att-test-/);
@@ -94,18 +110,16 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
   }) => {
     await page.goto("/writing/practice/1");
     await expect(
-      page.getByText("WRITING PART 1", { exact: true }),
+      page.getByRole("heading", { name: "Bài tập Writing", level: 1 }),
     ).toBeVisible();
 
     // Hiển thị danh sách bài tập Part 1
-    await expect(page.getByText("WP1-PRAC-01")).toBeVisible();
     await expect(page.getByText("Coffee Break Discussion")).toBeVisible();
-    await expect(page.getByText("WP1-PRAC-02")).toBeVisible();
 
     // Bắt đầu luyện bài tập
     await page
-      .locator("article", { hasText: "WP1-PRAC-01" })
-      .getByRole("button", { name: "Làm bài" })
+      .locator("article", { hasText: "Coffee Break Discussion" })
+      .getByRole("button", { name: "Làm bài Writing" })
       .click();
 
     // Mở phòng thi ở chế độ luyện tập không giới hạn thời gian

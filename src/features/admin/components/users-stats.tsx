@@ -31,7 +31,7 @@ export function UsersStats({
       {cards.map((card) => (
         <button
           aria-pressed={selectedStatus === card.status}
-          className={`rounded-xl border bg-[var(--admin-surface)] p-4 text-left transition hover:border-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] sm:p-5 ${selectedStatus === card.status ? "border-[var(--admin-brand-red)] ring-1 ring-[var(--admin-brand-red)]" : "border-[var(--admin-border)]"}`}
+          className={`rounded-2xl border bg-[var(--admin-surface)] p-4 text-left shadow-[0_1px_3px_rgb(62_44_30/8%)] transition hover:border-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)] sm:p-5 ${selectedStatus === card.status ? "border-[var(--admin-brand-red)] ring-1 ring-[var(--admin-brand-red)]" : "border-[var(--admin-border)]"}`}
           key={card.key}
           onClick={() => onSelectStatus(card.status)}
           type="button"
@@ -45,7 +45,7 @@ export function UsersStats({
               {card.mark}
             </span>
           </span>
-          <span className="mt-3 block text-2xl font-bold tracking-tight text-[var(--admin-ink)]">
+          <span className="mt-3 block text-3xl font-bold tracking-tight text-[var(--admin-ink)]">
             {stats[card.key].toLocaleString("vi-VN")}
           </span>
         </button>

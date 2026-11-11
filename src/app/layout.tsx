@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { NavigationTracker } from "@/shared/components/practice/navigation-tracker";
 import { ToastProvider } from "@/shared/components/toast-provider";
 import "./globals.css";
 
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <body>
+        <NavigationTracker />
         {children}
         <ToastProvider />
       </body>

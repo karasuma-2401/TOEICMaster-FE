@@ -1,3 +1,4 @@
+import { SpeakingApiError } from "./http";
 import {
   invalid,
   isCount,
@@ -8,6 +9,18 @@ import {
   isString,
 } from "./parsers";
 import type { SpeakingPart } from "./types";
+
+/**
+ * The backend refuses a guest's second evaluation within 24 hours with a plain
+ * 409, so its message is the only thing that tells this case apart.
+ */
+export function isGuestEvaluationLimit(cause: unknown) {
+  return (
+    cause instanceof SpeakingApiError &&
+    cause.status === 409 &&
+    /ẩn danh/i.test(cause.message)
+  );
+}
 
 // AI evaluation of a submitted Speaking attempt: Azure Speech transcribes each
 // recording and scores pronunciation, a language model scores grammar,

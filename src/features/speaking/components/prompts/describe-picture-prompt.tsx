@@ -1,4 +1,5 @@
 import type { DescribePictureContent } from "@/features/speaking/types";
+import { Chip } from "../ui/primitives";
 
 export function DescribePicturePrompt({
   content,
@@ -7,30 +8,22 @@ export function DescribePicturePrompt({
 }) {
   return (
     <figure>
+      <Chip tone="orange">MIÊU TẢ BỨC TRANH</Chip>
       {content.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- content media is served by the application.
         <img
           alt={content.imageAlt}
-          className="h-72 w-full rounded-2xl object-cover ring-1 ring-slate-200"
+          className="mx-auto mt-4 aspect-[4/3] w-full max-w-[680px] rounded-2xl object-cover"
           src={content.imageUrl}
         />
       ) : (
-        <div
-          aria-label={content.imageAlt}
-          className="grid h-72 place-items-center rounded-2xl bg-gradient-to-br from-orange-100 via-amber-50 to-sky-100 p-8 text-center ring-1 ring-orange-100"
-        >
-          <div className="max-w-md">
-            <span className="block text-xs font-bold tracking-[0.12em] text-orange-600">
-              HÌNH ẢNH ĐỀ BÀI
-            </span>
-            <span className="mt-3 block text-sm font-semibold leading-6 text-orange-950">
-              {content.imageAlt}
-            </span>
-          </div>
+        <div className="mx-auto mt-4 grid aspect-[4/3] w-full max-w-[680px] place-items-center rounded-2xl bg-(--sp-subtle) p-8 text-center text-sm text-(--sp-ink-2)">
+          {content.imageAlt}
         </div>
       )}
-      <figcaption className="mt-4 text-sm text-slate-600">
-        Mô tả bối cảnh, con người, hành động và các chi tiết nổi bật trong ảnh.
+      <figcaption className="mt-4 text-center text-sm text-(--sp-ink-2)">
+        Miêu tả bức tranh trên. Hãy nói rõ chủ đề, các đối tượng chính và chi
+        tiết nổi bật.
       </figcaption>
     </figure>
   );

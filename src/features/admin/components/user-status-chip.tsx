@@ -1,4 +1,5 @@
 import type { AdminUserStatus } from "@/features/admin/users";
+import { AdminBadge, type AdminBadgeTone } from "./content/admin-badges";
 
 const labels: Record<AdminUserStatus, string> = {
   ACTIVE: "Hoạt động",
@@ -6,19 +7,12 @@ const labels: Record<AdminUserStatus, string> = {
   LOCKED: "Bị khóa",
 };
 
-const styles: Record<AdminUserStatus, string> = {
-  ACTIVE: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
-  PENDING: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",
-  LOCKED: "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]",
+const tones: Record<AdminUserStatus, AdminBadgeTone> = {
+  ACTIVE: "success",
+  PENDING: "warning",
+  LOCKED: "danger",
 };
 
 export function UserStatusChip({ status }: { status: AdminUserStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status]}`}
-    >
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
-      {labels[status]}
-    </span>
-  );
+  return <AdminBadge tone={tones[status]}>{labels[status]}</AdminBadge>;
 }
