@@ -32,48 +32,42 @@ export function ContentTabs({
   section: ContentSection;
 }) {
   return (
-    <div className="mb-6">
-      <nav
-        aria-label="Phân loại dữ liệu"
-        className="flex gap-7 border-b border-[var(--admin-border)]"
-      >
-        {(Object.keys(sectionLabel) as ContentSection[]).map((item) => {
-          const active = item === section;
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`border-b-2 px-1 py-3 text-sm font-bold transition ${adminFocus} ${active ? "border-[var(--admin-brand-red)] text-[var(--admin-ink)]" : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-ink-soft)]"}`}
-              href={href(skill, item)}
-              key={item}
-            >
-              {sectionLabel[item]}
-            </Link>
-          );
-        })}
-      </nav>
-      <nav
-        aria-label="Kỹ năng TOEIC"
-        className="mt-5 grid overflow-hidden rounded-2xl border border-[#f1d8ce] bg-[#fff7f2] p-1 sm:grid-cols-3"
-      >
-        {skills.map((item) => {
-          const active = item.id === skill;
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${adminFocus} ${active ? "admin-brand-gradient-fill text-white shadow-[0_8px_20px_rgb(236_37_27/22%)]" : "text-[var(--admin-muted)] hover:bg-white hover:text-[var(--admin-ink-soft)]"}`}
-              href={href(item.id, section)}
-              key={item.id}
-            >
-              <span>{item.label}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? "bg-white/20 text-white" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
+    <div className="mb-5 border-b border-[var(--admin-border)]">
+      <div className="flex min-h-14 flex-wrap items-end justify-between gap-x-6">
+        <nav aria-label="Kỹ năng TOEIC" className="flex overflow-x-auto">
+          {skills.map((item) => {
+            const active = item.id === skill;
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`border-b-2 px-4 py-4 text-sm font-semibold transition ${adminFocus} ${active ? "border-[var(--admin-brand-red)] text-[var(--admin-ink)]" : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-ink-soft)]"}`}
+                href={href(item.id, section)}
+                key={item.id}
               >
-                {item.parts}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <nav
+          aria-label="Phân loại dữ liệu"
+          className="mb-2 inline-flex overflow-hidden rounded-lg bg-[var(--admin-surface-muted)] p-1"
+        >
+          {(Object.keys(sectionLabel) as ContentSection[]).map((item) => {
+            const active = item === section;
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition ${adminFocus} ${active ? "bg-white text-[var(--admin-ink)] shadow-sm" : "text-[var(--admin-muted)] hover:text-[var(--admin-ink-soft)]"}`}
+                href={href(skill, item)}
+                key={item}
+              >
+                {sectionLabel[item]}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }

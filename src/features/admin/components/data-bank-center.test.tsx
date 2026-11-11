@@ -109,14 +109,16 @@ describe("DataBankCenter", () => {
       screen.getByRole("heading", { name: "Kho dữ liệu" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Listening & Reading.*7 Part/i }),
+      screen.getByRole("link", { name: "Listening & Reading" }),
     ).toHaveAttribute("href", "/admin/exams");
-    expect(
-      screen.getByRole("link", { name: /Speaking.*5 Part/i }),
-    ).toHaveAttribute("href", "/admin/content/speaking");
-    expect(
-      screen.getByRole("link", { name: /Writing.*3 Part/i }),
-    ).toHaveAttribute("href", "/admin/content/writing");
+    expect(screen.getByRole("link", { name: "Speaking" })).toHaveAttribute(
+      "href",
+      "/admin/content/speaking",
+    );
+    expect(screen.getByRole("link", { name: "Writing" })).toHaveAttribute(
+      "href",
+      "/admin/content/writing",
+    );
     expect(screen.getByRole("link", { name: "Đề thi" })).toHaveAttribute(
       "href",
       "/admin/exams?tab=tests",
@@ -131,6 +133,95 @@ describe("DataBankCenter", () => {
     expect(
       await screen.findByRole("button", { name: "Tạo đề mới" }),
     ).toHaveClass("admin-primary-action");
+  });
+
+  it("renders the exam-management metrics from the loaded API data", async () => {
+    url = "tab=tests";
+    vi.mocked(getReadingExams).mockResolvedValue({
+      items: [
+        {
+          examId: "11111111-1111-4111-8111-111111111111",
+          revisionId: "22222222-2222-4222-8222-222222222222",
+          code: "LR-2026-001",
+          title: "ETS 2026 Test 01",
+          versionNumber: 1,
+          status: "Published",
+          createdAtUtc: "2026-11-01T00:00:00Z",
+        },
+        {
+          examId: "33333333-3333-4333-8333-333333333333",
+          revisionId: "44444444-4444-4444-8444-444444444444",
+          code: "LR-2026-002",
+          title: "ETS 2026 Test 02",
+          versionNumber: 1,
+          status: "Draft",
+          createdAtUtc: "2026-11-02T00:00:00Z",
+        },
+      ],
+      pageNumber: 1,
+      pageSize: 20,
+      totalCount: 2,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
+    vi.mocked(getScoreProfiles).mockResolvedValue([
+      {
+        id: "55555555-5555-4555-8555-555555555555",
+        name: "ETS chuẩn",
+        isComplete: true,
+        mappingCount: 202,
+      },
+    ]);
+
+    render(<DataBankCenter />);
+
+    expect(await screen.findByText("ĐỀ ĐANG CÔNG BỐ")).toBeInTheDocument();
+    expect(screen.getByText("1 đề")).toBeInTheDocument();
+    expect(screen.getByText("1 bản nháp")).toBeInTheDocument();
+    expect(screen.getByText("1 barem chuẩn")).toBeInTheDocument();
+  });
+
+  it("filters the visible exam rows by code or title without changing the API contract", async () => {
+    url = "tab=tests";
+    vi.mocked(getReadingExams).mockResolvedValue({
+      items: [
+        {
+          examId: "11111111-1111-4111-8111-111111111111",
+          revisionId: "22222222-2222-4222-8222-222222222222",
+          code: "LR-2026-001",
+          title: "ETS Spring",
+          versionNumber: 1,
+          status: "Published",
+          createdAtUtc: "2026-11-01T00:00:00Z",
+        },
+        {
+          examId: "33333333-3333-4333-8333-333333333333",
+          revisionId: "44444444-4444-4444-8444-444444444444",
+          code: "LR-2026-002",
+          title: "ETS Autumn",
+          versionNumber: 1,
+          status: "Draft",
+          createdAtUtc: "2026-11-02T00:00:00Z",
+        },
+      ],
+      pageNumber: 1,
+      pageSize: 20,
+      totalCount: 2,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
+
+    render(<DataBankCenter />);
+
+    await screen.findByText("ETS Spring");
+    fireEvent.change(screen.getByPlaceholderText("Tìm mã đề, tên đề L&R..."), {
+      target: { value: "Autumn" },
+    });
+
+    expect(screen.queryByText("ETS Spring")).not.toBeInTheDocument();
+    expect(screen.getByText("ETS Autumn")).toBeInTheDocument();
   });
 
   it("keeps the cancel action centered in the create-test modal footer", async () => {

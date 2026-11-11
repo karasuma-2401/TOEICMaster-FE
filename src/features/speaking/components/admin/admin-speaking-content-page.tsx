@@ -5,6 +5,7 @@ import {
   AdminNotice,
   AdminPageHeader,
 } from "@/features/admin/components/content/admin-page-header";
+import { AdminPartRouteTabs } from "@/features/admin/components/content/admin-part-route-tabs";
 import {
   adminGradient,
   adminPrimary,
@@ -21,7 +22,11 @@ import {
   toSpeakingDraft,
   type SpeakingDraft,
 } from "@/features/speaking/admin-draft";
-import type { Page, SpeakingExercise } from "@/features/speaking/types";
+import type {
+  Page,
+  SpeakingExercise,
+  SpeakingPart,
+} from "@/features/speaking/types";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { SpeakingExerciseEditor } from "./speaking-exercise-editor";
 import {
@@ -34,9 +39,13 @@ import { TablePagination } from "./table-pagination";
 
 const pageSize = 10;
 
-export function AdminSpeakingContentPage() {
+export function AdminSpeakingContentPage({
+  part,
+}: {
+  part?: SpeakingPart;
+} = {}) {
   const [filter, setFilter] = useState<ExerciseFilter>({
-    part: 1,
+    part: part ?? 1,
     query: "",
     difficulty: "ALL",
     status: "ALL",
@@ -83,7 +92,7 @@ export function AdminSpeakingContentPage() {
             },
             signal,
           ),
-          getSpeakingAdminSummary(signal),
+          part ? Promise.resolve(null) : getSpeakingAdminSummary(signal),
         ]);
         setPage(nextPage);
         setSummary(nextSummary);
@@ -94,7 +103,7 @@ export function AdminSpeakingContentPage() {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [filter],
+    [filter, part],
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -141,29 +150,44 @@ export function AdminSpeakingContentPage() {
             + Thêm bài tập
           </button>
         }
-        description="Tạo, tìm kiếm, preview và quản lý bài tập Speaking theo 5 Part."
-        title="Ngân hàng bài tập Speaking"
+        description={
+          part
+            ? `Tạo, tìm kiếm, preview và quản lý bài tập Speaking Part ${part}.`
+            : "Tạo, tìm kiếm, preview và quản lý bài tập Speaking theo 5 Part."
+        }
+        title={part ? `Speaking Part ${part}` : "Ngân hàng bài tập Speaking"}
       />
       <ContentTabs section="content" skill="speaking" />
+      {part && <AdminPartRouteTabs activePart={part} skill="speaking" />}
       {notice && <AdminNotice>{notice}</AdminNotice>}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStat
-          hint="Trên 5 Part"
-          label="Tổng bài tập"
-          value={summary?.exercises.total ?? "—"}
-        />
-        <AdminStat
-          hint="Có thể chọn khi lắp đề"
-          label="Hiển thị"
-          value={summary?.exercises.published ?? "—"}
-        />
-        <AdminStat label="Bản nháp" value={summary?.exercises.draft ?? "—"} />
-        <AdminStat label="Lưu trữ" value={summary?.exercises.archived ?? "—"} />
-      </div>
-      <SpeakingPartTabs
-        onChange={(part) => resetPage({ part })}
-        value={filter.part}
-      />
+      {!part && (
+        <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <AdminStat
+              hint="Trên 5 Part"
+              label="Tổng bài tập"
+              value={summary?.exercises.total ?? "—"}
+            />
+            <AdminStat
+              hint="Có thể chọn khi lắp đề"
+              label="Hiển thị"
+              value={summary?.exercises.published ?? "—"}
+            />
+            <AdminStat
+              label="Bản nháp"
+              value={summary?.exercises.draft ?? "—"}
+            />
+            <AdminStat
+              label="Lưu trữ"
+              value={summary?.exercises.archived ?? "—"}
+            />
+          </div>
+          <SpeakingPartTabs
+            onChange={(part) => resetPage({ part })}
+            value={filter.part}
+          />
+        </>
+      )}
       <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <SpeakingExerciseFilters
           filter={{ ...filter, query }}

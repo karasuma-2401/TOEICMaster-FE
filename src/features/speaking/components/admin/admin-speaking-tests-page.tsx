@@ -102,7 +102,7 @@ export function AdminSpeakingTestsPage() {
             + Tạo đề Speaking
           </button>
         }
-        description="Lắp đề 11 câu theo 5 Part và kiểm tra điều kiện xuất bản."
+        description="Soạn trực tiếp 11 câu theo 5 Part và kiểm tra điều kiện xuất bản."
         title="Đề Speaking"
       />
       <ContentTabs section="tests" skill="speaking" />
@@ -116,8 +116,8 @@ export function AdminSpeakingTestsPage() {
         />
         <AdminStat label="Bản nháp" value={summary?.tests.draft ?? "—"} />
         <AdminStat
-          hint="Bài ở trạng thái Hiển thị"
-          label="Bài tập sẵn sàng lắp đề"
+          hint="Chỉ dành cho các đề cũ dùng ngân hàng bài tập"
+          label="Bài tập đã công bố"
           value={summary?.exercises.published ?? "—"}
         />
       </div>
@@ -175,7 +175,6 @@ export function AdminSpeakingTestsPage() {
         <SpeakingTestWorkspace
           onClose={() => setEditing(undefined)}
           onSaved={(message) => {
-            setEditing(undefined);
             setNotice(message);
             reload();
           }}

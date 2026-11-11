@@ -30,6 +30,7 @@ import {
   AdminNotice,
   AdminPageHeader,
 } from "@/features/admin/components/content/admin-page-header";
+import { AdminPartRouteTabs } from "@/features/admin/components/content/admin-part-route-tabs";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import type { WritingDifficulty, WritingPart } from "@/features/writing/types";
 import { AdminWritingPrompt } from "./admin-writing-prompt";
@@ -698,10 +699,14 @@ function ImportDialog({
   );
 }
 
-export function AdminWritingContentPage() {
+export function AdminWritingContentPage({
+  part,
+}: {
+  part?: WritingPart;
+} = {}) {
   const [revision, setRevision] = useState(0);
   const [filter, setFilter] = useState<QuestionFilter>({
-    part: 1,
+    part: part ?? 1,
     query: "",
     difficulty: "ALL",
     status: "ALL",
@@ -782,28 +787,35 @@ export function AdminWritingContentPage() {
             </button>
           </>
         }
-        description="Tạo, tìm kiếm, preview và quản lý bài tập theo từng Part."
-        title="Ngân hàng bài tập Writing"
+        description={
+          part
+            ? `Tạo, tìm kiếm, preview và quản lý bài tập Writing Part ${part}.`
+            : "Tạo, tìm kiếm, preview và quản lý bài tập theo từng Part."
+        }
+        title={part ? `Writing Part ${part}` : "Ngân hàng bài tập Writing"}
       />
       <ContentTabs section="content" skill="writing" />
+      {part && <AdminPartRouteTabs activePart={part} skill="writing" />}
       {notice && <AdminNotice>{notice}</AdminNotice>}
       {loadError && (
         <p className="mt-4 text-sm text-red-700" role="alert">
           {loadError}
         </p>
       )}
-      <div className="mt-6 flex gap-2">
-        {parts.map((part) => (
-          <button
-            className={`rounded-lg px-4 py-2 text-sm font-bold ${part === filter.part ? "bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
-            key={part}
-            onClick={() => resetPage({ part })}
-            type="button"
-          >
-            Part {part}
-          </button>
-        ))}
-      </div>
+      {!part && (
+        <div className="mt-6 flex gap-2">
+          {parts.map((part) => (
+            <button
+              className={`rounded-lg px-4 py-2 text-sm font-bold ${part === filter.part ? "bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
+              key={part}
+              onClick={() => resetPage({ part })}
+              type="button"
+            >
+              Part {part}
+            </button>
+          ))}
+        </div>
+      )}
       <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <div className="grid gap-3 border-b border-[var(--admin-border)] p-4 lg:grid-cols-[1fr_11rem_11rem]">
           <input

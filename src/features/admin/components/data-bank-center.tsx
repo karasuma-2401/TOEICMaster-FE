@@ -15,6 +15,7 @@ import {
   type ReadingExamPage,
   type ScoreProfile,
 } from "@/features/admin/exam-management";
+import { summarizeExamDashboard } from "@/features/admin/exam-dashboard-summary";
 import {
   createLrExerciseItem,
   getLrExerciseItems,
@@ -193,7 +194,7 @@ export function DataBankCenter() {
   }, [summaryRefresh, tab]);
 
   return (
-    <div className="mx-auto max-w-[1480px]">
+    <div className="w-full">
       {!viewingPartWorkspace && (
         <>
           <header className="mb-7">
@@ -1131,7 +1132,20 @@ function CompleteTests() {
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [profiles, setProfiles] = useState<ScoreProfile[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "Draft" | "Published"
+  >("ALL");
   const loading = result === null && error === null;
+  const metrics = summarizeExamDashboard(result?.items ?? [], profiles ?? []);
+  const visibleItems = (result?.items ?? []).filter((item) => {
+    const matchesQuery = `${item.code} ${item.title}`
+      .toLocaleLowerCase("vi-VN")
+      .includes(query.trim().toLocaleLowerCase("vi-VN"));
+    const matchesStatus =
+      statusFilter === "ALL" || item.status === statusFilter;
+    return matchesQuery && matchesStatus;
+  });
   useEffect(() => {
     const controller = new AbortController();
     getReadingExams({ status: "ALL", page: 1, pageSize: 20 }, controller.signal)
@@ -1151,6 +1165,17 @@ function CompleteTests() {
       });
     return () => controller.abort();
   }, [retry]);
+  useEffect(() => {
+    const controller = new AbortController();
+    getScoreProfiles(controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setProfiles(value);
+      })
+      .catch(() => {
+        // Creating a test can retry the same request and surface the API error.
+      });
+    return () => controller.abort();
+  }, []);
   async function openCreate() {
     setCreateOpen(true);
     if (profiles) return;
@@ -1164,17 +1189,75 @@ function CompleteTests() {
   }
   return (
     <>
+      <section
+        aria-label="Tổng quan đề thi"
+        className="mb-5 grid gap-3 lg:grid-cols-3"
+      >
+        <MetricCard
+          accent="green"
+          detail="Bất biến · sẵn sàng cho thí sinh"
+          label="ĐỀ ĐANG CÔNG BỐ"
+          value={`${metrics.publishedCount} ${metrics.publishedCount === 1 ? "đề" : "đề"}`}
+        />
+        <MetricCard
+          accent="amber"
+          detail="Được phép chỉnh sửa nội dung và media"
+          label="BẢN NHÁP ĐANG DỰNG"
+          value={`${metrics.draftCount} ${metrics.draftCount === 1 ? "bản nháp" : "bản nháp"}`}
+        />
+        <MetricCard
+          accent="blue"
+          detail="Đủ 202/202 mốc Listening và Reading"
+          label="BAREM ĐIỂM SẴN SÀNG"
+          value={`${metrics.readyScoreProfileCount} ${metrics.readyScoreProfileCount === 1 ? "barem chuẩn" : "barem chuẩn"}`}
+        />
+      </section>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <label className="flex h-9 min-w-[260px] flex-1 items-center gap-2 rounded-md border border-[#e2e8f0] bg-white px-3 text-[11px] text-[var(--admin-muted)] sm:max-w-[320px]">
+          <ExamIcon className="size-4 shrink-0" name="search" />
+          <input
+            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#94a3b8]"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Tìm mã đề, tên đề L&R..."
+            type="search"
+            value={query}
+          />
+        </label>
+        <label className="sr-only" htmlFor="exam-status-filter">
+          Trạng thái đề thi
+        </label>
+        <select
+          className="h-9 rounded-md border border-[#e2e8f0] bg-white px-3 text-[11px] text-[var(--admin-ink-soft)] outline-none focus:border-[var(--admin-brand-orange)]"
+          id="exam-status-filter"
+          onChange={(event) =>
+            setStatusFilter(event.target.value as "ALL" | "Draft" | "Published")
+          }
+          value={statusFilter}
+        >
+          <option value="ALL">Trạng thái: Tất cả</option>
+          <option value="Published">Đã công bố</option>
+          <option value="Draft">Bản nháp</option>
+        </select>
+      </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-[var(--admin-ink)]">
+          <h2 className="text-base font-semibold tracking-tight text-[var(--admin-ink)]">
             Đề thi Listening &amp; Reading
           </h2>
-          <p className="mt-2 text-sm text-[var(--admin-muted)]">
-            Tạo hoặc import một đề TOEIC hoàn chỉnh 200 câu. Ngân hàng bài tập
-            theo Part nằm ở tab Bài tập.
+          <p className="mt-1 text-xs text-[var(--admin-muted)]">
+            Tạo bản nháp rồi nhập trực tiếp 200 câu, context và media trong
+            workspace. Ngân hàng bài tập theo Part nằm riêng ở tab Bài tập.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-white px-4 text-sm font-semibold text-[var(--admin-ink-soft)] transition hover:border-[var(--admin-brand-orange)]"
+            download
+            href="/api/admin/exams/import-template"
+            prefetch={false}
+          >
+            Tải mẫu Excel
+          </Link>
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)]"
             onClick={() => setImportOpen(true)}
@@ -1191,7 +1274,7 @@ function CompleteTests() {
           </button>
         </div>
       </div>
-      <section className="overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_42px_rgb(73_43_31/4%)]">
+      <section className="overflow-hidden rounded-lg border border-[var(--admin-border)] bg-white shadow-[0_12px_30px_rgb(73_43_31/3%)]">
         {loading ? (
           <div aria-busy="true" className="space-y-3 p-5">
             {Array.from({ length: 4 }, (_, index) => (
@@ -1220,57 +1303,58 @@ function CompleteTests() {
               Chưa có đề thi hoàn chỉnh
             </h3>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Tạo bản nháp hoặc import workbook 200 câu cùng master audio.
+              Tạo bản nháp để nhập trực tiếp 200 câu, context và media theo từng
+              Part; hoặc import workbook hoàn chỉnh.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-[800px] w-full text-left">
-              <thead className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[10px] font-bold tracking-[0.11em] text-[var(--admin-muted)]">
+              <thead className="border-b border-[var(--admin-border)] bg-[#faf7f5] text-[9px] font-semibold tracking-[0.08em] text-[var(--admin-muted)]">
                 <tr>
                   <th className="px-5 py-3">MÃ ĐỀ</th>
                   <th className="px-5 py-3">TÊN ĐỀ</th>
-                  <th className="px-5 py-3">PHẠM VI</th>
+                  <th className="px-5 py-3">CẤU TRÚC</th>
                   <th className="px-5 py-3">CẬP NHẬT</th>
                   <th className="px-5 py-3">TRẠNG THÁI</th>
-                  <th aria-label="Thao tác" className="px-5 py-3" />
+                  <th className="px-5 py-3">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--admin-border)]">
-                {result?.items.map((item) => (
+                {visibleItems.map((item) => (
                   <tr
                     className="hover:bg-[var(--admin-row-hover)]"
                     key={item.revisionId}
                   >
-                    <td className="px-5 py-4 text-sm font-bold text-[var(--admin-brand-red)]">
+                    <td className="px-5 py-4 font-mono text-xs font-bold text-[var(--admin-ink-soft)]">
                       {item.code}
                     </td>
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-[var(--admin-ink)]">
+                      <p className="text-xs font-semibold text-[var(--admin-ink)]">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-xs text-[var(--admin-muted)]">
+                      <p className="mt-1 text-[10px] text-[var(--admin-muted)]">
                         Revision {item.versionNumber} · 200 câu
                       </p>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="rounded-full bg-[var(--admin-nav-active)] px-2.5 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
-                        Listening &amp; Reading
+                      <span className="text-xs text-[var(--admin-ink-soft)]">
+                        200 câu · L&amp;R
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs text-[var(--admin-muted)]">
+                    <td className="px-5 py-4 text-[11px] text-[var(--admin-muted)]">
                       {formatAdminDate(item.createdAtUtc)}
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-4">
                       <Link
                         aria-label={`Mở ${item.code}`}
-                        className="inline-flex size-9 items-center justify-center rounded-lg border border-[var(--admin-border)] text-[var(--admin-ink-soft)] hover:border-[var(--admin-brand-orange)] hover:text-[var(--admin-brand-red)]"
+                        className="inline-flex h-7 items-center justify-center rounded-md bg-[var(--admin-surface-muted)] px-2 text-[10px] font-semibold text-[var(--admin-ink-soft)] transition hover:bg-[var(--admin-nav-active)] hover:text-[var(--admin-brand-red)]"
                         href={`/admin/exams/reading/${item.examId}/${item.revisionId}`}
                       >
-                        <ExamIcon className="size-4" name="edit" />
+                        {item.status === "Draft" ? "Tiếp tục soạn" : "Xem"}
                       </Link>
                     </td>
                   </tr>
@@ -1304,6 +1388,32 @@ function CompleteTests() {
         />
       )}
     </>
+  );
+}
+
+function MetricCard({
+  accent,
+  detail,
+  label,
+  value,
+}: {
+  accent: "green" | "amber" | "blue";
+  detail: string;
+  label: string;
+  value: string;
+}) {
+  const styles = {
+    green: "border-[#a7f3d0] bg-[#ecfdf5] text-[#047857]",
+    amber: "border-[#fde68a] bg-[#fef3c7] text-[#b45309]",
+    blue: "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]",
+  } as const;
+
+  return (
+    <article className={`rounded-lg border px-5 py-4 ${styles[accent]}`}>
+      <p className="text-[10px] font-bold tracking-[0.02em]">{label}</p>
+      <p className="mt-1 text-[22px] font-bold leading-none">{value}</p>
+      <p className="mt-2 text-[10px] font-medium opacity-80">{detail}</p>
+    </article>
   );
 }
 
@@ -1344,11 +1454,29 @@ function CreateExamModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Hệ thống tạo một bản nháp có đúng 200 slot Listening & Reading."
+      subtitle="Hệ thống tạo một bản nháp có đúng 200 slot. Sau đó bạn nhập lần lượt câu hỏi, context và media trong workspace."
       title="Tạo đề thi mới"
     >
       <form onSubmit={submit}>
         <div className="space-y-4">
+          <section
+            aria-label="Loại đề thi"
+            className="rounded-lg border border-[#3b82f6] bg-[#eff6ff] p-3"
+          >
+            <div className="flex items-start gap-2">
+              <span className="mt-1 grid size-3 shrink-0 place-items-center rounded-full border border-[var(--admin-brand-red)]">
+                <i className="size-1.5 rounded-full bg-[var(--admin-brand-red)]" />
+              </span>
+              <span>
+                <strong className="block text-xs text-[#1d4ed8]">
+                  Listening &amp; Reading
+                </strong>
+                <small className="mt-0.5 block text-[10px] text-[#2563eb]">
+                  120 phút · 200 câu · Thang điểm ETS 10–990
+                </small>
+              </span>
+            </div>
+          </section>
           <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
             Mã đề<span className="text-[var(--admin-brand-red)]"> *</span>
             <input
@@ -1548,24 +1676,24 @@ function Modal({
       />
       <dialog
         aria-modal="true"
-        className="relative w-full max-w-lg rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-2xl"
+        className="relative w-full max-w-[720px] rounded-xl border border-[var(--admin-border)] bg-white p-5 shadow-[0_20px_60px_rgb(48_43_41/24%)]"
         open
       >
         <button
           aria-label="Đóng"
-          className="absolute right-4 top-4 grid size-9 place-items-center rounded-lg text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
+          className="absolute right-4 top-4 grid size-7 place-items-center rounded-md text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
           onClick={onClose}
           type="button"
         >
           <ExamIcon className="size-5" name="close" />
         </button>
-        <span className="grid size-10 place-items-center rounded-xl bg-[var(--admin-nav-active)] text-[var(--admin-brand-red)]">
-          <ExamIcon className="size-5" name="file" />
+        <span className="grid size-7 place-items-center rounded-md bg-[#ecfdf5] text-[#047857]">
+          <ExamIcon className="size-4" name="file" />
         </span>
-        <h2 className="mt-4 pr-10 text-xl font-bold text-[var(--admin-ink)]">
+        <h2 className="-mt-7 pr-10 pl-10 text-sm font-semibold text-[var(--admin-ink)]">
           {title}
         </h2>
-        <p className="mt-1 text-sm leading-6 text-[var(--admin-muted)]">
+        <p className="mt-1 pl-10 text-[11px] leading-5 text-[var(--admin-muted)]">
           {subtitle}
         </p>
         <div className="mt-5">{children}</div>

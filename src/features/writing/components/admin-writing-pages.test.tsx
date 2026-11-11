@@ -54,3 +54,18 @@ it("shows the actual image and keywords when previewing a Part 1 exercise", asyn
   expect(within(dialog).getByText("desk")).toBeInTheDocument();
   expect(within(dialog).queryByText("asset-1")).not.toBeInTheDocument();
 });
+
+it("locks a dedicated workspace to its route Part", async () => {
+  mocks.list.mockResolvedValue({ items: [], totalCount: 0 });
+
+  render(<AdminWritingContentPage part={2} />);
+
+  await screen.findByText("Không tìm thấy bài tập phù hợp");
+  expect(mocks.list).toHaveBeenLastCalledWith(
+    expect.objectContaining({ part: 2 }),
+    expect.any(AbortSignal),
+  );
+  expect(
+    screen.queryByRole("button", { name: /Part 1/i }),
+  ).not.toBeInTheDocument();
+});

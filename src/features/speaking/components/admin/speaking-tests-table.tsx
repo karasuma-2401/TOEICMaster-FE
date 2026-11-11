@@ -18,7 +18,7 @@ export function SpeakingTestsTable({
           <tr>
             <th className="p-4">MÃ ĐỀ</th>
             <th className="p-4">TÊN ĐỀ</th>
-            <th className="p-4">CẤU TRÚC (BÀI / PART)</th>
+            <th className="p-4">CẤU TRÚC (NHÓM / PART)</th>
             <th className="p-4">SỐ CÂU</th>
             <th className="p-4">TRẠNG THÁI</th>
             <th className="p-4 text-right">THAO TÁC</th>
