@@ -1,5 +1,5 @@
-import { AdminSpeakingContentPage } from "@/features/speaking/components/admin/admin-speaking-content-page";
+import { AdminPartLanding } from "@/features/admin/components/content/admin-part-landing";
 
 export default function AdminSpeakingContentRoute() {
-  return <AdminSpeakingContentPage />;
+  return <AdminPartLanding skill="speaking" />;
 }

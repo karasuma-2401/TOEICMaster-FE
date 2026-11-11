@@ -43,6 +43,34 @@ describe("Speaking parsers", () => {
     expect(exercises).toHaveLength(3);
   });
 
+  it("reads direct test content without treating it as an exercise-bank item", () => {
+    const { test, exercises } = parseTestDetail(
+      testDetailDto({
+        contentMode: "DIRECT",
+        exercises: [],
+        questions: [
+          {
+            part: 3,
+            sequenceNumber: 1,
+            content: {
+              rubricNotes: "Rõ ràng",
+              modelAnswer: "Reference answer",
+              context: "A short interview.",
+              questions: ["Question one?", "Question two?", "Question three?"],
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(test.contentMode).toBe("DIRECT");
+    expect(test.questions[0]).toMatchObject({
+      part: 3,
+      content: { context: "A short interview." },
+    });
+    expect(exercises).toEqual([]);
+  });
+
   it("reads list part counts keyed by Part number", () => {
     expect(parseTestListItem(testListItemDto()).partCounts).toEqual({
       1: 2,

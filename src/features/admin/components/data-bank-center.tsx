@@ -1245,8 +1245,8 @@ function CompleteTests() {
             Đề thi Listening &amp; Reading
           </h2>
           <p className="mt-1 text-xs text-[var(--admin-muted)]">
-            Tạo hoặc import một đề TOEIC hoàn chỉnh 200 câu. Ngân hàng bài tập
-            theo Part nằm ở tab Bài tập.
+            Tạo bản nháp rồi nhập trực tiếp 200 câu, context và media trong
+            workspace. Ngân hàng bài tập theo Part nằm riêng ở tab Bài tập.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1303,7 +1303,8 @@ function CompleteTests() {
               Chưa có đề thi hoàn chỉnh
             </h3>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Tạo bản nháp hoặc import workbook 200 câu cùng master audio.
+              Tạo bản nháp để nhập trực tiếp 200 câu, context và media theo từng
+              Part; hoặc import workbook hoàn chỉnh.
             </p>
           </div>
         ) : (
@@ -1453,7 +1454,7 @@ function CreateExamModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Hệ thống tạo một bản nháp có đúng 200 slot Listening & Reading."
+      subtitle="Hệ thống tạo một bản nháp có đúng 200 slot. Sau đó bạn nhập lần lượt câu hỏi, context và media trong workspace."
       title="Tạo đề thi mới"
     >
       <form onSubmit={submit}>

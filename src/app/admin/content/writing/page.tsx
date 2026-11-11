@@ -1,5 +1,5 @@
-import { AdminWritingContentPage } from "@/features/writing/components/admin-writing-pages";
+import { AdminPartLanding } from "@/features/admin/components/content/admin-part-landing";
 
 export default function AdminWritingContentRoute() {
-  return <AdminWritingContentPage />;
+  return <AdminPartLanding skill="writing" />;
 }

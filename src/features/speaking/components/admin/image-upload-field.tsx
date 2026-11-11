@@ -11,9 +11,11 @@ const maxBytes = 5 * 1024 * 1024;
 export function ImageUploadField({
   imageUrl,
   onUploaded,
+  disabled = false,
 }: {
   imageUrl: string | null;
   onUploaded: (assetId: string, url: string) => void;
+  disabled?: boolean;
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,9 @@ export function ImageUploadField({
   };
   return (
     <div>
-      <label className="block cursor-pointer rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-sm font-bold text-[var(--admin-brand-red)]">
+      <label
+        className={`block rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-sm font-bold text-[var(--admin-brand-red)] ${disabled ? "cursor-not-allowed opacity-65" : "cursor-pointer"}`}
+      >
         Hình ảnh đề bài *
         <span className="mt-1 block font-normal text-[var(--admin-muted)]">
           {uploading
@@ -52,7 +56,7 @@ export function ImageUploadField({
         <input
           accept="image/jpeg,image/png"
           className="sr-only"
-          disabled={uploading}
+          disabled={disabled || uploading}
           onChange={(event) => void upload(event.target.files?.[0])}
           type="file"
         />

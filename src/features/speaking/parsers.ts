@@ -9,6 +9,9 @@ import type {
   SpeakingMode,
   SpeakingPart,
   SpeakingTest,
+  SpeakingTestContentMode,
+  SpeakingTestQuestion,
+  SpeakingTestQuestionContent,
   SpeakingTestStatus,
 } from "./types";
 
@@ -38,6 +41,8 @@ const isExerciseStatus = (value: unknown): value is SpeakingExerciseStatus =>
   value === "DRAFT" || value === "PUBLISHED" || value === "ARCHIVED";
 const isTestStatus = (value: unknown): value is SpeakingTestStatus =>
   value === "DRAFT" || value === "PUBLISHED";
+const isTestContentMode = (value: unknown): value is SpeakingTestContentMode =>
+  value === "EXERCISE_BANK" || value === "DIRECT";
 
 /** Same-origin media URL for an asset, through the admin or learner BFF. */
 export type MediaScope = "admin" | "public";
@@ -171,6 +176,32 @@ function emptySlots(): SpeakingTest["exerciseIds"] {
   return { 1: [], 2: [], 3: [], 4: [], 5: [] };
 }
 
+function parseDirectQuestion(
+  value: unknown,
+  what: string,
+): SpeakingTestQuestion {
+  if (
+    !isRecord(value) ||
+    !isPart(value.part) ||
+    !isCount(value.sequenceNumber) ||
+    !isRecord(value.content) ||
+    !isString(value.content.rubricNotes) ||
+    !isString(value.content.modelAnswer)
+  )
+    invalid(what);
+  const partContent = parseContent(
+    { ...value.content, part: value.part },
+    "admin",
+    what,
+  );
+  const content: SpeakingTestQuestionContent = {
+    rubricNotes: value.content.rubricNotes,
+    modelAnswer: value.content.modelAnswer,
+    ...partContent,
+  };
+  return { part: value.part, sequenceNumber: value.sequenceNumber, content };
+}
+
 /** Admin test detail: the test plus the exercises it references. */
 export function parseTestDetail(value: unknown): {
   test: SpeakingTest;
@@ -187,7 +218,9 @@ export function parseTestDetail(value: unknown): {
     !isCount(value.version) ||
     !isDate(value.updatedAtUtc) ||
     !isNullableDate(value.publishedAtUtc) ||
-    !Array.isArray(value.exercises)
+    !Array.isArray(value.exercises) ||
+    !(value.questions === undefined || Array.isArray(value.questions)) ||
+    !(value.contentMode === undefined || isTestContentMode(value.contentMode))
   )
     invalid(what);
   const slots = value.exercises.map((slot) => {
@@ -220,7 +253,11 @@ export function parseTestDetail(value: unknown): {
       version: value.version,
       updatedAtUtc: value.updatedAtUtc,
       publishedAtUtc: value.publishedAtUtc,
+      contentMode: value.contentMode ?? "EXERCISE_BANK",
       exerciseIds,
+      questions: (value.questions ?? []).map((question) =>
+        parseDirectQuestion(question, what),
+      ),
     },
     exercises: slots.map((slot) => slot.exercise),
   };
@@ -236,6 +273,7 @@ export interface SpeakingTestListItem {
   publishedAtUtc: string | null;
   partCounts: Record<SpeakingPart, number>;
   questionCount: number;
+  contentMode: SpeakingTestContentMode;
 }
 
 export function parseTestListItem(value: unknown): SpeakingTestListItem {
@@ -250,7 +288,8 @@ export function parseTestListItem(value: unknown): SpeakingTestListItem {
     !isDate(value.updatedAtUtc) ||
     !isNullableDate(value.publishedAtUtc) ||
     !isRecord(value.partCounts) ||
-    !isCount(value.questionCount)
+    !isCount(value.questionCount) ||
+    !(value.contentMode === undefined || isTestContentMode(value.contentMode))
   )
     invalid(what);
   const counts = value.partCounts;
@@ -270,6 +309,7 @@ export function parseTestListItem(value: unknown): SpeakingTestListItem {
     publishedAtUtc: value.publishedAtUtc,
     partCounts,
     questionCount: value.questionCount,
+    contentMode: value.contentMode ?? "EXERCISE_BANK",
   };
 }
 

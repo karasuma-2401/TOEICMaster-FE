@@ -54,7 +54,9 @@ beforeEach(() => {
     ),
   );
   vi.mocked(getSpeakingTestDetail).mockResolvedValue(
-    parseTestDetail(testDetailDto()),
+    parseTestDetail(
+      testDetailDto({ contentMode: "DIRECT", exercises: [], questions: [] }),
+    ),
   );
 });
 afterEach(() => {
@@ -85,7 +87,7 @@ describe("AdminSpeakingTestsPage", () => {
       await screen.findByRole("button", { name: "Practice Test 03" }),
     );
     const workspace = screen.getByRole("dialog", {
-      name: "Test builder Speaking",
+      name: "Soạn đề Speaking trực tiếp",
     });
 
     expect(
@@ -96,7 +98,7 @@ describe("AdminSpeakingTestsPage", () => {
     );
 
     expect(within(workspace).getByRole("alert")).toHaveTextContent(
-      "Hoàn thành mọi điều kiện xuất bản trước khi công bố.",
+      "Hoàn thành toàn bộ 7 nhóm nội dung / 11 câu trước khi xuất bản.",
     );
     expect(updateSpeakingTest).not.toHaveBeenCalled();
     expect(publishSpeakingTest).not.toHaveBeenCalled();

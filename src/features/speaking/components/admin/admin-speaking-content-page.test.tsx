@@ -54,6 +54,19 @@ describe("AdminSpeakingContentPage", () => {
     );
   });
 
+  it("locks a dedicated workspace to its route Part", async () => {
+    render(<AdminSpeakingContentPage part={3} />);
+
+    expect(await screen.findByText("SP3-001")).toBeInTheDocument();
+    expect(listSpeakingExercises).toHaveBeenLastCalledWith(
+      expect.objectContaining({ part: 3, pageNumber: 1, pageSize: 10 }),
+      expect.any(AbortSignal),
+    );
+    expect(
+      screen.queryByRole("button", { name: /Part 1/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows a retryable error when the backend is unavailable", async () => {
     vi.mocked(listSpeakingExercises).mockRejectedValueOnce(
       new Error("Không thể kết nối dịch vụ."),
