@@ -13,6 +13,7 @@ vi.mock("./writing-header", () => ({
   WritingHeader: () => <header>Writing</header>,
 }));
 vi.mock("@/features/writing/attempt-api", () => ({
+  getWritingHistory: vi.fn().mockResolvedValue([]),
   getWritingPracticeExercises: mocks.list,
   startWritingPractice: mocks.start,
 }));
@@ -36,7 +37,9 @@ describe("WritingPracticeLibrary", () => {
     mocks.start.mockResolvedValue({ id: "attempt-1" });
 
     render(<WritingPracticeLibrary part={2} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Làm bài" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Làm bài Writing" }),
+    );
 
     await waitFor(() => expect(mocks.start).toHaveBeenCalledWith("exercise-1"));
     expect(mocks.push).toHaveBeenCalledWith("/writing/attempts/attempt-1");

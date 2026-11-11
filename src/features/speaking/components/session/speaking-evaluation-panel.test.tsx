@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getSpeakingAttempt,
@@ -12,6 +12,7 @@ import { SpeakingApiError } from "@/features/speaking/http";
 import {
   attemptDto,
   evaluationDto,
+  ids,
 } from "@/features/speaking/testing/fixtures";
 import { SpeakingEvaluationPanel } from "./speaking-evaluation-panel";
 
@@ -24,7 +25,10 @@ vi.mock("@/features/speaking/api", () => ({
   getSpeakingEvaluationAvailability: vi.fn(),
   grantSpeakingEvaluationConsent: vi.fn(),
 }));
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 function submitted(overrides: object = {}) {
   const dto = attemptDto({
@@ -87,6 +91,32 @@ describe("SpeakingEvaluationPanel", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Bản ghi cuối vẫn đang được tải lên.",
     );
+  });
+
+  it("offers login when a guest has used the daily evaluation", async () => {
+    vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
+    vi.mocked(grantSpeakingEvaluationConsent).mockRejectedValue(
+      new SpeakingApiError(
+        409,
+        "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua. Hãy đăng nhập hoặc thử lại sau.",
+      ),
+    );
+    render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
+
+    fireEvent.click(await screen.findByRole("checkbox"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
+    );
+
+    expect(
+      await screen.findByRole("link", {
+        name: "Đăng nhập để nhận thêm lượt →",
+      }),
+    ).toHaveAttribute(
+      "href",
+      `/login?next=${encodeURIComponent(`/speaking/tests/${ids.test}`)}`,
+    );
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
   it("renders the completed report with criteria averages", async () => {

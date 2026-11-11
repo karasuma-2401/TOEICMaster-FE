@@ -10,10 +10,18 @@ import {
 import type { SpeakingAttempt } from "@/features/speaking/attempt";
 import {
   isEvaluationPending,
+  isGuestEvaluationLimit,
   type SpeakingEvaluation,
 } from "@/features/speaking/evaluation";
-import { formatDate, formatElapsed } from "../ui/format";
-import { CheckIcon, CircleIcon, ClockIcon, LoaderIcon } from "../ui/icons";
+import { useAttemptHistory } from "@/features/speaking/hooks/use-attempt-history";
+import { formatAttemptNumber, formatDate, formatElapsed } from "../ui/format";
+import {
+  AlertCircleIcon,
+  CheckIcon,
+  CircleIcon,
+  ClockIcon,
+  LoaderIcon,
+} from "../ui/icons";
 import { SpPage } from "../ui/page";
 import {
   Breadcrumb,
@@ -103,6 +111,8 @@ export function SpeakingEvaluationPanel({
   const [consented, setConsented] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guestLimited, setGuestLimited] = useState(false);
+  const { number: attemptNumber } = useAttemptHistory(attempt);
   const hasRecordings = attempt.questions.some(
     (question) => question.recording,
   );
@@ -139,11 +149,13 @@ export function SpeakingEvaluationPanel({
         (await grantSpeakingEvaluationConsent(attempt.id)).evaluation,
       );
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể yêu cầu chấm AI lúc này.",
-      );
+      if (isGuestEvaluationLimit(cause)) setGuestLimited(true);
+      else
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể yêu cầu chấm AI lúc này.",
+        );
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +168,16 @@ export function SpeakingEvaluationPanel({
   const queued = evaluation?.status === "QUEUED";
   const dataNote = pending
     ? "Bạn đã đồng ý gửi dữ liệu để AI đánh giá bài nói này."
-    : "Chỉ bắt đầu gửi dữ liệu khi bạn đồng ý chấm AI.";
+    : guestLimited
+      ? "Bài nói này chưa được gửi đến dịch vụ AI."
+      : "Chỉ bắt đầu gửi dữ liệu khi bạn đồng ý chấm AI.";
+  const partCount = new Set(attempt.questions.map((item) => item.part)).size;
+  // Guest attempts stay with the guest session and are not moved to an account,
+  // so login returns to where the learner can start a new attempt.
+  const retryPath = attempt.testId
+    ? `/speaking/tests/${attempt.testId}`
+    : `/speaking/exercises/${attempt.exerciseId}/practice`;
+  const canListen = available === false || evaluation?.status === "FAILED";
 
   return (
     <SpPage narrow>
@@ -219,7 +240,7 @@ export function SpeakingEvaluationPanel({
                 overline="ĐÃ NHẬN ĐỒNG Ý · ĐANG XỬ LÝ"
                 title="AI đang nghe và chấm bài nói của bạn (khoảng 20–40 giây)…"
               />
-              <div className="mt-5 rounded-2xl border border-(--sp-line) bg-(--sp-subtle) px-8 py-12 lg:pl-[28%]">
+              <div className="mt-5 rounded-2xl bg-(--sp-subtle) px-8 py-12 lg:pl-[28%]">
                 <p className="sp-overline text-(--sp-ink-2)">
                   ĐANG PHÂN TÍCH BẢN GHI ÂM
                 </p>
@@ -268,14 +289,22 @@ export function SpeakingEvaluationPanel({
           ) : (
             <>
               <Heading
-                description="Nhận phân tích bài nói và gợi ý cải thiện qua 3 bước đánh giá."
-                overline="BÀI NÓI ĐÃ SẴN SÀNG · XÁC NHẬN TRƯỚC KHI CHẤM"
+                description={
+                  guestLimited
+                    ? "Bài nói đã được lưu. Đăng nhập để nhận thêm lượt chấm AI."
+                    : "Nhận phân tích bài nói và gợi ý cải thiện qua 3 bước đánh giá."
+                }
+                overline={
+                  guestLimited
+                    ? "KHÁCH VÃNG LAI · ĐÃ HẾT LƯỢT CHẤM TRONG 24 GIỜ"
+                    : "BÀI NÓI ĐÃ SẴN SÀNG · XÁC NHẬN TRƯỚC KHI CHẤM"
+                }
                 title="Gửi bài nói để AI đánh giá & chấm điểm ước tính theo chuẩn ETS"
               />
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {tiles.map(([number, title, description]) => (
                   <div
-                    className="rounded-[14px] border border-(--sp-line) bg-(--sp-subtle) p-4"
+                    className="rounded-[14px] bg-(--sp-subtle) p-4"
                     key={number}
                   >
                     <p className="text-[13px] text-(--sp-brand)">{number}</p>
@@ -286,8 +315,45 @@ export function SpeakingEvaluationPanel({
                   </div>
                 ))}
               </div>
-              <hr className="my-6 border-(--sp-line)" />
+              {!guestLimited && <hr className="my-6 border-(--sp-line)" />}
 
+              {guestLimited && (
+                <>
+                  <div
+                    className="mt-6 rounded-[14px] border-[1.5px] border-(--sp-warning-line) bg-(--sp-warning-bg) p-5"
+                    role="alert"
+                  >
+                    <div className="flex gap-3">
+                      <AlertCircleIcon
+                        className="mt-0.5 shrink-0 text-(--sp-warning)"
+                        size={22}
+                      />
+                      <div>
+                        <p className="font-semibold">
+                          Khách vãng lai chỉ được chấm 1 lượt/ngày. Đăng nhập để
+                          nhận thêm lượt.
+                        </p>
+                        <p className="mt-1 text-sm">
+                          Đã dùng 1/1 lượt trong 24 giờ. Chưa gửi bài nói này
+                          đến dịch vụ AI.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <Link
+                        className="sp-btn sp-btn-solid"
+                        href={`/login?next=${encodeURIComponent(retryPath)}`}
+                      >
+                        Đăng nhập để nhận thêm lượt →
+                      </Link>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-xs text-(--sp-ink-2)">
+                    Bài làm của khách không chuyển sang tài khoản. Sau khi đăng
+                    nhập, bạn làm lại bài để được chấm.
+                  </p>
+                </>
+              )}
               {available === null && !evaluation && (
                 <p className="text-sm text-(--sp-ink-2)">
                   Đang kiểm tra dịch vụ chấm AI…
@@ -319,12 +385,12 @@ export function SpeakingEvaluationPanel({
                   </button>
                 </div>
               )}
-              {available && !evaluation && !hasRecordings && (
+              {available && !evaluation && !hasRecordings && !guestLimited && (
                 <p className="text-sm font-semibold text-(--sp-warning)">
                   Lượt này chưa có bản ghi nào nên chưa thể chấm.
                 </p>
               )}
-              {available && !evaluation && hasRecordings && (
+              {available && !evaluation && hasRecordings && !guestLimited && (
                 <>
                   <label className="flex min-h-20 items-center gap-3 rounded-xl border border-(--sp-line) p-4 text-sm">
                     <input
@@ -366,12 +432,22 @@ export function SpeakingEvaluationPanel({
             <p className="mt-3 font-semibold">{attempt.testTitle}</p>
             <p className="text-xs text-(--sp-ink-2)">
               {formatDate(attempt.createdAtUtc)}
+              {attemptNumber !== null &&
+                ` · Lần thi ${formatAttemptNumber(attemptNumber)}`}
             </p>
             <dl className="mt-3 space-y-2 text-[13px]">
               <div className="flex justify-between gap-2">
                 <dt className="text-(--sp-ink-2)">Câu trả lời</dt>
                 <dd>
                   {saved} / {attempt.questions.length} câu
+                </dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-(--sp-ink-2)">Nội dung</dt>
+                <dd>
+                  {partCount > 1
+                    ? `${partCount} Parts`
+                    : `Part ${attempt.questions[0]?.part}`}
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
@@ -386,14 +462,16 @@ export function SpeakingEvaluationPanel({
               <CheckIcon className="text-(--sp-success)" size={15} />
               Đã hoàn thành bài ghi âm
             </p>
-            <Link
-              className="sp-btn sp-btn-sm sp-btn-outline mt-3 w-full"
-              href={reviewHref(attempt.id)}
-            >
-              Nghe lại bài làm
-            </Link>
+            {canListen && (
+              <Link
+                className="sp-btn sp-btn-sm sp-btn-outline mt-3 w-full"
+                href={reviewHref(attempt.id)}
+              >
+                Nghe lại bài làm
+              </Link>
+            )}
           </section>
-          <section className="rounded-2xl border border-(--sp-line) bg-(--sp-row-hover) p-5">
+          <section className="sp-card p-5">
             <h2 className="font-semibold">Minh bạch về dữ liệu</h2>
             <p className="mt-2 text-[13px] text-(--sp-ink-2)">
               Bản ghi âm được gửi đến Azure Speech; văn bản bài nói được Gemini

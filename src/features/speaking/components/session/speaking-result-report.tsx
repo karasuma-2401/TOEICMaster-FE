@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import {
-  getSpeakingAttempts,
-  type SpeakingAttemptSummary,
-} from "@/features/speaking/api";
 import type { SpeakingAttempt } from "@/features/speaking/attempt";
 import type {
   SpeakingEvaluation,
   SpeakingEvaluationItem,
 } from "@/features/speaking/evaluation";
-import { formatDate, formatElapsed } from "../ui/format";
+import { useAttemptHistory } from "@/features/speaking/hooks/use-attempt-history";
+import { formatAttemptNumber, formatDate, formatElapsed } from "../ui/format";
 import { AlertCircleIcon, AwardIcon, CheckIcon } from "../ui/icons";
 import { SpPage } from "../ui/page";
 import { Breadcrumb, Chip, type ChipTone } from "../ui/primitives";
@@ -25,23 +21,82 @@ type ScoreKey = keyof Pick<
   | "relevanceScore"
 >;
 
-const criteria: { key: ScoreKey; vi: string; en: string }[] = [
-  { key: "pronunciationScore", vi: "Phát âm", en: "Pronunciation" },
-  { key: "prosodyScore", vi: "Ngữ điệu & Trọng âm", en: "Intonation & Stress" },
-  { key: "grammarScore", vi: "Ngữ pháp", en: "Grammar" },
-  { key: "vocabularyScore", vi: "Từ vựng", en: "Vocabulary" },
+type Band = "good" | "fair" | "low";
+
+// `speech` marks the criteria Azure Speech measures, shown with an English level.
+const criteria: {
+  key: ScoreKey;
+  vi: string;
+  en: string;
+  speech?: boolean;
+  /** One line per score band; the backend returns scores, not per-criterion notes. */
+  notes: Record<Band, string>;
+}[] = [
+  {
+    key: "pronunciationScore",
+    vi: "Phát âm",
+    en: "Pronunciation",
+    speech: true,
+    notes: {
+      good: "Phát âm rõ ở phần lớn các từ.",
+      fair: "Một số từ chưa rõ, xem chi tiết từng câu.",
+      low: "Nhiều từ chưa rõ, nên luyện lại từng âm.",
+    },
+  },
+  {
+    key: "prosodyScore",
+    vi: "Ngữ điệu & Trọng âm",
+    en: "Intonation & Stress",
+    speech: true,
+    notes: {
+      good: "Ngữ điệu và trọng âm tự nhiên.",
+      fair: "Cần chú ý ngữ điệu và trọng âm ở một số câu.",
+      low: "Ngữ điệu còn đều, nên nghe mẫu và nhại lại.",
+    },
+  },
+  {
+    key: "grammarScore",
+    vi: "Ngữ pháp",
+    en: "Grammar",
+    notes: {
+      good: "Cấu trúc câu chính xác.",
+      fair: "Còn một số lỗi ngữ pháp.",
+      low: "Cần ôn lại cấu trúc câu cơ bản.",
+    },
+  },
+  {
+    key: "vocabularyScore",
+    vi: "Từ vựng",
+    en: "Vocabulary",
+    notes: {
+      good: "Dùng từ đa dạng, phù hợp.",
+      fair: "Từ vựng đủ ý, có thể đa dạng hơn.",
+      low: "Vốn từ còn hạn chế, cần mở rộng.",
+    },
+  },
   {
     key: "relevanceScore",
     vi: "Tính liên kết & Phù hợp",
     en: "Cohesion & Relevance",
+    notes: {
+      good: "Trả lời đúng trọng tâm, mạch lạc.",
+      fair: "Có chỗ chưa bám sát câu hỏi.",
+      low: "Câu trả lời chưa đúng trọng tâm.",
+    },
   },
 ];
 
-function level(score: number): { label: string; tone: ChipTone } {
-  if (score >= 80) return { label: "Tốt", tone: "success" };
-  if (score >= 60) return { label: "Khá", tone: "warning" };
-  return { label: "Cần cải thiện", tone: "danger" };
-}
+const bandLook: Record<
+  Band,
+  { label: string; english: string; tone: ChipTone }
+> = {
+  good: { label: "Tốt", english: "High", tone: "success" },
+  fair: { label: "Khá", english: "Medium", tone: "warning" },
+  low: { label: "Cần cải thiện", english: "Low", tone: "danger" },
+};
+
+const bandOf = (score: number): Band =>
+  score >= 80 ? "good" : score >= 60 ? "fair" : "low";
 
 /** Mean of a score over the answers the service could assess. */
 function average(items: SpeakingEvaluationItem[], key: ScoreKey) {
@@ -54,6 +109,25 @@ function average(items: SpeakingEvaluationItem[], key: ScoreKey) {
     : null;
 }
 
+/** The Part with the lowest share of its raw points. */
+function weakestPart(items: SpeakingEvaluationItem[]) {
+  const totals = new Map<number, { raw: number; max: number }>();
+  for (const item of items) {
+    const total = totals.get(item.part) ?? { raw: 0, max: 0 };
+    total.raw += item.rawScore;
+    total.max += item.maxRawScore;
+    totals.set(item.part, total);
+  }
+  return [...totals.entries()]
+    .filter(([, total]) => total.max > 0)
+    .toSorted(([, a], [, b]) => a.raw / a.max - b.raw / b.max)[0]?.[0];
+}
+
+const joinNames = (names: string[]) =>
+  names.length > 1
+    ? `${names.slice(0, -1).join(", ")} và ${names.at(-1)}`
+    : (names[0] ?? "");
+
 export function SpeakingResultReport({
   attempt,
   evaluation,
@@ -61,29 +135,17 @@ export function SpeakingResultReport({
   attempt: SpeakingAttempt;
   evaluation: SpeakingEvaluation;
 }) {
-  const [history, setHistory] = useState<SpeakingAttemptSummary[]>([]);
-  useEffect(() => {
-    if (!attempt.testId) return;
-    const controller = new AbortController();
-    getSpeakingAttempts(controller.signal)
-      .then((items) =>
-        setHistory(
-          items
-            .filter(
-              (item) =>
-                item.testId === attempt.testId && item.estimatedScore !== null,
-            )
-            .toSorted((a, b) => a.createdAtUtc.localeCompare(b.createdAtUtc)),
-        ),
-      )
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, [attempt.testId]);
+  const { items: attempts, number } = useAttemptHistory(attempt);
+  const history = attempts.filter((item) => item.estimatedScore !== null);
 
   const rows = criteria.flatMap((criterion) => {
-    const score = average(evaluation.items, criterion.key);
-    return score === null ? [] : [{ ...criterion, score }];
+    const value = average(evaluation.items, criterion.key);
+    return value === null ? [] : [{ ...criterion, score: value }];
   });
+  const strong = rows.filter((row) => bandOf(row.score) === "good");
+  const weak = rows.filter((row) => bandOf(row.score) !== "good");
+  const lowest = rows.toSorted((a, b) => a.score - b.score)[0];
+  const part = weakestPart(evaluation.items);
   const recent = history.slice(-2);
   const change =
     recent.length === 2
@@ -91,6 +153,9 @@ export function SpeakingResultReport({
       : null;
   const score = evaluation.estimatedScore ?? 0;
   const recorded = attempt.questions.filter((item) => item.recording).length;
+  const partCount = new Set(attempt.questions.map((item) => item.part)).size;
+  const attemptLabel =
+    number === null ? null : `Lần thi ${formatAttemptNumber(number)}`;
 
   return (
     <SpPage narrow>
@@ -99,7 +164,11 @@ export function SpeakingResultReport({
           { label: "Trang chủ", href: "/" },
           { label: "Đề thi thử", href: "/speaking" },
           { label: "Speaking", href: "/speaking" },
-          { label: "Kết quả lần thi" },
+          {
+            label: attemptLabel
+              ? `Kết quả ${attemptLabel.toLowerCase()}`
+              : "Kết quả lần thi",
+          },
         ]}
       />
       <section className="relative mt-4 rounded-[20px] border border-(--sp-hero-line) bg-(--sp-cream) p-7">
@@ -115,6 +184,7 @@ export function SpeakingResultReport({
         </h1>
         <p className="text-[13px] text-(--sp-ink-2)">
           {attempt.testTitle} · {formatDate(attempt.createdAtUtc)} ·{" "}
+          {attemptLabel && `${attemptLabel} · `}
           {formatElapsed(attempt.createdAtUtc, attempt.submittedAtUtc)} · Trạng
           thái: COMPLETED
         </p>
@@ -131,7 +201,12 @@ export function SpeakingResultReport({
             <p className="text-xl font-semibold">
               {recorded} / {attempt.questions.length} câu
             </p>
-            <p className="mt-1 text-xs text-(--sp-ink-2)">Đã hoàn thành</p>
+            <p className="mt-1 text-xs text-(--sp-ink-2)">
+              Đã hoàn thành ·{" "}
+              {partCount > 1
+                ? `${partCount} Parts`
+                : `Part ${attempt.questions[0]?.part}`}
+            </p>
           </div>
           <div>
             <p className="font-semibold">Bài thi Speaking độc lập</p>
@@ -153,12 +228,13 @@ export function SpeakingResultReport({
               <tr className="sp-overline text-(--sp-ink-3)">
                 <th className="py-2 font-semibold">TIÊU CHÍ</th>
                 <th className="py-2 font-semibold">MỨC ĐÁNH GIÁ</th>
-                <th className="py-2 font-semibold">ĐIỂM TRUNG BÌNH</th>
+                <th className="py-2 font-semibold">NHẬN XÉT</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
-                const look = level(row.score);
+                const band = bandOf(row.score);
+                const look = bandLook[band];
                 return (
                   <tr className="border-t border-(--sp-line)" key={row.key}>
                     <td className="py-3">
@@ -166,9 +242,20 @@ export function SpeakingResultReport({
                       <p className="text-xs text-(--sp-ink-2)">{row.en}</p>
                     </td>
                     <td>
-                      <Chip tone={look.tone}>{look.label}</Chip>
+                      <Chip tone={look.tone}>
+                        {row.speech
+                          ? `${look.label} (${look.english})`
+                          : look.label}
+                      </Chip>
                     </td>
-                    <td className="text-[13px]">{Math.round(row.score)}/100</td>
+                    <td className="text-[13px]">
+                      <span className="font-semibold">
+                        {Math.round(row.score)}/100
+                      </span>{" "}
+                      <span className="text-(--sp-ink-2)">
+                        · {row.notes[band]}
+                      </span>
+                    </td>
                   </tr>
                 );
               })}
@@ -182,6 +269,12 @@ export function SpeakingResultReport({
               <p className="mt-2 text-[13px] text-(--sp-ink-2)">
                 {evaluation.summary}
               </p>
+              {lowest && (
+                <p className="mt-2 text-xs text-(--sp-ink-2)">
+                  Ưu tiên: {lowest.en}
+                  {part !== undefined && ` · Part ${part}`}
+                </p>
+              )}
             </section>
           )}
           {recent.length > 0 && (
@@ -208,9 +301,22 @@ export function SpeakingResultReport({
         </aside>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
+      <div className="mt-6 grid items-start gap-6 md:grid-cols-2">
         <section className="rounded-2xl border border-(--sp-success-border-soft) bg-(--sp-success-bg) p-5">
-          <h2 className="font-semibold">Điểm mạnh nổi bật</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Điểm mạnh nổi bật</h2>
+            {strong.length > 0 && (
+              <p className="text-xs text-(--sp-success)">
+                {strong.length} tiêu chí tốt
+              </p>
+            )}
+          </div>
+          {strong.length > 0 && (
+            <p className="mt-2 text-[13px]">
+              {joinNames(strong.map((row) => row.vi))} đang là những điểm mạnh
+              nổi bật trong bài Speaking lần này.
+            </p>
+          )}
           <ul className="mt-3 space-y-2 text-[13px]">
             {(evaluation.strengths.length
               ? evaluation.strengths
@@ -227,7 +333,20 @@ export function SpeakingResultReport({
           </ul>
         </section>
         <section className="rounded-2xl border border-(--sp-warning-line) bg-(--sp-warning-bg) p-5">
-          <h2 className="font-semibold">Cần ưu tiên cải thiện</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Cần ưu tiên cải thiện</h2>
+            {weak.length > 0 && (
+              <p className="text-xs text-(--sp-warning)">
+                {weak.length} tiêu chí cần cải thiện
+              </p>
+            )}
+          </div>
+          {weak.length > 0 && (
+            <p className="mt-2 text-[13px]">
+              {joinNames(weak.map((row) => row.vi))} cần được ưu tiên cải thiện
+              để nâng cao điểm Speaking.
+            </p>
+          )}
           <ul className="mt-3 space-y-2 text-[13px]">
             {(evaluation.improvements.length
               ? evaluation.improvements

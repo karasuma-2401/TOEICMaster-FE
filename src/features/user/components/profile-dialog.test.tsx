@@ -36,7 +36,7 @@ describe("ProfileDialog", () => {
     expect(dialog).toHaveAttribute("aria-modal", "true");
 
     expect(screen.getByText("Nguyễn Văn A")).toBeInTheDocument();
-    expect(screen.getByText("learner@example.com")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveValue("learner@example.com");
     expect(screen.getByText("NA")).toBeInTheDocument();
 
     expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Nguyễn Văn A");
@@ -75,23 +75,18 @@ describe("ProfileDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("cho phép chuyển đổi giữa tab Thông tin và Bảo mật", async () => {
-    const user = userEvent.setup();
+  it("dùng chung bố cục mới với trang hồ sơ, không còn tab", () => {
     render(<ProfileDialog isOpen={true} onClose={vi.fn()} user={sampleUser} />);
 
-    const infoTab = screen.getByRole("button", { name: "Thông tin" });
-    const securityTab = screen.getByRole("button", { name: "Bảo mật" });
-
-    expect(infoTab).toHaveAttribute("aria-current", "page");
+    expect(
+      screen.getByRole("heading", { name: "Hồ sơ & mục tiêu học tập" }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Tên hiển thị")).toBeInTheDocument();
-
-    await user.click(securityTab);
-    expect(securityTab).toHaveAttribute("aria-current", "page");
     expect(screen.getByLabelText("Mật khẩu hiện tại")).toBeInTheDocument();
-
-    await user.click(infoTab);
-    expect(infoTab).toHaveAttribute("aria-current", "page");
-    expect(screen.getByLabelText("Tên hiển thị")).toBeInTheDocument();
+    expect(screen.getByLabelText("Điểm kỳ vọng")).toHaveValue("750");
+    expect(
+      screen.queryByRole("button", { name: "Bảo mật" }),
+    ).not.toBeInTheDocument();
   });
 
   it("gọi onLogout khi nhấn nút Đăng xuất", async () => {

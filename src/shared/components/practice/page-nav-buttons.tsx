@@ -1,36 +1,53 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { MouseEvent, ReactNode } from "react";
+import { hasPreviousVisit, parentPath } from "./navigation-history";
+import { focusRing } from "./styles";
 
-const button =
-  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 text-[13px] font-medium whitespace-nowrap text-stone-700 transition hover:border-orange-500 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600";
+const button = `inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-slate-300 bg-white pl-2.5 pr-3 text-[13px] font-medium leading-none whitespace-nowrap text-slate-700 transition hover:border-orange-500 hover:bg-orange-50 hover:text-orange-700 ${focusRing}`;
 
-function goBack() {
-  // A page opened directly has nothing to go back to.
-  if (window.history.length > 1) window.history.back();
-  else window.location.assign("/");
+function NavIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-4 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.75}
+      viewBox="0 0 24 24"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function goBack(event: MouseEvent) {
+  // Opened directly, or in a new tab: the link's own target is the parent page.
+  if (event.metaKey || event.ctrlKey || event.shiftKey || !hasPreviousVisit())
+    return;
+  event.preventDefault();
+  window.history.back();
 }
 
 /** Lets learners move around without editing the address bar. */
 export function PageNavButtons() {
+  const pathname = usePathname() ?? "/";
   return (
     <div className="flex items-center gap-2">
-      <button className={button} onClick={goBack} type="button">
-        <span aria-hidden="true">←</span> Quay lại
-      </button>
+      <Link className={button} href={parentPath(pathname)} onClick={goBack}>
+        <NavIcon>
+          <path d="m12 19-7-7 7-7M19 12H5" />
+        </NavIcon>
+        Quay lại
+      </Link>
       <Link className={button} href="/">
-        <svg
-          aria-hidden="true"
-          className="size-4"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.75}
-          viewBox="0 0 24 24"
-        >
+        <NavIcon>
           <path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-9.5Z" />
-        </svg>
+        </NavIcon>
         Trang chủ
       </Link>
     </div>

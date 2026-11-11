@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { type UserProfile, getInitials } from "@/features/user/profile";
-import { avatarUrl } from "@/features/user/api";
-import { ChangePasswordForm } from "./change-password-form";
-import { ProfileForm } from "./profile-form";
-
-type ProfileTab = "info" | "security";
+import { useEffect, useRef } from "react";
+import type { UserProfile } from "@/features/user/profile";
+import { ProfileWorkspace } from "./profile-workspace";
 
 export interface ProfileDialogProps {
   isOpen: boolean;
@@ -24,12 +19,8 @@ export function ProfileDialog({
   onLogout,
   onSaved,
 }: ProfileDialogProps) {
-  const [activeTab, setActiveTab] = useState<ProfileTab>("info");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
-
-  const initials = user ? getInitials(user.displayName) : "U";
-  const imageUrl = user ? avatarUrl(user) : null;
 
   // Focus trap & Escape key listener
   useEffect(() => {
@@ -114,7 +105,7 @@ export function ProfileDialog({
       <dialog
         aria-labelledby="profile-dialog-title"
         aria-modal="true"
-        className="relative m-0 max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-[2rem] border border-[#eee8e5] bg-[#fffdfc] p-6 text-inherit shadow-2xl outline-none sm:p-8"
+        className="relative m-0 max-h-[90vh] w-full max-w-[1120px] overflow-y-auto rounded-[20px] border border-[#ece9e5] bg-[#f7f6f4] p-5 text-inherit shadow-2xl outline-none sm:p-7"
         open
         ref={dialogRef}
         tabIndex={-1}
@@ -142,89 +133,22 @@ export function ProfileDialog({
           </svg>
         </button>
 
-        {/* Thông tin học viên trên đầu popup */}
-        <div className="flex items-center gap-3.5 pr-10">
-          <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-base font-bold text-[#841013] shadow-sm">
-            {imageUrl ? (
-              <Image
-                alt={`Ảnh đại diện của ${user.displayName}`}
-                className="h-full w-full object-cover"
-                fill
-                sizes="48px"
-                src={imageUrl}
-                unoptimized
-              />
-            ) : (
-              initials
-            )}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2
-              className="truncate text-lg font-bold text-[#342d2a]"
-              id="profile-dialog-title"
-            >
-              {user.displayName}
-            </h2>
-            <p className="truncate text-xs text-[#a89f9b]">{user.email}</p>
-            {user.targetScore !== null && (
-              <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-[#fbdcd0] bg-[#fdf2ec] px-2.5 py-0.5 text-[11px] font-semibold text-[#ed361c]">
-                Mục tiêu: {user.targetScore} TOEIC
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Eyebrow */}
-        <p className="mt-5 flex items-center gap-3 text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
-          HỒ SƠ CỦA BẠN
+        <h2
+          className="pr-10 text-[28px] font-bold leading-tight text-[#2f2b28]"
+          id="profile-dialog-title"
+        >
+          Hồ sơ &amp; mục tiêu học tập
+        </h2>
+        <p className="mt-1.5 pr-10 text-[15px] text-[#6b655f]">
+          Cá nhân hóa hành trình chinh phục TOEIC của bạn.
         </p>
 
-        {/* Tab điều hướng */}
-        <nav
-          aria-label="Quản lý hồ sơ"
-          className="mt-4 grid grid-cols-2 rounded-xl bg-[#f5f1ef] p-1 text-sm font-bold"
-        >
-          <button
-            aria-current={activeTab === "info" ? "page" : undefined}
-            className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c] ${
-              activeTab === "info"
-                ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
-                : "text-[#b7aeaa] hover:text-[#736a66]"
-            }`}
-            onClick={() => setActiveTab("info")}
-            type="button"
-          >
-            Thông tin
-          </button>
-          <button
-            aria-current={activeTab === "security" ? "page" : undefined}
-            className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c] ${
-              activeTab === "security"
-                ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
-                : "text-[#b7aeaa] hover:text-[#736a66]"
-            }`}
-            onClick={() => setActiveTab("security")}
-            type="button"
-          >
-            Bảo mật
-          </button>
-        </nav>
-
-        {/* Nội dung theo Tab */}
         <div className="mt-5">
-          {activeTab === "info" ? (
-            <ProfileForm
-              initialValues={user}
-              key={JSON.stringify(user)}
-              onSaved={onSaved}
-            />
-          ) : (
-            <ChangePasswordForm hasPassword={user?.hasPassword ?? true} />
-          )}
+          <ProfileWorkspace onSaved={onSaved} profile={user} />
         </div>
 
         {/* Phần chân popup với nút Đăng xuất */}
-        <div className="mt-6 flex items-center justify-between border-t border-[#eee8e5] pt-4 text-xs">
+        <div className="mt-5 flex items-center justify-between border-t border-[#e4dfda] pt-4 text-xs">
           <button
             className="inline-flex cursor-pointer items-center gap-2 font-semibold text-[#ed361c] transition hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             onClick={onLogout}

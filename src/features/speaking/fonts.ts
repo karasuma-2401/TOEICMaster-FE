@@ -1,10 +1,14 @@
-import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Poppins } from "next/font/google";
 
-const beVietnamPro = Be_Vietnam_Pro({
-  subsets: ["latin", "vietnamese"],
+// Google serves Poppins without a Vietnamese subset; the fallback list draws
+// those letters instead of the size-adjusted Arial next/font would add.
+const poppins = Poppins({
+  subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--sp-font-sans",
   display: "swap",
+  adjustFontFallback: false,
+  fallback: ["Avenir Next", "Avenir", "Segoe UI", "sans-serif"],
 });
 
 const jetBrainsMono = JetBrains_Mono({
@@ -15,4 +19,4 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 /** Class names exposing the app fonts; applied beside `sp-theme` or `sp-font`. */
-export const speakingFontClasses = `${beVietnamPro.variable} ${jetBrainsMono.variable}`;
+export const speakingFontClasses = `${poppins.variable} ${jetBrainsMono.variable}`;

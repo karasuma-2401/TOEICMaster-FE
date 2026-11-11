@@ -11,6 +11,7 @@ import { SpeakingReview } from "./speaking-review";
 
 vi.mock("@/features/speaking/api", () => ({
   getSpeakingAttempt: vi.fn(),
+  getSpeakingAttempts: vi.fn().mockResolvedValue([]),
   recordingUrl: () => "/recording",
 }));
 afterEach(cleanup);
@@ -32,7 +33,7 @@ describe("SpeakingReview", () => {
     render(<SpeakingReview attemptId="a" position={1} />);
 
     expect(await screen.findByText("conference")).toHaveClass("sp-word-issue");
-    expect(screen.getByText("2/3 điểm")).toBeInTheDocument();
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
     expect(screen.getByText("Nhận xét câu 1.")).toBeInTheDocument();
   });
 

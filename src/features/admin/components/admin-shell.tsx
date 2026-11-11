@@ -16,10 +16,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
         onToggleCollapsed={sidebar.toggleCollapsed}
       />
       <div
-        className={`min-h-dvh transition-[padding] duration-200 ${sidebar.isCollapsed ? "lg:pl-[72px]" : "lg:pl-[264px]"}`}
+        className={`min-h-dvh transition-[padding] duration-200 ${sidebar.isCollapsed ? "lg:pl-[72px]" : "lg:pl-[255px]"}`}
       >
         <AdminTopbar onOpenMenu={sidebar.openMobile} />
-        <main className="mx-auto w-full max-w-[1600px] px-5 py-7 sm:px-8 lg:px-10">
+        <main className="w-full px-5 py-6 sm:px-6 lg:px-[25px]">
           {children}
         </main>
       </div>

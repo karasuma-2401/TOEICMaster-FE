@@ -44,7 +44,7 @@ describe("AdminSpeakingContentPage", () => {
     render(<AdminSpeakingContentPage />);
 
     expect(await screen.findByText("SP1-001")).toBeInTheDocument();
-    expect(screen.getByText(/Quản lý 12 bài tập/)).toBeInTheDocument();
+    expect(screen.getByText("9")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Part 4/ }));
 
     expect(await screen.findByText("SP4-001")).toBeInTheDocument();
@@ -52,6 +52,19 @@ describe("AdminSpeakingContentPage", () => {
       expect.objectContaining({ part: 4, pageNumber: 1, pageSize: 10 }),
       expect.any(AbortSignal),
     );
+  });
+
+  it("locks a dedicated workspace to its route Part", async () => {
+    render(<AdminSpeakingContentPage part={3} />);
+
+    expect(await screen.findByText("SP3-001")).toBeInTheDocument();
+    expect(listSpeakingExercises).toHaveBeenLastCalledWith(
+      expect.objectContaining({ part: 3, pageNumber: 1, pageSize: 10 }),
+      expect.any(AbortSignal),
+    );
+    expect(
+      screen.queryByRole("button", { name: /Part 1/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a retryable error when the backend is unavailable", async () => {

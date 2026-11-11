@@ -136,3 +136,12 @@ export const SearchIcon = icon(
   </>,
 );
 export const ArrowRightIcon = icon(<path d="M5 12h14M12 5l7 7-7 7" />);
+export const BookOpenIcon = icon(
+  <path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />,
+);
+export const SparklesIcon = icon(
+  <path d="m11 4 1.8 5.2L18 11l-5.2 1.8L11 18l-1.8-5.2L4 11l5.2-1.8ZM19 3v4M17 5h4" />,
+);
+export const TrendingUpIcon = icon(
+  <path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6" />,
+);

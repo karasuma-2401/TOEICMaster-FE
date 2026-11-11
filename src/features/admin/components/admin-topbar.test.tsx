@@ -15,4 +15,11 @@ describe("AdminTopbar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mở menu quản trị" }));
     expect(onOpenMenu).toHaveBeenCalledOnce();
   });
+
+  it("links back to the learner practice area", () => {
+    const { container } = render(<AdminTopbar onOpenMenu={vi.fn()} />);
+    expect(
+      within(container).getByRole("link", { name: "Về trang luyện đề" }),
+    ).toHaveAttribute("href", "/#home-skills");
+  });
 });

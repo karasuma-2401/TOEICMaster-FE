@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import { PracticePage } from "@/shared/components/practice/practice-page";
 import { SpeakingHeader } from "../speaking-header";
 
-/** Learner page frame: top navigation and the warm page background. */
+/** Learner page frame, the same one the other skills use. */
 export function SpPage({
   narrow = false,
   children,
@@ -10,13 +11,12 @@ export function SpPage({
   children: ReactNode;
 }) {
   return (
-    <div className="sp-page">
-      <SpeakingHeader />
-      <main
-        className={`sp-container ${narrow ? "sp-container-narrow" : ""} pb-16 pt-8`}
-      >
-        {children}
-      </main>
-    </div>
+    <PracticePage className="pb-16 pt-8" header={<SpeakingHeader />}>
+      {narrow ? (
+        <div className="mx-auto w-full max-w-[1100px]">{children}</div>
+      ) : (
+        children
+      )}
+    </PracticePage>
   );
 }

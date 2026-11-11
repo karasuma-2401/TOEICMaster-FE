@@ -10,6 +10,7 @@ export type SpeakingDifficulty = "EASY" | "MEDIUM" | "HARD";
 export type SpeakingExerciseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export type SpeakingTestStatus = "DRAFT" | "PUBLISHED";
+export type SpeakingTestContentMode = "EXERCISE_BANK" | "DIRECT";
 
 export type SpeakingMode =
   "FULL" | "PART_1" | "PART_2" | "PART_3" | "PART_4" | "PART_5";
@@ -91,7 +92,30 @@ export interface SpeakingTest {
   version: number;
   updatedAtUtc: string;
   publishedAtUtc: string | null;
+  contentMode: SpeakingTestContentMode;
   exerciseIds: Record<SpeakingPart, string[]>;
+  questions: SpeakingTestQuestion[];
+}
+
+/** Content owned by one Speaking test; it never becomes an exercise-bank record. */
+export interface SpeakingTestQuestionContent {
+  rubricNotes: string;
+  modelAnswer: string;
+  passage?: string;
+  imageAssetId?: string | null;
+  imageAlt?: string;
+  context?: string;
+  questions?: (string | null)[];
+  documentTitle?: string;
+  documentRows?: InformationRow[];
+  callerIntro?: string;
+  prompt?: string;
+}
+
+export interface SpeakingTestQuestion {
+  part: SpeakingPart;
+  sequenceNumber: number;
+  content: SpeakingTestQuestionContent;
 }
 
 export interface Page<T> {

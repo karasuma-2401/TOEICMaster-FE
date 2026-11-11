@@ -24,9 +24,9 @@ describe("ContentTabs", () => {
       "/admin/tests/speaking",
     );
     expect(
-      screen.getByRole("link", { name: /Listening & Reading/i }),
+      screen.getByRole("link", { name: "Listening & Reading" }),
     ).toHaveAttribute("href", "/admin/exams?tab=tests");
-    expect(screen.getByRole("link", { name: /Writing/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Writing" })).toHaveAttribute(
       "href",
       "/admin/tests/writing",
     );

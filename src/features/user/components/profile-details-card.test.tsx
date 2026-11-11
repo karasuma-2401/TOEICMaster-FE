@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/features/user/api";
 import type { UserProfile } from "@/features/user/profile";
-import { ProfileForm } from "./profile-form";
+import { ProfileDetailsCard } from "./profile-details-card";
 
 const mocks = vi.hoisted(() => ({
   updateProfile: vi.fn(),
@@ -64,11 +64,10 @@ beforeEach(() => {
   });
 });
 
-describe("ProfileForm", () => {
-  it("giữ nút Lưu thay đổi và Hủy disabled khi chưa có thay đổi", () => {
-    render(<ProfileForm initialValues={sampleUser} />);
+describe("ProfileDetailsCard", () => {
+  it("giữ nút Lưu thay đổi disabled khi chưa có thay đổi", () => {
+    render(<ProfileDetailsCard profile={sampleUser} />);
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Hủy" })).toBeDisabled();
   });
 
   it("gửi dữ liệu đã trim, khóa nút trong khi lưu và báo thành công", async () => {
@@ -80,7 +79,7 @@ describe("ProfileForm", () => {
         finishSave = resolve;
       }),
     );
-    render(<ProfileForm initialValues={sampleUser} onSaved={onSaved} />);
+    render(<ProfileDetailsCard onSaved={onSaved} profile={sampleUser} />);
     const nameInput = screen.getByLabelText("Tên hiển thị");
     await user.clear(nameInput);
     await user.type(nameInput, "  Nguyễn Văn C  ");
@@ -90,7 +89,7 @@ describe("ProfileForm", () => {
       phone: "0912345678",
       targetScore: 750,
     });
-    expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Đang lưu..." })).toBeDisabled();
     const saved = { ...sampleUser, displayName: "Nguyễn Văn C" };
     finishSave(saved);
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
@@ -99,7 +98,7 @@ describe("ProfileForm", () => {
 
   it("không gửi khi validation FE thất bại và gán lỗi 400 vào đúng ô", async () => {
     const user = userEvent.setup();
-    render(<ProfileForm initialValues={sampleUser} />);
+    render(<ProfileDetailsCard profile={sampleUser} />);
     const nameInput = screen.getByLabelText("Tên hiển thị");
     await user.clear(nameInput);
     await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
@@ -117,17 +116,16 @@ describe("ProfileForm", () => {
     expect(nameInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("hiển thị email chỉ đọc, số điện thoại và điểm mục tiêu, không có ngày sinh", () => {
-    render(<ProfileForm initialValues={sampleUser} />);
+  it("hiển thị email chỉ đọc và số điện thoại, không có ngày sinh", () => {
+    render(<ProfileDetailsCard profile={sampleUser} />);
     expect(screen.queryByLabelText("Ngày sinh")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0912345678");
-    expect(screen.getByLabelText("Điểm TOEIC mục tiêu")).toHaveValue(750);
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
-    expect(screen.getByText("Đã xác minh")).toBeInTheDocument();
+    expect(screen.getByText(/Đã xác minh/)).toBeInTheDocument();
   });
 
   it("từ chối ảnh sai và preview rồi upload ảnh hợp lệ đúng một lần", async () => {
-    const { container } = render(<ProfileForm initialValues={sampleUser} />);
+    const { container } = render(<ProfileDetailsCard profile={sampleUser} />);
     const input =
       container.querySelector<HTMLInputElement>('input[type="file"]')!;
     fireEvent.change(input, {

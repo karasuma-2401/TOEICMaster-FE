@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AdminNotice } from "@/features/admin/components/content/admin-page-header";
+import {
+  AdminNotice,
+  AdminPageHeader,
+} from "@/features/admin/components/content/admin-page-header";
+import { AdminPartRouteTabs } from "@/features/admin/components/content/admin-part-route-tabs";
+import {
+  adminGradient,
+  adminPrimary,
+} from "@/features/admin/components/content/admin-styles";
+import { AdminStat } from "@/features/admin/components/content/admin-workspace";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import {
   archiveSpeakingExercise,
@@ -13,8 +22,11 @@ import {
   toSpeakingDraft,
   type SpeakingDraft,
 } from "@/features/speaking/admin-draft";
-import { speakingPartSpecs } from "@/features/speaking/part-specs";
-import type { Page, SpeakingExercise } from "@/features/speaking/types";
+import type {
+  Page,
+  SpeakingExercise,
+  SpeakingPart,
+} from "@/features/speaking/types";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { SpeakingExerciseEditor } from "./speaking-exercise-editor";
 import {
@@ -27,9 +39,13 @@ import { TablePagination } from "./table-pagination";
 
 const pageSize = 10;
 
-export function AdminSpeakingContentPage() {
+export function AdminSpeakingContentPage({
+  part,
+}: {
+  part?: SpeakingPart;
+} = {}) {
   const [filter, setFilter] = useState<ExerciseFilter>({
-    part: 1,
+    part: part ?? 1,
     query: "",
     difficulty: "ALL",
     status: "ALL",
@@ -76,7 +92,7 @@ export function AdminSpeakingContentPage() {
             },
             signal,
           ),
-          getSpeakingAdminSummary(signal),
+          part ? Promise.resolve(null) : getSpeakingAdminSummary(signal),
         ]);
         setPage(nextPage);
         setSummary(nextSummary);
@@ -87,7 +103,7 @@ export function AdminSpeakingContentPage() {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [filter],
+    [filter, part],
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -123,32 +139,56 @@ export function AdminSpeakingContentPage() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1>
-            Speaking Part {filter.part}: {speakingPartSpecs[filter.part].title}{" "}
-            ({speakingPartSpecs[filter.part].subtitle})
-          </h1>
-          <p className="mt-1 text-[13px] text-(--sp-ink-2)">
-            Quản lý {summary?.exercises.total ?? "…"} bài tập Speaking trên 5
-            Part.
-          </p>
-        </div>
-        <button
-          className="sp-btn sp-btn-cta"
-          onClick={() => setEditor(toSpeakingDraft(undefined, filter.part))}
-          type="button"
-        >
-          + Thêm bài tập
-        </button>
-      </div>
-      <ContentTabs section="content" skill="speaking" />
-      {notice && <AdminNotice>{notice}</AdminNotice>}
-      <SpeakingPartTabs
-        onChange={(part) => resetPage({ part })}
-        value={filter.part}
+      <AdminPageHeader
+        actions={
+          <button
+            className={adminPrimary}
+            onClick={() => setEditor(toSpeakingDraft(undefined, filter.part))}
+            style={adminGradient}
+            type="button"
+          >
+            + Thêm bài tập
+          </button>
+        }
+        description={
+          part
+            ? `Tạo, tìm kiếm, preview và quản lý bài tập Speaking Part ${part}.`
+            : "Tạo, tìm kiếm, preview và quản lý bài tập Speaking theo 5 Part."
+        }
+        title={part ? `Speaking Part ${part}` : "Ngân hàng bài tập Speaking"}
       />
-      <section className="sp-card mt-4 overflow-hidden">
+      <ContentTabs section="content" skill="speaking" />
+      {part && <AdminPartRouteTabs activePart={part} skill="speaking" />}
+      {notice && <AdminNotice>{notice}</AdminNotice>}
+      {!part && (
+        <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <AdminStat
+              hint="Trên 5 Part"
+              label="Tổng bài tập"
+              value={summary?.exercises.total ?? "—"}
+            />
+            <AdminStat
+              hint="Có thể chọn khi lắp đề"
+              label="Hiển thị"
+              value={summary?.exercises.published ?? "—"}
+            />
+            <AdminStat
+              label="Bản nháp"
+              value={summary?.exercises.draft ?? "—"}
+            />
+            <AdminStat
+              label="Lưu trữ"
+              value={summary?.exercises.archived ?? "—"}
+            />
+          </div>
+          <SpeakingPartTabs
+            onChange={(part) => resetPage({ part })}
+            value={filter.part}
+          />
+        </>
+      )}
+      <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <SpeakingExerciseFilters
           filter={{ ...filter, query }}
           onChange={resetPage}

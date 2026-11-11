@@ -29,8 +29,8 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
     guide: {
       title: "Luyện theo Part",
       tips: [
-        "Chọn Part ở dải năm mục ngay dưới tiêu đề.",
-        "Lọc theo độ khó hoặc chủ đề, rồi bấm vào một bài để luyện.",
+        "Chọn Part ở dãy nút ngay dưới tiêu đề.",
+        "Lọc theo độ khó hoặc trạng thái, rồi bấm Làm bài để luyện.",
       ],
     },
   },
@@ -39,7 +39,7 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
     guide: {
       title: "Trang Speaking",
       tips: [
-        "Mới bắt đầu? Hãy luyện từng Part trước để quen dạng câu hỏi.",
+        "Mới bắt đầu? Bấm Bài tập ngay dưới tiêu đề để luyện từng Part trước.",
         "Khi đã sẵn sàng, chọn một đề thi thử đủ 11 câu.",
         "Trong lúc thi, nói đủ rồi thì bấm sang câu tiếp, không cần chờ hết giờ.",
       ],
@@ -74,8 +74,8 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
 const home: MascotGuide = {
   title: "Chào bạn, mình là Míc!",
   tips: [
-    "Chọn kỹ năng bạn muốn luyện ở khu “Chọn kỹ năng để bắt đầu”.",
-    "Ở mọi trang đều có nút Quay lại và Trang chủ trên thanh đầu trang.",
+    "Chọn kỹ năng bạn muốn luyện ở khu “Ba bài thi độc lập”.",
+    "Bấm logo TOEICMaster trên thanh đầu trang để về trang chủ.",
     "Cần trợ giúp lúc nào cứ bấm vào mình ở góc màn hình nhé.",
   ],
 };

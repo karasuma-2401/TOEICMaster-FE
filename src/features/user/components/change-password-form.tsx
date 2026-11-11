@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, changePassword } from "@/features/user/api";
 import {
@@ -10,34 +10,17 @@ import {
   validatePasswordChange,
 } from "@/features/user/profile";
 import { toast } from "@/shared/ui/toast";
+import {
+  profileInput,
+  profileLabel,
+  profileOutlineButton,
+} from "./profile-styles";
 
 const initialValues: PasswordChangeInput = {
   currentPassword: "",
   newPassword: "",
   confirmPassword: "",
 };
-
-function LockIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <rect
-        height="9.5"
-        rx="1.8"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        width="13"
-        x="5.5"
-        y="10"
-      />
-      <path
-        d="M8.5 10V7.8a3.5 3.5 0 0 1 7 0V10"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
 
 function PasswordToggle({
   isVisible,
@@ -49,7 +32,7 @@ function PasswordToggle({
   return (
     <button
       aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+      className="absolute bottom-0 right-0 top-2 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
     >
@@ -120,6 +103,8 @@ export function ChangePasswordForm({
 }: {
   hasPassword?: boolean;
 }) {
+  // The popup can be open on top of the profile page.
+  const id = useId();
   const [values, setValues] = useState<PasswordChangeInput>(initialValues);
   const [errors, setErrors] = useState<PasswordChangeFieldErrors>({});
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -192,28 +177,23 @@ export function ChangePasswordForm({
 
   return (
     <form noValidate onSubmit={submit}>
-      <div className="space-y-3.5">
+      <div className="grid gap-4 md:grid-cols-3">
         {passwordFields.map((field) => {
           const error = errors[field.name];
           const isVisible = visiblePasswords[field.name];
+          const fieldId = `${id}-${field.name}`;
           return (
             <div key={field.name}>
-              <label
-                className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
-                htmlFor={field.name}
-              >
+              <label className={profileLabel} htmlFor={fieldId}>
                 {field.label}
               </label>
               <div className="relative">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
-                  <LockIcon />
-                </span>
                 <input
-                  aria-describedby={error ? `${field.name}-error` : undefined}
+                  aria-describedby={error ? `${fieldId}-error` : undefined}
                   aria-invalid={Boolean(error)}
                   autoComplete={field.autoComplete}
-                  className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-12 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
-                  id={field.name}
+                  className={`${profileInput} pr-12`}
+                  id={fieldId}
                   name={field.name}
                   onChange={updateValue}
                   placeholder={field.placeholder}
@@ -228,7 +208,7 @@ export function ChangePasswordForm({
               {error && (
                 <p
                   className="mt-1.5 text-xs text-red-600"
-                  id={`${field.name}-error`}
+                  id={`${fieldId}-error`}
                   role="alert"
                 >
                   {error}
@@ -239,12 +219,16 @@ export function ChangePasswordForm({
         })}
       </div>
 
+      <p className="mt-3 text-[13px] text-[#6b655f]">
+        Mật khẩu cần từ 8 đến 128 ký tự.
+      </p>
+
       <button
-        className="mt-6 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+        className={`mt-4 ${profileOutlineButton}`}
         disabled={pending}
         type="submit"
       >
-        {pending ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+        {pending ? "Đang đổi mật khẩu..." : "Cập nhật mật khẩu"}
       </button>
 
       {notice && (

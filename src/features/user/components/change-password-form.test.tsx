@@ -33,7 +33,7 @@ describe("ChangePasswordForm", () => {
   it("hiển thị lỗi client-side khi để trống và xóa lỗi khi sửa", async () => {
     const user = userEvent.setup();
     render(<ChangePasswordForm />);
-    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Cập nhật mật khẩu" }));
     expect(
       await screen.findByText("Vui lòng nhập mật khẩu hiện tại."),
     ).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("ChangePasswordForm", () => {
       screen.getByLabelText("Xác nhận mật khẩu mới"),
       "new-password-123",
     );
-    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Cập nhật mật khẩu" }));
     expect(
       await screen.findByText("Mật khẩu hiện tại không đúng."),
     ).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe("ChangePasswordForm", () => {
       screen.getByLabelText("Xác nhận mật khẩu mới"),
       "new-password-123",
     );
-    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Cập nhật mật khẩu" }));
     expect(
       await screen.findByText(
         "Mật khẩu hiện tại không đúng hoặc tài khoản không có mật khẩu.",
@@ -130,7 +130,7 @@ describe("ChangePasswordForm", () => {
       screen.getByLabelText("Xác nhận mật khẩu mới"),
       "new-password-123",
     );
-    await user.click(screen.getByRole("button", { name: "Đổi mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Cập nhật mật khẩu" }));
     expect(mocks.changePassword).toHaveBeenCalledWith({
       currentPassword: "old-password-123",
       newPassword: "new-password-123",

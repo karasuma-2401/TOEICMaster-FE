@@ -4,6 +4,10 @@
 export const pageContainer =
   "mx-auto w-full max-w-[1440px] px-4 md:px-8 xl:px-12";
 
+/** Wider frame for list pages that fill large screens. */
+export const wideContainer =
+  "mx-auto w-full max-w-[1720px] px-4 md:px-8 xl:px-16";
+
 export const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600";
 
@@ -13,8 +17,7 @@ export const secondaryAction = `inline-flex min-h-11 items-center justify-center
 
 export const textLink = `text-sm font-bold text-orange-700 underline decoration-2 underline-offset-4 hover:text-orange-800 ${focusRing}`;
 
-export const surfaceCard =
-  "rounded-3xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04),0_12px_32px_-18px_rgb(15_23_42/0.18)]";
+export const surfaceCard = "rounded-[20px] border border-[#ece9e5] bg-white";
 
 export const insetPanel = "rounded-2xl border border-slate-200 bg-slate-50/70";
 

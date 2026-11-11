@@ -5,6 +5,11 @@ export function formatClock(totalSeconds: number) {
   return `${minutes}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+/** Attempt ordinal shown to learners, e.g. `#02`. */
+export function formatAttemptNumber(value: number) {
+  return `#${String(value).padStart(2, "0")}`;
+}
+
 export function formatDate(value: string) {
   return new Date(value).toLocaleDateString("vi-VN", {
     day: "2-digit",

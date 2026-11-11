@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandMark } from "@/features/user/components/brand-mark";
-import { PageNavButtons } from "./page-nav-buttons";
-import { focusRing, pageContainer } from "./styles";
+import { focusRing, pageContainer, wideContainer } from "./styles";
 
+// Each skill page has its own switch between tests and exercises.
 const navigation = [
-  { id: "writing", label: "Writing", href: "/writing" },
+  { id: "listening", label: "Listening", href: "/listening" },
+  { id: "reading", label: "Reading", href: "/reading" },
   { id: "speaking", label: "Speaking", href: "/speaking" },
+  { id: "writing", label: "Writing", href: "/writing" },
   { id: "history", label: "Lịch sử", href: "/history/writing" },
 ] as const;
 
@@ -15,42 +17,47 @@ export type PracticeNavId = (typeof navigation)[number]["id"];
 export function SkillHeader({
   active,
   account,
+  wide = false,
+  center,
 }: {
-  active: PracticeNavId;
+  active?: PracticeNavId;
   account: ReactNode;
+  wide?: boolean;
+  /** Replaces the navigation, e.g. with the title of a read-only review. */
+  center?: ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[#ece9e5] bg-white">
       <div
-        className={`${pageContainer} flex min-h-16 flex-wrap items-center gap-x-6 gap-y-2 py-2`}
+        className={`${wide ? wideContainer : pageContainer} grid min-h-[72px] grid-cols-[1fr_auto] items-center gap-x-6 gap-y-1 py-2 lg:grid-cols-[1fr_auto_1fr]`}
       >
         <Link
-          className={`flex items-center gap-2 text-lg font-extrabold tracking-tight text-slate-900 ${focusRing}`}
+          className={`flex w-fit items-center gap-2 text-xl font-bold tracking-tight text-[#2f2b28] ${focusRing}`}
           href="/"
         >
           <BrandMark className="h-8 w-8" />
           TOEICMaster
         </Link>
-        <PageNavButtons />
-        <nav
-          aria-label="Luyện tập"
-          className="order-last -mx-1 flex w-full gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto"
-        >
-          {navigation.map((item) => {
-            const current = item.id === active;
-            return (
-              <Link
-                aria-current={current ? "page" : undefined}
-                className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${focusRing} ${current ? "bg-orange-50 text-orange-700 ring-1 ring-orange-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}
-                href={item.href}
-                key={item.id}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="ml-auto">{account}</div>
+        <div className="order-last col-span-2 min-w-0 lg:order-none lg:col-span-1">
+          {center ?? (
+            <nav aria-label="Luyện tập" className="flex gap-1 overflow-x-auto">
+              {navigation.map((item) => {
+                const current = item.id === active;
+                return (
+                  <Link
+                    aria-current={current ? "page" : undefined}
+                    className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-[15px] transition hover:text-[#df5a28] ${focusRing} ${current ? "font-semibold text-[#df5a28]" : "text-[#4a4541]"}`}
+                    href={item.href}
+                    key={item.id}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
+        </div>
+        <div className="justify-self-end">{account}</div>
       </div>
     </header>
   );

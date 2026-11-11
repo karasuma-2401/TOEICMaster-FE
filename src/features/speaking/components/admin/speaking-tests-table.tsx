@@ -1,90 +1,84 @@
-import { AdminBadge } from "@/features/admin/components/content/admin-badges";
-import { formatDate } from "../ui/format";
-import { EyeIcon, PencilIcon } from "../ui/icons";
+import { adminFocus } from "@/features/admin/components/content/admin-styles";
+import { formatUpdatedAt } from "@/features/speaking/admin-labels";
+import { speakingPartSpecs } from "@/features/speaking/part-specs";
 import type { SpeakingTestListItem } from "@/features/speaking/parsers";
-
-const head = "px-4 py-2.5";
-const action =
-  "sp-focus cursor-pointer p-1 text-(--sp-ink-2) enabled:hover:text-(--sp-brand) disabled:cursor-not-allowed disabled:opacity-35";
+import { speakingParts } from "@/features/speaking/types";
 
 export function SpeakingTestsTable({
   tests,
   onOpen,
-  onView,
 }: {
   tests: SpeakingTestListItem[];
   onOpen: (test: SpeakingTestListItem) => void;
-  onView: (test: SpeakingTestListItem) => void;
 }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[900px] text-left text-sm">
-        <thead className="bg-(--sp-subtle)">
+        <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
           <tr>
-            <th className={head}>Mã đề</th>
-            <th className={head}>Tên đề thi</th>
-            <th className={head}>Thời gian</th>
-            <th className={head}>Số câu</th>
-            <th className={head}>Barem</th>
-            <th className={head}>Trạng thái</th>
-            <th className={head}>
-              <span className="sr-only">Thao tác</span>
-            </th>
+            <th className="p-4">MÃ ĐỀ</th>
+            <th className="p-4">TÊN ĐỀ</th>
+            <th className="p-4">CẤU TRÚC (NHÓM / PART)</th>
+            <th className="p-4">SỐ CÂU</th>
+            <th className="p-4">TRẠNG THÁI</th>
+            <th className="p-4 text-right">THAO TÁC</th>
           </tr>
         </thead>
         <tbody>
           {tests.map((test) => {
-            const full = test.questionCount === 11;
-            const published = test.status === "PUBLISHED";
             return (
               <tr
-                className="border-t border-(--sp-line) hover:bg-(--sp-row-hover)"
+                className="border-t border-[var(--admin-border)] transition hover:bg-[var(--admin-row-hover)]"
                 key={test.id}
               >
-                <td className="whitespace-nowrap px-4 py-3 text-[13px] font-medium tabular-nums text-(--sp-ink-2)">
+                <td className="p-4 font-bold text-[var(--admin-brand-red)]">
                   {test.code}
                 </td>
-                <td className="px-4 py-3">
+                <td className="p-4">
                   <button
-                    className="sp-focus cursor-pointer text-left font-medium hover:text-(--sp-brand)"
+                    className={`text-left font-bold hover:text-[var(--admin-brand-red)] ${adminFocus}`}
                     onClick={() => onOpen(test)}
                     type="button"
                   >
                     {test.title}
                   </button>
-                  <p className="text-xs text-(--sp-ink-3)">
-                    Cập nhật {formatDate(test.updatedAtUtc)}
+                  <p className="mt-1 text-xs text-[var(--admin-muted)]">
+                    {formatUpdatedAt(test.updatedAtUtc)}
                   </p>
                 </td>
-                <td className="px-4 py-3">~20 phút</td>
-                <td className="px-4 py-3">
-                  {test.questionCount}/11 · {full ? "Đủ" : "Chưa đủ"}
+                <td className="p-4">
+                  <div className="flex flex-wrap gap-1">
+                    {speakingParts.map((part) => {
+                      const full =
+                        test.partCounts[part] === speakingPartSpecs[part].slots;
+                      return (
+                        <span
+                          className={`rounded-md px-1.5 py-0.5 text-xs font-semibold ${full ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"}`}
+                          key={part}
+                          title={`Part ${part} · ${speakingPartSpecs[part].subtitle}`}
+                        >
+                          P{part} {test.partCounts[part]}/
+                          {speakingPartSpecs[part].slots}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </td>
-                <td className="px-4 py-3">0–200</td>
-                <td className="px-4 py-3">
-                  <AdminBadge tone={published ? "success" : "warning"}>
-                    {published ? "Chính thức" : "Bản nháp"}
-                  </AdminBadge>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3">
-                  <button
-                    aria-label={`Xem ${test.code}`}
-                    className={action}
-                    onClick={() => onView(test)}
-                    title="Xem đề"
-                    type="button"
+                <td className="p-4 font-semibold">{test.questionCount}/11</td>
+                <td className="p-4">
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
                   >
-                    <EyeIcon size={18} />
-                  </button>
+                    {test.status === "PUBLISHED" ? "Công bố" : "Bản nháp"}
+                  </span>
+                </td>
+                <td className="p-4 text-right">
                   <button
-                    aria-label={`Sửa ${test.code}`}
-                    className={`${action} ml-1`}
-                    disabled={published}
+                    className={`font-bold text-[var(--admin-brand-red)] ${adminFocus}`}
                     onClick={() => onOpen(test)}
-                    title={published ? "Đề đã công bố không thể sửa" : "Sửa đề"}
                     type="button"
                   >
-                    <PencilIcon size={18} />
+                    Mở builder
                   </button>
                 </td>
               </tr>

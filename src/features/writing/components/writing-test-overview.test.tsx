@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WritingTestOverview } from "./writing-test-overview";
 
@@ -51,12 +52,27 @@ describe("WritingTestOverview", () => {
   it("shows only the selected Part's timing and structure in practice mode", async () => {
     render(<WritingTestOverview mode="part-2" testId="test-1" />);
 
-    expect(await screen.findByText("LUYỆN THEO PART")).toBeInTheDocument();
+    expect(
+      await screen.findByText("WRITING · LUYỆN THEO PART"),
+    ).toBeInTheDocument();
     expect(screen.getByText("2 câu")).toBeInTheDocument();
     expect(screen.getByText("20 phút")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Writing Part 2" }),
+      screen.getByRole("heading", { name: "Part 2 · Phản hồi email" }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Writing Part 3")).not.toBeInTheDocument();
+    expect(screen.getByText(/Câu 6–7 · 60s chuẩn bị/)).toBeInTheDocument();
+    expect(screen.queryByText(/Part 3 ·/)).not.toBeInTheDocument();
+  });
+
+  it("only allows starting after the learner confirms the rules", async () => {
+    const user = userEvent.setup();
+    render(<WritingTestOverview mode="full" testId="test-1" />);
+
+    const start = await screen.findByRole("button", {
+      name: "BẮT ĐẦU LÀM BÀI WRITING",
+    });
+    expect(start).toBeDisabled();
+    await user.click(screen.getByRole("checkbox"));
+    expect(start).toBeEnabled();
   });
 });

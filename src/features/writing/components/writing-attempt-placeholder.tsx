@@ -356,6 +356,8 @@ export function WritingAttemptPlaceholder({
                   disabled={preparing || transitioning}
                   id="writing-answer"
                   spellCheck={false}
+                  onDrop={(event) => event.preventDefault()}
+                  onPaste={(event) => event.preventDefault()}
                   onChange={(event) => saveLocalAnswer(event.target.value)}
                   placeholder={
                     preparing

@@ -92,6 +92,49 @@ describe("Speaking admin API", () => {
     ]);
   });
 
+  it("sends direct test content without creating exercise-bank references", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json(
+        testDetailDto({
+          contentMode: "DIRECT",
+          exercises: [],
+          questions: [],
+        }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createSpeakingTest({
+      code: "SPK-DIRECT",
+      title: "Direct",
+      description: "",
+      contentMode: "DIRECT",
+      questions: [
+        {
+          part: 1,
+          sequenceNumber: 1,
+          content: {
+            rubricNotes: "Rõ ràng",
+            modelAnswer: "Reference answer",
+            passage: "Read this notice aloud.",
+          },
+        },
+      ],
+    });
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      contentMode: "DIRECT",
+      exercises: [],
+      questions: [
+        {
+          part: 1,
+          sequenceNumber: 1,
+          content: { passage: "Read this notice aloud." },
+        },
+      ],
+    });
+  });
+
   it("refreshes the session once after a 401 and retries", async () => {
     const fetchMock = vi
       .fn()

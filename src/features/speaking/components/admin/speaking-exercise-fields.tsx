@@ -16,12 +16,14 @@ function TextField({
   onChange,
   multiline = false,
   hint,
+  disabled = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   multiline?: boolean;
   hint?: string;
+  disabled?: boolean;
 }) {
   return (
     <label className="block text-sm font-semibold">
@@ -29,12 +31,14 @@ function TextField({
       {multiline ? (
         <textarea
           className={adminTextarea}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           value={value}
         />
       ) : (
         <input
           className={adminInput}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           value={value}
         />
@@ -52,10 +56,12 @@ function QuestionFields({
   draft,
   update,
   timing,
+  disabled,
 }: {
   draft: SpeakingDraft;
   update: Update;
   timing: string[];
+  disabled: boolean;
 }) {
   return (
     <fieldset className="space-y-3 rounded-xl border border-[var(--admin-border)] p-4">
@@ -74,6 +80,7 @@ function QuestionFields({
             )
           }
           value={question}
+          disabled={disabled}
         />
       ))}
     </fieldset>
@@ -84,9 +91,11 @@ function QuestionFields({
 export function SpeakingExerciseFields({
   draft,
   update,
+  disabled = false,
 }: {
   draft: SpeakingDraft;
   update: Update;
+  disabled?: boolean;
 }) {
   switch (draft.part) {
     case 1:
@@ -97,6 +106,7 @@ export function SpeakingExerciseFields({
           multiline
           onChange={(value) => update("passage", value)}
           value={draft.passage}
+          disabled={disabled}
         />
       );
     case 2:
@@ -108,6 +118,7 @@ export function SpeakingExerciseFields({
               update("imageAssetId", id);
               update("imageUrl", url);
             }}
+            disabled={disabled}
           />
           <TextField
             hint="Dùng làm alt text cho người dùng trình đọc màn hình."
@@ -115,6 +126,7 @@ export function SpeakingExerciseFields({
             multiline
             onChange={(value) => update("imageAlt", value)}
             value={draft.imageAlt}
+            disabled={disabled}
           />
         </>
       );
@@ -126,11 +138,13 @@ export function SpeakingExerciseFields({
             multiline
             onChange={(value) => update("context", value)}
             value={draft.context}
+            disabled={disabled}
           />
           <QuestionFields
             draft={draft}
             timing={["Trả lời 15s", "Trả lời 15s", "Trả lời 30s"]}
             update={update}
+            disabled={disabled}
           />
         </>
       );
@@ -141,6 +155,7 @@ export function SpeakingExerciseFields({
             label="Tiêu đề tài liệu *"
             onChange={(value) => update("documentTitle", value)}
             value={draft.documentTitle}
+            disabled={disabled}
           />
           <TextField
             hint="Mỗi dòng một mục: nhãn | nội dung (ví dụ: 9:00 | Registration)."
@@ -148,17 +163,20 @@ export function SpeakingExerciseFields({
             multiline
             onChange={(value) => update("documentRows", value)}
             value={draft.documentRows}
+            disabled={disabled}
           />
           <TextField
             label="Lời mở đầu của người gọi"
             multiline
             onChange={(value) => update("callerIntro", value)}
             value={draft.callerIntro}
+            disabled={disabled}
           />
           <QuestionFields
             draft={draft}
             timing={["Trả lời 15s", "Trả lời 15s", "Trả lời 30s"]}
             update={update}
+            disabled={disabled}
           />
         </>
       );
@@ -170,6 +188,7 @@ export function SpeakingExerciseFields({
           multiline
           onChange={(value) => update("prompt", value)}
           value={draft.prompt}
+          disabled={disabled}
         />
       );
   }

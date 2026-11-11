@@ -19,6 +19,8 @@ import {
   type SpeakingExerciseStatus,
   type SpeakingPart,
   type SpeakingTest,
+  type SpeakingTestContentMode,
+  type SpeakingTestQuestion,
   type SpeakingTestStatus,
 } from "./types";
 
@@ -40,7 +42,11 @@ export interface SpeakingTestInput {
   code: string;
   title: string;
   description: string;
-  exerciseIds: SpeakingTest["exerciseIds"];
+  contentMode?: SpeakingTestContentMode;
+  /** Kept only to send metadata changes for legacy exercise-bank tests. */
+  exerciseIds?: SpeakingTest["exerciseIds"];
+  /** New test-owned content. Never sent to the exercise bank. */
+  questions?: SpeakingTestQuestion[];
 }
 
 export interface ExerciseQuery {
@@ -77,12 +83,34 @@ function queryString(values: object) {
 }
 
 function testBody(input: SpeakingTestInput) {
+  if (input.contentMode === "DIRECT")
+    return {
+      code: input.code,
+      title: input.title,
+      description: input.description,
+      contentMode: "DIRECT",
+      exercises: [],
+      questions: (input.questions ?? []).map((question) => ({
+        part: question.part,
+        sequenceNumber: question.sequenceNumber,
+        content: question.content,
+      })),
+    };
+  const exerciseIds = input.exerciseIds;
+  if (exerciseIds === undefined)
+    return {
+      code: input.code,
+      title: input.title,
+      description: input.description,
+      contentMode: "EXERCISE_BANK",
+    };
   return {
     code: input.code,
     title: input.title,
     description: input.description,
+    contentMode: "EXERCISE_BANK",
     exercises: speakingParts.flatMap((part) =>
-      input.exerciseIds[part].map((exerciseId, index) => ({
+      exerciseIds[part].map((exerciseId, index) => ({
         exerciseId,
         part,
         sequenceNumber: index + 1,

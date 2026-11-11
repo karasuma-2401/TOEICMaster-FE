@@ -1,0 +1,30 @@
+/*
+ * Look of the learner Speaking pages only. Loaded by src/app/speaking/layout.tsx
+ * and scoped under .sp-learner: speaking-theme.css is shared with the admin,
+ * home, Writing and history pages and must keep its values.
+ */
+.sp-learner {
+  --sp-success-solid: #10b981;
+  --sp-review-sample-bg: #f7f1ff;
+}
+
+.sp-learner .sp-word-tip {
+  position: relative;
+  cursor: help;
+}
+
+.sp-learner .sp-word-tip:hover::after,
+.sp-learner .sp-word-tip:focus-visible::after {
+  position: absolute;
+  z-index: 10;
+  bottom: calc(100% + 8px);
+  left: 0;
+  border-radius: 8px;
+  background: var(--sp-ink);
+  padding: 6px 12px;
+  color: #fff;
+  content: attr(data-tip);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
