@@ -141,40 +141,11 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
 
   if (user === undefined) return null;
 
-  // Khách vẫn có thể mở trang hồ sơ cùng các lựa chọn đăng nhập/đăng ký.
+  // Khách chưa có hồ sơ nên chỉ thấy lựa chọn đăng nhập/đăng ký.
   if (!user) {
     return (
       <div className="flex flex-col gap-1 md:items-end">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2.5">
-          <Link
-            aria-label="Hồ sơ cá nhân"
-            className="flex items-center gap-3 rounded-full text-sm font-semibold text-[#4e4542] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
-            href="/profile"
-          >
-            <span className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md">
-              <svg
-                aria-hidden="true"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  cx="12"
-                  cy="8"
-                  r="3.5"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                />
-                <path
-                  d="M4.8 20c.6-3.3 3.4-5.2 7.2-5.2s6.6 1.9 7.2 5.2"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeWidth="1.8"
-                />
-              </svg>
-            </span>
-            <span className="md:hidden">Hồ sơ cá nhân</span>
-          </Link>
           <Link
             className="flex h-11 cursor-pointer items-center justify-center rounded-xl border border-[#ece9e5] text-sm font-semibold md:h-auto md:rounded-none md:border-0 text-[#4e4542] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/login"

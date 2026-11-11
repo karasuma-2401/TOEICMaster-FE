@@ -85,11 +85,12 @@ describe("UserMenu", () => {
 
     const loginLink = screen.getByRole("link", { name: "Đăng nhập" });
     const registerLink = screen.getByRole("link", { name: "Đăng ký" });
-    const profileLink = screen.getByRole("link", { name: "Hồ sơ cá nhân" });
 
     expect(loginLink).toHaveAttribute("href", "/login");
     expect(registerLink).toHaveAttribute("href", "/register");
-    expect(profileLink).toHaveAttribute("href", "/profile");
+    expect(
+      screen.queryByRole("link", { name: "Hồ sơ cá nhân" }),
+    ).not.toBeInTheDocument();
   });
 
   it("chuyển sang trạng thái chưa đăng nhập khi bấm Đăng xuất trong popup", async () => {
