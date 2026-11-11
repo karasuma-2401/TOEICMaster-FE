@@ -3,3 +3,4 @@ node_modules
 coverage
 package-lock.json
 next-env.d.ts
+pnpm-lock.yaml
