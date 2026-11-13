@@ -141,6 +141,7 @@ export interface LrSheetBlockApi {
   id: string;
   part: number;
   firstQuestionNumber: number;
+  audioAssetId: string | null;
   contextBlocks: {
     id: string;
     ordinal: number;
@@ -300,6 +301,7 @@ function parseSheet(value: unknown): LrSheetApi {
         rawBlock.firstQuestionNumber,
         "Dữ liệu nhóm câu hỏi không hợp lệ.",
       ),
+      audioAssetId: nullableString(rawBlock.audioAssetId),
       contextBlocks: rawBlock.contextBlocks.map((rawContext) => {
         if (!isRecord(rawContext)) {
           throw new Error("Dữ liệu ngữ cảnh không hợp lệ.");
@@ -617,4 +619,31 @@ export async function getLrReview(
       { signal },
     ),
   );
+}
+
+
+export interface LrMediaUrlApi {
+  url: string;
+  expiresAtUtc: string;
+}
+
+export async function getLrMediaUrl(
+  attemptId: string,
+  kind: "audio" | "images",
+  assetId?: string,
+  signal?: AbortSignal,
+): Promise<LrMediaUrlApi> {
+  const suffix = assetId ? `/${encodeURIComponent(assetId)}` : "";
+  const value = await lrRequest(
+    `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/${kind}${suffix}`,
+    { signal },
+  );
+  if (!isRecord(value)) throw new Error("Đường dẫn media không hợp lệ.");
+  return {
+    url: requiredString(value.url, "Đường dẫn media không hợp lệ."),
+    expiresAtUtc: requiredString(
+      value.expiresAtUtc,
+      "Đường dẫn media không hợp lệ.",
+    ),
+  };
 }
