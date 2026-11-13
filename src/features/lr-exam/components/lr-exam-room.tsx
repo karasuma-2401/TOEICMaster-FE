@@ -225,7 +225,6 @@ export function LrExamRoom({
           <button className={primaryButton} onClick={() => setConfirming(true)} type="button">
             {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
           </button>
-        </div>
           <span className="text-[10px] text-[#77716e]" aria-live="polite">
             {saveStatus === "saving" ? "Đang lưu…" : saveStatus === "saved" ? "Đã lưu" : saveStatus === "error" ? "Lưu thất bại" : ""}
           </span>
