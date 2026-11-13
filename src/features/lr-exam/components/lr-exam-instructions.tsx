@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getLrOverview, startLrAttempt, type LrOverviewApi } from "../api";
 import {
@@ -65,7 +66,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
     }
   }
 
-  const metrics = exam ? [
+  const metrics = exam ? ([
     { icon: "list-checks", value: String(exam.totalQuestions), label: "câu hỏi" },
     { icon: "timer", value: `${exam.durationMinutes} phút`, label: "làm bài" },
     { icon: "headphones", value: `${exam.listeningQuestions} + ${exam.readingQuestions}`, label: "Nghe & Đọc" },
@@ -114,7 +115,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           {error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <a className={secondaryButton} href="/listening">← Về danh sách đề</a>
+            <Link className={secondaryButton} href="/listening">← Về danh sách đề</Link>
             <button className={primaryButton} disabled={!ready || !exam || starting || loading} onClick={() => void begin()} type="button">
               {starting ? "Đang chuẩn bị bài thi…" : exam?.activeAttemptId ? "TIẾP TỤC BÀI THI" : "BẮT ĐẦU LÀM BÀI THI L&R"}
             </button>
