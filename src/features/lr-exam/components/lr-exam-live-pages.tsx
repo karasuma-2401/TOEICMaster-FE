@@ -166,7 +166,38 @@ export function LrReviewPage({ attemptId }: { attemptId: string }) {
   useEffect(() => {
     const controller = new AbortController();
     void getLrReview(attemptId, "All", controller.signal)
-      .then((review) => setState(reviewToState(review)))
+      .then(async (review) => {
+        const assetIds = new Set<string>();
+        for (const block of review.blocks) {
+          for (const context of block.contextBlocks) {
+            if (context.imageAssetId) assetIds.add(context.imageAssetId);
+          }
+          for (const question of block.questions) {
+            if (question.imageAssetId) assetIds.add(question.imageAssetId);
+          }
+        }
+        const entries = await Promise.all(
+          [...assetIds].map(async (assetId) => {
+            try {
+              const media = await getLrMediaUrl(
+                attemptId,
+                "images",
+                assetId,
+                controller.signal,
+              );
+              return [assetId, media.url] as const;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const mediaUrls = Object.fromEntries(
+          entries.filter(
+            (entry): entry is readonly [string, string] => entry !== null,
+          ),
+        );
+        setState(reviewToState(review, mediaUrls));
+      })
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
