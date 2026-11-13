@@ -10,7 +10,6 @@ const paths = [
   /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/answers$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/questions\/[0-9a-f-]{36}\/flag$/i,
-  /^exam-attempts\/[0-9a-f-]{36}\/(result|review)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(result|review|audio)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(audio|images)\/[0-9a-f-]{36}$/i,
   /^exam-attempts\/history$/i,
