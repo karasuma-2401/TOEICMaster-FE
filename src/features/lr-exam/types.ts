@@ -97,6 +97,6 @@ export interface LrResultReport {
   maxScore: number;
   listening: { score: number; max: number };
   reading: { score: number; max: number };
-  targetScore: number;
+  targetScore?: number;
   parts: LrPartResult[];
 }
