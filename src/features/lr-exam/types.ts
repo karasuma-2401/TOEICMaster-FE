@@ -22,6 +22,7 @@ export interface LrQuestion {
   number: number;
   prompt: string;
   choices: LrChoice[];
+  imageUrl?: string;
 }
 
 export interface LrPassage {
@@ -29,7 +30,7 @@ export interface LrPassage {
   title: string;
   meta?: string;
   /** Paragraphs in order. `evidence: true` marks the highlighted sentence. */
-  paragraphs: { text: string; evidence?: boolean }[];
+  paragraphs: { text: string; evidence?: boolean; imageUrl?: string }[];
   signature?: string[];
 }
 
@@ -42,7 +43,7 @@ export interface LrQuestionGroup {
   heading: string;
   description?: string;
   passage?: LrPassage;
-  audio?: { currentSeconds: number; totalSeconds: number };
+  audio?: { src: string };
   questions: LrQuestion[];
 }
 
