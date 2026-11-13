@@ -43,7 +43,7 @@ export interface LrQuestionGroup {
   heading: string;
   description?: string;
   passage?: LrPassage;
-  audio?: { src: string };
+  audio?: { src?: string; currentSeconds?: number; totalSeconds?: number };
   questions: LrQuestion[];
 }
 
