@@ -161,7 +161,16 @@ export function PassageCard({ passage }: { passage: LrPassage }) {
         </p>
       ) : null}
       {passage.paragraphs.map((paragraph) =>
-        paragraph.evidence ? (
+        paragraph.imageUrl ? (
+          <div className="flex flex-col gap-2" key={paragraph.text || paragraph.imageUrl}>
+            {paragraph.text ? <p className="text-[15px]">{paragraph.text}</p> : null}
+            <img
+              alt="Hình minh họa nội dung bài đọc"
+              className="max-h-[420px] w-auto max-w-full rounded-lg object-contain"
+              src={paragraph.imageUrl}
+            />
+          </div>
+        ) : paragraph.evidence ? (
           <p
             className="rounded-lg border border-[#ff5a1f] bg-[#fef08a] p-3 text-[15px]"
             key={paragraph.text}
