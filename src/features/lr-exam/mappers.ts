@@ -52,15 +52,21 @@ function examSummary(
   };
 }
 
-export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
+export function sheetToRoomState(
+  sheet: LrSheetApi,
+  mediaUrls: Record<string, string> = {},
+): LrRoomState {
   const groups: LrQuestionGroup[] = sheet.blocks.map((block) => {
     const questions: LrQuestion[] = block.questions.map((question) => ({
       number: question.number,
       prompt: question.stem ?? "",
       choices: choices(question),
+      ...(question.imageAssetId && mediaUrls[question.imageAssetId]
+        ? { imageUrl: mediaUrls[question.imageAssetId] }
+        : {}),
     }));
     const contexts = block.contextBlocks
-      .filter((context) => context.text)
+      .filter((context) => context.text || context.imageAssetId)
       .sort((a, b) => a.ordinal - b.ordinal);
     const first = questions[0]?.number ?? block.firstQuestionNumber;
     const last = questions.at(-1)?.number ?? first;
@@ -79,9 +85,15 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
               title: `Nội dung Part ${block.part}`,
               paragraphs: contexts.map((context) => ({
                 text: context.text ?? "",
+                ...(context.imageAssetId && mediaUrls[context.imageAssetId]
+                  ? { imageUrl: mediaUrls[context.imageAssetId] }
+                  : {}),
               })),
             },
           }
+        : {}),
+      ...(block.audioAssetId && mediaUrls[block.audioAssetId]
+        ? { audio: { src: mediaUrls[block.audioAssetId] } }
         : {}),
       questions,
     };
