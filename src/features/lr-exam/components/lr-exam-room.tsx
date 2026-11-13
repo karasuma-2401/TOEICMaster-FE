@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatClock } from "@/shared/ui/format-time";
-import { sectionForQuestion } from "../parts";
+import { saveLrAnswers, startLrReading, submitLrAttempt } from "../api";
 import { findGroup, formatCountdown, summarizeSubmission } from "../session";
 import type {
   LrAnswers,
@@ -33,6 +33,10 @@ export interface LrExamRoomProps {
   initialFlags: LrFlags;
   initialRemainingSeconds: number;
   resultHref: string;
+  attemptId?: string;
+  phase?: "listening" | "reading";
+  questionIds?: Record<number, string>;
+  masterAudioObjectKey?: string | null;
 }
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
@@ -60,6 +64,9 @@ export function LrExamRoom({
   initialFlags,
   initialRemainingSeconds,
   resultHref,
+  attemptId,
+  phase: initialPhase = "listening",
+  questionIds,
 }: LrExamRoomProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(initialNumber);
@@ -67,15 +74,61 @@ export function LrExamRoom({
   const [flags, setFlags] = useState<LrFlags>(initialFlags);
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [phase, setPhase] = useState<"listening" | "reading">(initialPhase);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const firstSave = useRef(true);
 
-  const submit = useCallback(() => {
+  const saveSnapshot = useCallback(async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
+    if (!attemptId || !questionIds) return;
+    const payload = Object.entries(questionIds).map(([number, questionId]) => ({
+      questionId, selectedKey: nextAnswers[Number(number)] ?? null, isFlagged: Boolean(nextFlags[Number(number)]),
+    }));
+    await saveLrAnswers(attemptId, payload);
+  }, [attemptId, questionIds]);
+
+  useEffect(() => {
+    if (!attemptId || !questionIds) return;
+    if (firstSave.current) { firstSave.current = false; return; }
+    const timer = window.setTimeout(() => {
+      setSaveStatus("saving");
+      void saveSnapshot(answers, flags).then(() => setSaveStatus("saved")).catch(() => setSaveStatus("error"));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [answers, flags, attemptId, questionIds, saveSnapshot]);
+
+  const submit = useCallback(async () => {
+    if (submitting) return;
     setSubmitting(true);
-    router.push(resultHref);
-  }, [router, resultHref]);
+    setActionError(null);
+    try {
+      if (attemptId) {
+        await saveSnapshot(answers, flags);
+        await submitLrAttempt(attemptId);
+        router.push("/exams/lr/attempts/" + attemptId + "/result");
+      } else { router.push(resultHref); }
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Không thể nộp bài thi.");
+      setSubmitting(false);
+    }
+  }, [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref]);
+
+  const moveToReading = useCallback(async () => {
+    if (!attemptId || phase === "reading") return;
+    setActionError(null);
+    try {
+      await saveSnapshot(answers, flags);
+      await startLrReading(attemptId);
+      setPhase("reading");
+      setCurrent(101);
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Không thể chuyển sang Reading.");
+    }
+  }, [attemptId, phase, saveSnapshot, answers, flags]);
 
   const remaining = useCountdown(initialRemainingSeconds, submit);
 
-  const section = sectionForQuestion(current);
+  const section = phase;
   const group = findGroup(groups, current);
   const sectionGroups = useMemo(
     () => groups.filter((item) => sectionForQuestion(item.first) === section),
@@ -147,11 +200,9 @@ export function LrExamRoom({
             Phòng thi chuẩn ETS · Kết nối ổn định
           </p>
         </div>
-        {section === "listening" ? (
-          <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
-            SECTION 1 · LISTENING
-          </span>
-        ) : null}
+        <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
+          {section === "listening" ? "SECTION 1 · LISTENING" : "SECTION 2 · READING"}
+        </span>
         <div className="flex items-center gap-4">
           <div
             aria-label="Thời gian còn lại"
@@ -165,19 +216,22 @@ export function LrExamRoom({
               {formatCountdown(remaining)}
             </span>
           </div>
-          <button
-            className={
-              section === "listening"
-                ? `inline-flex h-11 items-center rounded-xl bg-[#ea580c] px-5 text-[13px] font-semibold text-white hover:bg-[#c2410c] ${focusRing}`
-                : primaryButton
-            }
-            onClick={() => setConfirming(true)}
-            type="button"
-          >
+          {attemptId && section === "listening" ? (
+            <button className={secondaryButton} onClick={() => void moveToReading()} type="button">
+              Chuyển sang Reading →
+            </button>
+          ) : null}
+          <button className={primaryButton} onClick={() => setConfirming(true)} type="button">
             {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
           </button>
         </div>
+          <span className="text-[10px] text-[#77716e]" aria-live="polite">
+            {saveStatus === "saving" ? "Đang lưu…" : saveStatus === "saved" ? "Đã lưu" : saveStatus === "error" ? "Lưu thất bại" : ""}
+          </span>
+        </div>
       </header>
+
+      {actionError ? <p className="mx-4 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{actionError}</p> : null}
 
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
@@ -403,10 +457,7 @@ function ListeningGroup({
         >
           Đánh dấu xem lại (Cụm {group.first}–{group.last})
         </button>
-        {/* TODO: wire real autosave once the attempt API contract exists. */}
-        <output className="text-[11px] text-[#10b981] block">
-          ● Đã tự động lưu đáp án trên đám mây
-        </output>
+
         {nextGroup ? (
           <button
             className={`rounded-md bg-[#ea580c] px-4 py-2 text-[11.5px] font-semibold text-white hover:bg-[#c2410c] ${focusRing}`}
@@ -519,11 +570,7 @@ function ReadingQuestion({
           Câu tiếp →
         </button>
       </div>
-      <output className="text-[11px] text-[#77716e] block">
-        ✓ Đáp án đã được lưu
-        <br />
-        Kết nối máy chủ ổn định
-      </output>
+      <output className="text-[11px] text-[#77716e] block">Chọn đáp án để tự động lưu.</output>
     </section>
   );
 }
