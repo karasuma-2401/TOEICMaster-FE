@@ -175,7 +175,7 @@ export function LrReview({
           </div>
           <p className="text-[11px] text-[#77716e]">
             Listening 1–{LISTENING_LAST} · Reading {LISTENING_LAST + 1}–
-            {LR_TOTAL_QUESTIONS}. Demo chỉ có giải thích cho một số câu.
+            {LR_TOTAL_QUESTIONS}.
           </p>
         </aside>
       </div>
