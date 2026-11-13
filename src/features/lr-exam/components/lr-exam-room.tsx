@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatClock } from "@/shared/ui/format-time";
 import { saveLrAnswers, startLrReading, submitLrAttempt } from "../api";
 import { findGroup, formatCountdown, summarizeSubmission } from "../session";
+import { sectionForQuestion } from "../parts";
 import type {
   LrAnswers,
   LrChoiceKey,
@@ -97,13 +98,13 @@ export function LrExamRoom({
     return () => window.clearTimeout(timer);
   }, [answers, flags, attemptId, questionIds, saveSnapshot]);
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (skipFinalSave = false) => {
     if (submitting) return;
     setSubmitting(true);
     setActionError(null);
     try {
       if (attemptId) {
-        await saveSnapshot(answers, flags);
+        if (!skipFinalSave) await saveSnapshot(answers, flags);
         await submitLrAttempt(attemptId);
         router.push("/exams/lr/attempts/" + attemptId + "/result");
       } else { router.push(resultHref); }
@@ -126,7 +127,7 @@ export function LrExamRoom({
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
 
-  const remaining = useCountdown(initialRemainingSeconds, submit);
+  const remaining = useCountdown(initialRemainingSeconds, () => void submit(true));
 
   const section = phase;
   const group = findGroup(groups, current);
