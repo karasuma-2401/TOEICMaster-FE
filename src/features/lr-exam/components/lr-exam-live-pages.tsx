@@ -58,7 +58,43 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
   useEffect(() => {
     const controller = new AbortController();
     void getLrAttempt(attemptId, controller.signal)
-      .then(async (sheet) => {\n        const assetIds = new Set<string>();\n        for (const block of sheet.blocks) {\n          if (block.audioAssetId) assetIds.add(block.audioAssetId);\n          for (const context of block.contextBlocks) {\n            if (context.imageAssetId) assetIds.add(context.imageAssetId);\n          }\n          for (const question of block.questions) {\n            if (question.imageAssetId) assetIds.add(question.imageAssetId);\n          }\n        }\n        const mediaEntries = await Promise.all(\n          [...assetIds].map(async (assetId) => {\n            const kind = sheet.blocks.some((block) => block.audioAssetId === assetId)\n              ? "audio" as const\n              : "images" as const;\n            try {\n              const media = await getLrMediaUrl(attemptId, kind, assetId, controller.signal);\n              return [assetId, media.url] as const;\n            } catch {\n              return null;\n            }\n          }),\n        );\n        const mediaUrls = Object.fromEntries(\n          mediaEntries.filter((entry): entry is readonly [string, string] => entry !== null),\n        );\n        if (sheet.masterAudioObjectKey) {\n          try {\n            const media = await getLrMediaUrl(attemptId, "audio", undefined, controller.signal);\n            setMasterAudioUrl(media.url);\n          } catch {\n            setMasterAudioUrl(null);\n          }\n        }\n        setState(sheetToRoomState(sheet, mediaUrls));\n      })
+      .then(async (sheet) => {
+        const assetIds = new Set<string>();
+        for (const block of sheet.blocks) {
+          if (block.audioAssetId) assetIds.add(block.audioAssetId);
+          for (const context of block.contextBlocks) {
+            if (context.imageAssetId) assetIds.add(context.imageAssetId);
+          }
+          for (const question of block.questions) {
+            if (question.imageAssetId) assetIds.add(question.imageAssetId);
+          }
+        }
+        const mediaEntries = await Promise.all(
+          [...assetIds].map(async (assetId) => {
+            const kind = sheet.blocks.some((block) => block.audioAssetId === assetId)
+              ? "audio" as const
+              : "images" as const;
+            try {
+              const media = await getLrMediaUrl(attemptId, kind, assetId, controller.signal);
+              return [assetId, media.url] as const;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const mediaUrls = Object.fromEntries(
+          mediaEntries.filter((entry): entry is readonly [string, string] => entry !== null),
+        );
+        if (sheet.masterAudioObjectKey) {
+          try {
+            const media = await getLrMediaUrl(attemptId, "audio", undefined, controller.signal);
+            setMasterAudioUrl(media.url);
+          } catch {
+            setMasterAudioUrl(null);
+          }
+        }
+        setState(sheetToRoomState(sheet, mediaUrls));
+      })
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
