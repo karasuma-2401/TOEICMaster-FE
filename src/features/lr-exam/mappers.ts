@@ -15,27 +15,39 @@ import type { LrResultApi, LrReviewApi, LrSheetApi } from "./api";
 
 const choiceKeys: LrChoiceKey[] = ["A", "B", "C", "D"];
 
-function choices(question: { optionA: string | null; optionB: string | null; optionC: string | null; optionD: string | null }) {
-  return [
-    ["A", question.optionA],
-    ["B", question.optionB],
-    ["C", question.optionC],
-    ["D", question.optionD],
-  ].flatMap(([key, text]) =>
-    typeof text === "string" && text.trim()
-      ? [{ key: key as LrChoiceKey, text }]
+function choices(question: {
+  optionA: string | null;
+  optionB: string | null;
+  optionC: string | null;
+  optionD: string | null;
+}) {
+  const options = [
+    { key: "A" as const, text: question.optionA },
+    { key: "B" as const, text: question.optionB },
+    { key: "C" as const, text: question.optionC },
+    { key: "D" as const, text: question.optionD },
+  ];
+
+  return options.flatMap((option) =>
+    option.text?.trim()
+      ? [{ key: option.key, text: option.text }]
       : [],
   );
 }
 
-function examSummary(sheet: Pick<LrSheetApi, "examId" | "examCode" | "examTitle" | "totalQuestions">): LrExamSummary {
+function examSummary(
+  sheet: Pick<
+    LrSheetApi,
+    "examId" | "examCode" | "examTitle" | "totalQuestions" | "timeLimitSeconds"
+  >,
+): LrExamSummary {
   return {
     id: sheet.examId,
     title: sheet.examTitle,
     identity: sheet.examCode,
     breadcrumb: `Trang chủ / Đề thi thử / ${sheet.examCode}`,
     totalQuestions: sheet.totalQuestions,
-    durationMinutes: 120,
+    durationMinutes: Math.ceil(sheet.timeLimitSeconds / 60),
     scoreScale: "10–990",
   };
 }
@@ -52,6 +64,7 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
       .sort((a, b) => a.ordinal - b.ordinal);
     const first = questions[0]?.number ?? block.firstQuestionNumber;
     const last = questions.at(-1)?.number ?? first;
+
     return {
       id: block.id,
       part: block.part as LrQuestionGroup["part"],
@@ -64,7 +77,9 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
             passage: {
               label: `PART ${block.part} · CÂU ${first}–${last}`,
               title: `Nội dung Part ${block.part}`,
-              paragraphs: contexts.map((context) => ({ text: context.text! })),
+              paragraphs: contexts.map((context) => ({
+                text: context.text ?? "",
+              })),
             },
           }
         : {}),
@@ -74,13 +89,20 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
 
   const answers: LrAnswers = {};
   const flags: LrFlags = {};
+
   for (const block of sheet.blocks) {
     for (const question of block.questions) {
-      if (question.userSelectedKey) answers[question.number] = question.userSelectedKey;
-      if (question.isFlagged) flags[question.number] = true;
+      if (question.userSelectedKey) {
+        answers[question.number] = question.userSelectedKey;
+      }
+      if (question.isFlagged) {
+        flags[question.number] = true;
+      }
     }
   }
+
   const initialNumber = sheet.phase === "reading" ? 101 : 1;
+
   return {
     exam: examSummary(sheet),
     groups,
@@ -90,9 +112,13 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
     initialRemainingSeconds: sheet.remainingSeconds,
     attemptId: sheet.attemptId,
     phase: sheet.phase,
-    questionIds: Object.fromEntries(sheet.blocks.flatMap((block) =>
-      block.questions.map((question) => [question.number, question.id] as const),
-    )),
+    questionIds: Object.fromEntries(
+      sheet.blocks.flatMap((block) =>
+        block.questions.map(
+          (question) => [question.number, question.id] as const,
+        ),
+      ),
+    ),
     masterAudioObjectKey: sheet.masterAudioObjectKey,
   };
 }
@@ -112,8 +138,14 @@ export function resultToReport(result: LrResultApi): LrResultReport {
     scale: "ETS Standard",
     totalScore: result.totalScaledScore,
     maxScore: result.maxScaledScore,
-    listening: { score: result.listeningScaledScore, max: result.listeningMaxScaledScore },
-    reading: { score: result.readingScaledScore, max: result.readingMaxScaledScore },
+    listening: {
+      score: result.listeningScaledScore,
+      max: result.listeningMaxScaledScore,
+    },
+    reading: {
+      score: result.readingScaledScore,
+      max: result.readingMaxScaledScore,
+    },
     parts: result.parts.map((part) => ({
       part: part.part as LrResultReport["parts"][number]["part"],
       correct: part.correctCount,
@@ -125,38 +157,52 @@ export function resultToReport(result: LrResultApi): LrResultReport {
 export function reviewToState(review: LrReviewApi): LrReviewState {
   const statuses: Record<number, LrReviewStatus> = {};
   const flags: LrFlags = {};
+
   const groups: LrReviewGroup[] = review.blocks.map((block) => {
-    const questions: LrReviewQuestionDetail[] = block.questions.map((question) => {
-      const correct = question.correctKey;
-      if (!choiceKeys.includes(correct as LrChoiceKey))
-        throw new Error(`Thiếu đáp án đúng cho câu ${question.number} trong dữ liệu review.`);
-      const selected = question.userSelectedKey;
-      if (selected !== null && !choiceKeys.includes(selected as LrChoiceKey))
-        throw new Error(`Đáp án đã chọn của câu ${question.number} không hợp lệ.`);
-      statuses[question.number] = question.status;
-      if (question.isFlagged) flags[question.number] = true;
-      const optionSet = {
-        optionA: question.optionA,
-        optionB: question.optionB,
-        optionC: question.optionC,
-        optionD: question.optionD,
-      };
-      return {
-        number: question.number,
-        prompt: question.stem ?? "",
-        choices: choices(optionSet),
-        selected: selected as LrChoiceKey | null ?? undefined,
-        correct: correct as LrChoiceKey,
-        analysis: {
-          summary: question.explanation ?? "Chưa có lời giải chi tiết cho câu hỏi này.",
-          ...(question.translation ? { notes: [question.translation] } : {}),
-          skill: `Listening & Reading · Part ${question.part}`,
-        },
-      };
-    });
+    const questions: LrReviewQuestionDetail[] = block.questions.map(
+      (question) => {
+        const correct = question.correctKey;
+        if (!choiceKeys.includes(correct as LrChoiceKey)) {
+          throw new Error(
+            `Thiếu đáp án đúng cho câu ${question.number} trong dữ liệu review.`,
+          );
+        }
+
+        const selected = question.userSelectedKey;
+        if (selected !== null && !choiceKeys.includes(selected as LrChoiceKey)) {
+          throw new Error(
+            `Đáp án đã chọn của câu ${question.number} không hợp lệ.`,
+          );
+        }
+
+        statuses[question.number] = question.status;
+        if (question.isFlagged) flags[question.number] = true;
+
+        return {
+          number: question.number,
+          prompt: question.stem ?? "",
+          choices: choices(question),
+          selected: selected
+            ? (selected as LrChoiceKey)
+            : undefined,
+          correct: correct as LrChoiceKey,
+          analysis: {
+            summary:
+              question.explanation ??
+              "Chưa có lời giải chi tiết cho câu hỏi này.",
+            ...(question.translation
+              ? { notes: [question.translation] }
+              : {}),
+            skill: `Listening & Reading · Part ${question.part}`,
+          },
+        };
+      },
+    );
+
     const contexts = block.contextBlocks
       .filter((context) => context.text)
       .sort((a, b) => a.ordinal - b.ordinal);
+
     return {
       id: block.id,
       ...(contexts.length > 0
@@ -164,13 +210,16 @@ export function reviewToState(review: LrReviewApi): LrReviewState {
             passage: {
               label: `PART ${block.part}`,
               title: `Nội dung Part ${block.part}`,
-              paragraphs: contexts.map((context) => ({ text: context.text! })),
+              paragraphs: contexts.map((context) => ({
+                text: context.text ?? "",
+              })),
             },
           }
         : {}),
       questions,
     };
   });
+
   return {
     exam: {
       id: review.examId,
