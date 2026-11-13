@@ -20,12 +20,14 @@ const rules = [
   {
     index: "01",
     title: "Listening · Câu 1–100",
-    body: "File âm thanh chạy liên tục. Không thể tạm dừng hay tua lại. Sau khi chuyển sang Reading, không thể sửa đáp án Listening.",
+    body:
+      "File âm thanh chạy liên tục. Không thể tạm dừng hay tua lại. Sau khi chuyển sang Reading, không thể sửa đáp án Listening.",
   },
   {
     index: "02",
     title: "Reading · Câu 101–200",
-    body: "Tự do điều hướng giữa các câu hỏi Reading. Có thể gắn cờ để kiểm tra lại trước khi nộp bài.",
+    body:
+      "Tự do điều hướng giữa các câu hỏi Reading. Có thể gắn cờ để kiểm tra lại trước khi nộp bài.",
   },
   {
     index: "03",
@@ -65,7 +67,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
     setStarting(true);
     setError(null);
     try {
-      // Backend resumes the current attempt when one exists; otherwise it creates a new attempt.
+      // Backend resumes an active attempt or creates a new one.
       const attempt = await startLrAttempt(examId);
       router.push(`/exams/lr/attempts/${attempt.attemptId}/attempt`);
     } catch (cause) {
@@ -106,7 +108,9 @@ export function LrExamInstructions({ examId }: { examId: string }) {
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
-      <main className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]">
+      <main
+        className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]"
+      >
         <p className="text-[13px] text-[#77716e]">
           Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}
         </p>
@@ -157,7 +161,9 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           </ol>
 
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`}
+            className={
+              `flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`
+            }
           >
             <input
               checked={ready}
