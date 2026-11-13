@@ -38,6 +38,7 @@ export interface LrExamRoomProps {
   phase?: "listening" | "reading";
   questionIds?: Record<number, string>;
   masterAudioObjectKey?: string | null;
+  masterAudioUrl?: string;
 }
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
@@ -68,6 +69,7 @@ export function LrExamRoom({
   attemptId,
   phase: initialPhase = "listening",
   questionIds,
+  masterAudioUrl,
 }: LrExamRoomProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(initialNumber);
@@ -268,6 +270,19 @@ export function LrExamRoom({
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
           <main className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9">
+            {masterAudioUrl ? (
+              <section className="flex flex-col gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4">
+                <p className="text-sm font-semibold">Audio Listening</p>
+                <audio
+                  aria-label="Audio toàn bộ phần Listening"
+                  className="w-full"
+                  controls
+                  controlsList="nodownload"
+                  preload="metadata"
+                  src={masterAudioUrl}
+                />
+              </section>
+            ) : null}
             {group ? (
               <ListeningGroup
                 answers={answers}
@@ -418,32 +433,17 @@ function ListeningGroup({
           aria-label="Trình phát âm thanh"
           className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
         >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[13px] font-bold text-[#1d4ed8]">
-              ĐANG PHÁT AUDIO:
-            </p>
-            <span className="rounded bg-[#fef3c7] px-2 py-[3px] text-[10.5px] font-medium text-[#b45309]">
-              Âm thanh tự động chuyển bài · Khóa tua ngược
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span
-              aria-hidden="true"
-              className="rounded-2xl bg-[#1d4ed8] px-2 py-1 text-[10px] font-bold text-white"
-            >
-              ▶
-            </span>
-            <progress
-              aria-label="Tiến độ âm thanh"
-              className="h-2 flex-1 accent-[#1d4ed8]"
-              max={100}
-              value={progress}
-            />
-            <span className="text-xs font-semibold text-[#475569]">
-              {formatClock(audio.currentSeconds)} /{" "}
-              {formatClock(audio.totalSeconds)}
-            </span>
-          </div>
+          <p className="text-[13px] font-bold text-[#1d4ed8]">
+            AUDIO PART {group.part}
+          </p>
+          <audio
+            aria-label={`Audio Part ${group.part}`}
+            className="w-full"
+            controls
+            controlsList="nodownload"
+            preload="metadata"
+            src={audio.src}
+          />
         </section>
       ) : null}
 
@@ -459,6 +459,13 @@ function ListeningGroup({
           className="flex flex-col gap-2.5 rounded-[10px] border border-[#e2e8f0] bg-white px-5 py-4"
           key={question.number}
         >
+          {question.imageUrl ? (
+            <img
+              alt={`Hình minh họa câu ${question.number}`}
+              className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
+              src={question.imageUrl}
+            />
+          ) : null}
           <legend className="float-left mb-2.5 flex w-full gap-2 text-[13px]">
             <span className="font-bold text-[#ea580c]">
               CÂU {question.number}:
@@ -562,6 +569,13 @@ function ReadingQuestion({
       className="flex flex-1 flex-col gap-4 rounded-2xl bg-white p-4"
     >
       <Pill>QUESTION {question.number}</Pill>
+      {question.imageUrl ? (
+        <img
+          alt={`Hình minh họa câu ${question.number}`}
+          className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"
+          src={question.imageUrl}
+        />
+      ) : null}
       <h2 className="text-lg font-semibold">{question.prompt}</h2>
       <fieldset className="flex flex-col gap-3">
         <legend className="sr-only">Đáp án cho câu {question.number}</legend>
