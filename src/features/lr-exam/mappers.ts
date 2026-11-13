@@ -94,7 +94,7 @@ export function sheetToRoomState(sheet: LrSheetApi): LrRoomState {
       block.questions.map((question) => [question.number, question.id] as const),
     )),
     masterAudioObjectKey: sheet.masterAudioObjectKey,
-  } as LrRoomState;
+  };
 }
 
 function durationLabel(seconds: number) {
