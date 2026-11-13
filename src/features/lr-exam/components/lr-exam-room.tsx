@@ -82,11 +82,13 @@ export function LrExamRoom({
 
   const saveSnapshot = useCallback(async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
     if (!attemptId || !questionIds) return;
-    const payload = Object.entries(questionIds).map(([number, questionId]) => ({
-      questionId, selectedKey: nextAnswers[Number(number)] ?? null, isFlagged: Boolean(nextFlags[Number(number)]),
-    }));
+    const payload = Object.entries(questionIds)
+      .filter(([number]) => phase !== "reading" || Number(number) > 100)
+      .map(([number, questionId]) => ({
+        questionId, selectedKey: nextAnswers[Number(number)] ?? null, isFlagged: Boolean(nextFlags[Number(number)]),
+      }));
     await saveLrAnswers(attemptId, payload);
-  }, [attemptId, questionIds]);
+  }, [attemptId, questionIds, phase]);
 
   useEffect(() => {
     if (!attemptId || !questionIds) return;
