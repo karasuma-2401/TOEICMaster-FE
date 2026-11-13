@@ -382,7 +382,7 @@ function parseReview(value: unknown): LrReviewApi {
 }
 
 export async function getLrCatalog(signal?: AbortSignal): Promise<LrExamCatalogItemApi[]> {
-  const value = await lrRequest("/api/lr/exams", { signal });
+  const value = await lrRequest("/api/lr/exams/lr", { signal });
   if (!Array.isArray(value)) throw new Error("Danh sách đề L&R không hợp lệ.");
   return value.map(parseCatalogItem);
 }
