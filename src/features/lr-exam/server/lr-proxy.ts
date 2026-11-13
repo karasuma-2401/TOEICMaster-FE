@@ -52,9 +52,10 @@ export async function forwardLr(
 
   if (method !== "GET") {
     const raw = await request.text();
-    const bodyless = /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i.test(
-      segments.join("/"),
-    );
+    const path = segments.join("/");
+    const bodyless =
+      /^exams\/[0-9a-f-]{36}\/attempts$/i.test(path) ||
+      /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i.test(path);
 
     if (raw) {
       if (!request.headers.get("content-type")?.startsWith("application/json")) {
