@@ -2,9 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { UserMenu } from "@/features/user/components/user-menu";
-import { getLrCatalog, type LrExamCatalogItemApi } from "@/features/lr-exam/api";
-import { ExamLibrary, type ExamLibrarySkill } from "@/shared/components/practice/exam-library";
-import type { ExamLibraryItem } from "@/shared/components/practice/exam-library-model";
+import {
+  getLrCatalog,
+  type LrExamCatalogItemApi,
+} from "@/features/lr-exam/api";
+import {
+  ExamLibrary,
+  type ExamLibrarySkill,
+} from "@/shared/components/practice/exam-library";
+import type {
+  ExamLibraryItem,
+} from "@/shared/components/practice/exam-library-model";
 import { SkillHeader } from "@/shared/components/practice/skill-header";
 
 const skills = {
@@ -101,7 +109,9 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
 
   return (
     <ExamLibrary
-      emptyDescription={`Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`}
+      emptyDescription={
+        `Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`
+      }
       emptyTitle={`Chưa có đề thi ${name}`}
       error={error}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
@@ -126,7 +136,9 @@ export function ListeningReadingPractice({
 
   return (
     <ExamLibrary
-      emptyDescription={`Danh sách bài luyện ${name} theo Part chưa có API learner tương ứng ở Backend.`}
+      emptyDescription={
+        `Danh sách bài luyện ${name} theo Part chưa có API learner tương ứng ở Backend.`
+      }
       emptyTitle={`Bài luyện ${name} sắp ra mắt`}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       items={[]}
