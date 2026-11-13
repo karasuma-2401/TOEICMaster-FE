@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatClock } from "@/shared/ui/format-time";
 import { saveLrAnswers, startLrReading, submitLrAttempt } from "../api";
 import { findGroup, formatCountdown, summarizeSubmission } from "../session";
 import { sectionForQuestion } from "../parts";
@@ -422,10 +421,6 @@ function ListeningGroup({
 }) {
   const flagged = group.questions.every((item) => flags[item.number]);
   const audio = group.audio;
-  const progress = audio
-    ? Math.round((audio.currentSeconds / audio.totalSeconds) * 100)
-    : 0;
-
   return (
     <>
       {audio ? (
