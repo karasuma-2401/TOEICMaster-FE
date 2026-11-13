@@ -166,7 +166,10 @@ export function resultToReport(result: LrResultApi): LrResultReport {
   };
 }
 
-export function reviewToState(review: LrReviewApi): LrReviewState {
+export function reviewToState(
+  review: LrReviewApi,
+  mediaUrls: Record<string, string> = {},
+): LrReviewState {
   const statuses: Record<number, LrReviewStatus> = {};
   const flags: LrFlags = {};
 
@@ -194,6 +197,9 @@ export function reviewToState(review: LrReviewApi): LrReviewState {
           number: question.number,
           prompt: question.stem ?? "",
           choices: choices(question),
+          ...(question.imageAssetId && mediaUrls[question.imageAssetId]
+            ? { imageUrl: mediaUrls[question.imageAssetId] }
+            : {}),
           selected: selected
             ? (selected as LrChoiceKey)
             : undefined,
@@ -212,7 +218,7 @@ export function reviewToState(review: LrReviewApi): LrReviewState {
     );
 
     const contexts = block.contextBlocks
-      .filter((context) => context.text)
+      .filter((context) => context.text || context.imageAssetId)
       .sort((a, b) => a.ordinal - b.ordinal);
 
     return {
@@ -224,6 +230,9 @@ export function reviewToState(review: LrReviewApi): LrReviewState {
               title: `Nội dung Part ${block.part}`,
               paragraphs: contexts.map((context) => ({
                 text: context.text ?? "",
+                ...(context.imageAssetId && mediaUrls[context.imageAssetId]
+                  ? { imageUrl: mediaUrls[context.imageAssetId] }
+                  : {}),
               })),
             },
           }
