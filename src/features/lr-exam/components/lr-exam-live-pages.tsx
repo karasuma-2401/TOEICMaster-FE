@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   getLrAttempt,
+  getLrMediaUrl,
   getLrResult,
   getLrReview,
 } from "../api";
@@ -51,12 +52,13 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
   const [state, setState] = useState<ReturnType<
     typeof sheetToRoomState
   > | null>(null);
+  const [masterAudioUrl, setMasterAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     void getLrAttempt(attemptId, controller.signal)
-      .then((sheet) => setState(sheetToRoomState(sheet)))
+      .then(async (sheet) => {\n        const assetIds = new Set<string>();\n        for (const block of sheet.blocks) {\n          if (block.audioAssetId) assetIds.add(block.audioAssetId);\n          for (const context of block.contextBlocks) {\n            if (context.imageAssetId) assetIds.add(context.imageAssetId);\n          }\n          for (const question of block.questions) {\n            if (question.imageAssetId) assetIds.add(question.imageAssetId);\n          }\n        }\n        const mediaEntries = await Promise.all(\n          [...assetIds].map(async (assetId) => {\n            const kind = sheet.blocks.some((block) => block.audioAssetId === assetId)\n              ? "audio" as const\n              : "images" as const;\n            try {\n              const media = await getLrMediaUrl(attemptId, kind, assetId, controller.signal);\n              return [assetId, media.url] as const;\n            } catch {\n              return null;\n            }\n          }),\n        );\n        const mediaUrls = Object.fromEntries(\n          mediaEntries.filter((entry): entry is readonly [string, string] => entry !== null),\n        );\n        if (sheet.masterAudioObjectKey) {\n          try {\n            const media = await getLrMediaUrl(attemptId, "audio", undefined, controller.signal);\n            setMasterAudioUrl(media.url);\n          } catch {\n            setMasterAudioUrl(null);\n          }\n        }\n        setState(sheetToRoomState(sheet, mediaUrls));\n      })
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
@@ -74,6 +76,7 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
   return (
     <LrExamRoom
       {...state}
+      masterAudioUrl={masterAudioUrl ?? undefined}
       resultHref={`/exams/lr/attempts/${attemptId}/result`}
     />
   );
