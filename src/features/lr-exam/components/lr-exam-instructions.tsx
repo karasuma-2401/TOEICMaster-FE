@@ -71,7 +71,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
     { icon: "timer", value: `${exam.durationMinutes} phút`, label: "làm bài" },
     { icon: "headphones", value: `${exam.listeningQuestions} + ${exam.readingQuestions}`, label: "Nghe & Đọc" },
     { icon: "trophy", value: `${exam.minScaledScore}–${exam.maxScaledScore}`, label: "Thang điểm ETS" },
-  ] as const : [];
+  ] as const) : [];
 
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
