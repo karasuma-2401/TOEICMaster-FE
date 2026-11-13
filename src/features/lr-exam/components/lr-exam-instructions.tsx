@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getLrOverview, startLrAttempt, type LrOverviewApi } from "../api";
+import {
+  getLrOverview,
+  startLrAttempt,
+  type LrOverviewApi,
+} from "../api";
 import {
   ExamIcon,
   LearnerNav,
   Pill,
-  focusRing,
   primaryButton,
   secondaryButton,
 } from "./exam-ui";
@@ -44,8 +47,13 @@ export function LrExamInstructions({ examId }: { examId: string }) {
     void getLrOverview(examId, controller.signal)
       .then(setExam)
       .catch((cause) => {
-        if (!controller.signal.aborted)
-          setError(cause instanceof Error ? cause.message : "Không thể tải thông tin đề thi.");
+        if (!controller.signal.aborted) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Không thể tải thông tin đề thi.",
+          );
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -61,42 +69,83 @@ export function LrExamInstructions({ examId }: { examId: string }) {
       const attempt = await startLrAttempt(examId);
       router.push(`/exams/lr/attempts/${attempt.attemptId}/attempt`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể bắt đầu bài thi.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể bắt đầu bài thi.",
+      );
       setStarting(false);
     }
   }
 
-  const metrics = exam ? ([
-    { icon: "list-checks", value: String(exam.totalQuestions), label: "câu hỏi" },
-    { icon: "timer", value: `${exam.durationMinutes} phút`, label: "làm bài" },
-    { icon: "headphones", value: `${exam.listeningQuestions} + ${exam.readingQuestions}`, label: "Nghe & Đọc" },
-    { icon: "trophy", value: `${exam.minScaledScore}–${exam.maxScaledScore}`, label: "Thang điểm ETS" },
-  ] as const) : [];
+  const metrics = exam
+    ? ([
+        {
+          icon: "list-checks",
+          value: String(exam.totalQuestions),
+          label: "câu hỏi",
+        },
+        {
+          icon: "timer",
+          value: `${exam.durationMinutes} phút`,
+          label: "làm bài",
+        },
+        {
+          icon: "headphones",
+          value: `${exam.listeningQuestions} + ${exam.readingQuestions}`,
+          label: "Nghe & Đọc",
+        },
+        {
+          icon: "trophy",
+          value: `${exam.minScaledScore}–${exam.maxScaledScore}`,
+          label: "Thang điểm ETS",
+        },
+      ] as const)
+    : [];
 
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
       <main className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]">
-        <p className="text-[13px] text-[#77716e]">Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}</p>
-        <section aria-labelledby="exam-title" className="flex flex-col gap-6 rounded-2xl border border-[#eee9e6] bg-white p-6 sm:p-8">
+        <p className="text-[13px] text-[#77716e]">
+          Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}
+        </p>
+        <section
+          aria-labelledby="exam-title"
+          className="flex flex-col gap-6 rounded-2xl border border-[#eee9e6] bg-white p-6 sm:p-8"
+        >
           <Pill>LISTENING &amp; READING · FULL TEST</Pill>
-          <h1 className="text-[32px] leading-tight font-bold" id="exam-title">
-            {loading ? "Đang tải thông tin đề thi…" : exam?.title ?? "Không thể tải đề thi"}
+          <h1
+            className="text-[32px] leading-tight font-bold"
+            id="exam-title"
+          >
+            {loading
+              ? "Đang tải thông tin đề thi…"
+              : (exam?.title ?? "Không thể tải đề thi")}
           </h1>
 
           {exam ? (
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {metrics.map((metric) => (
-                <li className="flex flex-col gap-2 rounded-xl bg-[#faf7f5] p-5" key={metric.label}>
+                <li
+                  className="flex flex-col gap-2 rounded-xl bg-[#faf7f5] p-5"
+                  key={metric.label}
+                >
                   <ExamIcon name={metric.icon} />
-                  <p className="text-2xl leading-tight font-semibold">{metric.value}</p>
-                  <p className="text-[13px] text-[#77716e]">{metric.label}</p>
+                  <p className="text-2xl leading-tight font-semibold">
+                    {metric.value}
+                  </p>
+                  <p className="text-[13px] text-[#77716e]">
+                    {metric.label}
+                  </p>
                 </li>
               ))}
             </ul>
           ) : null}
 
-          <h2 className="text-lg font-semibold">Trước khi bắt đầu, hãy đọc kỹ quy chế</h2>
+          <h2 className="text-lg font-semibold">
+            Trước khi bắt đầu, hãy đọc kỹ quy chế
+          </h2>
           <ol className="grid gap-6 md:grid-cols-3">
             {rules.map((rule) => (
               <li className="flex flex-col gap-2" key={rule.index}>
@@ -107,21 +156,51 @@ export function LrExamInstructions({ examId }: { examId: string }) {
             ))}
           </ol>
 
-          <label className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`}>
-            <input checked={ready} className="mt-0.5 size-5 accent-[#398565]" onChange={(event) => setReady(event.target.checked)} type="checkbox" />
-            <span>Tôi đã sẵn sàng và đảm bảo đường truyền mạng, tai nghe hoạt động ổn định</span>
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`}
+          >
+            <input
+              checked={ready}
+              className="mt-0.5 size-5 accent-[#398565]"
+              onChange={(event) => setReady(event.target.checked)}
+              type="checkbox"
+            />
+            <span>
+              Tôi đã sẵn sàng và đảm bảo đường truyền mạng, tai nghe hoạt động
+              ổn định
+            </span>
           </label>
 
-          {error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
+          {error ? (
+            <p
+              className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+              role="alert"
+            >
+              {error}
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link className={secondaryButton} href="/listening">← Về danh sách đề</Link>
-            <button className={primaryButton} disabled={!ready || !exam || starting || loading} onClick={() => void begin()} type="button">
-              {starting ? "Đang chuẩn bị bài thi…" : exam?.activeAttemptId ? "TIẾP TỤC BÀI THI" : "BẮT ĐẦU LÀM BÀI THI L&R"}
+            <Link className={secondaryButton} href="/listening">
+              ← Về danh sách đề
+            </Link>
+            <button
+              className={primaryButton}
+              disabled={!ready || !exam || starting || loading}
+              onClick={() => void begin()}
+              type="button"
+            >
+              {starting
+                ? "Đang chuẩn bị bài thi…"
+                : exam?.activeAttemptId
+                  ? "TIẾP TỤC BÀI THI"
+                  : "BẮT ĐẦU LÀM BÀI THI L&R"}
             </button>
           </div>
         </section>
-        <p className="text-center text-[11px] text-[#77716e]">Đáp án được lưu trên máy chủ · Thời gian do máy chủ kiểm soát</p>
+        <p className="text-center text-[11px] text-[#77716e]">
+          Đáp án được lưu trên máy chủ · Thời gian do máy chủ kiểm soát
+        </p>
       </main>
     </div>
   );
