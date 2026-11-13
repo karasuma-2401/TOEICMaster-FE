@@ -80,41 +80,58 @@ export function LrExamRoom({
   const [actionError, setActionError] = useState<string | null>(null);
   const firstSave = useRef(true);
 
-  const saveSnapshot = useCallback(async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
-    if (!attemptId || !questionIds) return;
-    const payload = Object.entries(questionIds)
-      .filter(([number]) => phase !== "reading" || Number(number) > 100)
-      .map(([number, questionId]) => ({
-        questionId, selectedKey: nextAnswers[Number(number)] ?? null, isFlagged: Boolean(nextFlags[Number(number)]),
-      }));
-    await saveLrAnswers(attemptId, payload);
-  }, [attemptId, questionIds, phase]);
+  const saveSnapshot = useCallback(
+    async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
+      if (!attemptId || !questionIds) return;
+      const payload = Object.entries(questionIds)
+        .filter(([number]) => phase !== "reading" || Number(number) > 100)
+        .map(([number, questionId]) => ({
+          questionId,
+          selectedKey: nextAnswers[Number(number)] ?? null,
+          isFlagged: Boolean(nextFlags[Number(number)]),
+        }));
+      await saveLrAnswers(attemptId, payload);
+    },
+    [attemptId, questionIds, phase],
+  );
 
   useEffect(() => {
     if (!attemptId || !questionIds) return;
-    if (firstSave.current) { firstSave.current = false; return; }
+    if (firstSave.current) {
+      firstSave.current = false;
+      return;
+    }
     const timer = window.setTimeout(() => {
       setSaveStatus("saving");
-      void saveSnapshot(answers, flags).then(() => setSaveStatus("saved")).catch(() => setSaveStatus("error"));
+      void saveSnapshot(answers, flags)
+        .then(() => setSaveStatus("saved"))
+        .catch(() => setSaveStatus("error"));
     }, 500);
     return () => window.clearTimeout(timer);
   }, [answers, flags, attemptId, questionIds, saveSnapshot]);
 
-  const submit = useCallback(async (skipFinalSave = false) => {
-    if (submitting) return;
-    setSubmitting(true);
-    setActionError(null);
-    try {
-      if (attemptId) {
-        if (!skipFinalSave) await saveSnapshot(answers, flags);
-        await submitLrAttempt(attemptId);
-        router.push("/exams/lr/attempts/" + attemptId + "/result");
-      } else { router.push(resultHref); }
-    } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : "Không thể nộp bài thi.");
-      setSubmitting(false);
-    }
-  }, [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref]);
+  const submit = useCallback(
+    async (skipFinalSave = false) => {
+      if (submitting) return;
+      setSubmitting(true);
+      setActionError(null);
+      try {
+        if (attemptId) {
+          if (!skipFinalSave) await saveSnapshot(answers, flags);
+          await submitLrAttempt(attemptId);
+          router.push("/exams/lr/attempts/" + attemptId + "/result");
+        } else {
+          router.push(resultHref);
+        }
+      } catch (cause) {
+        setActionError(
+          cause instanceof Error ? cause.message : "Không thể nộp bài thi.",
+        );
+        setSubmitting(false);
+      }
+    },
+    [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref],
+  );
 
   const moveToReading = useCallback(async () => {
     if (!attemptId || phase === "reading") return;
@@ -125,7 +142,11 @@ export function LrExamRoom({
       setPhase("reading");
       setCurrent(101);
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : "Không thể chuyển sang Reading.");
+      setActionError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể chuyển sang Reading.",
+      );
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
 
@@ -227,8 +248,17 @@ export function LrExamRoom({
           <button className={primaryButton} onClick={() => setConfirming(true)} type="button">
             {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
           </button>
-          <span className="text-[10px] text-[#77716e]" aria-live="polite">
-            {saveStatus === "saving" ? "Đang lưu…" : saveStatus === "saved" ? "Đã lưu" : saveStatus === "error" ? "Lưu thất bại" : ""}
+          <span
+            className="text-[10px] text-[#77716e]"
+            aria-live="polite"
+          >
+            {saveStatus === "saving"
+              ? "Đang lưu…"
+              : saveStatus === "saved"
+                ? "Đã lưu"
+                : saveStatus === "error"
+                  ? "Lưu thất bại"
+                  : ""}
           </span>
         </div>
       </header>
