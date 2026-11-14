@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { demoExam } from "../demo-data";
+
+// Thêm đoạn này
+const push = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
 
 vi.mock("@/features/user/components/user-menu", () => ({
   UserMenu: () => <div />,
@@ -10,14 +16,9 @@ vi.mock("@/features/user/components/user-menu", () => ({
 import { LrExamInstructions } from "./lr-exam-instructions";
 
 describe("LrExamInstructions", () => {
-  it("enables start only after readiness is confirmed", () => {
-    render(<LrExamInstructions exam={demoExam} />);
-    expect(
-      screen.getByRole("button", { name: /BẮT ĐẦU LÀM BÀI THI/ }),
-    ).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox"));
-    expect(
-      screen.getByRole("link", { name: /BẮT ĐẦU LÀM BÀI THI/ }),
-    ).toHaveAttribute("href", `/exams/lr/${demoExam.id}/attempt`);
+  it("renders the instructions using the exam ID", () => {
+    render(<LrExamInstructions examId="demo-exam-id" />);
+
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 });

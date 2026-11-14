@@ -162,8 +162,13 @@ export function PassageCard({ passage }: { passage: LrPassage }) {
       ) : null}
       {passage.paragraphs.map((paragraph) =>
         paragraph.imageUrl ? (
-          <div className="flex flex-col gap-2" key={paragraph.text || paragraph.imageUrl}>
-            {paragraph.text ? <p className="text-[15px]">{paragraph.text}</p> : null}
+          <div
+            className="flex flex-col gap-2"
+            key={paragraph.text || paragraph.imageUrl}
+          >
+            {paragraph.text ? (
+              <p className="text-[15px]">{paragraph.text}</p>
+            ) : null}
             <img
               alt="Hình minh họa nội dung bài đọc"
               className="max-h-[420px] w-auto max-w-full rounded-lg object-contain"

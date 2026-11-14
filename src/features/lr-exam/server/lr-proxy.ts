@@ -32,10 +32,7 @@ export async function forwardLr(
   }
 
   const session = sessionCookie(request);
-  if (
-    !session ||
-    Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now()
-  ) {
+  if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now()) {
     return problem(401, "Vui lòng đăng nhập để làm bài thi.");
   }
 
@@ -58,7 +55,9 @@ export async function forwardLr(
       /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i.test(path);
 
     if (raw) {
-      if (!request.headers.get("content-type")?.startsWith("application/json")) {
+      if (
+        !request.headers.get("content-type")?.startsWith("application/json")
+      ) {
         return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
       }
       try {
@@ -77,9 +76,7 @@ export async function forwardLr(
   }
 
   try {
-    const base = new URL(
-      process.env.API_BASE_URL ?? "http://localhost:5287",
-    );
+    const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
     if (
       !["http:", "https:"].includes(base.protocol) ||
       base.username ||

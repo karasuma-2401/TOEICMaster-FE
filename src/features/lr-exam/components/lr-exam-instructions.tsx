@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  getLrOverview,
-  startLrAttempt,
-  type LrOverviewApi,
-} from "../api";
+import { getLrOverview, startLrAttempt, type LrOverviewApi } from "../api";
 import {
   ExamIcon,
   LearnerNav,
@@ -20,14 +16,12 @@ const rules = [
   {
     index: "01",
     title: "Listening · Câu 1–100",
-    body:
-      "File âm thanh chạy liên tục. Không thể tạm dừng hay tua lại. Sau khi chuyển sang Reading, không thể sửa đáp án Listening.",
+    body: "File âm thanh chạy liên tục. Không thể tạm dừng hay tua lại. Sau khi chuyển sang Reading, không thể sửa đáp án Listening.",
   },
   {
     index: "02",
     title: "Reading · Câu 101–200",
-    body:
-      "Tự do điều hướng giữa các câu hỏi Reading. Có thể gắn cờ để kiểm tra lại trước khi nộp bài.",
+    body: "Tự do điều hướng giữa các câu hỏi Reading. Có thể gắn cờ để kiểm tra lại trước khi nộp bài.",
   },
   {
     index: "03",
@@ -72,9 +66,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
       router.push(`/exams/lr/attempts/${attempt.attemptId}/attempt`);
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể bắt đầu bài thi.",
+        cause instanceof Error ? cause.message : "Không thể bắt đầu bài thi.",
       );
       setStarting(false);
     }
@@ -108,9 +100,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
-      <main
-        className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]"
-      >
+      <main className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]">
         <p className="text-[13px] text-[#77716e]">
           Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}
         </p>
@@ -119,10 +109,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           className="flex flex-col gap-6 rounded-2xl border border-[#eee9e6] bg-white p-6 sm:p-8"
         >
           <Pill>LISTENING &amp; READING · FULL TEST</Pill>
-          <h1
-            className="text-[32px] leading-tight font-bold"
-            id="exam-title"
-          >
+          <h1 className="text-[32px] leading-tight font-bold" id="exam-title">
             {loading
               ? "Đang tải thông tin đề thi…"
               : (exam?.title ?? "Không thể tải đề thi")}
@@ -139,9 +126,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
                   <p className="text-2xl leading-tight font-semibold">
                     {metric.value}
                   </p>
-                  <p className="text-[13px] text-[#77716e]">
-                    {metric.label}
-                  </p>
+                  <p className="text-[13px] text-[#77716e]">{metric.label}</p>
                 </li>
               ))}
             </ul>
@@ -161,9 +146,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           </ol>
 
           <label
-            className={
-              `flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`
-            }
+            className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 text-[13px] ${ready ? "bg-[#e5f4ec]" : "bg-[#faf7f5]"}`}
           >
             <input
               checked={ready}

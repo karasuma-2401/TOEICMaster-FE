@@ -61,6 +61,7 @@ export function loadRoomState(
     initialRemainingSeconds: reading
       ? READING_REMAINING_SECONDS
       : LISTENING_REMAINING_SECONDS,
+    phase: reading ? "reading" : "listening",
   };
 }
 
