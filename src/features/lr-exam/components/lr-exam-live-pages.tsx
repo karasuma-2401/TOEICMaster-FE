@@ -1,17 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getLrAttempt,
-  getLrMediaUrl,
-  getLrResult,
-  getLrReview,
-} from "../api";
-import {
-  resultToReport,
-  reviewToState,
-  sheetToRoomState,
-} from "../mappers";
+import { getLrAttempt, getLrMediaUrl, getLrResult, getLrReview } from "../api";
+import { resultToReport, reviewToState, sheetToRoomState } from "../mappers";
 import { LrExamRoom } from "./lr-exam-room";
 import { LrResultReportView } from "./lr-result-report";
 import { LrReview } from "./lr-review";
@@ -71,11 +62,18 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
         }
         const mediaEntries = await Promise.all(
           [...assetIds].map(async (assetId) => {
-            const kind = sheet.blocks.some((block) => block.audioAssetId === assetId)
-              ? "audio" as const
-              : "images" as const;
+            const kind = sheet.blocks.some(
+              (block) => block.audioAssetId === assetId,
+            )
+              ? ("audio" as const)
+              : ("images" as const);
             try {
-              const media = await getLrMediaUrl(attemptId, kind, assetId, controller.signal);
+              const media = await getLrMediaUrl(
+                attemptId,
+                kind,
+                assetId,
+                controller.signal,
+              );
               return [assetId, media.url] as const;
             } catch {
               return null;
@@ -83,11 +81,18 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
           }),
         );
         const mediaUrls = Object.fromEntries(
-          mediaEntries.filter((entry): entry is readonly [string, string] => entry !== null),
+          mediaEntries.filter(
+            (entry): entry is readonly [string, string] => entry !== null,
+          ),
         );
         if (sheet.masterAudioObjectKey) {
           try {
-            const media = await getLrMediaUrl(attemptId, "audio", undefined, controller.signal);
+            const media = await getLrMediaUrl(
+              attemptId,
+              "audio",
+              undefined,
+              controller.signal,
+            );
             setMasterAudioUrl(media.url);
           } catch {
             setMasterAudioUrl(null);
@@ -98,9 +103,7 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error
-              ? cause.message
-              : "Không thể tải bài thi.",
+            cause instanceof Error ? cause.message : "Không thể tải bài thi.",
           );
         }
       });
@@ -135,9 +138,7 @@ export function LrResultPage({ attemptId }: { attemptId: string }) {
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error
-              ? cause.message
-              : "Không thể tải kết quả.",
+            cause instanceof Error ? cause.message : "Không thể tải kết quả.",
           );
         }
       });
@@ -158,9 +159,9 @@ export function LrResultPage({ attemptId }: { attemptId: string }) {
 }
 
 export function LrReviewPage({ attemptId }: { attemptId: string }) {
-  const [state, setState] = useState<ReturnType<
-    typeof reviewToState
-  > | null>(null);
+  const [state, setState] = useState<ReturnType<typeof reviewToState> | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

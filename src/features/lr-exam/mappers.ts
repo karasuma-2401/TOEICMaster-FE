@@ -29,9 +29,7 @@ function choices(question: {
   ];
 
   return options.flatMap((option) =>
-    option.text?.trim()
-      ? [{ key: option.key, text: option.text }]
-      : [],
+    option.text?.trim() ? [{ key: option.key, text: option.text }] : [],
   );
 }
 
@@ -184,7 +182,10 @@ export function reviewToState(
         }
 
         const selected = question.userSelectedKey;
-        if (selected !== null && !choiceKeys.includes(selected as LrChoiceKey)) {
+        if (
+          selected !== null &&
+          !choiceKeys.includes(selected as LrChoiceKey)
+        ) {
           throw new Error(
             `Đáp án đã chọn của câu ${question.number} không hợp lệ.`,
           );
@@ -200,17 +201,13 @@ export function reviewToState(
           ...(question.imageAssetId && mediaUrls[question.imageAssetId]
             ? { imageUrl: mediaUrls[question.imageAssetId] }
             : {}),
-          selected: selected
-            ? (selected as LrChoiceKey)
-            : undefined,
+          selected: selected ? (selected as LrChoiceKey) : undefined,
           correct: correct as LrChoiceKey,
           analysis: {
             summary:
               question.explanation ??
               "Chưa có lời giải chi tiết cho câu hỏi này.",
-            ...(question.translation
-              ? { notes: [question.translation] }
-              : {}),
+            ...(question.translation ? { notes: [question.translation] } : {}),
             skill: `Listening & Reading · Part ${question.part}`,
           },
         };

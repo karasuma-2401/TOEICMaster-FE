@@ -60,9 +60,7 @@ export async function lrRequest(
           : {}),
       },
       body:
-        options.body === undefined
-          ? undefined
-          : JSON.stringify(options.body),
+        options.body === undefined ? undefined : JSON.stringify(options.body),
       cache: "no-store",
       signal: options.signal,
     });
@@ -293,10 +291,7 @@ function parseSheet(value: unknown): LrSheetApi {
 
     return {
       id: requiredString(rawBlock.id, "Dữ liệu nhóm câu hỏi không hợp lệ."),
-      part: requiredNumber(
-        rawBlock.part,
-        "Dữ liệu nhóm câu hỏi không hợp lệ.",
-      ),
+      part: requiredNumber(rawBlock.part, "Dữ liệu nhóm câu hỏi không hợp lệ."),
       firstQuestionNumber: requiredNumber(
         rawBlock.firstQuestionNumber,
         "Dữ liệu nhóm câu hỏi không hợp lệ.",
@@ -336,8 +331,7 @@ function parseSheet(value: unknown): LrSheetApi {
           optionC: nullableString(rawQuestion.optionC),
           optionD: nullableString(rawQuestion.optionD),
           imageAssetId: nullableString(rawQuestion.imageAssetId),
-          userSelectedKey:
-            selected as LrSheetQuestionApi["userSelectedKey"],
+          userSelectedKey: selected as LrSheetQuestionApi["userSelectedKey"],
           isFlagged: rawQuestion.isFlagged === true,
         };
       }),
@@ -386,10 +380,7 @@ function parseResult(value: unknown): LrResultApi {
       value.listeningMaxScaledScore,
       message,
     ),
-    readingMaxScaledScore: requiredNumber(
-      value.readingMaxScaledScore,
-      message,
-    ),
+    readingMaxScaledScore: requiredNumber(value.readingMaxScaledScore, message),
     maxScaledScore: requiredNumber(value.maxScaledScore, message),
     totalCorrect: requiredNumber(value.totalCorrect, message),
     totalIncorrect: requiredNumber(value.totalIncorrect, message),
@@ -520,36 +511,27 @@ export async function getLrCatalog(
   return value.map(parseCatalogItem);
 }
 
-export async function getLrOverview(
-  examId: string,
-  signal?: AbortSignal,
-) {
+export async function getLrOverview(examId: string, signal?: AbortSignal) {
   return parseOverview(
-    await lrRequest(
-      `/api/lr/exams/${encodeURIComponent(examId)}/lr-overview`,
-      { signal },
-    ),
+    await lrRequest(`/api/lr/exams/${encodeURIComponent(examId)}/lr-overview`, {
+      signal,
+    }),
   );
 }
 
 export async function startLrAttempt(examId: string) {
   return parseSheet(
-    await lrRequest(
-      `/api/lr/exams/${encodeURIComponent(examId)}/attempts`,
-      { method: "POST" },
-    ),
+    await lrRequest(`/api/lr/exams/${encodeURIComponent(examId)}/attempts`, {
+      method: "POST",
+    }),
   );
 }
 
-export async function getLrAttempt(
-  attemptId: string,
-  signal?: AbortSignal,
-) {
+export async function getLrAttempt(attemptId: string, signal?: AbortSignal) {
   return parseSheet(
-    await lrRequest(
-      `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}`,
-      { signal },
-    ),
+    await lrRequest(`/api/lr/exam-attempts/${encodeURIComponent(attemptId)}`, {
+      signal,
+    }),
   );
 }
 
@@ -596,10 +578,7 @@ export async function submitLrAttempt(attemptId: string) {
   );
 }
 
-export async function getLrResult(
-  attemptId: string,
-  signal?: AbortSignal,
-) {
+export async function getLrResult(attemptId: string, signal?: AbortSignal) {
   return parseResult(
     await lrRequest(
       `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/result`,
@@ -620,7 +599,6 @@ export async function getLrReview(
     ),
   );
 }
-
 
 export interface LrMediaUrlApi {
   url: string;

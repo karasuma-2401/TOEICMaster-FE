@@ -77,7 +77,9 @@ export function LrExamRoom({
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<"listening" | "reading">(initialPhase);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [actionError, setActionError] = useState<string | null>(null);
   const firstSave = useRef(true);
 
@@ -151,7 +153,10 @@ export function LrExamRoom({
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
 
-  const remaining = useCountdown(initialRemainingSeconds, () => void submit(true));
+  const remaining = useCountdown(
+    initialRemainingSeconds,
+    () => void submit(true),
+  );
 
   const section = phase;
   const group = findGroup(groups, current);
@@ -226,7 +231,9 @@ export function LrExamRoom({
           </p>
         </div>
         <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
-          {section === "listening" ? "SECTION 1 · LISTENING" : "SECTION 2 · READING"}
+          {section === "listening"
+            ? "SECTION 1 · LISTENING"
+            : "SECTION 2 · READING"}
         </span>
         <div className="flex items-center gap-4">
           <div
@@ -242,17 +249,22 @@ export function LrExamRoom({
             </span>
           </div>
           {attemptId && section === "listening" ? (
-            <button className={secondaryButton} onClick={() => void moveToReading()} type="button">
+            <button
+              className={secondaryButton}
+              onClick={() => void moveToReading()}
+              type="button"
+            >
               Chuyển sang Reading →
             </button>
           ) : null}
-          <button className={primaryButton} onClick={() => setConfirming(true)} type="button">
+          <button
+            className={primaryButton}
+            onClick={() => setConfirming(true)}
+            type="button"
+          >
             {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
           </button>
-          <span
-            className="text-[10px] text-[#77716e]"
-            aria-live="polite"
-          >
+          <span className="text-[10px] text-[#77716e]" aria-live="polite">
             {saveStatus === "saving"
               ? "Đang lưu…"
               : saveStatus === "saved"
@@ -264,7 +276,14 @@ export function LrExamRoom({
         </div>
       </header>
 
-      {actionError ? <p className="mx-4 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{actionError}</p> : null}
+      {actionError ? (
+        <p
+          className="mx-4 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+          role="alert"
+        >
+          {actionError}
+        </p>
+      ) : null}
 
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
@@ -611,7 +630,9 @@ function ReadingQuestion({
           Câu tiếp →
         </button>
       </div>
-      <output className="text-[11px] text-[#77716e] block">Chọn đáp án để tự động lưu.</output>
+      <output className="text-[11px] text-[#77716e] block">
+        Chọn đáp án để tự động lưu.
+      </output>
     </section>
   );
 }

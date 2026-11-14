@@ -41,7 +41,8 @@ export function LrResultReportView({
   examHref,
   reviewHref,
 }: LrResultReportViewProps) {
-  const reached = report.targetScore !== undefined && report.totalScore >= report.targetScore;
+  const reached =
+    report.targetScore !== undefined && report.totalScore >= report.targetScore;
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
@@ -119,7 +120,8 @@ export function LrResultReportView({
                 : "Cố lên! Sắp đạt mục tiêu"}
             </h2>
             <p className="text-[13px]">
-              Điểm mục tiêu {report.targetScore} · Bạn đạt {report.totalScore} điểm.
+              Điểm mục tiêu {report.targetScore} · Bạn đạt {report.totalScore}{" "}
+              điểm.
             </p>
           </section>
         ) : null}
