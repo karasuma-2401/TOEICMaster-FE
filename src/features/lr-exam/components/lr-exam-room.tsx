@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatClock } from "@/shared/ui/format-time";
-import { sectionForQuestion } from "../parts";
+import { saveLrAnswers, startLrReading, submitLrAttempt } from "../api";
 import { findGroup, formatCountdown, summarizeSubmission } from "../session";
+import { sectionForQuestion } from "../parts";
 import type {
   LrAnswers,
   LrChoiceKey,
@@ -33,6 +33,11 @@ export interface LrExamRoomProps {
   initialFlags: LrFlags;
   initialRemainingSeconds: number;
   resultHref: string;
+  attemptId?: string;
+  phase?: "listening" | "reading";
+  questionIds?: Record<number, string>;
+  masterAudioObjectKey?: string | null;
+  masterAudioUrl?: string;
 }
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
@@ -60,6 +65,10 @@ export function LrExamRoom({
   initialFlags,
   initialRemainingSeconds,
   resultHref,
+  attemptId,
+  phase: initialPhase = "listening",
+  questionIds,
+  masterAudioUrl,
 }: LrExamRoomProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(initialNumber);
@@ -67,15 +76,84 @@ export function LrExamRoom({
   const [flags, setFlags] = useState<LrFlags>(initialFlags);
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [phase, setPhase] = useState<"listening" | "reading">(initialPhase);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const firstSave = useRef(true);
 
-  const submit = useCallback(() => {
-    setSubmitting(true);
-    router.push(resultHref);
-  }, [router, resultHref]);
+  const saveSnapshot = useCallback(
+    async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
+      if (!attemptId || !questionIds) return;
+      const payload = Object.entries(questionIds)
+        .filter(([number]) => phase !== "reading" || Number(number) > 100)
+        .map(([number, questionId]) => ({
+          questionId,
+          selectedKey: nextAnswers[Number(number)] ?? null,
+          isFlagged: Boolean(nextFlags[Number(number)]),
+        }));
+      await saveLrAnswers(attemptId, payload);
+    },
+    [attemptId, questionIds, phase],
+  );
 
-  const remaining = useCountdown(initialRemainingSeconds, submit);
+  useEffect(() => {
+    if (!attemptId || !questionIds) return;
+    if (firstSave.current) {
+      firstSave.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setSaveStatus("saving");
+      void saveSnapshot(answers, flags)
+        .then(() => setSaveStatus("saved"))
+        .catch(() => setSaveStatus("error"));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [answers, flags, attemptId, questionIds, saveSnapshot]);
 
-  const section = sectionForQuestion(current);
+  const submit = useCallback(
+    async (skipFinalSave = false) => {
+      if (submitting) return;
+      setSubmitting(true);
+      setActionError(null);
+      try {
+        if (attemptId) {
+          if (!skipFinalSave) await saveSnapshot(answers, flags);
+          await submitLrAttempt(attemptId);
+          router.push("/exams/lr/attempts/" + attemptId + "/result");
+        } else {
+          router.push(resultHref);
+        }
+      } catch (cause) {
+        setActionError(
+          cause instanceof Error ? cause.message : "Không thể nộp bài thi.",
+        );
+        setSubmitting(false);
+      }
+    },
+    [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref],
+  );
+
+  const moveToReading = useCallback(async () => {
+    if (!attemptId || phase === "reading") return;
+    setActionError(null);
+    try {
+      await saveSnapshot(answers, flags);
+      await startLrReading(attemptId);
+      setPhase("reading");
+      setCurrent(101);
+    } catch (cause) {
+      setActionError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể chuyển sang Reading.",
+      );
+    }
+  }, [attemptId, phase, saveSnapshot, answers, flags]);
+
+  const remaining = useCountdown(initialRemainingSeconds, () => void submit(true));
+
+  const section = phase;
   const group = findGroup(groups, current);
   const sectionGroups = useMemo(
     () => groups.filter((item) => sectionForQuestion(item.first) === section),
@@ -147,11 +225,9 @@ export function LrExamRoom({
             Phòng thi chuẩn ETS · Kết nối ổn định
           </p>
         </div>
-        {section === "listening" ? (
-          <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
-            SECTION 1 · LISTENING
-          </span>
-        ) : null}
+        <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
+          {section === "listening" ? "SECTION 1 · LISTENING" : "SECTION 2 · READING"}
+        </span>
         <div className="flex items-center gap-4">
           <div
             aria-label="Thời gian còn lại"
@@ -165,23 +241,47 @@ export function LrExamRoom({
               {formatCountdown(remaining)}
             </span>
           </div>
-          <button
-            className={
-              section === "listening"
-                ? `inline-flex h-11 items-center rounded-xl bg-[#ea580c] px-5 text-[13px] font-semibold text-white hover:bg-[#c2410c] ${focusRing}`
-                : primaryButton
-            }
-            onClick={() => setConfirming(true)}
-            type="button"
-          >
+          {attemptId && section === "listening" ? (
+            <button className={secondaryButton} onClick={() => void moveToReading()} type="button">
+              Chuyển sang Reading →
+            </button>
+          ) : null}
+          <button className={primaryButton} onClick={() => setConfirming(true)} type="button">
             {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
           </button>
+          <span
+            className="text-[10px] text-[#77716e]"
+            aria-live="polite"
+          >
+            {saveStatus === "saving"
+              ? "Đang lưu…"
+              : saveStatus === "saved"
+                ? "Đã lưu"
+                : saveStatus === "error"
+                  ? "Lưu thất bại"
+                  : ""}
+          </span>
         </div>
       </header>
+
+      {actionError ? <p className="mx-4 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{actionError}</p> : null}
 
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
           <main className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9">
+            {masterAudioUrl ? (
+              <section className="flex flex-col gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4">
+                <p className="text-sm font-semibold">Audio Listening</p>
+                <audio
+                  aria-label="Audio toàn bộ phần Listening"
+                  className="w-full"
+                  controls
+                  controlsList="nodownload"
+                  preload="metadata"
+                  src={masterAudioUrl}
+                />
+              </section>
+            ) : null}
             {group ? (
               <ListeningGroup
                 answers={answers}
@@ -321,10 +421,6 @@ function ListeningGroup({
 }) {
   const flagged = group.questions.every((item) => flags[item.number]);
   const audio = group.audio;
-  const progress = audio
-    ? Math.round((audio.currentSeconds / audio.totalSeconds) * 100)
-    : 0;
-
   return (
     <>
       {audio ? (
@@ -332,32 +428,17 @@ function ListeningGroup({
           aria-label="Trình phát âm thanh"
           className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
         >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[13px] font-bold text-[#1d4ed8]">
-              ĐANG PHÁT AUDIO:
-            </p>
-            <span className="rounded bg-[#fef3c7] px-2 py-[3px] text-[10.5px] font-medium text-[#b45309]">
-              Âm thanh tự động chuyển bài · Khóa tua ngược
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span
-              aria-hidden="true"
-              className="rounded-2xl bg-[#1d4ed8] px-2 py-1 text-[10px] font-bold text-white"
-            >
-              ▶
-            </span>
-            <progress
-              aria-label="Tiến độ âm thanh"
-              className="h-2 flex-1 accent-[#1d4ed8]"
-              max={100}
-              value={progress}
-            />
-            <span className="text-xs font-semibold text-[#475569]">
-              {formatClock(audio.currentSeconds)} /{" "}
-              {formatClock(audio.totalSeconds)}
-            </span>
-          </div>
+          <p className="text-[13px] font-bold text-[#1d4ed8]">
+            AUDIO PART {group.part}
+          </p>
+          <audio
+            aria-label={`Audio Part ${group.part}`}
+            className="w-full"
+            controls
+            controlsList="nodownload"
+            preload="metadata"
+            src={audio.src}
+          />
         </section>
       ) : null}
 
@@ -373,6 +454,13 @@ function ListeningGroup({
           className="flex flex-col gap-2.5 rounded-[10px] border border-[#e2e8f0] bg-white px-5 py-4"
           key={question.number}
         >
+          {question.imageUrl ? (
+            <img
+              alt={`Hình minh họa câu ${question.number}`}
+              className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
+              src={question.imageUrl}
+            />
+          ) : null}
           <legend className="float-left mb-2.5 flex w-full gap-2 text-[13px]">
             <span className="font-bold text-[#ea580c]">
               CÂU {question.number}:
@@ -403,10 +491,7 @@ function ListeningGroup({
         >
           Đánh dấu xem lại (Cụm {group.first}–{group.last})
         </button>
-        {/* TODO: wire real autosave once the attempt API contract exists. */}
-        <output className="text-[11px] text-[#10b981] block">
-          ● Đã tự động lưu đáp án trên đám mây
-        </output>
+
         {nextGroup ? (
           <button
             className={`rounded-md bg-[#ea580c] px-4 py-2 text-[11.5px] font-semibold text-white hover:bg-[#c2410c] ${focusRing}`}
@@ -479,6 +564,13 @@ function ReadingQuestion({
       className="flex flex-1 flex-col gap-4 rounded-2xl bg-white p-4"
     >
       <Pill>QUESTION {question.number}</Pill>
+      {question.imageUrl ? (
+        <img
+          alt={`Hình minh họa câu ${question.number}`}
+          className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"
+          src={question.imageUrl}
+        />
+      ) : null}
       <h2 className="text-lg font-semibold">{question.prompt}</h2>
       <fieldset className="flex flex-col gap-3">
         <legend className="sr-only">Đáp án cho câu {question.number}</legend>
@@ -519,11 +611,7 @@ function ReadingQuestion({
           Câu tiếp →
         </button>
       </div>
-      <output className="text-[11px] text-[#77716e] block">
-        ✓ Đáp án đã được lưu
-        <br />
-        Kết nối máy chủ ổn định
-      </output>
+      <output className="text-[11px] text-[#77716e] block">Chọn đáp án để tự động lưu.</output>
     </section>
   );
 }

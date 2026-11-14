@@ -1,5 +1,4 @@
 import { LrExamInstructions } from "@/features/lr-exam/components/lr-exam-instructions";
-import { loadExamSummary } from "@/features/lr-exam/loaders";
 
 export default async function LrExamInstructionsRoute({
   params,
@@ -7,5 +6,5 @@ export default async function LrExamInstructionsRoute({
   params: Promise<{ examId: string }>;
 }) {
   const { examId } = await params;
-  return <LrExamInstructions exam={loadExamSummary(examId)} />;
+  return <LrExamInstructions examId={examId} />;
 }

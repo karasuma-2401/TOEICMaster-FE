@@ -175,7 +175,7 @@ export function LrReview({
           </div>
           <p className="text-[11px] text-[#77716e]">
             Listening 1–{LISTENING_LAST} · Reading {LISTENING_LAST + 1}–
-            {LR_TOTAL_QUESTIONS}. Demo chỉ có giải thích cho một số câu.
+            {LR_TOTAL_QUESTIONS}.
           </p>
         </aside>
       </div>
@@ -241,6 +241,13 @@ function ReviewDetail({
           </Pill>
           {flagged ? <Pill tone="warning">⚑ Đã gắn cờ</Pill> : null}
         </div>
+        {question.imageUrl ? (
+          <img
+            alt={`Hình minh họa câu ${question.number}`}
+            className="max-h-80 w-auto max-w-full rounded-lg object-contain"
+            src={question.imageUrl}
+          />
+        ) : null}
         <h2 className="text-lg font-semibold">{question.prompt}</h2>
         <ul className="flex flex-col gap-2">
           {question.choices.map((choice) => {

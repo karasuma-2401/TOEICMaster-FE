@@ -1,8 +1,18 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import { UserMenu } from "@/features/user/components/user-menu";
+import {
+  getLrCatalog,
+  type LrExamCatalogItemApi,
+} from "@/features/lr-exam/api";
 import {
   ExamLibrary,
   type ExamLibrarySkill,
 } from "@/shared/components/practice/exam-library";
+import type {
+  ExamLibraryItem,
+} from "@/shared/components/practice/exam-library-model";
 import { SkillHeader } from "@/shared/components/practice/skill-header";
 
 const skills = {
@@ -51,21 +61,68 @@ export function isListeningReadingPart(skill: Skill, part: string) {
   return part in practiceParts[skill];
 }
 
-/** The backend has no learner endpoints for these skills yet, so the list stays empty. */
+function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
+  return {
+    id: exam.examId,
+    code: exam.code,
+    title: exam.title,
+    badge: `Bản ${exam.versionNumber} · Full Test`,
+    meta: `${exam.totalQuestions} câu · 120 phút · Listening & Reading`,
+    action: { href: `/exams/lr/${exam.examId}` },
+    sortKey: exam.publishedAtUtc,
+    difficulty: null,
+    attemptCount: 0,
+    bestScore: null,
+  };
+}
+
 export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
+  const [items, setItems] = useState<ExamLibraryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const catalog = await getLrCatalog(signal);
+      setItems(catalog.map(toLibraryItem));
+    } catch (cause) {
+      if (signal?.aborted) return;
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể tải danh sách đề thi.",
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
+
   const { name } = skills[skill];
+
   return (
     <ExamLibrary
-      emptyDescription={`Phần làm bài ${name} đang được hoàn thiện. Trong lúc chờ, bạn có thể luyện Speaking và Writing.`}
-      emptyTitle={`Đề thi ${name} sắp ra mắt`}
+      emptyDescription={
+        `Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`
+      }
+      emptyTitle={`Chưa có đề thi ${name}`}
+      error={error}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
-      items={[]}
+      items={items}
+      loading={loading}
+      onRetry={() => void load()}
       skill={skills[skill]}
     />
   );
 }
 
-/** Per-Part practice list; empty for the same reason as the test list. */
 export function ListeningReadingPractice({
   skill,
   part,
@@ -76,10 +133,13 @@ export function ListeningReadingPractice({
   const { name } = skills[skill];
   const parts = partsOf(skill);
   const current = parts.find(([number]) => number === part)?.[1];
+
   return (
     <ExamLibrary
-      emptyDescription={`Phần luyện ${name} đang được hoàn thiện. Trong lúc chờ, bạn có thể luyện Speaking và Writing.`}
-      emptyTitle={`Bài tập ${name} sắp ra mắt`}
+      emptyDescription={
+        `Danh sách bài luyện ${name} theo Part chưa có API learner tương ứng ở Backend.`
+      }
+      emptyTitle={`Bài luyện ${name} sắp ra mắt`}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       items={[]}
       kind="exercise"

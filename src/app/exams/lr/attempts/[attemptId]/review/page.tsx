@@ -1,5 +1,4 @@
-import { LrReview } from "@/features/lr-exam/components/lr-review";
-import { loadReview } from "@/features/lr-exam/loaders";
+import { LrReviewPage } from "@/features/lr-exam/components/lr-exam-live-pages";
 
 export default async function LrReviewRoute({
   params,
@@ -7,10 +6,5 @@ export default async function LrReviewRoute({
   params: Promise<{ attemptId: string }>;
 }) {
   const { attemptId } = await params;
-  return (
-    <LrReview
-      resultHref={`/exams/lr/attempts/${attemptId}/result`}
-      state={loadReview(attemptId)}
-    />
-  );
+  return <LrReviewPage attemptId={attemptId} />;
 }

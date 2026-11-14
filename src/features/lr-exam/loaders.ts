@@ -33,6 +33,10 @@ export interface LrRoomState {
   initialAnswers: LrAnswers;
   initialFlags: LrFlags;
   initialRemainingSeconds: number;
+  attemptId?: string;
+  phase?: "listening" | "reading";
+  questionIds?: Record<number, string>;
+  masterAudioObjectKey?: string | null;
 }
 
 export function loadExamSummary(_examId: string): LrExamSummary {

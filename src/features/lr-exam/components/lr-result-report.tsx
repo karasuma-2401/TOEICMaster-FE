@@ -41,7 +41,7 @@ export function LrResultReportView({
   examHref,
   reviewHref,
 }: LrResultReportViewProps) {
-  const reached = report.totalScore >= report.targetScore;
+  const reached = report.targetScore !== undefined && report.totalScore >= report.targetScore;
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
@@ -105,19 +105,24 @@ export function LrResultReportView({
           </ul>
         </section>
 
-        <section
-          className={`flex flex-col gap-1 rounded-2xl p-6 ${reached ? "bg-[#e5f4ec] text-[#398565]" : "bg-[#fef3c7] text-[#d97706]"}`}
-        >
-          <h2 className="text-lg font-semibold">
-            {reached
-              ? "Chúc mừng! Bạn đã đạt mục tiêu"
-              : "Cố lên! Sắp đạt mục tiêu"}
-          </h2>
-          <p className="text-[13px]">
-            Điểm mục tiêu {report.targetScore} · Bạn đạt {report.totalScore}{" "}
-            điểm.
-          </p>
-        </section>
+        {report.targetScore !== undefined ? (
+          <section
+            className={
+              reached
+                ? "flex flex-col gap-1 rounded-2xl bg-[#e5f4ec] p-6 text-[#398565]"
+                : "flex flex-col gap-1 rounded-2xl bg-[#fef3c7] p-6 text-[#d97706]"
+            }
+          >
+            <h2 className="text-lg font-semibold">
+              {reached
+                ? "Chúc mừng! Bạn đã đạt mục tiêu"
+                : "Cố lên! Sắp đạt mục tiêu"}
+            </h2>
+            <p className="text-[13px]">
+              Điểm mục tiêu {report.targetScore} · Bạn đạt {report.totalScore} điểm.
+            </p>
+          </section>
+        ) : null}
 
         <div className="flex flex-wrap gap-3">
           <Link className={primaryButton} href={reviewHref}>
