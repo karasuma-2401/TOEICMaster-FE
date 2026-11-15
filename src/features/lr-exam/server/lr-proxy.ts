@@ -31,15 +31,22 @@ export async function forwardLr(
     return problem(403, "Yêu cầu không hợp lệ.");
   }
 
-  const session = sessionCookie(request);
-  if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now()) {
+  // Public catalog: anyone may browse published L&R exams without signing in.
+  // Every other learner endpoint still requires a valid session.
+  const isPublicCatalog =
+    method === "GET" && segments.join("/") === "exams/lr";
+  const session = isPublicCatalog ? null : sessionCookie(request);
+  if (
+    !isPublicCatalog &&
+    (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
+  ) {
     return problem(401, "Vui lòng đăng nhập để làm bài thi.");
   }
 
-  const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${session.accessToken}`,
-  });
+  const headers = new Headers({ Accept: "application/json" });
+  if (session) {
+    headers.set("Authorization", `Bearer ${session.accessToken}`);
+  }
   const init: RequestInit = {
     method,
     headers,
