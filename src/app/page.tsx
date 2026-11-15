@@ -23,8 +23,7 @@ import {
 } from "@/shared/components/practice/styles";
 
 const navigation = [
-  { label: "Listening", href: "/listening" },
-  { label: "Reading", href: "/reading" },
+  { label: "Listening & Reading", href: "/listening" },
   { label: "Speaking", href: "/speaking" },
   { label: "Writing", href: "/writing" },
   { label: "Lịch sử", href: "/history/writing" },
@@ -36,7 +35,7 @@ const promises = [
   "Bắt đầu miễn phí",
 ];
 
-const milestoneLinks = navigation.slice(0, 4);
+const milestoneLinks = navigation.slice(0, 3);
 
 const exams = [
   {
