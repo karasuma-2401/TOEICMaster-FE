@@ -1,9 +1,6 @@
 import { notFound } from "next/navigation";
-import {
-  isListeningReadingPart,
-  ListeningReadingPractice,
-} from "@/features/listening-reading/components/listening-reading-library";
-
+import { isListeningReadingPart } from "@/features/listening-reading/utils/listening-reading-utils";
+import { ListeningReadingPractice } from "@/features/listening-reading/components/listening-reading-library";
 export default async function ListeningPracticeRoute({
   params,
 }: {

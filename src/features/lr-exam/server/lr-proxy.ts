@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { problem, sameOrigin } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
@@ -13,6 +14,12 @@ const paths = [
   /^exam-attempts\/[0-9a-f-]{36}\/(result|review|audio)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(audio|images)\/[0-9a-f-]{36}$/i,
   /^exam-attempts\/history$/i,
+
+  // Learner Listening & Reading Practice
+  /^lr-practice\/parts\/[1-7]\/items$/i,
+  /^lr-practice\/parts\/[1-7]\/statistics$/i,
+  /^lr-practice\/items\/[0-9a-f-]{36}$/i,
+  /^lr-practice\/items\/[0-9a-f-]{36}\/submit$/i,
 ];
 
 function validPath(segments: string[]) {
@@ -27,26 +34,40 @@ export async function forwardLr(
   if (!validPath(segments)) {
     return problem(404, "Không tìm thấy API Listening & Reading.");
   }
+
   if (method !== "GET" && !sameOrigin(request)) {
     return problem(403, "Yêu cầu không hợp lệ.");
   }
 
-  // Public catalog: anyone may browse published L&R exams without signing in.
-  // Every other learner endpoint still requires a valid session.
-  const isPublicCatalog =
-    method === "GET" && segments.join("/") === "exams/lr";
-  const session = isPublicCatalog ? null : sessionCookie(request);
+  const path = segments.join("/");
+
+ const isPublicCatalog =
+  method === "GET" && path === "exams/lr";
+
+const isPublicPractice =
+  method === "GET" &&
+  (
+    /^lr-practice\/parts\/[1-7]\/items$/i.test(path) ||
+    /^lr-practice\/items\/[0-9a-f-]{36}$/i.test(path)
+  );
+
+const isPublic = isPublicCatalog || isPublicPractice;
+
+  const session = isPublic ? null : sessionCookie(request);
+
   if (
-    !isPublicCatalog &&
+    !isPublic &&
     (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
   ) {
     return problem(401, "Vui lòng đăng nhập để làm bài thi.");
   }
 
   const headers = new Headers({ Accept: "application/json" });
+
   if (session) {
     headers.set("Authorization", `Bearer ${session.accessToken}`);
   }
+
   const init: RequestInit = {
     method,
     headers,
@@ -56,7 +77,7 @@ export async function forwardLr(
 
   if (method !== "GET") {
     const raw = await request.text();
-    const path = segments.join("/");
+
     const bodyless =
       /^exams\/[0-9a-f-]{36}\/attempts$/i.test(path) ||
       /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i.test(path);
@@ -67,11 +88,14 @@ export async function forwardLr(
       ) {
         return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
       }
+
       try {
         const parsed: unknown = JSON.parse(raw);
+
         if (parsed === null || typeof parsed !== "object") {
           return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
         }
+
         headers.set("Content-Type", "application/json");
         init.body = JSON.stringify(parsed);
       } catch {
@@ -83,7 +107,10 @@ export async function forwardLr(
   }
 
   try {
-    const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
+    const base = new URL(
+      process.env.API_BASE_URL ?? "http://localhost:5287",
+    );
+
     if (
       !["http:", "https:"].includes(base.protocol) ||
       base.username ||
@@ -92,17 +119,23 @@ export async function forwardLr(
       throw new Error("Invalid API_BASE_URL");
     }
 
-    const url = new URL(`/api/v1/${segments.join("/")}`, base);
+    const url = new URL(`/api/v1/${path}`, base);
     url.search = new URL(request.url).search;
+
     const upstream = await fetch(url, init);
+
     const responseHeaders = new Headers({
       "Cache-Control": "no-store",
     });
+
     const contentType = upstream.headers.get("content-type");
+
     if (contentType) {
       responseHeaders.set("Content-Type", contentType);
     }
+
     const retryAfter = upstream.headers.get("retry-after");
+
     if (retryAfter) {
       responseHeaders.set("Retry-After", retryAfter);
     }
