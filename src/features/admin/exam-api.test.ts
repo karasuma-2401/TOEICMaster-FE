@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { refreshSession } from "@/features/auth/api";
+import * as examApi from "./exam-api";
 import {
+  completeMediaUploadIntent,
+  createMediaUploadIntent,
   getReadingExams,
+  importReadingExam,
   uploadFileToMediaIntent,
-  uploadReadingMasterAudio,
   updateReadingQuestion,
 } from "./exam-api";
 
@@ -106,24 +109,84 @@ describe("admin exam API client", () => {
     );
   });
 
-  it("sends a master-audio file to the existing revision endpoint", async () => {
+  it("removes legacy uploadReadingMasterAudio and sends durationMs on audio upload intents", async () => {
+    expect("uploadReadingMasterAudio" in examApi).toBe(false);
+
+    const intentPayload = {
+      intentId: "00000000-0000-4000-8000-000000000001",
+      uploadUrl: "http://localhost:9000/exam-media/presigned",
+      expiresAtUtc: "2026-11-03T12:00:00.000Z",
+      requiredHeaders: { "Content-Type": "audio/mpeg" },
+    };
+    const completedPayload = {
+      id: "11111111-1111-4111-8111-111111111111",
+      contentType: "audio/mpeg",
+      kind: "Audio",
+      byteSize: 1024,
+      durationMs: 18500,
+    };
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(new Response(null, { status: 204 }));
+      .mockResolvedValueOnce(Response.json(intentPayload, { status: 201 }))
+      .mockResolvedValueOnce(Response.json(completedPayload, { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await uploadReadingMasterAudio(
-      "exam-1",
-      "revision-1",
-      new File(["audio"], "master.mp3", {
-        type: "audio/mpeg",
+    await createMediaUploadIntent("exam-1", "revision-1", {
+      ownerKind: "AudioGroup",
+      ownerKey: "P1-Q1",
+      contentType: "audio/mpeg",
+      byteSize: 1024,
+      durationMs: 18500,
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/admin/exams/exam-1/revisions/revision-1/media-upload-intents",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          ownerKind: "AudioGroup",
+          ownerKey: "P1-Q1",
+          contentType: "audio/mpeg",
+          byteSize: 1024,
+          durationMs: 18500,
+        }),
       }),
     );
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/admin/exams/exam-1/revisions/revision-1/master-audio",
-      expect.objectContaining({ method: "PUT", body: expect.any(FormData) }),
+    const completed = await completeMediaUploadIntent(
+      "exam-1",
+      "revision-1",
+      intentPayload.intentId,
     );
+    expect(completed.durationMs).toBe(18500);
+  });
+
+  it("imports a Reading/Listening exam workbook without a masterAudio field", async () => {
+    const draft = {
+      examId: "11111111-1111-4111-8111-111111111111",
+      revisionId: "22222222-2222-4222-8222-222222222222",
+      code: "LR-2026-01",
+      title: "ETS Test 01",
+      versionNumber: 1,
+      status: "Draft",
+      questionCount: 200,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(draft, { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const workbook = new File(["xlsx"], "exam.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const result = await importReadingExam(workbook);
+
+    expect(result).toEqual(draft);
+    const body = fetchMock.mock.calls[0]?.[1]?.body as FormData;
+    expect(body).toBeInstanceOf(FormData);
+    expect(body.get("workbook")).toBe(workbook);
+    expect(body.has("masterAudio")).toBe(false);
   });
 
   it("preserves authorization errors from a list endpoint", async () => {
