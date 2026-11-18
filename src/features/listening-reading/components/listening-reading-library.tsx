@@ -217,7 +217,7 @@ export function ListeningReadingPractice({
 
       try {
         const [result, statistics] = await Promise.all([
-          getLrPracticeItems(Number(part), 1, 20, signal),
+          getLrPracticeItems(Number(part), 1, 50, signal),
           getLrPracticeStatistics(Number(part), signal).catch(
             (): LrPracticeItemStatisticsApi[] => [],
           ),

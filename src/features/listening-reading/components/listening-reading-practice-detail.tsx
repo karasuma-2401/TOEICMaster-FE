@@ -195,6 +195,7 @@ export function ListeningReadingPracticeDetail({
                 </h2>
                 <audio
                   controls
+                  controlsList="nodownload"
                   preload="metadata"
                   className="w-full"
                   src={detail.audioUrl}
@@ -378,12 +379,22 @@ export function ListeningReadingPracticeDetail({
             </div>
 
             {error && detail && (
-              <p
+              <div
                 role="alert"
                 className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
               >
-                {error}
-              </p>
+                <p>{error}</p>
+                {/đăng nhập/i.test(error) && (
+                  <div className="mt-3">
+                    <Link
+                      href={`/login?returnUrl=/${skill}/practice/${part}/${encodeURIComponent(itemId)}`}
+                      className="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                    >
+                      Đăng nhập ngay →
+                    </Link>
+                  </div>
+                )}
+              </div>
             )}
 
             {result && (
@@ -427,20 +438,36 @@ export function ListeningReadingPracticeDetail({
                   </strong>
                 </p>
 
-                <Link
-                  href={`/${skill}/practice/${part}`}
-                  className="mt-5 inline-flex rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Quay lại danh sách bài luyện
-                </Link>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResult(null);
+                      setAnswers({});
+                      setError(null);
+                    }}
+                    className="inline-flex rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    Làm lại bài này
+                  </button>
+                  <Link
+                    href={`/${skill}/practice/${part}`}
+                    className="inline-flex rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Quay lại danh sách bài luyện
+                  </Link>
+                </div>
               </section>
             )}
 
             {!result && (
               <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-                <p className="mb-4 text-sm text-slate-600">
+                <p className="mb-2 text-sm text-slate-600">
                   Bạn đã trả lời {answeredCount}/{totalQuestions} câu. Câu chưa
                   trả lời sẽ được tính là sai khi nộp bài.
+                </p>
+                <p className="mb-4 text-xs text-slate-400">
+                  Lưu ý: Bạn cần đăng nhập để nộp bài và lưu kết quả bài làm.
                 </p>
 
                 <button
