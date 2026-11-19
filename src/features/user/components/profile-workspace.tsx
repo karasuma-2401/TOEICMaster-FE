@@ -48,7 +48,7 @@ export function ProfileWorkspace({
         <SectionHeading
           description="Cập nhật thông tin cá nhân và mục tiêu điểm TOEIC của bạn."
           id="profile-section-title"
-          title="Hồ sơ cá nhân & Mục tiêu học tập"
+          title="Thông tin cá nhân & Mục tiêu"
         />
         <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
           <ProfileDetailsCard

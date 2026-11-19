@@ -78,6 +78,8 @@ export function SentenceDiffView({
       aria-label="So sánh câu văn và gợi ý chỉnh sửa"
       className="rounded-xl border border-[#EEE9E6] bg-[#FAF7F5] p-4"
       data-testid="writing-sentence-diff"
+      // Phase 1 test sentence-diff-view.test.tsx:60 requires explicit role="region" on the diff container.
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="region"
     >
       <h4 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">

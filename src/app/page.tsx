@@ -255,7 +255,12 @@ export default async function Home(props: {
           <FeaturedExams />
         </section>
 
-        <AttemptHistorySection limit={6} showFilter showViewAll />
+        <AttemptHistorySection
+          limit={6}
+          showFilter
+          showViewAll
+          title="Lịch sử làm bài gần đây"
+        />
 
         <section aria-labelledby="home-steps" className="mt-12">
           <h2 className={`${sectionTitle} scroll-mt-20`} id="home-steps">
