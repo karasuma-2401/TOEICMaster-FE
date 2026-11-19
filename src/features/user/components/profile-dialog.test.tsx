@@ -6,6 +6,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProfileDialog } from "./profile-dialog";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
+vi.mock("@/features/history/api", () => ({
+  fetchUnifiedHistory: vi.fn().mockResolvedValue({
+    items: [],
+    unauthenticatedSkills: [],
+  }),
+}));
 
 afterEach(cleanup);
 
@@ -15,6 +21,7 @@ describe("ProfileDialog", () => {
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
     phone: "0912345678",
+    dateOfBirth: null,
     targetScore: 750,
     avatarVersion: null,
     hasPassword: true,

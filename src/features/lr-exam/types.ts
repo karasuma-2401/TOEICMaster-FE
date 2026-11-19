@@ -110,6 +110,8 @@ export interface LrResultReport {
   maxScore: number;
   listening: { score: number; max: number };
   reading: { score: number; max: number };
+  listeningRaw: { correct: number; total: number };
+  readingRaw: { correct: number; total: number };
   targetScore?: number;
   parts: LrPartResult[];
 }

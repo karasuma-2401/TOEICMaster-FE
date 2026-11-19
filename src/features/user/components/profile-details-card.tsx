@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import Image from "next/image";
 import { avatarUrl } from "@/features/user/api";
 import { type UserProfile, getInitials } from "@/features/user/profile";
@@ -70,6 +70,9 @@ export function ProfileDetailsCard({
     selectAvatar,
   } = useProfileEditor({ initialValues: profile, onSaved });
   const imageUrl = previewUrl ?? avatarUrl(profile);
+  const [maxDateOfBirth] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
 
   return (
     <form className={profileCard} noValidate onSubmit={submit}>
@@ -192,6 +195,31 @@ export function ProfileDetailsCard({
             value={values.phone}
           />
           <FieldError id={`${id}-phone-error`} message={errors.phone} />
+        </div>
+
+        <div>
+          <label className={profileLabel} htmlFor={`${id}-dateOfBirth`}>
+            Ngày sinh
+          </label>
+          <input
+            aria-describedby={
+              errors.dateOfBirth ? `${id}-dateOfBirth-error` : undefined
+            }
+            aria-invalid={Boolean(errors.dateOfBirth)}
+            autoComplete="bday"
+            className={profileInput}
+            id={`${id}-dateOfBirth`}
+            max={maxDateOfBirth}
+            min="1900-01-01"
+            name="dateOfBirth"
+            onChange={updateValue}
+            type="date"
+            value={values.dateOfBirth}
+          />
+          <FieldError
+            id={`${id}-dateOfBirth-error`}
+            message={errors.dateOfBirth}
+          />
         </div>
       </div>
 

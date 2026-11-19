@@ -1,16 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { UserMenu } from "@/features/user/components/user-menu";
 import {
+  getLrAttemptHistory,
   getLrCatalog,
+  type LrAttemptHistoryItemApi,
   type LrExamCatalogItemApi,
 } from "@/features/lr-exam/api";
+import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import {
   ExamLibrary,
   type ExamLibrarySkill,
 } from "@/shared/components/practice/exam-library";
 import type { ExamLibraryItem } from "@/shared/components/practice/exam-library-model";
+import { summarizeExamAttempts } from "@/shared/components/practice/exam-library-model";
 import { SkillHeader } from "@/shared/components/practice/skill-header";
 
 const skills = {
@@ -32,9 +36,20 @@ const skills = {
     examHref: "/reading",
     exerciseHref: "/reading/practice/5",
   },
+  "listening-reading": {
+    id: "listening",
+    name: "Listening & Reading",
+    tagline:
+      "Làm trọn đề Listening & Reading 200 câu trong 120 phút như kỳ thi thật.",
+    format: "200 câu · 120 phút · 10–990 điểm · 7 Parts",
+    maxScore: 990,
+    examHref: "/listening-reading",
+    exerciseHref: "/listening/practice/1",
+  },
 } as const satisfies Record<string, ExamLibrarySkill>;
 
 type Skill = keyof typeof skills;
+type PracticeSkill = "listening" | "reading";
 
 const practiceParts = {
   listening: {
@@ -52,14 +67,18 @@ const practiceParts = {
 
 type PartInfo = { title: string; questions: number };
 
-const partsOf = (skill: Skill) =>
+const partsOf = (skill: PracticeSkill) =>
   Object.entries(practiceParts[skill]) as [string, PartInfo][];
 
-export function isListeningReadingPart(skill: Skill, part: string) {
+export function isListeningReadingPart(skill: PracticeSkill, part: string) {
   return part in practiceParts[skill];
 }
 
-function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
+function toLibraryItem(
+  exam: LrExamCatalogItemApi,
+  results: Map<string, { attemptCount: number; bestScore: number | null }>,
+): ExamLibraryItem {
+  const result = results.get(exam.examId);
   return {
     id: exam.examId,
     code: exam.code,
@@ -69,13 +88,14 @@ function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
     action: { href: `/exams/lr/${exam.examId}` },
     sortKey: exam.publishedAtUtc,
     difficulty: null,
-    attemptCount: 0,
-    bestScore: null,
+    attemptCount: result?.attemptCount ?? 0,
+    bestScore: result?.bestScore ?? null,
   };
 }
 
 export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
-  const [items, setItems] = useState<ExamLibraryItem[]>([]);
+  const [catalog, setCatalog] = useState<LrExamCatalogItemApi[]>([]);
+  const [attempts, setAttempts] = useState<LrAttemptHistoryItemApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,8 +103,15 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
     setLoading(true);
     setError(null);
     try {
-      const catalog = await getLrCatalog(signal);
-      setItems(catalog.map(toLibraryItem));
+      const [nextCatalog, history] = await Promise.all([
+        getLrCatalog(signal),
+        // History is an extra: the catalog stays usable without it (e.g. 401).
+        getLrAttemptHistory({ pageIndex: 1, pageSize: 100 }, signal).catch(
+          () => null,
+        ),
+      ]);
+      setCatalog(nextCatalog);
+      setAttempts(history?.items ?? []);
     } catch (cause) {
       if (signal?.aborted) return;
       setError(
@@ -99,9 +126,23 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
-    return () => controller.abort();
+    const task = window.setTimeout(() => void load(controller.signal), 0);
+    return () => {
+      window.clearTimeout(task);
+      controller.abort();
+    };
   }, [load]);
+
+  const items = useMemo(() => {
+    const results = summarizeExamAttempts(
+      attempts.flatMap((attempt): { id: string; score: number | null }[] =>
+        attempt.status === "Completed"
+          ? [{ id: attempt.examId, score: attempt.totalScaledScore }]
+          : [],
+      ),
+    );
+    return catalog.map((exam) => toLibraryItem(exam, results));
+  }, [catalog, attempts]);
 
   const { name } = skills[skill];
 
@@ -110,7 +151,21 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
       emptyDescription={`Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`}
       emptyTitle={`Chưa có đề thi ${name}`}
       error={error}
-      header={<SkillHeader account={<UserMenu />} active={skill} wide />}
+      header={
+        <SkillHeader
+          account={<UserMenu />}
+          active={skill === "listening-reading" ? undefined : skill}
+          wide
+        />
+      }
+      historySection={
+        <AttemptHistorySection
+          description={`Các lần làm đề ${name} được lưu tại đây.`}
+          limit={3}
+          skills={["lr"]}
+          title="Lịch sử làm bài L&R"
+        />
+      }
       items={items}
       loading={loading}
       onRetry={() => void load()}
@@ -123,7 +178,7 @@ export function ListeningReadingPractice({
   skill,
   part,
 }: {
-  skill: Skill;
+  skill: PracticeSkill;
   part: string;
 }) {
   const { name } = skills[skill];

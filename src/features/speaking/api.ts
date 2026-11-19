@@ -182,11 +182,17 @@ export interface SpeakingAttemptSummary {
   testId: string | null;
   /** Exercise practised on its own; null for test attempts. */
   exerciseId: string | null;
+  testCode: string;
+  testTitle: string;
   mode: string | null;
   /** Answers with a saved recording; null when the backend omits it. */
   recordedCount: number | null;
+  questionCount: number;
   status: string;
   createdAtUtc: string;
+  updatedAtUtc: string | null;
+  submittedAtUtc: string | null;
+  evaluationStatus: string | null;
   estimatedScore: number | null;
 }
 
@@ -209,10 +215,20 @@ function parseAttemptSummary(value: unknown): SpeakingAttemptSummary {
     id: value.id,
     testId: value.testId,
     exerciseId: isString(value.exerciseId) ? value.exerciseId : null,
+    testCode: isString(value.testCode) ? value.testCode : "",
+    testTitle: isString(value.testTitle) ? value.testTitle : "",
     mode: isString(value.mode) ? value.mode : null,
     recordedCount: isCount(value.recordedCount) ? value.recordedCount : null,
+    questionCount: isCount(value.questionCount) ? value.questionCount : 0,
     status: value.status,
     createdAtUtc: value.createdAtUtc,
+    updatedAtUtc: isString(value.updatedAtUtc) ? value.updatedAtUtc : null,
+    submittedAtUtc: isString(value.submittedAtUtc)
+      ? value.submittedAtUtc
+      : null,
+    evaluationStatus: isString(value.evaluationStatus)
+      ? value.evaluationStatus
+      : null,
     estimatedScore: value.estimatedScore ?? null,
   };
 }

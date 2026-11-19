@@ -295,13 +295,9 @@ export function useSequentialListeningPlayer({
   const togglePlay = useCallback(async () => {
     if (!enabled || tracksRef.current.length === 0) return;
 
-    if (isPlayingRef.current) {
-      audioRef.current?.pause();
-      isPlayingRef.current = false;
-      setIsPlaying(false);
-      setIsBuffering(false);
-      return;
-    }
+    // ETS rule: once Listening playback starts it cannot be paused. Only a
+    // failed start (error state) lets the learner try again.
+    if (isPlayingRef.current) return;
 
     setError(null);
     isPlayingRef.current = true;

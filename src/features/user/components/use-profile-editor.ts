@@ -23,6 +23,7 @@ interface FormState {
   displayName: string;
   email: string;
   phone: string;
+  dateOfBirth: string;
   targetScore: string;
 }
 
@@ -31,6 +32,7 @@ function toFormState(profile: UserProfile): FormState {
     displayName: profile.displayName,
     email: profile.email,
     phone: profile.phone ?? "",
+    dateOfBirth: profile.dateOfBirth ?? "",
     targetScore:
       profile.targetScore === null ? "" : String(profile.targetScore),
   };
@@ -73,7 +75,8 @@ export function useProfileEditor({
 
   const isChanged =
     values.displayName !== normalizedInitial.displayName ||
-    values.phone !== normalizedInitial.phone;
+    values.phone !== normalizedInitial.phone ||
+    values.dateOfBirth !== normalizedInitial.dateOfBirth;
 
   function updateValue(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -91,6 +94,7 @@ export function useProfileEditor({
       displayName: values.displayName,
       email: values.email,
       phone: values.phone,
+      dateOfBirth: values.dateOfBirth,
       targetScore: values.targetScore,
     });
     setErrors(nextErrors);

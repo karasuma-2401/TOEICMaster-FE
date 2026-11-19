@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getLrMediaUrl } from "@/features/lr-exam/api";
+import {
+  getReviewAudioRate,
+  preferencesChangedEvent,
+} from "@/features/user/preferences";
 import { formatClock } from "@/shared/ui/format-time";
 import { focusRing, secondaryButton } from "./exam-ui";
 
@@ -43,6 +47,14 @@ export function ReviewAudioPlayer({
   const initialDurationSec =
     durationMs && durationMs > 0 ? Math.round(durationMs / 1000) : 0;
   const totalSeconds = measuredDurationSec ?? initialDurationSec;
+
+  // The profile settings own the learner's default review speed.
+  useEffect(() => {
+    const sync = () => setRate(getReviewAudioRate());
+    sync();
+    window.addEventListener(preferencesChangedEvent, sync);
+    return () => window.removeEventListener(preferencesChangedEvent, sync);
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;

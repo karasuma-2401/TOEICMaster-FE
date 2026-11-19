@@ -85,7 +85,12 @@ describe("toUpdateRequest", () => {
         phone: "  ",
         targetScore: "",
       }),
-    ).toEqual({ displayName: "Linh", phone: null, targetScore: null });
+    ).toEqual({
+      displayName: "Linh",
+      phone: null,
+      dateOfBirth: null,
+      targetScore: null,
+    });
     expect(
       toUpdateRequest({
         displayName: "Linh",
@@ -93,7 +98,12 @@ describe("toUpdateRequest", () => {
         phone: " 0912345678 ",
         targetScore: "750",
       }),
-    ).toEqual({ displayName: "Linh", phone: "0912345678", targetScore: 750 });
+    ).toEqual({
+      displayName: "Linh",
+      phone: "0912345678",
+      dateOfBirth: null,
+      targetScore: 750,
+    });
   });
 });
 

@@ -3,6 +3,7 @@ export interface UserProfile {
   email: string;
   displayName: string;
   phone: string | null;
+  dateOfBirth: string | null;
   targetScore: number | null;
   avatarVersion: string | null;
   hasPassword: boolean;
@@ -12,12 +13,14 @@ export interface ProfileInput {
   displayName: string;
   email: string;
   phone?: string | null;
+  dateOfBirth?: string | null;
   targetScore?: number | string | null;
 }
 
 export interface UpdateProfileRequest {
   displayName: string;
   phone: string | null;
+  dateOfBirth: string | null;
   targetScore: number | null;
 }
 
@@ -50,14 +53,42 @@ export function getInitials(name: string): string {
 export function toUpdateRequest(input: ProfileInput): UpdateProfileRequest {
   const phone = input.phone?.trim() ?? "";
   const score = input.targetScore;
+  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
   return {
     displayName: input.displayName.trim(),
     phone: phone || null,
+    dateOfBirth: dateOfBirth || null,
     targetScore:
       score === undefined || score === null || String(score).trim() === ""
         ? null
         : Number(score),
   };
+}
+
+const dateOfBirthPattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidCalendarDate(value: string): boolean {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+export function validateDateOfBirth(value: string): string | null {
+  if (!dateOfBirthPattern.test(value) || !isValidCalendarDate(value)) {
+    return "Ngày sinh không hợp lệ.";
+  }
+  if (value < "1900-01-01") {
+    return "Ngày sinh không được trước 01/01/1900.";
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (value > today) {
+    return "Ngày sinh không được ở tương lai.";
+  }
+  return null;
 }
 
 export function validateProfile(input: ProfileInput): ProfileFieldErrors {
@@ -73,6 +104,12 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
   const phone = input.phone?.trim() ?? "";
   if (phone && !phonePattern.test(phone)) {
     errors.phone = "Số điện thoại không hợp lệ.";
+  }
+
+  const dateOfBirth = input.dateOfBirth?.trim() ?? "";
+  if (dateOfBirth) {
+    const dateOfBirthError = validateDateOfBirth(dateOfBirth);
+    if (dateOfBirthError) errors.dateOfBirth = dateOfBirthError;
   }
 
   const targetScore = input.targetScore;

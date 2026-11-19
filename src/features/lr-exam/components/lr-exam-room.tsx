@@ -503,12 +503,13 @@ function ListeningMasterPlayer({
           </p>
         </div>
         <button
-          className={`${primaryButton} min-h-[44px] shrink-0`}
+          className={`${primaryButton} min-h-[44px] shrink-0 disabled:cursor-not-allowed disabled:opacity-60`}
           data-testid="lr-master-audio-toggle"
+          disabled={isPlaying && !error}
           onClick={() => void togglePlay()}
           type="button"
         >
-          {isPlaying ? "Tạm dừng audio" : "Bắt đầu phát Listening"}
+          {isPlaying ? "Đang phát · Khóa tạm dừng" : "Bắt đầu phát Listening"}
         </button>
       </div>
       <div
@@ -520,6 +521,11 @@ function ListeningMasterPlayer({
           style={{ width: `${progressPercent}%` }}
         />
       </div>
+      <p className="text-xs text-[#64748b]">
+        {isPlaying
+          ? "Audio Listening phát một lần theo quy định ETS: không thể tạm dừng hoặc tua."
+          : "Audio Listening chỉ phát một lần theo quy định ETS: sau khi bắt đầu, bạn không thể tạm dừng hay tua."}
+      </p>
       {isBuffering ? (
         <output className="block text-xs text-[#64748b]">
           Đang đệm đoạn audio tiếp theo…

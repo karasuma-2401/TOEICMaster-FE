@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FeaturedExams } from "@/features/home/components/featured-exams";
+import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import {
   BookOpenIcon,
   HeadphonesIcon,
@@ -27,7 +28,7 @@ const navigation = [
   { label: "Reading", href: "/reading" },
   { label: "Speaking", href: "/speaking" },
   { label: "Writing", href: "/writing" },
-  { label: "Lịch sử", href: "/history/writing" },
+  { label: "Lịch sử", href: "/history" },
 ];
 
 const promises = [
@@ -48,7 +49,7 @@ const exams = [
     accent: "text-(--sp-lr)",
     facts: "200 câu · 120 phút · 10–990",
     description:
-      "Trắc nghiệm Nghe & Đọc với Master Audio liên tục và ma trận 200 câu. Sắp ra mắt.",
+      "Trắc nghiệm Nghe & Đọc với Master Audio liên tục và ma trận 200 câu.",
   },
   {
     badge: "Speaking",
@@ -130,8 +131,7 @@ export default async function Home(props: {
             </h1>
             <p className="mt-4 max-w-2xl text-[17px] leading-6 text-(--sp-ink-2)">
               Phòng thi ảo theo đúng nhịp đề thật, AI chấm điểm Speaking &amp;
-              Writing chi tiết. Ngân hàng đề 200 câu L&amp;R đang được hoàn
-              thiện.
+              Writing chi tiết. Đề L&amp;R 200 câu với Master Audio đã sẵn sàng.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link className={primaryAction} href="/speaking">
@@ -255,6 +255,8 @@ export default async function Home(props: {
           <FeaturedExams />
         </section>
 
+        <AttemptHistorySection limit={6} showFilter showViewAll />
+
         <section aria-labelledby="home-steps" className="mt-12">
           <h2 className={`${sectionTitle} scroll-mt-20`} id="home-steps">
             Lộ trình luyện thi
@@ -277,10 +279,7 @@ export default async function Home(props: {
         <footer className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[13px] text-(--sp-ink-2)">
           <p>© 2026 TOEICMaster. Học ngoại ngữ, mở ra thế giới.</p>
           <nav aria-label="Liên kết cuối trang" className="flex gap-6">
-            <Link
-              className={`hover:underline ${focusRing}`}
-              href="/history/writing"
-            >
+            <Link className={`hover:underline ${focusRing}`} href="/history">
               Lịch sử học tập
             </Link>
             <Link

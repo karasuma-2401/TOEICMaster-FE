@@ -147,6 +147,29 @@ function durationLabel(seconds: number) {
 }
 
 export function resultToReport(result: LrResultApi): LrResultReport {
+  const listeningParts = result.parts.filter((part) => part.part <= 4);
+  const readingParts = result.parts.filter((part) => part.part >= 5);
+  const listeningPartsTotal = listeningParts.reduce(
+    (sum, part) => sum + part.totalQuestions,
+    0,
+  );
+  const readingPartsTotal = readingParts.reduce(
+    (sum, part) => sum + part.totalQuestions,
+    0,
+  );
+  const listeningTotal = Math.max(
+    listeningParts.length === 4 && listeningPartsTotal > 0
+      ? listeningPartsTotal
+      : 100,
+    result.listeningRawScore,
+  );
+  const readingTotal = Math.max(
+    readingParts.length === 3 && readingPartsTotal > 0
+      ? readingPartsTotal
+      : 100,
+    result.readingRawScore,
+  );
+
   return {
     examTitle: `Kết quả bài thi Listening & Reading - ${result.examTitle}`,
     examIdentity: result.examCode,
@@ -162,6 +185,14 @@ export function resultToReport(result: LrResultApi): LrResultReport {
     reading: {
       score: result.readingScaledScore,
       max: result.readingMaxScaledScore,
+    },
+    listeningRaw: {
+      correct: result.listeningRawScore,
+      total: listeningTotal,
+    },
+    readingRaw: {
+      correct: result.readingRawScore,
+      total: readingTotal,
     },
     parts: result.parts.map((part) => ({
       part: part.part as LrResultReport["parts"][number]["part"],

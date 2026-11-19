@@ -24,6 +24,12 @@ vi.mock("@/features/user/api", async (importOriginal) => {
   };
 });
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }));
+vi.mock("@/features/history/api", () => ({
+  fetchUnifiedHistory: vi.fn().mockResolvedValue({
+    items: [],
+    unauthenticatedSkills: [],
+  }),
+}));
 
 afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
@@ -34,6 +40,7 @@ describe("ProfilePanel", () => {
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
     phone: "0912345678",
+    dateOfBirth: null,
     targetScore: 750,
     avatarVersion: null,
     hasPassword: true,
@@ -85,6 +92,7 @@ describe("ProfilePanel", () => {
       expect(mocks.updateProfile).toHaveBeenCalledWith({
         displayName: "Nguyễn Văn A",
         phone: "0912345678",
+        dateOfBirth: null,
         targetScore: 850,
       }),
     );
@@ -118,6 +126,7 @@ describe("ProfilePanel", () => {
       expect(mocks.updateProfile).toHaveBeenLastCalledWith({
         displayName: "Linh",
         phone: "0912345678",
+        dateOfBirth: null,
         targetScore: 850,
       }),
     );

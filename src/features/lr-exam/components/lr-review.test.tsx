@@ -248,4 +248,28 @@ describe("LrReview lazy audio player", () => {
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   });
+
+  it("renders Screen 19 filter tabs (Tất cả, Làm sai, Bỏ qua, Sai / Bỏ qua, Gắn cờ, Đúng) and /history link", () => {
+    render(
+      <LrReview
+        state={buildReviewState()}
+        resultHref="/result"
+        attemptId={ATTEMPT_ID}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+    ).toHaveAttribute("href", "/history");
+    for (const label of [
+      /Tất cả/,
+      /Làm sai \(1\)/,
+      /Bỏ qua \(0\)/,
+      /Sai \/ Bỏ qua \(1\)/,
+      /Gắn cờ \(0\)/,
+      /Đúng \(3\)/,
+    ]) {
+      expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
+    }
+  });
 });
