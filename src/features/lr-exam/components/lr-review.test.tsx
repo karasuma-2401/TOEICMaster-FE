@@ -143,6 +143,7 @@ function buildReviewState(): LrReviewState {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getLrMediaUrl).mockReset();
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() =>
     Promise.resolve(),
   );
@@ -175,10 +176,9 @@ describe("LrReview lazy audio player", () => {
     );
 
     const playerRegion = screen.getByTestId("lr-review-audio-player");
-    expect(playerRegion).toHaveAttribute("role", "region");
-    expect(
-      screen.getByRole("region", { name: "Audio xem lại câu hỏi" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Audio xem lại câu hỏi" })).toBe(
+      playerRegion,
+    );
     expect(screen.getByText(/00:00\s*\/\s*00:45/)).toBeInTheDocument();
     expect(getLrMediaUrl).not.toHaveBeenCalled();
 
@@ -210,12 +210,12 @@ describe("LrReview lazy audio player", () => {
     expect(audioEl.currentTime).toBe(15);
 
     // Switch to Q33 (same audioAssetId: asset-p3-1) -> reuses cache without calling getLrMediaUrl again.
-    fireEvent.click(screen.getByRole("button", { name: /33/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 33\b/ }));
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     expect(getLrMediaUrl).toHaveBeenCalledTimes(1);
 
     // Switch to Q35 (different audioAssetId: asset-p3-2) -> fetches asset-p3-2.
-    fireEvent.click(screen.getByRole("button", { name: /35/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 35\b/ }));
     expect(screen.getByText(/00:00\s*\/\s*00:30/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     await waitFor(() =>
@@ -228,7 +228,7 @@ describe("LrReview lazy audio player", () => {
     expect(getLrMediaUrl).toHaveBeenCalledTimes(2);
 
     // Switch to Q101 (Part 5) -> ReviewAudioPlayer must NOT render.
-    fireEvent.click(screen.getByRole("button", { name: /101/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 101\b/ }));
     expect(
       screen.queryByTestId("lr-review-audio-player"),
     ).not.toBeInTheDocument();

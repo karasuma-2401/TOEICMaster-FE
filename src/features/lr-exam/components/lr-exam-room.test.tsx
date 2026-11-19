@@ -100,10 +100,9 @@ describe("LrExamRoom", () => {
     );
 
     const player = screen.getByTestId("lr-master-audio-player");
-    expect(player).toHaveAttribute("role", "region");
     expect(
       screen.getByRole("region", { name: "Trình phát audio phần Listening" }),
-    ).toBeInTheDocument();
+    ).toBe(player);
 
     // Zero per-block <audio> elements: at most 1 unified <audio> element in DOM.
     expect(container.querySelectorAll("audio").length).toBeLessThanOrEqual(1);
