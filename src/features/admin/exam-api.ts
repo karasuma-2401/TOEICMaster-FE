@@ -216,13 +216,9 @@ export async function createReadingExam(
   return value;
 }
 
-export async function importReadingExam(
-  workbook: File,
-  masterAudio?: File,
-): Promise<ReadingDraft> {
+export async function importReadingExam(workbook: File): Promise<ReadingDraft> {
   const formData = new FormData();
   formData.set("workbook", workbook);
-  if (masterAudio) formData.set("masterAudio", masterAudio);
   const value = await request<unknown>(
     "/api/admin/exams/import",
     "POST",
@@ -269,6 +265,7 @@ export async function createMediaUploadIntent(
     ownerKey: string;
     contentType: string;
     byteSize: number;
+    durationMs?: number | null;
   },
 ): Promise<MediaUploadIntent> {
   const value = await request<unknown>(
@@ -298,11 +295,19 @@ export async function uploadFileToMediaIntent(
     );
 }
 
+export interface CompletedMediaUpload {
+  id: string;
+  contentType?: string;
+  kind?: string;
+  byteSize?: number;
+  durationMs: number | null;
+}
+
 export async function completeMediaUploadIntent(
   examId: string,
   revisionId: string,
   intentId: string,
-): Promise<{ id: string }> {
+): Promise<CompletedMediaUpload> {
   const value = await request<unknown>(
     `/api/admin/exams/${encodeURIComponent(examId)}/revisions/${encodeURIComponent(revisionId)}/media-upload-intents/${encodeURIComponent(intentId)}/complete`,
     "POST",
@@ -314,7 +319,28 @@ export async function completeMediaUploadIntent(
     !isGuid((value as { id?: unknown }).id)
   )
     throw new AdminExamApiError(502, "Phản hồi hoàn tất upload không hợp lệ.");
-  return { id: (value as { id: string }).id };
+  const record = value as {
+    id: string;
+    contentType?: unknown;
+    kind?: unknown;
+    byteSize?: unknown;
+    durationMs?: unknown;
+  };
+  const durationMs =
+    typeof record.durationMs === "number" && Number.isFinite(record.durationMs)
+      ? record.durationMs
+      : null;
+  return {
+    id: record.id,
+    ...(typeof record.contentType === "string"
+      ? { contentType: record.contentType }
+      : {}),
+    ...(typeof record.kind === "string" ? { kind: record.kind } : {}),
+    ...(typeof record.byteSize === "number" && Number.isFinite(record.byteSize)
+      ? { byteSize: record.byteSize }
+      : {}),
+    durationMs,
+  };
 }
 
 export async function updateReadingQuestion(
@@ -357,20 +383,6 @@ export async function uploadReadingImage(file: File): Promise<{ id: string }> {
   )
     throw new AdminExamApiError(502, "Ảnh vừa tải lên không hợp lệ.");
   return { id: (value as { id: string }).id };
-}
-
-export async function uploadReadingMasterAudio(
-  examId: string,
-  revisionId: string,
-  file: File,
-) {
-  const formData = new FormData();
-  formData.set("file", file);
-  await request(
-    `/api/admin/exams/${encodeURIComponent(examId)}/revisions/${encodeURIComponent(revisionId)}/master-audio`,
-    "PUT",
-    formData,
-  );
 }
 
 export async function publishReadingRevision(

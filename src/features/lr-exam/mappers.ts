@@ -90,8 +90,16 @@ export function sheetToRoomState(
             },
           }
         : {}),
-      ...(block.audioAssetId && mediaUrls[block.audioAssetId]
-        ? { audio: { src: mediaUrls[block.audioAssetId] } }
+      ...(block.audioAssetId
+        ? {
+            audio: {
+              assetId: block.audioAssetId,
+              durationMs: block.audioDurationMs,
+              ...(mediaUrls[block.audioAssetId]
+                ? { src: mediaUrls[block.audioAssetId] }
+                : {}),
+            },
+          }
         : {}),
       questions,
     };
@@ -129,7 +137,6 @@ export function sheetToRoomState(
         ),
       ),
     ),
-    masterAudioObjectKey: sheet.masterAudioObjectKey,
   };
 }
 
@@ -220,6 +227,14 @@ export function reviewToState(
 
     return {
       id: block.id,
+      ...(block.audioAssetId
+        ? {
+            audio: {
+              assetId: block.audioAssetId,
+              durationMs: block.audioDurationMs,
+            },
+          }
+        : {}),
       ...(contexts.length > 0
         ? {
             passage: {

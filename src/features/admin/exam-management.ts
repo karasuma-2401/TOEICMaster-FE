@@ -55,6 +55,7 @@ export interface ReadingBlock {
   type: string;
   firstQuestionNumber: number;
   audioAssetId: string | null;
+  audioDurationMs: number | null;
   contextBlocks: ReadingContext[];
   questions: ReadingQuestion[];
 }
@@ -67,8 +68,6 @@ export interface ReadingRevision {
   versionNumber: number;
   status: "Draft" | "Published";
   scoreProfileId: string;
-  hasMasterAudio: boolean;
-  usesMediaWorkspace: boolean;
   blocks: ReadingBlock[];
 }
 
@@ -164,6 +163,13 @@ function isReadingContext(value: unknown): value is ReadingContext {
   );
 }
 
+function isNullableNonNegativeNumber(value: unknown): value is number | null {
+  return (
+    value === null ||
+    (typeof value === "number" && Number.isFinite(value) && value >= 0)
+  );
+}
+
 function isReadingBlock(value: unknown): value is ReadingBlock {
   if (!isRecord(value)) return false;
   return (
@@ -172,6 +178,7 @@ function isReadingBlock(value: unknown): value is ReadingBlock {
     typeof value.type === "string" &&
     isPositiveInteger(value.firstQuestionNumber) &&
     isNullableGuid(value.audioAssetId) &&
+    isNullableNonNegativeNumber(value.audioDurationMs) &&
     Array.isArray(value.contextBlocks) &&
     value.contextBlocks.every(isReadingContext) &&
     Array.isArray(value.questions) &&
@@ -189,8 +196,6 @@ export function parseReadingRevision(value: unknown): ReadingRevision {
     !isPositiveInteger(value.versionNumber) ||
     (value.status !== "Draft" && value.status !== "Published") ||
     !isGuid(value.scoreProfileId) ||
-    typeof value.hasMasterAudio !== "boolean" ||
-    typeof value.usesMediaWorkspace !== "boolean" ||
     !Array.isArray(value.blocks) ||
     !value.blocks.every(isReadingBlock)
   )
