@@ -309,6 +309,7 @@ export function useSequentialListeningPlayer({
 
     const readyUrl = blobUrlsRef.current.get(activeIndexRef.current);
     if (!readyUrl) {
+      failedIndicesRef.current.delete(activeIndexRef.current);
       setIsBuffering(true);
       pumpQueue();
       return;
@@ -393,6 +394,7 @@ export function useSequentialListeningPlayer({
     if (nextUrl) {
       attachAndMaybePlay(nextUrl, isPlayingRef.current);
     } else {
+      failedIndicesRef.current.delete(nextIdx);
       setActiveBlobUrl(undefined);
       setIsBuffering(true);
     }
