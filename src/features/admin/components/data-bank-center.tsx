@@ -1566,7 +1566,7 @@ function ImportExamModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Workbook cần có Manifest, Blocks, ContextBlocks và Questions; master audio là bắt buộc."
+      subtitle="Workbook cần có Manifest, Blocks, ContextBlocks và Questions."
       title="Import đề thi hoàn chỉnh"
     >
       <form onSubmit={submit}>

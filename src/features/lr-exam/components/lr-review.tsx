@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { formatClock } from "@/shared/ui/format-time";
 import { LISTENING_LAST, LR_TOTAL_QUESTIONS } from "../parts";
 import { range } from "../session";
@@ -15,6 +15,7 @@ import {
   primaryButton,
   secondaryButton,
 } from "./exam-ui";
+import { ReviewAudioPlayer } from "./review-audio-player";
 
 type Filter = "all" | "wrong" | "flagged";
 
@@ -33,11 +34,21 @@ const slotTone = {
 export function LrReview({
   state,
   resultHref,
+  attemptId,
 }: {
   state: LrReviewState;
   resultHref: string;
+  attemptId?: string;
 }) {
   const { groups, statuses, counts, flags, exam } = state;
+  const [audioUrlCache, setAudioUrlCache] = useState<Record<string, string>>(
+    {},
+  );
+  const cacheAudioUrl = useCallback((assetId: string, url: string) => {
+    setAudioUrlCache((prev) =>
+      prev[assetId] === url ? prev : { ...prev, [assetId]: url },
+    );
+  }, []);
   const detailed = useMemo(
     () =>
       new Map<
@@ -111,8 +122,11 @@ export function LrReview({
 
           {entry ? (
             <ReviewDetail
+              attemptId={attemptId}
+              audioUrlCache={audioUrlCache}
               entry={entry}
               flagged={Boolean(flags[current])}
+              onCacheAudioUrl={cacheAudioUrl}
               status={statuses[current] ?? "skipped"}
             />
           ) : (
@@ -184,27 +198,48 @@ export function LrReview({
 }
 
 function ReviewDetail({
+  attemptId,
+  audioUrlCache,
   entry,
   status,
   flagged,
+  onCacheAudioUrl,
 }: {
+  attemptId?: string;
+  audioUrlCache: Record<string, string>;
   entry: { group: LrReviewGroup; question: LrReviewQuestionDetail };
   status: keyof typeof statusLabel;
   flagged: boolean;
+  onCacheAudioUrl: (assetId: string, url: string) => void;
 }) {
   const { group, question } = entry;
+  const hasLazyAudio =
+    question.number <= LISTENING_LAST &&
+    Boolean(attemptId) &&
+    Boolean(group.audio?.assetId);
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <div className="flex flex-col gap-4">
-        {group.audio ? (
+        {hasLazyAudio && attemptId && group.audio?.assetId ? (
+          <ReviewAudioPlayer
+            assetId={group.audio.assetId}
+            attemptId={attemptId}
+            cachedUrl={audioUrlCache[group.audio.assetId]}
+            durationMs={group.audio.durationMs ?? null}
+            key={group.audio.assetId}
+            onCacheUrl={onCacheAudioUrl}
+          />
+        ) : group.audio && !group.audio.assetId ? (
           <section
             aria-label="Audio"
             className="flex flex-col gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4"
           >
-            <p className="text-[11px] text-[#77716e]">{group.audio.note}</p>
+            {group.audio.note ? (
+              <p className="text-[11px] text-[#77716e]">{group.audio.note}</p>
+            ) : null}
             <p className="text-xs font-semibold text-[#475569]">
-              {formatClock(group.audio.currentSeconds)} /{" "}
-              {formatClock(group.audio.totalSeconds)}
+              {formatClock(group.audio.currentSeconds ?? 0)} /{" "}
+              {formatClock(group.audio.totalSeconds ?? 0)}
             </p>
           </section>
         ) : null}
