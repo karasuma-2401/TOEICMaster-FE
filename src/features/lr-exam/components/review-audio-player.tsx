@@ -8,6 +8,15 @@ import { focusRing, secondaryButton } from "./exam-ui";
 const PLAYBACK_RATES = ["0.8", "1.0", "1.2"] as const;
 type PlaybackRateOption = (typeof PLAYBACK_RATES)[number];
 
+function isAbortError(cause: unknown): boolean {
+  return (
+    typeof cause === "object" &&
+    cause !== null &&
+    "name" in cause &&
+    (cause as { name?: unknown }).name === "AbortError"
+  );
+}
+
 export function ReviewAudioPlayer({
   attemptId,
   assetId,
@@ -34,6 +43,14 @@ export function ReviewAudioPlayer({
   const initialDurationSec =
     durationMs && durationMs > 0 ? Math.round(durationMs / 1000) : 0;
   const totalSeconds = measuredDurationSec ?? initialDurationSec;
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !cachedUrl) return;
+    if (audio.getAttribute("src") !== cachedUrl) {
+      audio.src = cachedUrl;
+    }
+  }, [cachedUrl]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -71,7 +88,7 @@ export function ReviewAudioPlayer({
       setLoading(false);
     }
 
-    if (audio.src !== url) {
+    if (audio.getAttribute("src") !== url) {
       audio.src = url;
     }
     audio.playbackRate = Number(rate);
@@ -80,9 +97,11 @@ export function ReviewAudioPlayer({
       setIsPlaying(true);
     } catch (cause) {
       setIsPlaying(false);
-      setError(
-        cause instanceof Error ? cause.message : "Không thể phát audio.",
-      );
+      if (!isAbortError(cause)) {
+        setError(
+          cause instanceof Error ? cause.message : "Không thể phát audio.",
+        );
+      }
     }
   }
 
@@ -122,7 +141,6 @@ export function ReviewAudioPlayer({
         }}
         preload="none"
         ref={audioRef}
-        src={cachedUrl}
       >
         <track kind="captions" />
       </audio>

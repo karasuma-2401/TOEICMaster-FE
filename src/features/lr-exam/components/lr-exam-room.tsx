@@ -259,7 +259,7 @@ export function LrExamRoom({
 
   return (
     <div className="flex min-h-screen flex-col bg-[#faf7f5] text-[#4c4542]">
-      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
+      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-3 sm:gap-x-6 sm:px-8 sm:py-2">
         <ExamBrand />
         <div className="flex flex-col gap-0.5">
           <p className="text-[15px] font-semibold">{exam.identity}</p>
@@ -272,22 +272,22 @@ export function LrExamRoom({
             ? "SECTION 1 · LISTENING"
             : "SECTION 2 · READING"}
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-4">
           <div
             aria-label="Thời gian còn lại"
-            className="flex items-center gap-3 rounded-xl bg-[#fff7ed] px-5 py-2.5"
+            className="flex items-center gap-2.5 rounded-xl bg-[#fff7ed] px-4 py-2 sm:gap-3 sm:px-5 sm:py-2.5"
             role="timer"
           >
             <ExamIcon name="timer" />
             <span
-              className={`font-mono text-xl font-bold ${section === "listening" ? "text-[#b45309]" : "text-[#302c2a]"}`}
+              className={`font-mono text-lg font-bold sm:text-xl ${section === "listening" ? "text-[#b45309]" : "text-[#302c2a]"}`}
             >
               {formatCountdown(remaining)}
             </span>
           </div>
           {attemptId && section === "listening" ? (
             <button
-              className={secondaryButton}
+              className={`${secondaryButton} whitespace-nowrap`}
               onClick={() => void moveToReading()}
               type="button"
             >
@@ -295,7 +295,7 @@ export function LrExamRoom({
             </button>
           ) : null}
           <button
-            className={primaryButton}
+            className={`${primaryButton} whitespace-nowrap`}
             onClick={() => setConfirming(true)}
             type="button"
           >
