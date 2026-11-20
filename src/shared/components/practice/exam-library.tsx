@@ -232,6 +232,7 @@ export function ExamLibrary({
   header,
   items,
   partLinks,
+  skillLinks,
   sortOptions = newestFirst,
   loading = false,
   error = null,
@@ -245,6 +246,7 @@ export function ExamLibrary({
   header: ReactNode;
   items: ExamLibraryItem[];
   partLinks?: { href: string; label: string; active: boolean }[];
+  skillLinks?: { href: string; label: string; active: boolean }[];
   /** The first option is the initial order. */
   sortOptions?: { value: ExamSort; label: string }[];
   loading?: boolean;
@@ -349,7 +351,27 @@ export function ExamLibrary({
             </p>
           </aside>
         </header>
-
+        {skillLinks && (
+          <nav
+            aria-label="Chọn Listening hoặc Reading"
+            className="mt-6 flex gap-2"
+          >
+            {skillLinks.map((link) => (
+              <Link
+                aria-current={link.active ? "page" : undefined}
+                className={`inline-flex min-h-10 items-center rounded-[10px] border px-5 text-sm transition ${focusRing} ${
+                  link.active
+                    ? "border-(--sp-hero-line) bg-(--sp-orange-soft) font-semibold text-(--sp-brand)"
+                    : "border-(--sp-line)/70 bg-white text-(--sp-ink-2)"
+                }`}
+                href={link.href}
+                key={link.href}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
         {partLinks && (
           <nav aria-label="Chọn Part" className="mt-6 flex flex-wrap gap-2">
             {partLinks.map((link) => (

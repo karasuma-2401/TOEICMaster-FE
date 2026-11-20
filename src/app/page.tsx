@@ -24,8 +24,7 @@ import {
 } from "@/shared/components/practice/styles";
 
 const navigation = [
-  { label: "Listening", href: "/listening" },
-  { label: "Reading", href: "/reading" },
+  { label: "Listening & Reading", href: "/listening-reading" },
   { label: "Speaking", href: "/speaking" },
   { label: "Writing", href: "/writing" },
   { label: "Lịch sử", href: "/history" },
@@ -37,13 +36,13 @@ const promises = [
   "Bắt đầu miễn phí",
 ];
 
-const milestoneLinks = navigation.slice(0, 4);
+const milestoneLinks = navigation.slice(0, 3);
 
 const exams = [
   {
     badge: "L&R",
     name: "Listening & Reading",
-    href: "/listening",
+    href: "/listening-reading",
     icons: [HeadphonesIcon, BookOpenIcon],
     banner: "bg-(--sp-lr-bg) text-(--sp-lr)",
     accent: "text-(--sp-lr)",

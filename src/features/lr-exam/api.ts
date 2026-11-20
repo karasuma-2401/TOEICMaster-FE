@@ -785,3 +785,268 @@ export async function getLrMediaUrl(
     ),
   };
 }
+// ==========================================
+// LEARNER LISTENING & READING PRACTICE API
+// ==========================================
+
+export interface LrPracticeItemApi {
+  id: string;
+  part: number;
+  kind: string;
+  code: string;
+  topic: string | null;
+  difficulty: string | null;
+  context: string | null;
+  audioUrl: string | null;
+  imageUrl: string | null;
+  questionCount: number;
+}
+
+export interface LrPracticeItemPageApi {
+  items: LrPracticeItemApi[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+function parsePracticeItem(value: unknown): LrPracticeItemApi {
+  if (!isRecord(value)) {
+    throw new LrApiError(502, "Dữ liệu bài luyện không hợp lệ.");
+  }
+
+  const message = "Dữ liệu bài luyện không hợp lệ.";
+
+  return {
+    id: requiredString(value.id, message),
+    part: requiredNumber(value.part, message),
+    kind: requiredString(value.kind, message),
+    code: requiredString(value.code, message),
+    topic: nullableString(value.topic),
+    difficulty: nullableString(value.difficulty),
+    context: nullableString(value.context),
+    audioUrl: nullableString(value.audioUrl),
+    imageUrl: nullableString(value.imageUrl),
+    questionCount: requiredNumber(value.questionCount, message),
+  };
+}
+
+export async function getLrPracticeItems(
+  part: number,
+  pageNumber = 1,
+  pageSize = 20,
+  signal?: AbortSignal,
+): Promise<LrPracticeItemPageApi> {
+  if (!Number.isInteger(part) || part < 1 || part > 7) {
+    throw new LrApiError(400, "Part không hợp lệ.");
+  }
+
+  const query = new URLSearchParams({
+    pageNumber: String(pageNumber),
+    pageSize: String(pageSize),
+  });
+
+  const value = await lrRequest(
+    `/api/lr/lr-practice/parts/${part}/items?${query.toString()}`,
+    { signal },
+  );
+
+  if (!isRecord(value) || !Array.isArray(value.items)) {
+    throw new LrApiError(502, "Danh sách bài luyện không hợp lệ.");
+  }
+
+  const message = "Thông tin phân trang không hợp lệ.";
+
+  return {
+    items: value.items.map(parsePracticeItem),
+    pageNumber: requiredNumber(value.pageNumber, message),
+    pageSize: requiredNumber(value.pageSize, message),
+    totalCount: requiredNumber(value.totalCount, message),
+    totalPages: requiredNumber(value.totalPages, message),
+  };
+}
+// ==========================================
+// LEARNER LISTENING & READING PRACTICE DETAIL
+// ==========================================
+
+export interface LrPracticeQuestionApi {
+  id: string;
+  ordinal: number;
+  code: string | null;
+  prompt: string | null;
+  optionA: string | null;
+  optionB: string | null;
+  optionC: string | null;
+  optionD: string | null;
+}
+
+export interface LrPracticeDetailApi {
+  id: string;
+  part: number;
+  kind: string;
+  code: string;
+  topic: string | null;
+  difficulty: string | null;
+  context: string | null;
+  audioUrl: string | null;
+  imageUrl: string | null;
+  questions: LrPracticeQuestionApi[];
+}
+
+export interface LrPracticeSubmitAnswerApi {
+  questionId: string;
+  selectedKey: string | null;
+}
+
+export interface LrPracticeQuestionResultApi {
+  questionId: string;
+  ordinal: number;
+  selectedKey: string | null;
+  correctKey: string;
+  isCorrect: boolean;
+  translation: string | null;
+  explanation: string | null;
+}
+
+export interface LrPracticeSubmitResultApi {
+  itemId: string;
+  totalQuestions: number;
+  correctCount: number;
+  incorrectCount: number;
+  questions: LrPracticeQuestionResultApi[];
+}
+
+function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
+  if (!isRecord(value) || !Array.isArray(value.questions)) {
+    throw new LrApiError(502, "Chi tiết bài luyện không hợp lệ.");
+  }
+
+  const message = "Chi tiết bài luyện không hợp lệ.";
+
+  return {
+    id: requiredString(value.id, message),
+    part: requiredNumber(value.part, message),
+    kind: requiredString(value.kind, message),
+    code: requiredString(value.code, message),
+    topic: nullableString(value.topic),
+    difficulty: nullableString(value.difficulty),
+    context: nullableString(value.context),
+    audioUrl: nullableString(value.audioUrl),
+    imageUrl: nullableString(value.imageUrl),
+    questions: value.questions.map((raw): LrPracticeQuestionApi => {
+      if (!isRecord(raw)) {
+        throw new LrApiError(502, "Dữ liệu câu hỏi không hợp lệ.");
+      }
+
+      return {
+        id: requiredString(raw.id, message),
+        ordinal: requiredNumber(raw.ordinal, message),
+        code: nullableString(raw.code),
+        prompt: nullableString(raw.prompt),
+        optionA: nullableString(raw.optionA),
+        optionB: nullableString(raw.optionB),
+        optionC: nullableString(raw.optionC),
+        optionD: nullableString(raw.optionD),
+      };
+    }),
+  };
+}
+
+function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
+  if (!isRecord(value) || !Array.isArray(value.questions)) {
+    throw new LrApiError(502, "Kết quả chấm bài không hợp lệ.");
+  }
+
+  const message = "Kết quả chấm bài không hợp lệ.";
+
+  return {
+    itemId: requiredString(value.itemId, message),
+    totalQuestions: requiredNumber(value.totalQuestions, message),
+    correctCount: requiredNumber(value.correctCount, message),
+    incorrectCount: requiredNumber(value.incorrectCount, message),
+    questions: value.questions.map((raw): LrPracticeQuestionResultApi => {
+      if (!isRecord(raw)) {
+        throw new LrApiError(502, "Kết quả câu hỏi không hợp lệ.");
+      }
+
+      return {
+        questionId: requiredString(raw.questionId, message),
+        ordinal: requiredNumber(raw.ordinal, message),
+        selectedKey: nullableString(raw.selectedKey),
+        correctKey: requiredString(raw.correctKey, message),
+        isCorrect: raw.isCorrect === true,
+        translation: nullableString(raw.translation),
+        explanation: nullableString(raw.explanation),
+      };
+    }),
+  };
+}
+
+export async function getLrPracticeDetail(
+  itemId: string,
+  signal?: AbortSignal,
+): Promise<LrPracticeDetailApi> {
+  const value = await lrRequest(
+    `/api/lr/lr-practice/items/${encodeURIComponent(itemId)}`,
+    { signal },
+  );
+
+  return parsePracticeDetail(value);
+}
+
+export async function submitLrPractice(
+  itemId: string,
+  answers: LrPracticeSubmitAnswerApi[],
+): Promise<LrPracticeSubmitResultApi> {
+  const value = await lrRequest(
+    `/api/lr/lr-practice/items/${encodeURIComponent(itemId)}/submit`,
+    {
+      method: "POST",
+      body: { answers },
+    },
+  );
+
+  return parsePracticeSubmitResult(value);
+}
+export interface LrPracticeItemStatisticsApi {
+  itemId: string;
+  attemptCount: number;
+  bestScore: number;
+  totalQuestions: number;
+}
+
+function parsePracticeStatisticsItem(
+  value: unknown,
+): LrPracticeItemStatisticsApi {
+  const message = "Dữ liệu thống kê không hợp lệ.";
+  if (!isRecord(value)) {
+    throw new LrApiError(502, message);
+  }
+
+  return {
+    itemId: requiredString(value.itemId, message),
+    attemptCount: requiredNumber(value.attemptCount, message),
+    bestScore: requiredNumber(value.bestScore, message),
+    totalQuestions: requiredNumber(value.totalQuestions, message),
+  };
+}
+
+export async function getLrPracticeStatistics(
+  part: number,
+  signal?: AbortSignal,
+): Promise<LrPracticeItemStatisticsApi[]> {
+  if (!Number.isInteger(part) || part < 1 || part > 7) {
+    throw new LrApiError(400, "Part không hợp lệ.");
+  }
+
+  const value = await lrRequest(
+    `/api/lr/lr-practice/parts/${part}/statistics`,
+    { signal },
+  );
+
+  if (!Array.isArray(value)) {
+    throw new LrApiError(502, "Dữ liệu thống kê không hợp lệ.");
+  }
+
+  return value.map(parsePracticeStatisticsItem);
+}
