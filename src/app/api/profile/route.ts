@@ -14,6 +14,7 @@ export async function PUT(request: NextRequest) {
     !body ||
     typeof body.displayName !== "string" ||
     !(typeof body.phone === "string" || body.phone === null) ||
+    !(typeof body.dateOfBirth === "string" || body.dateOfBirth === null) ||
     !(typeof body.targetScore === "number" || body.targetScore === null)
   ) {
     return problem(400, "Dữ liệu hồ sơ không hợp lệ.");
@@ -21,6 +22,7 @@ export async function PUT(request: NextRequest) {
   const editableProfile = {
     displayName: body.displayName,
     phone: body.phone,
+    dateOfBirth: body.dateOfBirth,
     targetScore: body.targetScore,
   };
   return forward(request, "/api/v1/profile", {

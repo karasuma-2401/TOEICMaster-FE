@@ -24,4 +24,8 @@ it("shows a failed status instead of claiming the AI is still grading", async ()
   expect(
     screen.getByRole("button", { name: "Thử chấm lại" }),
   ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /lịch sử/i })).toHaveAttribute(
+    "href",
+    "/history",
+  );
 });

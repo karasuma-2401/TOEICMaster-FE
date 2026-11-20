@@ -2,6 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  isMascotHidden,
+  preferencesChangedEvent,
+} from "@/features/user/preferences";
 import { mascotGuide, type MascotGuide } from "./mascot-tips";
 
 const seenKey = "toeicmaster-mascot-seen";
@@ -95,10 +99,19 @@ function GuideBubble({
 export function GuideMascot() {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const guide = mascotGuide(pathname);
 
   useEffect(() => {
+    const sync = () => setHidden(isMascotHidden());
+    sync();
+    window.addEventListener(preferencesChangedEvent, sync);
+    return () => window.removeEventListener(preferencesChangedEvent, sync);
+  }, []);
+
+  useEffect(() => {
     const task = window.setTimeout(() => {
+      if (isMascotHidden()) return;
       try {
         if (window.localStorage.getItem(seenKey)) return;
         window.localStorage.setItem(seenKey, "1");
@@ -110,7 +123,7 @@ export function GuideMascot() {
     return () => window.clearTimeout(task);
   }, []);
 
-  if (!guide) return null;
+  if (!guide || hidden) return null;
   return (
     <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
       {open && (

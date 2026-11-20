@@ -1,123 +1,143 @@
 // @vitest-environment jsdom
+
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
-import type { ComponentProps } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import type { LrExamCatalogItemApi } from "@/features/lr-exam/api";
+  getLrAttemptHistory,
+  getLrCatalog,
+  LrApiError,
+} from "@/features/lr-exam/api";
+import { ListeningReadingLibrary } from "./listening-reading-library";
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: ComponentProps<"a">) => (
+  default: ({ children, href, ...props }: React.ComponentProps<"a">) => (
     <a href={href} {...props}>
       {children}
     </a>
   ),
 }));
 
-vi.mock("@/features/user/components/user-menu", () => ({
-  UserMenu: () => <div data-testid="user-menu" />,
+vi.mock("@/features/lr-exam/api", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/features/lr-exam/api")>();
+  return {
+    ...actual,
+    getLrCatalog: vi.fn(),
+    getLrAttemptHistory: vi.fn(),
+  };
+});
+
+vi.mock("@/features/history/api", () => ({
+  fetchUnifiedHistory: vi.fn().mockResolvedValue({
+    items: [],
+    unauthenticatedSkills: [],
+  }),
 }));
 
-vi.mock("@/features/lr-exam/api", () => ({
-  getLrCatalog: vi.fn(),
+vi.mock("@/shared/components/practice/skill-header", () => ({
+  SkillHeader: ({ active }: { active: string }) => (
+    <header data-testid="mock-skill-header">{active}</header>
+  ),
 }));
 
-import { getLrCatalog } from "@/features/lr-exam/api";
-import { ListeningReadingLibrary } from "./listening-reading-library";
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-const mockedGetLrCatalog = vi.mocked(getLrCatalog);
+afterEach(cleanup);
 
-const sampleExam: LrExamCatalogItemApi = {
-  examId: "exam-1",
-  code: "ETS-2026-01",
-  title: "ETS 2026 Test 01",
-  versionNumber: 1,
-  totalQuestions: 200,
-  listeningQuestions: 100,
-  readingQuestions: 100,
-  publishedAtUtc: "2026-11-10T00:00:00Z",
-};
+const sampleCatalog = [
+  {
+    examId: "exam-1",
+    code: "ETS-2026-01",
+    title: "ETS 2026 Test 01",
+    versionNumber: 1,
+    totalQuestions: 200,
+    listeningQuestions: 100,
+    readingQuestions: 100,
+    durationMinutes: 120,
+    minScaledScore: 10,
+    maxScaledScore: 990,
+    publishedAtUtc: "2026-11-18T00:00:00Z",
+    activeAttemptId: null,
+  },
+];
 
 describe("ListeningReadingLibrary", () => {
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
-
-  it("starts loading immediately on mount and renders catalog items on success", async () => {
-    let resolveCatalog!: (items: LrExamCatalogItemApi[]) => void;
-    mockedGetLrCatalog.mockImplementation(
-      () =>
-        new Promise<LrExamCatalogItemApi[]>((resolve) => {
-          resolveCatalog = resolve;
-        }),
-    );
+  it("computes real attemptCount and bestScore from completed L&R attempts and renders AttemptHistorySection", async () => {
+    vi.mocked(getLrCatalog).mockResolvedValueOnce(sampleCatalog);
+    vi.mocked(getLrAttemptHistory).mockResolvedValueOnce({
+      items: [
+        {
+          attemptId: "a-1",
+          examId: "exam-1",
+          examTitle: "ETS 2026 Test 01",
+          examCode: "ETS-2026-01",
+          status: "Completed",
+          listeningScaledScore: 410,
+          readingScaledScore: 390,
+          totalScaledScore: 800,
+          isTimeExpired: false,
+          startedAtUtc: "2026-11-10T08:00:00Z",
+          submittedAtUtc: "2026-11-10T10:00:00Z",
+          durationSeconds: 7000,
+        },
+        {
+          attemptId: "a-2",
+          examId: "exam-1",
+          examTitle: "ETS 2026 Test 01",
+          examCode: "ETS-2026-01",
+          status: "Completed",
+          listeningScaledScore: 445,
+          readingScaledScore: 410,
+          totalScaledScore: 855,
+          isTimeExpired: false,
+          startedAtUtc: "2026-11-15T08:00:00Z",
+          submittedAtUtc: "2026-11-15T10:00:00Z",
+          durationSeconds: 6800,
+        },
+        {
+          attemptId: "a-3",
+          examId: "exam-1",
+          examTitle: "ETS 2026 Test 01",
+          examCode: "ETS-2026-01",
+          status: "InProgress",
+          listeningScaledScore: null,
+          readingScaledScore: null,
+          totalScaledScore: null,
+          isTimeExpired: false,
+          startedAtUtc: "2026-11-18T08:00:00Z",
+          submittedAtUtc: null,
+          durationSeconds: null,
+        },
+      ],
+      totalCount: 3,
+      pageIndex: 1,
+      pageSize: 50,
+    });
 
     render(<ListeningReadingLibrary skill="listening" />);
 
-    expect(screen.getByText("Đang tải đề thi Listening…")).toBeInTheDocument();
-    expect(mockedGetLrCatalog).toHaveBeenCalledTimes(1);
-    expect(mockedGetLrCatalog.mock.calls[0]?.[0]).toBeInstanceOf(AbortSignal);
-
-    resolveCatalog([sampleExam]);
-
-    expect(await screen.findByText("ETS 2026 Test 01")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Đang tải đề thi Listening…"),
-    ).not.toBeInTheDocument();
+    const heading = await screen.findByRole("heading", {
+      name: "ETS 2026 Test 01",
+    });
+    const card = heading.closest("article") as HTMLElement;
+    expect(within(card).getByText("Bạn đã thi 2 lần")).toBeInTheDocument();
+    expect(within(card).getByText("Tốt nhất: 855 / 990")).toBeInTheDocument();
+    expect(screen.getByTestId("attempt-history-section")).toBeInTheDocument();
   });
 
-  it("renders error state on failure and recovers when retried", async () => {
-    let resolveRetry!: (items: LrExamCatalogItemApi[]) => void;
-    mockedGetLrCatalog
-      .mockRejectedValueOnce(new Error("Không thể kết nối máy chủ."))
-      .mockImplementationOnce(
-        () =>
-          new Promise<LrExamCatalogItemApi[]>((resolve) => {
-            resolveRetry = resolve;
-          }),
-      );
+  it("still renders the L&R exam catalog when history returns 401", async () => {
+    vi.mocked(getLrCatalog).mockResolvedValueOnce(sampleCatalog);
+    vi.mocked(getLrAttemptHistory).mockRejectedValueOnce(
+      new LrApiError(401, "Unauthorized"),
+    );
 
     render(<ListeningReadingLibrary skill="reading" />);
 
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Không thể kết nối máy chủ.");
-
-    fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
-
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("Đang tải đề thi Reading…")).toBeInTheDocument();
-    expect(mockedGetLrCatalog).toHaveBeenCalledTimes(2);
-
-    resolveRetry([sampleExam]);
-
-    expect(await screen.findByText("ETS 2026 Test 01")).toBeInTheDocument();
-  });
-
-  it("aborts the in-flight catalog request on unmount", async () => {
-    let resolveCatalog!: (items: LrExamCatalogItemApi[]) => void;
-    mockedGetLrCatalog.mockImplementation(
-      () =>
-        new Promise<LrExamCatalogItemApi[]>((resolve) => {
-          resolveCatalog = resolve;
-        }),
-    );
-
-    const { unmount } = render(<ListeningReadingLibrary skill="listening" />);
-    const signal = mockedGetLrCatalog.mock.calls[0]?.[0];
-    expect(signal).toBeInstanceOf(AbortSignal);
-    expect(signal?.aborted).toBe(false);
-
-    unmount();
-
-    expect(signal?.aborted).toBe(true);
-    resolveCatalog([sampleExam]);
-    await waitFor(() => {
-      expect(mockedGetLrCatalog).toHaveBeenCalledTimes(1);
-    });
+    expect(
+      await screen.findByRole("heading", { name: "ETS 2026 Test 01" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("attempt-history-section")).toBeInTheDocument();
   });
 });

@@ -95,6 +95,7 @@ interface BackendProfile {
   displayName: string;
   avatarUrl: string | null;
   phone?: string | null;
+  dateOfBirth?: string | null;
   targetScore?: number | null;
   hasPassword?: boolean;
 }
@@ -113,6 +114,9 @@ function isBackendProfile(value: unknown): value is BackendProfile {
     (profile.phone === undefined ||
       profile.phone === null ||
       typeof profile.phone === "string") &&
+    (profile.dateOfBirth === undefined ||
+      profile.dateOfBirth === null ||
+      typeof profile.dateOfBirth === "string") &&
     (profile.targetScore === undefined ||
       profile.targetScore === null ||
       (typeof profile.targetScore === "number" &&
@@ -132,6 +136,7 @@ async function profileResponse(response: Response): Promise<UserProfile> {
     email: body.email,
     displayName: body.displayName,
     phone: body.phone ?? null,
+    dateOfBirth: body.dateOfBirth ?? null,
     targetScore: body.targetScore ?? null,
     avatarVersion: body.avatarUrl ? Date.now().toString(36) : null,
     hasPassword: body.hasPassword ?? true,

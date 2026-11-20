@@ -25,6 +25,7 @@ const profile = {
   email: "linh@example.com",
   displayName: "Linh",
   phone: null,
+  dateOfBirth: null,
   targetScore: null,
   avatarVersion: null,
   hasPassword: true,
@@ -157,7 +158,12 @@ describe("profile API", () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json(backendProfile));
     vi.stubGlobal("fetch", fetchMock);
     await expect(
-      updateProfile({ displayName: "Linh", phone: null, targetScore: null }),
+      updateProfile({
+        displayName: "Linh",
+        phone: null,
+        dateOfBirth: null,
+        targetScore: null,
+      }),
     ).resolves.toEqual(profile);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/profile",
@@ -166,6 +172,7 @@ describe("profile API", () => {
         body: JSON.stringify({
           displayName: "Linh",
           phone: null,
+          dateOfBirth: null,
           targetScore: null,
         }),
       }),

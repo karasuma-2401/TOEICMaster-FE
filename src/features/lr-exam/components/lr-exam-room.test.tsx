@@ -117,11 +117,15 @@ describe("LrExamRoom", () => {
     expect(toggle).toHaveAccessibleName("Bắt đầu phát Listening");
     fireEvent.click(toggle);
 
-    await waitFor(() =>
-      expect(screen.getByTestId("lr-master-audio-toggle")).toHaveAccessibleName(
-        "Tạm dừng audio",
-      ),
-    );
+    await waitFor(() => {
+      const lockedButton = screen.getByTestId("lr-master-audio-toggle");
+      expect(lockedButton).toHaveAccessibleName("Đang phát · Khóa tạm dừng");
+      expect(lockedButton).toBeDisabled();
+    });
+
+    // Clicking again while disabled/locked does not pause playback.
+    fireEvent.click(screen.getByTestId("lr-master-audio-toggle"));
+    expect(HTMLMediaElement.prototype.pause).not.toHaveBeenCalled();
   });
 
   it("does not render ListeningMasterPlayer during the reading phase", () => {

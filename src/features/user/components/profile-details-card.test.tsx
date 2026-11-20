@@ -41,6 +41,7 @@ const sampleUser: UserProfile = {
   displayName: "Nguyễn Văn A",
   email: "learner@example.com",
   phone: "0912345678",
+  dateOfBirth: "1998-05-12",
   targetScore: 750,
   avatarVersion: null,
   hasPassword: true,
@@ -87,6 +88,7 @@ describe("ProfileDetailsCard", () => {
     expect(mocks.updateProfile).toHaveBeenCalledWith({
       displayName: "Nguyễn Văn C",
       phone: "0912345678",
+      dateOfBirth: "1998-05-12",
       targetScore: 750,
     });
     expect(screen.getByRole("button", { name: "Đang lưu..." })).toBeDisabled();
@@ -116,9 +118,9 @@ describe("ProfileDetailsCard", () => {
     expect(nameInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("hiển thị email chỉ đọc và số điện thoại, không có ngày sinh", () => {
+  it("hiển thị email chỉ đọc, số điện thoại và ngày sinh", () => {
     render(<ProfileDetailsCard profile={sampleUser} />);
-    expect(screen.queryByLabelText("Ngày sinh")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Ngày sinh")).toHaveValue("1998-05-12");
     expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0912345678");
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
     expect(screen.getByText(/Đã xác minh/)).toBeInTheDocument();

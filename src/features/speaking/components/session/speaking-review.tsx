@@ -238,9 +238,14 @@ export function SpeakingReview({
             </p>
           </div>
         )}
-        <Link className="sp-btn sp-btn-outline ml-auto" href={base}>
-          ← Về báo cáo kết quả
-        </Link>
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Link className="sp-btn sp-btn-outline" href="/history">
+            Về lịch sử làm bài
+          </Link>
+          <Link className="sp-btn sp-btn-outline" href={base}>
+            ← Về báo cáo kết quả
+          </Link>
+        </div>
       </div>
       {body}
     </PracticePage>
