@@ -46,6 +46,18 @@ body {
   font-family: Poppins, "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
 
+/* Learner pages with the fixed left sidebar (PracticeSidebar) leave room for it:
+   w-60 expanded, w-16 collapsed. */
+@media (min-width: 48rem) {
+  body:has(.practice-sidebar) {
+    padding-left: 15rem;
+    transition: padding-left 200ms;
+  }
+  body:has(.practice-sidebar[data-collapsed="true"]) {
+    padding-left: 4rem;
+  }
+}
+
 /* Shared admin actions use the TOEICMaster red-to-orange brand gradient. */
 .admin-primary-action {
   border: 1px solid var(--admin-brand-red-dark);
