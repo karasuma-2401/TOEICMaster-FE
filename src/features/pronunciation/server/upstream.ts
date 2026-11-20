@@ -34,9 +34,35 @@ export async function readMultipart(
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > limit)
     return { ok: false, response: problem(413, "Bản thu vượt quá giới hạn.") };
-  const body = await request.arrayBuffer();
-  if (body.byteLength > limit)
-    return { ok: false, response: problem(413, "Bản thu vượt quá giới hạn.") };
+  const reader = request.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  if (reader) {
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > limit) {
+          void reader.cancel().catch(() => {});
+          return {
+            ok: false,
+            response: problem(413, "Bản thu vượt quá giới hạn."),
+          };
+        }
+        if (value.byteLength > 0) chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+  const body = new ArrayBuffer(total);
+  const bytes = new Uint8Array(body);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
   return { ok: true, body, contentType };
 }
 

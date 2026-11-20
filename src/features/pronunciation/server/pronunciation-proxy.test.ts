@@ -32,6 +32,8 @@ function request(
     origin?: string;
     cookie?: string;
     body?: BodyInit;
+    length?: string;
+    signal?: AbortSignal;
     type?: string;
   } = {},
 ) {
@@ -40,10 +42,12 @@ function request(
     origin: init.origin ?? origin,
   });
   if (init.cookie) headers.set("cookie", init.cookie);
+  if (init.length !== undefined) headers.set("content-length", init.length);
   return new NextRequest(`${origin}/api/pronunciation/assessments`, {
     method: "POST",
     headers,
     body: init.body ?? "--x--",
+    signal: init.signal,
   });
 }
 
@@ -81,6 +85,63 @@ describe("forwardPronunciationAssessment", () => {
     expect(
       (await forwardPronunciationAssessment(request({ body: big }))).status,
     ).toBe(413);
+  });
+
+  it.each([
+    { label: "missing", length: undefined },
+    { label: "malformed", length: "invalid" },
+    { label: "understated", length: "16" },
+  ])(
+    "cancels an oversized stream with $label Content-Length",
+    async ({ length }) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const cancel = vi.fn(() => Promise.withResolvers<void>().promise);
+      const chunks = [new Uint8Array(maxAssessmentBytes), new Uint8Array(1)];
+      const pull = vi.fn(
+        (controller: ReadableStreamDefaultController<Uint8Array>) => {
+          const chunk = chunks.shift();
+          if (chunk) controller.enqueue(chunk);
+          else controller.close();
+        },
+      );
+      const body = new ReadableStream({ pull, cancel }, { highWaterMark: 0 });
+
+      const response = await forwardPronunciationAssessment(
+        request({ body, length }),
+      );
+
+      expect(response.status).toBe(413);
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(pull).toHaveBeenCalledTimes(2);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("forwards all streamed bytes when the size equals the limit", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const prefix = new TextEncoder().encode("--x\r\n");
+    const rest = new Uint8Array(maxAssessmentBytes - prefix.byteLength).fill(
+      42,
+    );
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(prefix);
+        controller.enqueue(rest);
+        controller.close();
+      },
+    });
+
+    const response = await forwardPronunciationAssessment(request({ body }));
+
+    expect(response.status).toBe(204);
+    const [, init] = fetchMock.mock.calls[0] as [URL, { body: ArrayBuffer }];
+    expect(Buffer.from(init.body).equals(Buffer.concat([prefix, rest]))).toBe(
+      true,
+    );
   });
 
   it("forwards with the bearer token and relays the response", async () => {
@@ -132,6 +193,35 @@ describe("forwardPronunciationAssessment", () => {
     const failed = await forwardPronunciationAssessment(request());
     expect(failed.status).toBe(502);
     expect(await failed.text()).not.toContain("ECONNREFUSED");
+  });
+
+  it("aborts the in-flight upstream fetch when the client disconnects", async () => {
+    const client = new AbortController();
+    const started = Promise.withResolvers<AbortSignal>();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockImplementation((_input, init) => {
+        const signal = init?.signal;
+        if (!signal) throw new Error("Expected an upstream signal");
+        started.resolve(signal);
+        return new Promise((_, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          });
+        });
+      }),
+    );
+
+    const response = forwardPronunciationAssessment(
+      request({ signal: client.signal }),
+    );
+    const upstreamSignal = await started.promise;
+    expect(upstreamSignal.aborted).toBe(false);
+
+    client.abort();
+
+    expect(upstreamSignal.reason).toBe(client.signal.reason);
+    expect((await response).status).toBe(502);
   });
 
   it("refuses an API_BASE_URL that is not http(s)", () => {

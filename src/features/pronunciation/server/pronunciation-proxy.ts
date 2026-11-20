@@ -38,7 +38,7 @@ export async function forwardPronunciationAssessment(request: NextRequest) {
       headers,
       body: body.body,
       cache: "no-store",
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(timeoutMs)]),
     });
     return relay(upstream);
   } catch (error) {

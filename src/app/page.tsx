@@ -17,10 +17,6 @@ import { UserMenu } from "@/features/user/components/user-menu";
 import { GuideMascot } from "@/shared/components/mascot/guide-mascot";
 import { HeaderMenu } from "@/shared/components/practice/header-menu";
 import {
-  PracticeSidebar,
-  PracticeSidebarNav,
-} from "@/shared/components/practice/practice-sidebar";
-import {
   focusRing,
   primaryAction,
   secondaryAction,
@@ -97,18 +93,26 @@ export default async function Home(props: {
 
   return (
     <div className={`sp-theme min-h-dvh bg-white ${speakingFontClasses}`}>
-      <PracticeSidebar />
       <header className="sticky top-0 z-50 border-b border-(--sp-line) bg-(--sp-surface)">
         <div
-          className={`${wideContainer} flex min-h-[72px] flex-wrap items-center justify-between gap-x-10 gap-y-2 py-2`}
+          className={`${wideContainer} flex min-h-16 flex-wrap items-center justify-between gap-x-10 gap-y-2 py-2`}
         >
-          <div className="md:hidden">
-            <SpeakingLogo />
-          </div>
+          <SpeakingLogo />
           <HeaderMenu>
-            <div className="md:hidden">
-              <PracticeSidebarNav />
-            </div>
+            <nav
+              aria-label="Kỹ năng"
+              className="flex flex-col gap-1 text-base md:flex-row md:flex-wrap md:gap-x-7 md:gap-y-1 md:text-[15px]"
+            >
+              {navigation.map((item) => (
+                <Link
+                  className="sp-focus rounded-lg px-3.5 py-3 font-medium hover:text-(--sp-brand) md:p-0"
+                  href={item.href}
+                  key={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
             <div className="border-t border-(--sp-line) pt-5 md:ml-auto md:border-0 md:pt-0">
               <UserMenu initialOpen={openProfile} />
             </div>
