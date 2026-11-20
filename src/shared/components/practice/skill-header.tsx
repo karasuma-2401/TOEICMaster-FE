@@ -14,11 +14,7 @@ const navigation = [
 ] as const;
 
 export type PracticeNavId =
-  | "listening"
-  | "reading"
-  | "speaking"
-  | "writing"
-  | "history";
+  "listening" | "reading" | "speaking" | "writing" | "history";
 
 export function SkillHeader({
   active,

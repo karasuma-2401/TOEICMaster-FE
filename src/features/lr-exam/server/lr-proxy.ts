@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { problem, sameOrigin } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
@@ -41,17 +40,14 @@ export async function forwardLr(
 
   const path = segments.join("/");
 
- const isPublicCatalog =
-  method === "GET" && path === "exams/lr";
+  const isPublicCatalog = method === "GET" && path === "exams/lr";
 
-const isPublicPractice =
-  method === "GET" &&
-  (
-    /^lr-practice\/parts\/[1-7]\/items$/i.test(path) ||
-    /^lr-practice\/items\/[0-9a-f-]{36}$/i.test(path)
-  );
+  const isPublicPractice =
+    method === "GET" &&
+    (/^lr-practice\/parts\/[1-7]\/items$/i.test(path) ||
+      /^lr-practice\/items\/[0-9a-f-]{36}$/i.test(path));
 
-const isPublic = isPublicCatalog || isPublicPractice;
+  const isPublic = isPublicCatalog || isPublicPractice;
 
   const session = isPublic ? null : sessionCookie(request);
 
@@ -107,9 +103,7 @@ const isPublic = isPublicCatalog || isPublicPractice;
   }
 
   try {
-    const base = new URL(
-      process.env.API_BASE_URL ?? "http://localhost:5287",
-    );
+    const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
 
     if (
       !["http:", "https:"].includes(base.protocol) ||

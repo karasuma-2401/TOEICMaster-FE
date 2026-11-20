@@ -349,7 +349,10 @@ export function ExamLibrary({
           </aside>
         </header>
         {skillLinks && (
-          <nav aria-label="Chọn Listening hoặc Reading" className="mt-6 flex gap-2">
+          <nav
+            aria-label="Chọn Listening hoặc Reading"
+            className="mt-6 flex gap-2"
+          >
             {skillLinks.map((link) => (
               <Link
                 aria-current={link.active ? "page" : undefined}

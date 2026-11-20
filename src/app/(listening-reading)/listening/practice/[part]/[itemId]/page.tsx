@@ -9,9 +9,7 @@ type Props = {
   }>;
 };
 
-export default async function ListeningPracticeDetailPage({
-  params,
-}: Props) {
+export default async function ListeningPracticeDetailPage({ params }: Props) {
   const { part, itemId } = await params;
 
   if (!isListeningReadingPart("listening", part)) {

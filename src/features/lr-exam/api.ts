@@ -792,9 +792,7 @@ function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
   };
 }
 
-function parsePracticeSubmitResult(
-  value: unknown,
-): LrPracticeSubmitResultApi {
+function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
   if (!isRecord(value) || !Array.isArray(value.questions)) {
     throw new Error("Kết quả chấm bài không hợp lệ.");
   }
@@ -806,23 +804,21 @@ function parsePracticeSubmitResult(
     totalQuestions: requiredNumber(value.totalQuestions, message),
     correctCount: requiredNumber(value.correctCount, message),
     incorrectCount: requiredNumber(value.incorrectCount, message),
-    questions: value.questions.map(
-      (raw): LrPracticeQuestionResultApi => {
-        if (!isRecord(raw)) {
-          throw new Error("Kết quả câu hỏi không hợp lệ.");
-        }
+    questions: value.questions.map((raw): LrPracticeQuestionResultApi => {
+      if (!isRecord(raw)) {
+        throw new Error("Kết quả câu hỏi không hợp lệ.");
+      }
 
-        return {
-          questionId: requiredString(raw.questionId, message),
-          ordinal: requiredNumber(raw.ordinal, message),
-          selectedKey: nullableString(raw.selectedKey),
-          correctKey: requiredString(raw.correctKey, message),
-          isCorrect: raw.isCorrect === true,
-          translation: nullableString(raw.translation),
-          explanation: nullableString(raw.explanation),
-        };
-      },
-    ),
+      return {
+        questionId: requiredString(raw.questionId, message),
+        ordinal: requiredNumber(raw.ordinal, message),
+        selectedKey: nullableString(raw.selectedKey),
+        correctKey: requiredString(raw.correctKey, message),
+        isCorrect: raw.isCorrect === true,
+        translation: nullableString(raw.translation),
+        explanation: nullableString(raw.explanation),
+      };
+    }),
   };
 }
 

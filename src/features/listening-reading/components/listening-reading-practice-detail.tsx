@@ -28,13 +28,7 @@ const partTitles: Record<number, string> = {
   7: "Đọc hiểu",
 };
 
-const optionKeys = ["A", "B", "C", "D"] as const;
-
-export function ListeningReadingPracticeDetail({
-  skill,
-  part,
-  itemId,
-}: Props) {
+export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
   const [detail, setDetail] = useState<LrPracticeDetailApi | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<LrPracticeSubmitResultApi | null>(null);
@@ -42,37 +36,51 @@ export function ListeningReadingPracticeDetail({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
+  const fetchDetail = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const data = await getLrPracticeDetail(itemId, signal);
 
-    try {
-      const data = await getLrPracticeDetail(itemId, signal);
+        if (data.part !== Number(part)) {
+          throw new Error("Bài luyện không thuộc Part đang chọn.");
+        }
 
-      if (data.part !== Number(part)) {
-        throw new Error("Bài luyện không thuộc Part đang chọn.");
+        if (signal?.aborted) return;
+        setDetail(data);
+        setError(null);
+      } catch (cause) {
+        if (signal?.aborted) return;
+
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể tải nội dung bài luyện.",
+        );
+      } finally {
+        if (!signal?.aborted) setLoading(false);
       }
-
-      setDetail(data);
-    } catch (cause) {
-      if (signal?.aborted) return;
-
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể tải nội dung bài luyện.",
-      );
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [itemId, part]);
+    },
+    [itemId, part],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
+    const task = window.setTimeout(
+      () => void fetchDetail(controller.signal),
+      0,
+    );
 
-    return () => controller.abort();
-  }, [load]);
+    return () => {
+      window.clearTimeout(task);
+      controller.abort();
+    };
+  }, [fetchDetail]);
+
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    void fetchDetail();
+  }
 
   function selectAnswer(questionId: string, key: string) {
     if (result || submitting) return;
@@ -111,10 +119,7 @@ export function ListeningReadingPracticeDetail({
   }
 
   const resultByQuestion = new Map(
-    result?.questions.map((question) => [
-      question.questionId,
-      question,
-    ]) ?? [],
+    result?.questions.map((question) => [question.questionId, question]) ?? [],
   );
 
   const answeredCount = Object.keys(answers).length;
@@ -146,7 +151,7 @@ export function ListeningReadingPracticeDetail({
             <p className="font-semibold text-red-700">{error}</p>
             <button
               type="button"
-              onClick={() => void load()}
+              onClick={handleRetry}
               className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
             >
               Thử tải lại
@@ -181,8 +186,7 @@ export function ListeningReadingPracticeDetail({
                     </strong>
                   </span>
                   <span>
-                    Còn lại:{" "}
-                    <strong>{totalQuestions - answeredCount}</strong>
+                    Còn lại: <strong>{totalQuestions - answeredCount}</strong>
                   </span>
                 </div>
               )}
@@ -200,6 +204,7 @@ export function ListeningReadingPracticeDetail({
                   className="w-full"
                   src={detail.audioUrl}
                 >
+                  <track kind="captions" />
                   Trình duyệt không hỗ trợ phát audio.
                 </audio>
               </section>
@@ -207,9 +212,8 @@ export function ListeningReadingPracticeDetail({
 
             {detail.imageUrl && (
               <section className="mb-6 rounded-xl border border-slate-200 bg-white p-6">
-                <h2 className="mb-3 font-semibold text-slate-900">
-                  Hình ảnh
-                </h2>
+                <h2 className="mb-3 font-semibold text-slate-900">Hình ảnh</h2>
+                {/* eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions. */}
                 <img
                   src={detail.imageUrl}
                   alt="Hình ảnh bài luyện TOEIC"
@@ -220,9 +224,7 @@ export function ListeningReadingPracticeDetail({
 
             {detail.context && (
               <section className="mb-6 whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-6">
-                <h2 className="mb-3 font-semibold text-slate-900">
-                  Nội dung
-                </h2>
+                <h2 className="mb-3 font-semibold text-slate-900">Nội dung</h2>
                 <p className="leading-7 text-slate-700">{detail.context}</p>
               </section>
             )}
@@ -256,7 +258,9 @@ export function ListeningReadingPracticeDetail({
                               : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {questionResult.isCorrect ? "Chính xác" : "Chưa chính xác"}
+                          {questionResult.isCorrect
+                            ? "Chính xác"
+                            : "Chưa chính xác"}
                         </span>
                       )}
                     </div>
@@ -273,11 +277,13 @@ export function ListeningReadingPracticeDetail({
                       </p>
                     )}
 
-                    {detail.imageUrl && detail.questions.length > 1 && index === 0 && (
-                      <p className="mb-3 text-xs text-slate-500">
-                        Xem hình ảnh ở phần đầu bài luyện.
-                      </p>
-                    )}
+                    {detail.imageUrl &&
+                      detail.questions.length > 1 &&
+                      index === 0 && (
+                        <p className="mb-3 text-xs text-slate-500">
+                          Xem hình ảnh ở phần đầu bài luyện.
+                        </p>
+                      )}
 
                     <div className="space-y-3">
                       {options.map(([key, value]) => {
@@ -317,9 +323,7 @@ export function ListeningReadingPracticeDetail({
                               value={key}
                               checked={selected}
                               disabled={Boolean(result) || submitting}
-                              onChange={() =>
-                                selectAnswer(question.id, key)
-                              }
+                              onChange={() => selectAnswer(question.id, key)}
                               className="mt-1 accent-blue-600"
                             />
 

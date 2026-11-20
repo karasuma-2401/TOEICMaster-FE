@@ -14,12 +14,6 @@ export const practiceParts = {
 
 export type Skill = keyof typeof practiceParts;
 
-export function isListeningReadingPart(
-  skill: Skill,
-  part: string,
-): boolean {
-  return Object.prototype.hasOwnProperty.call(
-    practiceParts[skill],
-    part,
-  );
+export function isListeningReadingPart(skill: Skill, part: string): boolean {
+  return Object.prototype.hasOwnProperty.call(practiceParts[skill], part);
 }
