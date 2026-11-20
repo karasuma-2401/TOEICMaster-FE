@@ -12,6 +12,7 @@ import {
   type ExamLibrarySkill,
 } from "@/shared/components/practice/exam-library";
 import { summarizeExamAttempts } from "@/shared/components/practice/exam-library-model";
+import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import { formatMinutes } from "@/shared/ui/format-time";
 import { SpeakingHeader } from "./speaking-header";
 
@@ -103,6 +104,14 @@ export function SpeakingLibrary() {
       emptyTitle="Chưa có đề Speaking được công bố"
       error={error}
       header={<SpeakingHeader wide />}
+      historySection={
+        <AttemptHistorySection
+          description="Các lần làm Speaking của bạn được lưu tại đây."
+          limit={3}
+          skills={["speaking"]}
+          title="Lịch sử làm bài Speaking"
+        />
+      }
       items={items}
       loading={loading}
       onRetry={() => void load()}

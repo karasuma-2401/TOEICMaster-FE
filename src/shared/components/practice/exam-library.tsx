@@ -239,6 +239,7 @@ export function ExamLibrary({
   onRetry,
   emptyTitle,
   emptyDescription,
+  historySection,
 }: {
   skill: ExamLibrarySkill;
   kind?: ExamLibraryKind;
@@ -253,6 +254,8 @@ export function ExamLibrary({
   onRetry?: () => void;
   emptyTitle: string;
   emptyDescription: string;
+  /** Attempt history rendered below the exam grid, scoped to this skill. */
+  historySection?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ExamStatusFilter>("ALL");
@@ -476,6 +479,8 @@ export function ExamLibrary({
             </div>
           )}
         </section>
+
+        {historySection}
 
         {!loading && filtered.length > 0 && (
           <footer className="mt-6 flex flex-wrap items-center justify-between gap-3">

@@ -248,4 +248,53 @@ describe("LrReview lazy audio player", () => {
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   });
+
+  it("renders Screen 19 filter tabs (Tất cả, Làm sai, Bỏ qua, Sai / Bỏ qua, Gắn cờ, Đúng) and /history link", () => {
+    render(
+      <LrReview
+        state={buildReviewState()}
+        resultHref="/result"
+        attemptId={ATTEMPT_ID}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+    ).toHaveAttribute("href", "/history");
+    for (const label of [
+      /Tất cả/,
+      /Làm sai \(1\)/,
+      /Bỏ qua \(0\)/,
+      /Sai \/ Bỏ qua \(1\)/,
+      /Gắn cờ \(0\)/,
+      /Đúng \(3\)/,
+    ]) {
+      expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it("initializes ReviewAudioPlayer playback rate from toeicmaster-review-audio-rate preference", () => {
+    localStorage.setItem("toeicmaster-review-audio-rate", "1.2");
+    try {
+      render(
+        <LrReview
+          state={buildReviewState()}
+          resultHref="/result"
+          attemptId={ATTEMPT_ID}
+        />,
+      );
+
+      const playerRegion = screen.getByTestId("lr-review-audio-player");
+      const speedControl = screen.getByTestId("lr-review-audio-speed");
+      const audioEl = playerRegion.querySelector("audio") as HTMLAudioElement;
+      if (speedControl.tagName === "SELECT") {
+        expect(speedControl).toHaveValue("1.2");
+      } else {
+        expect(speedControl).toHaveTextContent("1.2");
+      }
+      expect(audioEl.playbackRate).toBe(1.2);
+    } finally {
+      localStorage.clear();
+    }
+  });
 });

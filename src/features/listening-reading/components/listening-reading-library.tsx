@@ -1,28 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { UserMenu } from "@/features/user/components/user-menu";
+import { useEffect, useMemo, useState } from "react";
+import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import {
+  isListeningReadingPart,
+  practiceParts,
+  type Skill as PracticeSkill,
+} from "@/features/listening-reading/utils/listening-reading-utils";
+import {
+  getLrAttemptHistory,
   getLrCatalog,
   getLrPracticeItems,
   getLrPracticeStatistics,
+  type LrAttemptHistoryItemApi,
   type LrExamCatalogItemApi,
   type LrPracticeItemApi,
   type LrPracticeItemStatisticsApi,
 } from "@/features/lr-exam/api";
+import { UserMenu } from "@/features/user/components/user-menu";
 import {
   ExamLibrary,
   type ExamLibrarySkill,
 } from "@/shared/components/practice/exam-library";
-import type {
-  ExamDifficulty,
-  ExamLibraryItem,
-} from "@/shared/components/practice/exam-library-model";
 import {
-  isListeningReadingPart,
-  practiceParts,
-  type Skill,
-} from "@/features/listening-reading/utils/listening-reading-utils";
+  summarizeExamAttempts,
+  type ExamDifficulty,
+  type ExamLibraryItem,
+} from "@/shared/components/practice/exam-library-model";
 import { SkillHeader } from "@/shared/components/practice/skill-header";
 
 export { isListeningReadingPart };
@@ -33,7 +37,7 @@ const skills = {
     name: "Listening",
     tagline: "Luyện nghe theo 4 Part với audio phát liên tục như phòng thi.",
     format: "100 câu · 45 phút · 5–495 điểm · 4 Parts",
-    maxScore: 495,
+    maxScore: 990,
     examHref: "/listening",
     exerciseHref: "/listening/practice/1",
   },
@@ -42,18 +46,33 @@ const skills = {
     name: "Reading",
     tagline: "Luyện đọc theo 3 Part và quản lý thời gian cho 100 câu hỏi.",
     format: "100 câu · 75 phút · 5–495 điểm · 3 Parts",
-    maxScore: 495,
+    maxScore: 990,
     examHref: "/reading",
     exerciseHref: "/reading/practice/5",
   },
-} as const satisfies Record<Skill, ExamLibrarySkill>;
+  "listening-reading": {
+    id: "listening",
+    name: "Listening & Reading",
+    tagline:
+      "Làm trọn đề Listening & Reading 200 câu trong 120 phút như kỳ thi thật.",
+    format: "200 câu · 120 phút · 10–990 điểm · 7 Parts",
+    maxScore: 990,
+    examHref: "/listening-reading",
+    exerciseHref: "/listening/practice/1",
+  },
+} as const satisfies Record<string, ExamLibrarySkill>;
 
+type Skill = keyof typeof skills;
 type PartInfo = { title: string; questions: number };
 
-const partsOf = (skill: Skill) =>
+const partsOf = (skill: PracticeSkill) =>
   Object.entries(practiceParts[skill]) as [string, PartInfo][];
 
-function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
+function toLibraryItem(
+  exam: LrExamCatalogItemApi,
+  results: Map<string, { attemptCount: number; bestScore: number | null }>,
+): ExamLibraryItem {
+  const result = results.get(exam.examId);
   return {
     id: exam.examId,
     code: exam.code,
@@ -63,8 +82,8 @@ function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
     action: { href: `/exams/lr/${exam.examId}` },
     sortKey: exam.publishedAtUtc,
     difficulty: null,
-    attemptCount: 0,
-    bestScore: null,
+    attemptCount: result?.attemptCount ?? 0,
+    bestScore: result?.bestScore ?? null,
   };
 }
 
@@ -85,7 +104,7 @@ function toPracticeDifficulty(
 
 function toPracticeLibraryItem(
   item: LrPracticeItemApi,
-  skill: Skill,
+  skill: PracticeSkill,
   part: string,
   statistics?: LrPracticeItemStatisticsApi,
 ): ExamLibraryItem {
@@ -123,18 +142,26 @@ function toPracticeLibraryItem(
 }
 
 export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
-  const [items, setItems] = useState<ExamLibraryItem[]>([]);
+  const [catalog, setCatalog] = useState<LrExamCatalogItemApi[]>([]);
+  const [attempts, setAttempts] = useState<LrAttemptHistoryItemApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    void getLrCatalog(controller.signal)
-      .then((catalog) => {
+    void Promise.all([
+      getLrCatalog(controller.signal),
+      // History is an extra: the catalog stays usable without it (e.g. 401).
+      Promise.resolve(
+        getLrAttemptHistory({ pageIndex: 1, pageSize: 100 }, controller.signal),
+      ).catch(() => null),
+    ])
+      .then(([nextCatalog, history]) => {
         if (controller.signal.aborted) return;
         setError(null);
-        setItems(catalog.map(toLibraryItem));
+        setCatalog(nextCatalog);
+        setAttempts(history?.items ?? []);
       })
       .catch((cause) => {
         if (controller.signal.aborted) return;
@@ -156,29 +183,53 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
     setAttempt((current) => current + 1);
   }
 
-  const name = "Listening & Reading";
+  const items = useMemo(() => {
+    const results = summarizeExamAttempts(
+      attempts.flatMap((entry): { id: string; score: number | null }[] =>
+        entry.status === "Completed"
+          ? [{ id: entry.examId, score: entry.totalScaledScore }]
+          : [],
+      ),
+    );
+    return catalog.map((exam) => toLibraryItem(exam, results));
+  }, [catalog, attempts]);
+
+  const { name } = skills[skill];
 
   return (
     <ExamLibrary
       emptyDescription={`Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`}
       emptyTitle={`Chưa có đề thi ${name}`}
       error={error}
-      header={<SkillHeader account={<UserMenu />} active="listening" wide />}
+      header={<SkillHeader account={<UserMenu />} active={skill} wide />}
+      historySection={
+        <AttemptHistorySection
+          description={`Các lần làm đề ${name} được lưu tại đây.`}
+          limit={3}
+          skills={["lr"]}
+          title="Lịch sử làm bài L&R"
+        />
+      }
       items={items}
       loading={loading}
       onRetry={handleRetry}
-      skill={{
-        ...skills[skill],
-        id: "listening",
-        name: "Listening & Reading",
-        tagline:
-          "Đề thi TOEIC Listening & Reading đầy đủ 200 câu trong 120 phút.",
-        format: "200 câu · 120 phút · Listening & Reading",
-        maxScore: 990,
-        examHref: "/listening",
-        exerciseHref:
-          skill === "reading" ? "/reading/practice/5" : "/listening/practice/1",
-      }}
+      skill={skills[skill]}
+      skillLinks={
+        skill === "listening-reading"
+          ? [
+              {
+                href: "/listening/practice/1",
+                label: "Bài tập Listening",
+                active: false,
+              },
+              {
+                href: "/reading/practice/5",
+                label: "Bài tập Reading",
+                active: false,
+              },
+            ]
+          : undefined
+      }
     />
   );
 }
@@ -187,7 +238,7 @@ export function ListeningReadingPractice({
   skill,
   part,
 }: {
-  skill: Skill;
+  skill: PracticeSkill;
   part: string;
 }) {
   const { name } = skills[skill];
@@ -204,23 +255,23 @@ export function ListeningReadingPractice({
     key: string;
     message: string;
   } | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const items = itemsState?.key === currentKey ? itemsState.items : [];
   const error = errorState?.key === currentKey ? errorState.message : null;
   const loading =
     retrying || (itemsState?.key !== currentKey && error === null);
 
-  const fetchItems = useCallback(
-    async (signal?: AbortSignal) => {
-      try {
-        const [result, statistics] = await Promise.all([
-          getLrPracticeItems(Number(part), 1, 50, signal),
-          getLrPracticeStatistics(Number(part), signal).catch(
-            (): LrPracticeItemStatisticsApi[] => [],
-          ),
-        ]);
-
-        if (signal?.aborted) return;
+  useEffect(() => {
+    const controller = new AbortController();
+    void Promise.all([
+      getLrPracticeItems(Number(part), 1, 50, controller.signal),
+      Promise.resolve(
+        getLrPracticeStatistics(Number(part), controller.signal),
+      ).catch((): LrPracticeItemStatisticsApi[] => []),
+    ])
+      .then(([result, statistics]) => {
+        if (controller.signal.aborted) return;
         setItemsState({
           key: currentKey,
           items: result.items.map((item) =>
@@ -233,9 +284,9 @@ export function ListeningReadingPractice({
           ),
         });
         setErrorState(null);
-      } catch (cause) {
-        if (signal?.aborted) return;
-
+      })
+      .catch((cause) => {
+        if (controller.signal.aborted) return;
         setErrorState({
           key: currentKey,
           message:
@@ -243,27 +294,18 @@ export function ListeningReadingPractice({
               ? cause.message
               : "Không thể tải danh sách bài luyện.",
         });
-      } finally {
-        if (!signal?.aborted) setRetrying(false);
-      }
-    },
-    [currentKey, part, skill],
-  );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRetrying(false);
+      });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const task = window.setTimeout(() => void fetchItems(controller.signal), 0);
-
-    return () => {
-      window.clearTimeout(task);
-      controller.abort();
-    };
-  }, [fetchItems]);
+    return () => controller.abort();
+  }, [attempt, currentKey, part, skill]);
 
   function handleRetry() {
     setRetrying(true);
     setErrorState(null);
-    void fetchItems();
+    setAttempt((currentAttempt) => currentAttempt + 1);
   }
 
   return (
@@ -273,18 +315,6 @@ export function ListeningReadingPractice({
       error={error}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       items={items}
-      skillLinks={[
-        {
-          href: "/listening/practice/1",
-          label: "Listening",
-          active: skill === "listening",
-        },
-        {
-          href: "/reading/practice/5",
-          label: "Reading",
-          active: skill === "reading",
-        },
-      ]}
       kind="exercise"
       loading={loading}
       onRetry={handleRetry}
@@ -297,6 +327,18 @@ export function ListeningReadingPractice({
         ...skills[skill],
         format: `Part ${part} · ${current?.title} · ${current?.questions} câu trong đề thi`,
       }}
+      skillLinks={[
+        {
+          href: "/listening/practice/1",
+          label: "Listening",
+          active: skill === "listening",
+        },
+        {
+          href: "/reading/practice/5",
+          label: "Reading",
+          active: skill === "reading",
+        },
+      ]}
     />
   );
 }

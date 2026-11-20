@@ -348,11 +348,10 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
     await assertCleanDomGeometry(page);
     await saveScreenshot(page, "01-desktop-default-1440x900.png");
 
-    // Start playback on desktop
+    // Start playback on desktop (ETS lock: cannot pause once started)
     await toggle.click();
-    await expect(toggle).toHaveAccessibleName("Tạm dừng audio");
-    await toggle.click();
-    await expect(toggle).toHaveAccessibleName("Bắt đầu phát Listening");
+    await expect(toggle).toHaveAccessibleName("Đang phát · Khóa tạm dừng");
+    await expect(toggle).toBeDisabled();
 
     // Mobile 390x844
     await page.setViewportSize({ width: 390, height: 844 });

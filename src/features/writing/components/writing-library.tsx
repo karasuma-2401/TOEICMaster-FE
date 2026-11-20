@@ -12,6 +12,7 @@ import {
   type ExamLibrarySkill,
 } from "@/shared/components/practice/exam-library";
 import { summarizeExamAttempts } from "@/shared/components/practice/exam-library-model";
+import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import { WritingHeader } from "./writing-header";
 
 const skill: ExamLibrarySkill = {
@@ -112,6 +113,14 @@ export function WritingLibrary() {
       emptyTitle="Chưa có đề Writing được công bố"
       error={error}
       header={<WritingHeader wide />}
+      historySection={
+        <AttemptHistorySection
+          description="Các lần làm Writing của bạn được lưu tại đây."
+          limit={3}
+          skills={["writing"]}
+          title="Lịch sử làm bài Writing"
+        />
+      }
       items={items}
       loading={loading}
       onRetry={() => void load()}

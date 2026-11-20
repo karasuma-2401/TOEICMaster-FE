@@ -4,17 +4,26 @@ import { BrandMark } from "@/features/user/components/brand-mark";
 import { HeaderMenu } from "./header-menu";
 import { focusRing, pageContainer, wideContainer } from "./styles";
 
-// Listening and Reading are one full-test area; keep both route IDs active
-// because the existing practice pages still use /listening and /reading.
+// Listening and Reading share one hub; keep "listening" and "reading" active
+// IDs working because practice pages and legacy routes still pass them.
 const navigation = [
-  { id: "listening-reading", label: "Listening & Reading", href: "/listening" },
+  {
+    id: "listening-reading",
+    label: "Listening & Reading",
+    href: "/listening-reading",
+  },
   { id: "speaking", label: "Speaking", href: "/speaking" },
   { id: "writing", label: "Writing", href: "/writing" },
-  { id: "history", label: "Lịch sử", href: "/history/writing" },
+  { id: "history", label: "Lịch sử", href: "/history" },
 ] as const;
 
 export type PracticeNavId =
-  "listening" | "reading" | "speaking" | "writing" | "history";
+  | "listening-reading"
+  | "listening"
+  | "reading"
+  | "speaking"
+  | "writing"
+  | "history";
 
 export function SkillHeader({
   active,
@@ -56,7 +65,9 @@ export function SkillHeader({
               {navigation.map((item) => {
                 const current =
                   item.id === "listening-reading"
-                    ? active === "listening" || active === "reading"
+                    ? active === "listening-reading" ||
+                      active === "listening" ||
+                      active === "reading"
                     : item.id === active;
                 return (
                   <Link
