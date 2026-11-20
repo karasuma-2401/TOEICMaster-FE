@@ -33,6 +33,7 @@ describe("UserMenu", () => {
     displayName: "Nguyễn Văn A",
     email: "learner@example.com",
     phone: "0912345678",
+    dateOfBirth: null,
     targetScore: 750,
     avatarVersion: null,
     hasPassword: true,
@@ -41,10 +42,8 @@ describe("UserMenu", () => {
   it("hiển thị icon avatar tròn với chữ cái đầu khi đã đăng nhập", () => {
     render(<UserMenu initialUser={sampleUser} />);
 
-    const avatarBtn = screen.getByRole("button", {
-      name: "Mở hồ sơ cá nhân",
-    });
-    expect(avatarBtn).toBeInTheDocument();
+    const avatarBtn = screen.getByTestId("user-menu-trigger");
+    expect(avatarBtn).toHaveAccessibleName("Mở menu tài khoản");
     expect(avatarBtn).toHaveTextContent("NA");
 
     expect(
@@ -55,33 +54,44 @@ describe("UserMenu", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("mở popup Hồ sơ cá nhân khi bấm vào avatar và trả focus về avatar khi đóng", async () => {
+  it("mở dropdown menu với liên kết Hồ sơ cá nhân, Lịch sử làm bài và đóng bằng Escape hoặc click ngoài", async () => {
     const user = userEvent.setup();
-    render(<UserMenu initialUser={sampleUser} />);
+    render(
+      <div>
+        <button type="button">Ngoài menu</button>
+        <UserMenu initialUser={sampleUser} />
+      </div>,
+    );
 
-    const avatarBtn = screen.getByRole("button", {
-      name: "Mở hồ sơ cá nhân",
-    });
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const avatarBtn = screen.getByTestId("user-menu-trigger");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 
     await user.click(avatarBtn);
 
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Nguyễn Văn A")).toBeInTheDocument();
+    const menu = screen.getByRole("menu", { name: "Menu tài khoản" });
+    expect(within(menu).getByText("Nguyễn Văn A")).toBeInTheDocument();
+    expect(within(menu).getByText("learner@example.com")).toBeInTheDocument();
+    expect(
+      within(menu).getByRole("menuitem", { name: "Hồ sơ cá nhân" }),
+    ).toHaveAttribute("href", "/profile");
+    expect(
+      within(menu).getByRole("menuitem", { name: "Lịch sử làm bài" }),
+    ).toHaveAttribute("href", "/history");
 
-    await user.click(screen.getByRole("button", { name: "Đóng" }));
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(avatarBtn).toHaveFocus();
+
+    await user.click(avatarBtn);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Ngoài menu" }));
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
   it("hiển thị nút Đăng nhập và Đăng ký khi chưa đăng nhập", () => {
     render(<UserMenu initialUser={null} />);
 
-    expect(
-      screen.queryByRole("button", { name: "Mở hồ sơ cá nhân" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu-trigger")).not.toBeInTheDocument();
 
     const loginLink = screen.getByRole("link", { name: "Đăng nhập" });
     const registerLink = screen.getByRole("link", { name: "Đăng ký" });
@@ -93,29 +103,27 @@ describe("UserMenu", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("chuyển sang trạng thái chưa đăng nhập khi bấm Đăng xuất trong popup", async () => {
+  it("chuyển sang trạng thái chưa đăng nhập khi bấm Đăng xuất trong menu", async () => {
     const user = userEvent.setup();
     render(<UserMenu initialUser={sampleUser} />);
 
-    await user.click(screen.getByRole("button", { name: "Mở hồ sơ cá nhân" }));
+    await user.click(screen.getByTestId("user-menu-trigger"));
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Đăng xuất" }));
+    await user.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Mở hồ sơ cá nhân" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu-trigger")).not.toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: "Đăng nhập" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Đăng ký" })).toBeInTheDocument();
   });
 
-  it("mở popup sẵn khi initialOpen = true", () => {
+  it("mở menu sẵn khi initialOpen = true", () => {
     render(<UserMenu initialOpen={true} initialUser={sampleUser} />);
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
   });
 
   it("tải hồ sơ thật sau khi xác nhận session và đồng bộ lại khi phát event", async () => {
@@ -136,9 +144,7 @@ describe("UserMenu", () => {
       });
 
     render(<UserMenu />);
-    const avatarButton = await screen.findByRole("button", {
-      name: "Mở hồ sơ cá nhân",
-    });
+    const avatarButton = await screen.findByTestId("user-menu-trigger");
     expect(apiMocks.getProfile).toHaveBeenCalledTimes(1);
     expect(
       screen.getByRole("img", { name: "Ảnh đại diện của Nguyễn Văn A" }),

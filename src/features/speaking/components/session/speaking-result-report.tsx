@@ -371,6 +371,9 @@ export function SpeakingResultReport({
         >
           Xem lại & Nghe lại chi tiết bài làm
         </Link>
+        <Link className="sp-btn sp-btn-outline" href="/history">
+          Về lịch sử làm bài
+        </Link>
         <Link className="sp-btn sp-btn-outline" href="/speaking">
           Về danh sách đề Speaking
         </Link>

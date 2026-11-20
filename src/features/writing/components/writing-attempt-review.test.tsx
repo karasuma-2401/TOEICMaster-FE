@@ -105,7 +105,7 @@ it("switches question and falls back to AI feedback without a model essay", asyn
   expect(screen.queryByText("Good grammar")).not.toBeInTheDocument();
 });
 
-it("shows the model essay when the API provides one", async () => {
+it("shows BOTH the model essay and AI feedback with SentenceDiffView for Part 1 & Part 2, plus /history link", async () => {
   mocks.getAttempt.mockResolvedValueOnce({
     ...attempt,
     reviewQuestions: [{ position: 1, modelAnswer: "A model sentence" }],
@@ -114,6 +114,12 @@ it("shows the model essay when the API provides one", async () => {
 
   expect(await screen.findByText("A model sentence")).toBeInTheDocument();
   expect(screen.getByText("High-score Model Essay")).toBeInTheDocument();
+  expect(screen.getByText("Nhận xét của AI")).toBeInTheDocument();
+  expect(screen.getByText("Good grammar")).toBeInTheDocument();
+  expect(screen.getByTestId("writing-sentence-diff")).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+  ).toHaveAttribute("href", "/history");
 });
 
 it("still works when the attempt history cannot load", async () => {

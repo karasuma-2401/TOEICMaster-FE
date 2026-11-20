@@ -247,6 +247,80 @@ export interface LrReviewApi {
   }[];
 }
 
+export type LrAttemptStatus = "InProgress" | "Completed" | "Abandoned";
+
+export interface LrAttemptHistoryItemApi {
+  attemptId: string;
+  examId: string;
+  examTitle: string;
+  examCode: string;
+  status: LrAttemptStatus;
+  listeningScaledScore: number | null;
+  readingScaledScore: number | null;
+  totalScaledScore: number | null;
+  isTimeExpired: boolean;
+  startedAtUtc: string;
+  submittedAtUtc: string | null;
+  durationSeconds: number | null;
+}
+
+export interface LrAttemptHistoryPagedApi {
+  items: LrAttemptHistoryItemApi[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+}
+
+function parseAttemptStatus(value: unknown): LrAttemptStatus {
+  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  if (typeof value === "number") {
+    if (value === 1) return "InProgress";
+    if (value === 2) return "Completed";
+    if (value === 3) return "Abandoned";
+    throw new LrApiError(502, message);
+  }
+  if (
+    value === "InProgress" ||
+    value === "Completed" ||
+    value === "Abandoned"
+  ) {
+    return value;
+  }
+  throw new LrApiError(502, message);
+}
+
+function parseAttemptHistoryItem(value: unknown): LrAttemptHistoryItemApi {
+  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  if (!isRecord(value)) throw new LrApiError(502, message);
+  return {
+    attemptId: requiredString(value.attemptId, message),
+    examId: requiredString(value.examId, message),
+    examTitle: requiredString(value.examTitle, message),
+    examCode: requiredString(value.examCode, message),
+    status: parseAttemptStatus(value.status),
+    listeningScaledScore: nullableNumber(value.listeningScaledScore),
+    readingScaledScore: nullableNumber(value.readingScaledScore),
+    totalScaledScore: nullableNumber(value.totalScaledScore),
+    isTimeExpired: value.isTimeExpired === true,
+    startedAtUtc: requiredString(value.startedAtUtc, message),
+    submittedAtUtc: nullableString(value.submittedAtUtc),
+    durationSeconds: nullableNumber(value.durationSeconds),
+  };
+}
+
+function parseAttemptHistory(value: unknown): LrAttemptHistoryPagedApi {
+  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  if (!isRecord(value) || !Array.isArray(value.items)) {
+    throw new LrApiError(502, message);
+  }
+  return {
+    items: value.items.map(parseAttemptHistoryItem),
+    totalCount: requiredNumber(value.totalCount, message),
+    pageIndex: requiredNumber(value.pageIndex, message),
+    pageSize: requiredNumber(value.pageSize, message),
+  };
+}
+
 function parseCatalogItem(value: unknown): LrExamCatalogItemApi {
   if (!isRecord(value)) {
     throw new Error("Danh sách đề L&R không hợp lệ.");
@@ -660,6 +734,29 @@ export async function getLrListeningPlaylist(
     await lrRequest(
       `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/listening-audio-urls`,
       { signal },
+    ),
+  );
+}
+
+export async function getLrAttemptHistory(
+  params: { pageIndex?: number; pageSize?: number; examId?: string } = {},
+  signal?: AbortSignal,
+): Promise<LrAttemptHistoryPagedApi> {
+  const search = new URLSearchParams();
+  if (params.pageIndex !== undefined) {
+    search.set("pageIndex", String(params.pageIndex));
+  }
+  if (params.pageSize !== undefined) {
+    search.set("pageSize", String(params.pageSize));
+  }
+  if (params.examId) search.set("examId", params.examId);
+  const query = search.toString();
+  return parseAttemptHistory(
+    await lrRequest(
+      `/api/lr/exam-attempts/history${query ? `?${query}` : ""}`,
+      {
+        signal,
+      },
     ),
   );
 }
