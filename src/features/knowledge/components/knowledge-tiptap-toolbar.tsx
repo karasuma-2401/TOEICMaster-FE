@@ -91,8 +91,8 @@ export function KnowledgeTiptapToolbar({
     }`;
 
   return (
-    <>
-      <div className="flex flex-wrap items-center gap-1 border-b border-(--admin-border) bg-(--admin-surface-muted) px-3 py-2">
+    <div className="sticky top-14 z-20 rounded-t-xl bg-(--admin-surface)/95 shadow-xs backdrop-blur-xs">
+      <div className="flex flex-wrap items-center gap-1 rounded-t-xl border-b border-(--admin-border) bg-(--admin-surface-muted) px-3 py-2">
         <button
           aria-label="Đoạn văn thường"
           className={toolBtn(Boolean(editor?.isActive("paragraph")))}
@@ -422,6 +422,6 @@ export function KnowledgeTiptapToolbar({
           </button>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
