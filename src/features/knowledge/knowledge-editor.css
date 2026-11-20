@@ -1,0 +1,125 @@
+.kn-prose {
+  color: var(--sp-ink, #2b2724);
+  line-height: 1.75;
+  font-size: 15.5px;
+}
+
+.kn-prose .tiptap {
+  min-height: 360px;
+  outline: none;
+}
+
+.kn-prose .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--sp-ink-3, #948d86);
+  pointer-events: none;
+  height: 0;
+}
+
+.kn-prose h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--sp-ink, #2b2724);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1.4rem;
+  margin-bottom: 0.6rem;
+  color: var(--sp-ink, #2b2724);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.15rem;
+  margin-bottom: 0.5rem;
+  color: var(--sp-ink, #2b2724);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose p {
+  margin-top: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.kn-prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.kn-prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.kn-prose li {
+  margin: 0.3rem 0;
+}
+
+.kn-prose blockquote {
+  border-left: 4px solid var(--sp-brand, #df5a28);
+  background: var(--sp-cream, #fdf7ed);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 0 8px 8px 0;
+  color: var(--sp-ink-2, #5f5953);
+}
+
+.kn-prose a {
+  color: var(--sp-brand, #df5a28);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kn-prose a:hover {
+  color: var(--sp-crimson, #a21d1e);
+}
+
+.kn-prose code {
+  background: var(--sp-subtle, #f4f1ee);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.kn-prose pre {
+  background: #241f1c;
+  color: #f8f5f2;
+  padding: 1rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.kn-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.kn-prose hr {
+  border: 0;
+  border-top: 1px solid var(--sp-line, #dacfc5);
+  margin: 1.5rem 0;
+}
+
+.kn-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--sp-line, #dacfc5);
+  margin: 1rem auto;
+  display: block;
+}
