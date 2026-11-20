@@ -3,10 +3,7 @@
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
-  loginWithGoogle,
-  resolveLoginDestination,
-} from "@/features/auth/api";
+import { loginWithGoogle, resolveLoginDestination } from "@/features/auth/api";
 
 declare global {
   interface Window {

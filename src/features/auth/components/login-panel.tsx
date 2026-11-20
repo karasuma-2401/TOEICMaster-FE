@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import {
-  AuthError,
-  login,
-  resolveLoginDestination,
-} from "@/features/auth/api";
+import { AuthError, login, resolveLoginDestination } from "@/features/auth/api";
 import { validateLogin } from "@/features/auth/login";
 import { authUrl } from "@/features/auth/protected-routes";
 import { AuthTabs } from "./auth-layout";
