@@ -1,0 +1,189 @@
+.kn-prose {
+  color: var(--admin-ink, #302b29);
+  line-height: 1.75;
+  font-size: 15.5px;
+}
+
+.kn-prose .tiptap {
+  min-height: 360px;
+  outline: none;
+}
+
+.kn-prose .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--admin-muted, #817a76);
+  pointer-events: none;
+  height: 0;
+}
+
+.kn-prose h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--admin-ink, #302b29);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1.4rem;
+  margin-bottom: 0.6rem;
+  color: var(--admin-ink, #302b29);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.15rem;
+  margin-bottom: 0.5rem;
+  color: var(--admin-ink, #302b29);
+  scroll-margin-top: 96px;
+}
+
+.kn-prose p {
+  margin-top: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.kn-prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.kn-prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.kn-prose li {
+  margin: 0.3rem 0;
+}
+
+.kn-prose blockquote {
+  border-left: 4px solid var(--admin-brand-red, #e34229);
+  background: var(--admin-row-hover, #fffaf7);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 0 8px 8px 0;
+  color: var(--admin-ink-soft, #4c4542);
+}
+
+.kn-prose a {
+  color: var(--admin-brand-red, #e34229);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kn-prose a:hover {
+  color: var(--admin-brand-red-dark, #c92e1c);
+}
+
+.kn-prose code {
+  background: var(--admin-surface-muted, #f5f2f0);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.kn-prose pre {
+  background: #241f1c;
+  color: #f8f5f2;
+  padding: 1rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.kn-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.kn-prose hr {
+  border: 0;
+  border-top: 1px solid var(--admin-border, #e8e3e0);
+  margin: 1.5rem 0;
+}
+
+.kn-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border, #e8e3e0);
+  margin: 1rem auto;
+  display: block;
+}
+
+.kn-prose .kn-table-wrap,
+.kn-prose .tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border, #e8e3e0);
+}
+
+.kn-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 0.9375rem;
+  background: var(--admin-surface, #ffffff);
+}
+
+.kn-prose th,
+.kn-prose td {
+  border-bottom: 1px solid var(--admin-border, #e8e3e0);
+  border-right: 1px solid var(--admin-border, #e8e3e0);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.kn-prose th:last-child,
+.kn-prose td:last-child {
+  border-right: 0;
+}
+
+.kn-prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.kn-prose th {
+  background: var(--admin-ink, #302b29);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.kn-prose tbody tr:nth-child(even) td {
+  background: var(--admin-surface-muted, #f5f2f0);
+}
+
+.kn-prose th p,
+.kn-prose td p {
+  margin: 0.2rem 0;
+}
+
+.kn-prose .selectedCell {
+  background: var(--admin-nav-active, #fbe9df) !important;
+}
+
+.kn-prose .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--admin-brand-orange, #fb6b24);
+  pointer-events: none;
+}

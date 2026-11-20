@@ -13,5 +13,9 @@ describe("getAdminNavigationItem", () => {
     ])
       expect(getAdminNavigationItem(path)?.label).toBe("Kho dữ liệu");
     expect(getAdminNavigationItem("/admin/users")?.label).toBe("Người dùng");
+    expect(getAdminNavigationItem("/admin/knowledge")?.label).toBe("Kiến thức");
+    expect(getAdminNavigationItem("/admin/knowledge/new")?.label).toBe(
+      "Kiến thức",
+    );
   });
 });

@@ -22,6 +22,14 @@ export const adminNavigation = [
     matches: ["/admin/content", "/admin/exams", "/admin/tests"],
   },
   {
+    label: "Kiến thức",
+    icon: "✎",
+    href: "/admin/knowledge",
+    description: "Quản lý bài viết kiến thức, danh mục và thư viện ảnh",
+    enabled: true,
+    matches: ["/admin/knowledge"],
+  },
+  {
     label: "Nhật ký hoạt động",
     icon: "◷",
     href: "/admin/activity",
