@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   estimateReadMinutes,
   extractTocFromDoc,
+  isKnowledgeMediaUuid,
   isSafeKnowledgeHref,
   normalizeMediaSrcForBff,
+  sanitizeKnowledgeHref,
   slugifyVietnamese,
 } from "./tiptap-utils";
 
@@ -102,5 +104,43 @@ describe("knowledge tiptap-utils", () => {
     expect(normalizeMediaSrcForBff("//evil.com/tracker.png")).toBe("");
     expect(normalizeMediaSrcForBff("/\t/evil.com/tracker.png")).toBe("");
     expect(normalizeMediaSrcForBff("mailto:user@example.com")).toBe("");
+  });
+
+  it("returns cleaned href strings from sanitizeKnowledgeHref and rejects unsafe inputs", () => {
+    expect(
+      sanitizeKnowledgeHref("\u0001  https://example.com/\u0007docs\u007f  "),
+    ).toBe("https://example.com/docs");
+    expect(sanitizeKnowledgeHref("  http://example.com/guide  ")).toBe(
+      "http://example.com/guide",
+    );
+    expect(sanitizeKnowledgeHref(" mailto:support@toeicmaster.vn ")).toBe(
+      "mailto:support@toeicmaster.vn",
+    );
+    expect(sanitizeKnowledgeHref(" /knowledge/part-5 ")).toBe(
+      "/knowledge/part-5",
+    );
+    expect(sanitizeKnowledgeHref(" #section-2 ")).toBe("#section-2");
+
+    expect(sanitizeKnowledgeHref("")).toBeNull();
+    expect(sanitizeKnowledgeHref("   ")).toBeNull();
+    expect(sanitizeKnowledgeHref("javascript:alert(1)")).toBeNull();
+    expect(
+      sanitizeKnowledgeHref("DATA:text/html,<script>alert(1)</script>"),
+    ).toBeNull();
+    expect(sanitizeKnowledgeHref("//evil.com/phish")).toBeNull();
+  });
+
+  it("validates UUID format with isKnowledgeMediaUuid", () => {
+    expect(isKnowledgeMediaUuid("11111111-2222-3333-4444-555555555555")).toBe(
+      true,
+    );
+    expect(isKnowledgeMediaUuid("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")).toBe(
+      true,
+    );
+    expect(isKnowledgeMediaUuid("../etc/passwd")).toBe(false);
+    expect(isKnowledgeMediaUuid("not-a-uuid")).toBe(false);
+    expect(
+      isKnowledgeMediaUuid("11111111-2222-3333-4444-555555555555?admin=1"),
+    ).toBe(false);
   });
 });

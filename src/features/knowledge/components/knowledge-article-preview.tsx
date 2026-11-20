@@ -6,8 +6,9 @@ import "../knowledge-editor.css";
 import {
   estimateReadMinutes,
   extractTocFromDoc,
-  isSafeKnowledgeHref,
+  isKnowledgeMediaUuid,
   normalizeMediaSrcForBff,
+  sanitizeKnowledgeHref,
 } from "../tiptap-utils";
 import type {
   KnowledgeArticleStatus,
@@ -40,12 +41,13 @@ function renderTextWithMarks(node: TiptapNode, key: string): ReactNode {
     else if (mark.type === "code")
       element = <code key={`${key}-c`}>{element}</code>;
     else if (mark.type === "link") {
-      const href =
-        typeof mark.attrs?.href === "string" ? mark.attrs.href.trim() : "";
-      if (isSafeKnowledgeHref(href)) {
+      const rawHref =
+        typeof mark.attrs?.href === "string" ? mark.attrs.href : "";
+      const safeHref = sanitizeKnowledgeHref(rawHref);
+      if (safeHref !== null) {
         element = (
           <a
-            href={href}
+            href={safeHref}
             key={`${key}-a`}
             rel="noopener noreferrer"
             target="_blank"
@@ -182,12 +184,15 @@ export function KnowledgeArticlePreview({
       }
       case "image": {
         const assetId =
-          typeof node.attrs?.assetId === "string" ? node.attrs.assetId : null;
+          typeof node.attrs?.assetId === "string"
+            ? node.attrs.assetId.trim()
+            : null;
         const rawSrc =
           typeof node.attrs?.src === "string" ? node.attrs.src : "";
-        const src = assetId
-          ? toAdminBffMediaUrl(assetId)
-          : normalizeMediaSrcForBff(rawSrc);
+        const src =
+          assetId && isKnowledgeMediaUuid(assetId)
+            ? toAdminBffMediaUrl(assetId)
+            : normalizeMediaSrcForBff(rawSrc);
         const alt =
           typeof node.attrs?.alt === "string"
             ? node.attrs.alt
@@ -261,13 +266,14 @@ export function KnowledgeArticlePreview({
             </div>
           ) : null}
 
-          {coverImageAssetId ? (
+          {coverImageAssetId &&
+          isKnowledgeMediaUuid(coverImageAssetId.trim()) ? (
             <div className="mt-6 overflow-hidden rounded-xl border border-(--admin-border)">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt={coverImageAlt || title}
                 className="max-h-95 w-full object-cover"
-                src={toAdminBffMediaUrl(coverImageAssetId)}
+                src={toAdminBffMediaUrl(coverImageAssetId.trim())}
               />
             </div>
           ) : null}

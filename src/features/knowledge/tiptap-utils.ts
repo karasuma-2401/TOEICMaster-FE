@@ -75,8 +75,14 @@ export function estimateReadMinutes(doc: TiptapDoc): number {
 
 const BACKEND_MEDIA_RE =
   /\/api\/v1\/(?:admin\/)?knowledge\/media\/([0-9a-f-]{36})/i;
+const KNOWLEDGE_MEDIA_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HTTP_URL_RE = /^https?:\/\//i;
 const MAILTO_URL_RE = /^mailto:/i;
+
+export function isKnowledgeMediaUuid(value: string): boolean {
+  return KNOWLEDGE_MEDIA_UUID_RE.test(value);
+}
 
 function stripControlCharsAndTrim(raw: string): string {
   let result = "";
@@ -95,14 +101,21 @@ function isSafeHttpOrSameOriginPath(url: string): boolean {
   );
 }
 
-export function isSafeKnowledgeHref(href: string): boolean {
+export function sanitizeKnowledgeHref(href: string): string | null {
   const cleaned = stripControlCharsAndTrim(href);
-  if (!cleaned) return false;
-  return (
+  if (!cleaned) return null;
+  if (
     isSafeHttpOrSameOriginPath(cleaned) ||
     MAILTO_URL_RE.test(cleaned) ||
     cleaned.startsWith("#")
-  );
+  ) {
+    return cleaned;
+  }
+  return null;
+}
+
+export function isSafeKnowledgeHref(href: string): boolean {
+  return sanitizeKnowledgeHref(href) !== null;
 }
 
 export function normalizeMediaSrcForBff(
