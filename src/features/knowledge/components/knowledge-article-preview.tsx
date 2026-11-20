@@ -6,6 +6,7 @@ import "../knowledge-editor.css";
 import {
   estimateReadMinutes,
   extractTocFromDoc,
+  isSafeKnowledgeHref,
   normalizeMediaSrcForBff,
 } from "../tiptap-utils";
 import type {
@@ -39,17 +40,20 @@ function renderTextWithMarks(node: TiptapNode, key: string): ReactNode {
     else if (mark.type === "code")
       element = <code key={`${key}-c`}>{element}</code>;
     else if (mark.type === "link") {
-      const href = typeof mark.attrs?.href === "string" ? mark.attrs.href : "#";
-      element = (
-        <a
-          href={href}
-          key={`${key}-a`}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {element}
-        </a>
-      );
+      const href =
+        typeof mark.attrs?.href === "string" ? mark.attrs.href.trim() : "";
+      if (isSafeKnowledgeHref(href)) {
+        element = (
+          <a
+            href={href}
+            key={`${key}-a`}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {element}
+          </a>
+        );
+      }
     }
   }
   return <span key={key}>{element}</span>;
