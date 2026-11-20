@@ -5,6 +5,7 @@ import { POST as google } from "./google/route";
 import { POST as refresh } from "./refresh/route";
 import { POST as logout } from "./logout/route";
 import { GET as session } from "./session/route";
+import { readSession } from "@/features/auth/server/session";
 
 const user = {
   id: "user-id",
@@ -13,7 +14,10 @@ const user = {
   role: "USER",
 };
 
-function authBody(refreshToken = "refresh-secret") {
+function authBody(
+  refreshToken = "refresh-secret",
+  role: "USER" | "ADMIN" = "USER",
+) {
   return {
     tokenType: "Bearer",
     accessToken: "access-secret",
@@ -22,7 +26,7 @@ function authBody(refreshToken = "refresh-secret") {
     refreshTokenExpiresAtUtc: new Date(
       Date.now() + 24 * 60 * 60_000,
     ).toISOString(),
-    user,
+    user: { ...user, role },
   };
 }
 
@@ -95,6 +99,71 @@ describe("auth BFF", () => {
       user: { id: user.id, displayName: user.displayName, email: user.email },
     });
   });
+
+  it.each([
+    {
+      entrypoint: "local login",
+      path: "login",
+      body: {
+        email: "admin@example.com",
+        password: "password",
+        rememberMe: true,
+      },
+      upstreamPath: "login",
+    },
+    {
+      entrypoint: "Google login",
+      path: "google",
+      body: { credential: "google-id-token", rememberMe: true },
+      upstreamPath: "google",
+    },
+  ])(
+    "preserves ADMIN role through $entrypoint and the encrypted session boundary",
+    async ({ path, body, upstreamPath }) => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(Response.json(authBody("refresh-secret", "ADMIN")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const response = await (path === "login" ? login : google)(
+        request(path, body),
+      );
+      const cookieValue = response.cookies.get("toeicmaster_session")?.value;
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+          email: user.email,
+          role: "ADMIN",
+        },
+      });
+      expect(cookieValue).toMatch(/^v1\./);
+      expect(cookieValue).not.toContain("access-secret");
+      expect(cookieValue).not.toContain("refresh-secret");
+      expect(readSession(cookieValue)?.role).toBe("ADMIN");
+      expect(readSession(cookieValue)?.user).toEqual({
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+      });
+      expect(fetchMock.mock.calls[0][0].toString()).toBe(
+        `http://backend:8080/api/v1/auth/${upstreamPath}`,
+      );
+      expect(fetchMock.mock.calls[0][1]).toEqual(
+        expect.objectContaining({ method: "POST" }),
+      );
+
+      const sessionResponse = await session(
+        request("session", undefined, `toeicmaster_session=${cookieValue}`),
+      );
+      expect(await sessionResponse.json()).toEqual({
+        status: "authenticated",
+        user: { id: user.id, displayName: user.displayName, email: user.email },
+      });
+    },
+  );
 
   it("falls back to the legacy local auth route only when the versioned route is absent", async () => {
     const fetchMock = vi

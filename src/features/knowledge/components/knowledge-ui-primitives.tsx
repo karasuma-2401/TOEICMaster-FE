@@ -4,6 +4,7 @@ import {
   adminFocus,
   adminSecondary,
 } from "@/features/admin/components/content/admin-styles";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { KnowledgeArticleStatus } from "../types";
 
 const STATUS_STYLES: Record<KnowledgeArticleStatus, string> = {
@@ -56,14 +57,111 @@ export function KnowledgeConfirmDialog({
   onConfirm,
   onCancel,
 }: KnowledgeConfirmDialogProps) {
-  if (!open) return null;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    cancelButtonRef.current?.focus();
+
+    return () => {
+      if (dialog.open && typeof dialog.close === "function") {
+        dialog.close();
+      } else {
+        dialog.removeAttribute("open");
+      }
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) return;
+    const previouslyFocused = restoreFocusRef.current;
+    restoreFocusRef.current = null;
+    if (previouslyFocused?.isConnected) previouslyFocused.focus();
+  }, [open]);
+
+  function handleCancel() {
+    if (!pending) onCancel();
+  }
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const activeDialog: HTMLDialogElement = dialog;
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (!pending) onCancel();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(
+        activeDialog.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (
+        (event.shiftKey &&
+          (document.activeElement === first ||
+            !activeDialog.contains(document.activeElement))) ||
+        (!event.shiftKey &&
+          (document.activeElement === last ||
+            !activeDialog.contains(document.activeElement)))
+      ) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    }
+
+    function handleNativeCancel(event: Event) {
+      event.preventDefault();
+      if (!pending) onCancel();
+    }
+
+    function handleBackdropClick(event: MouseEvent) {
+      if (event.target === activeDialog && !pending) onCancel();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    activeDialog.addEventListener("cancel", handleNativeCancel);
+    activeDialog.addEventListener("click", handleBackdropClick);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      activeDialog.removeEventListener("cancel", handleNativeCancel);
+      activeDialog.removeEventListener("click", handleBackdropClick);
+    };
+  }, [open, pending, onCancel]);
 
   return (
     <dialog
       aria-label={title}
       aria-modal="true"
       className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4 backdrop-blur-[1px]"
-      open
+      ref={dialogRef}
     >
       <div className="w-full max-w-md rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-2xl">
         <div className="flex items-start gap-3">
@@ -95,7 +193,8 @@ export function KnowledgeConfirmDialog({
           <button
             className={`${adminSecondary} h-10 cursor-pointer px-4`}
             disabled={pending}
-            onClick={onCancel}
+            onClick={handleCancel}
+            ref={cancelButtonRef}
             type="button"
           >
             {cancelLabel}
