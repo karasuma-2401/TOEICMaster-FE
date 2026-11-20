@@ -201,7 +201,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
           />
         )}
         <div className="mt-8 flex flex-wrap gap-3 border-t border-slate-100 pt-6">
-          <Link className={primaryAction} href="/history/writing">
+          <Link className={primaryAction} href="/history">
             Xem lịch sử
           </Link>
           {attempt && (

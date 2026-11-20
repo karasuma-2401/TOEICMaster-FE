@@ -17,7 +17,7 @@ import {
 } from "./exam-ui";
 import { ReviewAudioPlayer } from "./review-audio-player";
 
-type Filter = "all" | "wrong" | "flagged";
+type Filter = "all" | "wrongOnly" | "skipped" | "wrong" | "flagged" | "correct";
 
 const statusLabel = {
   correct: "Đúng",
@@ -68,23 +68,45 @@ export function LrReview({
 
   const visible = useMemo(
     () =>
-      range(1, LR_TOTAL_QUESTIONS).filter((number) =>
-        filter === "wrong"
-          ? statuses[number] !== "correct"
-          : filter === "flagged"
-            ? flags[number]
-            : true,
-      ),
+      range(1, LR_TOTAL_QUESTIONS).filter((number) => {
+        const status = statuses[number] ?? "skipped";
+        if (filter === "wrongOnly") return status === "wrong";
+        if (filter === "skipped") return status === "skipped";
+        if (filter === "wrong") return status !== "correct";
+        if (filter === "flagged") return Boolean(flags[number]);
+        if (filter === "correct") return status === "correct";
+        return true;
+      }),
     [filter, statuses, flags],
   );
   const reviewable = visible.filter((number) => detailed.has(number));
   const index = reviewable.indexOf(current);
   const entry = detailed.get(current);
 
+  const selectFilter = (nextFilter: Filter) => {
+    setFilter(nextFilter);
+    const matching = range(1, LR_TOTAL_QUESTIONS).filter((number) => {
+      if (!detailed.has(number)) return false;
+      const status = statuses[number] ?? "skipped";
+      if (nextFilter === "wrongOnly") return status === "wrong";
+      if (nextFilter === "skipped") return status === "skipped";
+      if (nextFilter === "wrong") return status !== "correct";
+      if (nextFilter === "flagged") return Boolean(flags[number]);
+      if (nextFilter === "correct") return status === "correct";
+      return true;
+    });
+    if (matching.length > 0 && !matching.includes(current)) {
+      setCurrent(matching[0]);
+    }
+  };
+
   const tabs: { id: Filter; label: string }[] = [
     { id: "all", label: `Tất cả (${LR_TOTAL_QUESTIONS})` },
+    { id: "wrongOnly", label: `Làm sai (${counts.wrong})` },
+    { id: "skipped", label: `Bỏ qua (${counts.skipped})` },
     { id: "wrong", label: `Sai / Bỏ qua (${counts.wrong + counts.skipped})` },
     { id: "flagged", label: `Gắn cờ (${Object.keys(flags).length})` },
+    { id: "correct", label: `Đúng (${counts.correct})` },
   ];
 
   return (
@@ -94,24 +116,33 @@ export function LrReview({
         <p className="text-[15px] font-semibold">
           Xem lại bài làm · {exam.identity}
         </p>
-        <Link className={secondaryButton} href={resultHref}>
-          ← Về báo cáo kết quả
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link className={secondaryButton} href="/history">
+            Về lịch sử làm bài
+          </Link>
+          <Link className={secondaryButton} href={resultHref}>
+            ← Về báo cáo kết quả
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6 xl:flex-row">
         <main className="flex min-w-0 flex-1 flex-col gap-5">
           <div
-            className="flex flex-wrap items-center gap-3"
+            className="flex flex-wrap items-center gap-2"
             role="tablist"
             aria-label="Bộ lọc câu hỏi"
           >
             {tabs.map((tab) => (
               <button
                 aria-selected={filter === tab.id}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${filter === tab.id ? "bg-[#fff7ed] text-[#ff5a1f]" : "bg-white text-[#77716e]"} ${focusRing}`}
+                className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                  filter === tab.id
+                    ? "border-[#EA580C] bg-[#fff7ed] text-[#ff5a1f]"
+                    : "border-[#E2E8F0] bg-white text-[#77716e]"
+                } ${focusRing}`}
                 key={tab.id}
-                onClick={() => setFilter(tab.id)}
+                onClick={() => selectFilter(tab.id)}
                 role="tab"
                 type="button"
               >
@@ -277,6 +308,7 @@ function ReviewDetail({
           {flagged ? <Pill tone="warning">⚑ Đã gắn cờ</Pill> : null}
         </div>
         {question.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
           <img
             alt={`Hình minh họa câu ${question.number}`}
             className="max-h-80 w-auto max-w-full rounded-lg object-contain"
@@ -308,17 +340,29 @@ function ReviewDetail({
             );
           })}
         </ul>
-        <div className="flex flex-col gap-2 text-[13px]">
-          <p>{question.analysis.summary}</p>
+        <div className="flex flex-col gap-3 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] p-4 text-[13px]">
+          <h3 className="text-xs font-bold tracking-wide uppercase text-[#166534]">
+            Lời giải chi tiết &amp; bản dịch
+          </h3>
+          <p className="leading-6 text-[#1E293B]">
+            {question.analysis.summary}
+          </p>
           {question.analysis.trap ? (
-            <p className="text-[#dc2626]">{question.analysis.trap}</p>
+            <p className="rounded-lg bg-[#FEF2F2] px-3 py-2 text-[#DC2626]">
+              <span className="font-semibold">Bẫy thường gặp: </span>
+              {question.analysis.trap}
+            </p>
           ) : null}
           {question.analysis.notes?.map((note) => (
-            <p className="text-[#77716e]" key={note}>
+            <p
+              className="rounded-lg border border-[#DCFCE7] bg-white px-3 py-2 leading-6 text-[#475569]"
+              key={note}
+            >
+              <span className="font-semibold text-[#166534]">Bản dịch: </span>
               {note}
             </p>
           ))}
-          <p className="font-semibold text-[#398565]">
+          <p className="text-xs font-semibold text-[#047857]">
             {question.analysis.skill}
           </p>
         </div>

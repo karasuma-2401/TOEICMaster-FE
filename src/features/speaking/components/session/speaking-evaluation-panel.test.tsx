@@ -135,6 +135,9 @@ describe("SpeakingEvaluationPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Phát âm")).toBeInTheDocument();
     expect(screen.getByText("79/100")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+    ).toHaveAttribute("href", "/history");
     expect(getSpeakingAttempt).not.toHaveBeenCalled();
   });
 

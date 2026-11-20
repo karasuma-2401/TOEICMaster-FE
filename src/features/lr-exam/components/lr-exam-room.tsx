@@ -503,12 +503,13 @@ function ListeningMasterPlayer({
           </p>
         </div>
         <button
-          className={`${primaryButton} min-h-[44px] shrink-0`}
+          className={`${primaryButton} min-h-[44px] shrink-0 disabled:cursor-not-allowed disabled:opacity-60`}
           data-testid="lr-master-audio-toggle"
+          disabled={isPlaying && !error}
           onClick={() => void togglePlay()}
           type="button"
         >
-          {isPlaying ? "Tạm dừng audio" : "Bắt đầu phát Listening"}
+          {isPlaying ? "Đang phát · Khóa tạm dừng" : "Bắt đầu phát Listening"}
         </button>
       </div>
       <div
@@ -520,6 +521,11 @@ function ListeningMasterPlayer({
           style={{ width: `${progressPercent}%` }}
         />
       </div>
+      <p className="text-xs text-[#64748b]">
+        {isPlaying
+          ? "Audio Listening phát một lần theo quy định ETS: không thể tạm dừng hoặc tua."
+          : "Audio Listening chỉ phát một lần theo quy định ETS: sau khi bắt đầu, bạn không thể tạm dừng hay tua."}
+      </p>
       {isBuffering ? (
         <output className="block text-xs text-[#64748b]">
           Đang đệm đoạn audio tiếp theo…
@@ -567,6 +573,7 @@ function ListeningGroup({
           key={question.number}
         >
           {question.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
             <img
               alt={`Hình minh họa câu ${question.number}`}
               className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
@@ -677,6 +684,7 @@ function ReadingQuestion({
     >
       <Pill>QUESTION {question.number}</Pill>
       {question.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
         <img
           alt={`Hình minh họa câu ${question.number}`}
           className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"

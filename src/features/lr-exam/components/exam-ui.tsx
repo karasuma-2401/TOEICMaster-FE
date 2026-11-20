@@ -169,6 +169,7 @@ export function PassageCard({ passage }: { passage: LrPassage }) {
             {paragraph.text ? (
               <p className="text-[15px]">{paragraph.text}</p>
             ) : null}
+            {/* eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions. */}
             <img
               alt="Hình minh họa nội dung bài đọc"
               className="max-h-[420px] w-auto max-w-full rounded-lg object-contain"

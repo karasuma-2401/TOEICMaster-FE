@@ -135,6 +135,8 @@ export const demoResult: LrResultReport = {
   maxScore: 990,
   listening: { score: 445, max: 495 },
   reading: { score: 410, max: 495 },
+  listeningRaw: { correct: 89, total: 100 },
+  readingRaw: { correct: 83, total: 100 },
   targetScore: 800,
   parts: [
     { part: 1, correct: 6, total: 6 },

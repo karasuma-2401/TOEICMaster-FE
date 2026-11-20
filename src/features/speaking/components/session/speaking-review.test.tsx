@@ -35,6 +35,9 @@ describe("SpeakingReview", () => {
     expect(await screen.findByText("conference")).toHaveClass("sp-word-issue");
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
     expect(screen.getByText("Nhận xét câu 1.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Lịch sử làm bài|Về lịch sử/i }),
+    ).toHaveAttribute("href", "/history");
   });
 
   it("explains an answer without recognised speech", async () => {

@@ -20,6 +20,7 @@ import {
   surfaceCard,
   textLink,
 } from "@/shared/components/practice/styles";
+import { SentenceDiffView } from "./sentence-diff-view";
 import { WritingHeader } from "./writing-header";
 import { WritingQuestionPrompt } from "./writing-question-prompt";
 
@@ -272,12 +273,17 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
             </>
           )}
 
-          <Link
-            className={`mt-5 inline-block ${textLink}`}
-            href={`/writing/attempts/${encodeURIComponent(attemptId)}/result`}
-          >
-            ← Về trang kết quả
-          </Link>
+          <div className="mt-5 flex flex-col gap-2">
+            <Link
+              className={`inline-block ${textLink}`}
+              href={`/writing/attempts/${encodeURIComponent(attemptId)}/result`}
+            >
+              ← Về trang kết quả
+            </Link>
+            <Link className={`inline-block ${textLink}`} href="/history">
+              Về lịch sử làm bài
+            </Link>
+          </div>
         </aside>
 
         {current && (
@@ -291,6 +297,14 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                 <WritingQuestionPrompt question={current} />
               </div>
             </section>
+
+            {(current.part === 1 || current.part === 2) &&
+              feedback?.suggestedRevision && (
+                <SentenceDiffView
+                  original={current.answer}
+                  suggested={feedback.suggestedRevision}
+                />
+              )}
 
             <div className="grid gap-5 xl:grid-cols-2">
               <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
@@ -308,7 +322,7 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                 </p>
               </section>
 
-              {modelAnswer ? (
+              {modelAnswer && (
                 <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
                   <h2 className={cardHeading}>High-score Model Essay</h2>
                   <p className={`mt-3 ${greenTag}`}>BÀI VĂN MẪU · CHUẨN ETS</p>
@@ -319,33 +333,37 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                     {modelAnswer}
                   </p>
                 </section>
-              ) : (
-                <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
-                  <h2 className={cardHeading}>Nhận xét của AI</h2>
-                  {feedback ? (
-                    <>
-                      <p className={`mt-3 ${greenTag}`}>
-                        Điểm tiêu chí AI: {feedback.criterionScore}
-                      </p>
-                      <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
-                        {feedback.feedback}
-                      </p>
-                      <h3 className="mt-5 font-semibold text-[#3d3935]">
-                        Gợi ý chỉnh sửa
-                      </h3>
-                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
-                        {feedback.suggestedRevision}
-                      </p>
-                    </>
-                  ) : (
-                    <p className={`mt-3 ${mutedNote}`}>
-                      Chưa có nhận xét cho câu này. Bạn có thể yêu cầu AI chấm
-                      bài ở trang kết quả.
-                    </p>
-                  )}
-                </section>
               )}
             </div>
+
+            <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className={cardHeading}>Nhận xét của AI</h2>
+                {feedback && (
+                  <p className={greenTag}>
+                    Điểm tiêu chí AI: {feedback.criterionScore}
+                  </p>
+                )}
+              </div>
+              {feedback ? (
+                <>
+                  <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
+                    {feedback.feedback}
+                  </p>
+                  <h3 className="mt-5 font-semibold text-[#3d3935]">
+                    Gợi ý chỉnh sửa
+                  </h3>
+                  <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
+                    {feedback.suggestedRevision}
+                  </p>
+                </>
+              ) : (
+                <p className={`mt-3 ${mutedNote}`}>
+                  Chưa có nhận xét cho câu này. Bạn có thể yêu cầu AI chấm bài ở
+                  trang kết quả.
+                </p>
+              )}
+            </section>
           </div>
         )}
       </div>

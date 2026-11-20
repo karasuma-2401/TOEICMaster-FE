@@ -75,14 +75,58 @@ export function estimateReadMinutes(doc: TiptapDoc): number {
 
 const BACKEND_MEDIA_RE =
   /\/api\/v1\/(?:admin\/)?knowledge\/media\/([0-9a-f-]{36})/i;
+const KNOWLEDGE_MEDIA_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const HTTP_URL_RE = /^https?:\/\//i;
+const MAILTO_URL_RE = /^mailto:/i;
+
+export function isKnowledgeMediaUuid(value: string): boolean {
+  return KNOWLEDGE_MEDIA_UUID_RE.test(value);
+}
+
+function stripControlCharsAndTrim(raw: string): string {
+  let result = "";
+  for (let i = 0; i < raw.length; i += 1) {
+    const code = raw.charCodeAt(i);
+    if (code <= 0x1f || code === 0x7f) continue;
+    result += raw[i];
+  }
+  return result.trim();
+}
+
+function isSafeHttpOrSameOriginPath(url: string): boolean {
+  return (
+    HTTP_URL_RE.test(url) ||
+    (url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\"))
+  );
+}
+
+export function sanitizeKnowledgeHref(href: string): string | null {
+  const cleaned = stripControlCharsAndTrim(href);
+  if (!cleaned) return null;
+  if (
+    isSafeHttpOrSameOriginPath(cleaned) ||
+    MAILTO_URL_RE.test(cleaned) ||
+    cleaned.startsWith("#")
+  ) {
+    return cleaned;
+  }
+  return null;
+}
+
+export function isSafeKnowledgeHref(href: string): boolean {
+  return sanitizeKnowledgeHref(href) !== null;
+}
 
 export function normalizeMediaSrcForBff(
   src: string | null | undefined,
 ): string {
   if (!src) return "";
-  const match = BACKEND_MEDIA_RE.exec(src);
+  const cleaned = stripControlCharsAndTrim(src);
+  if (!cleaned) return "";
+  const match = BACKEND_MEDIA_RE.exec(cleaned);
   if (match) return `/api/admin/knowledge/media/${match[1]}`;
-  return src;
+  return isSafeHttpOrSameOriginPath(cleaned) ? cleaned : "";
 }
 
 export function formatBytes(bytes: number): string {

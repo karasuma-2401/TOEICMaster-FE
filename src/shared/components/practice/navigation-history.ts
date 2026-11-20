@@ -27,7 +27,7 @@ const parents: [RegExp, string | ((match: RegExpMatchArray) => string)][] = [
   ],
   [/^\/speaking\/exercises\//, "/speaking/parts/1"],
   [/^\/speaking\/.+/, "/speaking"],
-  [/^\/writing\/attempts\/[^/]+\/result$/, "/history/writing"],
+  [/^\/writing\/attempts\/[^/]+\/result$/, "/history"],
   [/^\/writing\/.+/, "/writing"],
   [/^\/listening\/.+/, "/listening"],
   [/^\/reading\/.+/, "/reading"],

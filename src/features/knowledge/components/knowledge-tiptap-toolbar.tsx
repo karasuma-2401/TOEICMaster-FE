@@ -3,6 +3,7 @@
 import type { Editor } from "@tiptap/react";
 import { useRef, useState } from "react";
 import { toast } from "@/shared/ui/toast";
+import { sanitizeKnowledgeHref } from "../tiptap-utils";
 
 interface KnowledgeTiptapToolbarProps {
   editor: Editor | null;
@@ -64,20 +65,18 @@ export function KnowledgeTiptapToolbar({
       setLinkOpen(false);
       return;
     }
-    const isSafe =
-      /^https?:\/\//i.test(trimmed) ||
-      /^mailto:/i.test(trimmed) ||
-      trimmed.startsWith("/") ||
-      trimmed.startsWith("#");
-    if (!isSafe) {
-      toast.error("Link phải bắt đầu bằng https://, http://, mailto: hoặc /");
+    const safeHref = sanitizeKnowledgeHref(linkUrl);
+    if (!safeHref) {
+      toast.error(
+        "Link phải bắt đầu bằng https://, http://, mailto:, / hoặc #",
+      );
       return;
     }
     editor
       .chain()
       .focus()
       .extendMarkRange("link")
-      .setLink({ href: trimmed })
+      .setLink({ href: safeHref })
       .run();
     setLinkOpen(false);
     setLinkUrl("");

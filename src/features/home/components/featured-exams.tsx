@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getLrCatalog } from "@/features/lr-exam/api";
 import { getSpeakingTests } from "@/features/speaking/api";
 import { getWritingTests } from "@/features/writing/attempt-api";
 import { EmptyPanel } from "@/shared/components/practice/state-panels";
@@ -23,13 +24,23 @@ export interface FeaturedExam {
 
 async function loadFeatured(signal: AbortSignal) {
   // One skill failing should not empty the section.
-  const [speaking, writing] = await Promise.all([
+  const [lr, speaking, writing] = await Promise.all([
+    // Guests receive 401 from the L&R catalog, so it is optional here.
+    getLrCatalog(signal).catch(() => []),
     getSpeakingTests(signal).catch(() => []),
     getWritingTests(signal, "", 1, maxFeatured)
       .then((page) => page.items)
       .catch(() => []),
   ]);
   return [
+    ...lr.map((exam) => ({
+      id: exam.examId,
+      title: exam.title,
+      meta: `${exam.totalQuestions} câu · 120 phút · Listening & Reading`,
+      facts: "7 Parts · 10–990 điểm",
+      href: `/exams/lr/${encodeURIComponent(exam.examId)}`,
+      publishedAtUtc: exam.publishedAtUtc,
+    })),
     ...speaking.map((test) => ({
       id: test.id,
       title: test.title,

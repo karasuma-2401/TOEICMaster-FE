@@ -10,7 +10,7 @@ const navigation = [
   { id: "reading", label: "Reading", href: "/reading" },
   { id: "speaking", label: "Speaking", href: "/speaking" },
   { id: "writing", label: "Writing", href: "/writing" },
-  { id: "history", label: "Lịch sử", href: "/history/writing" },
+  { id: "history", label: "Lịch sử", href: "/history" },
 ] as const;
 
 export type PracticeNavId = (typeof navigation)[number]["id"];
