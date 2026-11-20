@@ -67,7 +67,12 @@ describe("auth BFF", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      user: { id: user.id, displayName: user.displayName, email: user.email },
+      user: {
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        role: "USER",
+      },
     });
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=lax");
@@ -173,7 +178,12 @@ describe("auth BFF", () => {
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      user: { id: user.id, displayName: user.displayName, email: user.email },
+      user: {
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        role: "USER",
+      },
     });
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
       "http://backend:8080/api/v1/auth/google",
