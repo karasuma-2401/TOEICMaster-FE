@@ -108,6 +108,7 @@ export function KnowledgeAdminHub() {
       <AdminPageHeader
         actions={headerAction}
         description="Soạn thảo, phân loại, xem trước và xuất bản bài viết hướng dẫn TOEIC cho học viên."
+        eyebrow="QUẢN TRỊ / KIẾN THỨC"
         title="Quản trị Kiến thức & Tài liệu mẫu"
       />
 

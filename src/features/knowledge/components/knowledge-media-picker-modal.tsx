@@ -234,7 +234,7 @@ export function KnowledgeMediaPickerModal({
                           {asset.originalFileName}
                         </p>
                         <p className="text-[11px] text-(--admin-muted)">
-                          {formatBytes(asset.byteLength)} ·{" "}
+                          {formatBytes(asset.byteLength)} -{" "}
                           {used
                             ? `Dùng trong ${asset.usageCount} bài`
                             : "Chưa dùng"}
