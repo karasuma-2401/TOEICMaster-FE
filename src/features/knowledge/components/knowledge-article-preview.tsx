@@ -120,6 +120,62 @@ export function KnowledgeArticlePreview({
         return <hr key={key} />;
       case "hardBreak":
         return <br key={key} />;
+      case "table": {
+        const rows = node.content ?? [];
+        const hasHeaderRow =
+          rows.length > 0 &&
+          (rows[0].content ?? []).some((cell) => cell.type === "tableHeader");
+        const headRows = hasHeaderRow ? rows.slice(0, 1) : [];
+        const bodyRows = hasHeaderRow ? rows.slice(1) : rows;
+        return (
+          <div className="kn-table-wrap" key={key}>
+            <table>
+              {headRows.length > 0 ? (
+                <thead>
+                  {headRows.map((row, idx) =>
+                    renderNode(row, `${key}-h-${idx}`),
+                  )}
+                </thead>
+              ) : null}
+              <tbody>
+                {bodyRows.map((row, idx) => renderNode(row, `${key}-b-${idx}`))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      case "tableRow":
+        return <tr key={key}>{children}</tr>;
+      case "tableHeader": {
+        const colSpan =
+          typeof node.attrs?.colspan === "number" && node.attrs.colspan > 1
+            ? node.attrs.colspan
+            : undefined;
+        const rowSpan =
+          typeof node.attrs?.rowspan === "number" && node.attrs.rowspan > 1
+            ? node.attrs.rowspan
+            : undefined;
+        return (
+          <th colSpan={colSpan} key={key} rowSpan={rowSpan}>
+            {children}
+          </th>
+        );
+      }
+      case "tableCell": {
+        const colSpan =
+          typeof node.attrs?.colspan === "number" && node.attrs.colspan > 1
+            ? node.attrs.colspan
+            : undefined;
+        const rowSpan =
+          typeof node.attrs?.rowspan === "number" && node.attrs.rowspan > 1
+            ? node.attrs.rowspan
+            : undefined;
+        return (
+          <td colSpan={colSpan} key={key} rowSpan={rowSpan}>
+            {children}
+          </td>
+        );
+      }
       case "image": {
         const assetId =
           typeof node.attrs?.assetId === "string" ? node.attrs.assetId : null;

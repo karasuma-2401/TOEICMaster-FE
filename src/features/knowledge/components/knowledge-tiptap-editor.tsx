@@ -3,6 +3,12 @@
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import {
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@tiptap/extension-table";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
@@ -55,6 +61,12 @@ export function KnowledgeTiptapEditor({
       KnowledgeImageExtension.configure({
         inline: false,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({
         placeholder:
           "Bắt đầu viết nội dung bài kiến thức TOEIC... Dùng tiêu đề H2/H3 để tự tạo bảng mục lục.",

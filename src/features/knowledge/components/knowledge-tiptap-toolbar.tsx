@@ -19,7 +19,25 @@ export function KnowledgeTiptapToolbar({
 }: KnowledgeTiptapToolbarProps) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [tableOpen, setTableOpen] = useState(false);
+  const [tableRows, setTableRows] = useState("3");
+  const [tableCols, setTableCols] = useState("2");
+  const [tableWithHeader, setTableWithHeader] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function insertCustomTable() {
+    if (!editor) return;
+    const rows = Math.min(20, Math.max(1, Number.parseInt(tableRows, 10) || 3));
+    const cols = Math.min(10, Math.max(1, Number.parseInt(tableCols, 10) || 2));
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows, cols, withHeaderRow: tableWithHeader })
+      .run();
+    setTableOpen(false);
+  }
+
+  const inTable = Boolean(editor?.isActive("table"));
 
   function applyLink() {
     if (!editor) return;
@@ -151,11 +169,22 @@ export function KnowledgeTiptapToolbar({
           onClick={() => {
             const currentHref = editor?.getAttributes("link").href;
             setLinkUrl(typeof currentHref === "string" ? currentHref : "");
+            setTableOpen(false);
             setLinkOpen((prev) => !prev);
           }}
           type="button"
         >
           Gắn link
+        </button>
+        <button
+          className={toolBtn(inTable || tableOpen)}
+          onClick={() => {
+            setLinkOpen(false);
+            setTableOpen((prev) => !prev);
+          }}
+          type="button"
+        >
+          ⊞ Bảng
         </button>
 
         <input
@@ -237,6 +266,114 @@ export function KnowledgeTiptapToolbar({
             type="button"
           >
             Bỏ link
+          </button>
+        </div>
+      ) : null}
+
+      {tableOpen ? (
+        <div className="flex flex-wrap items-center gap-3 border-b border-(--admin-border) bg-(--admin-row-hover) px-4 py-2 text-xs">
+          <label className="flex items-center gap-1.5 font-semibold text-(--admin-ink-soft)">
+            Số dòng
+            <input
+              className="w-16 rounded-md border border-(--admin-border) bg-white px-2 py-1 text-xs outline-none focus:border-(--admin-brand-orange)"
+              max={20}
+              min={1}
+              onChange={(e) => setTableRows(e.target.value)}
+              type="number"
+              value={tableRows}
+            />
+          </label>
+          <label className="flex items-center gap-1.5 font-semibold text-(--admin-ink-soft)">
+            Số cột
+            <input
+              className="w-16 rounded-md border border-(--admin-border) bg-white px-2 py-1 text-xs outline-none focus:border-(--admin-brand-orange)"
+              max={10}
+              min={1}
+              onChange={(e) => setTableCols(e.target.value)}
+              type="number"
+              value={tableCols}
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-(--admin-ink-soft)">
+            <input
+              checked={tableWithHeader}
+              onChange={(e) => setTableWithHeader(e.target.checked)}
+              type="checkbox"
+            />
+            Có dòng tiêu đề
+          </label>
+          <button
+            className="admin-primary-action rounded-md px-3 py-1 text-xs font-bold"
+            onClick={insertCustomTable}
+            type="button"
+          >
+            Chèn bảng
+          </button>
+        </div>
+      ) : null}
+
+      {inTable ? (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-(--admin-border) bg-(--admin-surface-muted)/60 px-3 py-1.5 text-xs">
+          <span className="mr-1 font-semibold text-(--admin-muted)">
+            Thao tác bảng:
+          </span>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+            onClick={() => editor?.chain().focus().addRowBefore().run()}
+            type="button"
+          >
+            + Dòng trên
+          </button>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+            onClick={() => editor?.chain().focus().addRowAfter().run()}
+            type="button"
+          >
+            + Dòng dưới
+          </button>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) hover:bg-(--admin-danger-soft)"
+            onClick={() => editor?.chain().focus().deleteRow().run()}
+            type="button"
+          >
+            - Xóa dòng
+          </button>
+          <span className="mx-0.5 h-3.5 w-px bg-(--admin-border)" />
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+            onClick={() => editor?.chain().focus().addColumnBefore().run()}
+            type="button"
+          >
+            + Cột trái
+          </button>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+            onClick={() => editor?.chain().focus().addColumnAfter().run()}
+            type="button"
+          >
+            + Cột phải
+          </button>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) hover:bg-(--admin-danger-soft)"
+            onClick={() => editor?.chain().focus().deleteColumn().run()}
+            type="button"
+          >
+            - Xóa cột
+          </button>
+          <span className="mx-0.5 h-3.5 w-px bg-(--admin-border)" />
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink-soft) hover:bg-(--admin-surface-muted)"
+            onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
+            type="button"
+          >
+            Đổi dòng tiêu đề
+          </button>
+          <button
+            className="rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) hover:bg-(--admin-danger-soft)"
+            onClick={() => editor?.chain().focus().deleteTable().run()}
+            type="button"
+          >
+            Xóa bảng
           </button>
         </div>
       ) : null}
