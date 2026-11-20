@@ -173,9 +173,7 @@ export function KnowledgeArticlePreview({
                 {categoryName}
               </span>
             ) : null}
-            <span className="text-(--sp-ink-3)">
-              · {readMinutes} phút đọc
-            </span>
+            <span className="text-(--sp-ink-3)">· {readMinutes} phút đọc</span>
           </div>
 
           <h1 className="text-2xl font-extrabold leading-tight text-(--sp-ink) sm:text-3xl">
@@ -206,7 +204,7 @@ export function KnowledgeArticlePreview({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt={coverImageAlt || title}
-                className="max-h-[380px] w-full object-cover"
+                className="max-h-95 w-full object-cover"
                 src={toAdminBffMediaUrl(coverImageAssetId)}
               />
             </div>

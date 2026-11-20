@@ -11,6 +11,7 @@ import {
 import { KnowledgeApiError } from "../http";
 import { formatBytes } from "../tiptap-utils";
 import type { KnowledgeMediaAsset } from "../types";
+import { KnowledgePagination } from "./knowledge-ui-primitives";
 
 interface KnowledgeMediaPickerModalProps {
   open: boolean;
@@ -268,31 +269,16 @@ export function KnowledgeMediaPickerModal({
           )}
         </div>
 
-        {totalPages > 1 ? (
-          <div className="flex items-center justify-between border-t border-(--sp-line) px-6 py-3 text-xs text-(--sp-ink-2)">
-            <span>
-              Trang {pageNumber} / {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                className="rounded-md border border-(--sp-line) px-3 py-1 disabled:opacity-40"
-                disabled={pageNumber <= 1}
-                onClick={() => setPageNumber((p) => p - 1)}
-                type="button"
-              >
-                Trước
-              </button>
-              <button
-                className="rounded-md border border-(--sp-line) px-3 py-1 disabled:opacity-40"
-                disabled={pageNumber >= totalPages}
-                onClick={() => setPageNumber((p) => p + 1)}
-                type="button"
-              >
-                Sau
-              </button>
-            </div>
-          </div>
-        ) : null}
+        <KnowledgePagination
+          className="border-t border-(--sp-line) px-6 py-3"
+          hasNextPage={pageNumber < totalPages}
+          hasPreviousPage={pageNumber > 1}
+          itemLabel="ảnh"
+          onPageChange={setPageNumber}
+          pageNumber={pageNumber}
+          totalCount={totalCount}
+          totalPages={totalPages}
+        />
       </div>
     </dialog>
   );
