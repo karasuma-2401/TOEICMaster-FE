@@ -138,7 +138,7 @@ export function KnowledgeArticlePreview({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img alt={alt} src={src} />
             {alt ? (
-              <figcaption className="mt-1.5 text-center text-xs text-(--sp-ink-3)">
+              <figcaption className="mt-1.5 text-center text-xs text-(--admin-muted)">
                 {alt}
               </figcaption>
             ) : null}
@@ -152,7 +152,7 @@ export function KnowledgeArticlePreview({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-xl border border-(--sp-warning-line) bg-(--sp-warning-bg) px-4 py-2.5 text-xs font-medium text-(--sp-warning)">
+      <div className="flex items-center justify-between rounded-xl border border-(--admin-warning)/25 bg-(--admin-warning-soft) px-4 py-2.5 text-xs font-medium text-(--admin-warning)">
         <span>
           Chế độ xem trước Admin (Preview Mode) — Hiển thị giống bố cục bài báo
           hoàn thiện dành cho Học viên.
@@ -163,25 +163,27 @@ export function KnowledgeArticlePreview({
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <article className="rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-6 shadow-sm sm:p-8">
+        <article className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-sm sm:p-8">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <span className="rounded-full bg-(--sp-orange-soft) px-3 py-1 text-(--sp-brand)">
+            <span className="rounded-full bg-(--admin-nav-active) px-3 py-1 text-(--admin-brand-red)">
               {skill}
             </span>
             {categoryName ? (
-              <span className="rounded-full bg-(--sp-subtle) px-3 py-1 text-(--sp-ink-2)">
+              <span className="rounded-full bg-(--admin-surface-muted) px-3 py-1 text-(--admin-ink-soft)">
                 {categoryName}
               </span>
             ) : null}
-            <span className="text-(--sp-ink-3)">· {readMinutes} phút đọc</span>
+            <span className="text-(--admin-muted)">
+              · {readMinutes} phút đọc
+            </span>
           </div>
 
-          <h1 className="text-2xl font-extrabold leading-tight text-(--sp-ink) sm:text-3xl">
+          <h1 className="text-2xl font-extrabold leading-tight text-(--admin-ink) sm:text-3xl">
             {title.trim() || "Chưa có tiêu đề bài viết"}
           </h1>
 
           {summary.trim() ? (
-            <p className="mt-3 text-base leading-relaxed text-(--sp-ink-2)">
+            <p className="mt-3 text-base leading-relaxed text-(--admin-ink-soft)">
               {summary}
             </p>
           ) : null}
@@ -190,7 +192,7 @@ export function KnowledgeArticlePreview({
             <div className="mt-4 flex flex-wrap gap-1.5">
               {tags.map((tag) => (
                 <span
-                  className="rounded-md border border-(--sp-line) bg-(--sp-subtle) px-2.5 py-0.5 text-xs text-(--sp-ink-2)"
+                  className="rounded-md border border-(--admin-border) bg-(--admin-surface-muted) px-2.5 py-0.5 text-xs text-(--admin-ink-soft)"
                   key={tag}
                 >
                   #{tag}
@@ -200,7 +202,7 @@ export function KnowledgeArticlePreview({
           ) : null}
 
           {coverImageAssetId ? (
-            <div className="mt-6 overflow-hidden rounded-xl border border-(--sp-line)">
+            <div className="mt-6 overflow-hidden rounded-xl border border-(--admin-border)">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt={coverImageAlt || title}
@@ -210,19 +212,19 @@ export function KnowledgeArticlePreview({
             </div>
           ) : null}
 
-          <div className="kn-prose mt-6 border-t border-(--sp-line) pt-6">
+          <div className="kn-prose mt-6 border-t border-(--admin-border) pt-6">
             {(content.content ?? []).map((node, idx) =>
               renderNode(node, `root-${idx}`),
             )}
           </div>
         </article>
 
-        <aside className="h-fit rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-5 shadow-sm lg:sticky lg:top-6">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-(--sp-ink-2)">
+        <aside className="h-fit rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm lg:sticky lg:top-6">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-(--admin-muted)">
             Mục lục bài viết
           </h2>
           {toc.length === 0 ? (
-            <p className="mt-3 text-xs text-(--sp-ink-3)">
+            <p className="mt-3 text-xs text-(--admin-muted)">
               Thêm tiêu đề H2, H3 hoặc H4 trong trình soạn thảo để tự động sinh
               mục lục cuộn nhanh.
             </p>
@@ -230,7 +232,7 @@ export function KnowledgeArticlePreview({
             <nav aria-label="Mục lục bài viết" className="mt-3 space-y-1.5">
               {toc.map((item) => (
                 <button
-                  className={`block w-full rounded-md px-2 py-1 text-left text-xs text-(--sp-ink-2) transition hover:bg-(--sp-orange-soft) hover:text-(--sp-brand) ${
+                  className={`block w-full rounded-md px-2 py-1 text-left text-xs text-(--admin-ink-soft) transition hover:bg-(--admin-nav-active) hover:text-(--admin-brand-red) ${
                     item.level === 3
                       ? "pl-5"
                       : item.level >= 4

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import {
+  adminFocus,
+  adminSecondary,
+} from "@/features/admin/components/content/admin-styles";
+import { toast } from "@/shared/ui/toast";
 import {
   deleteKnowledgeMedia,
   listKnowledgeMedia,
@@ -124,11 +128,11 @@ export function KnowledgeMediaPickerModal({
       className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4"
       open
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-(--sp-line) bg-(--sp-surface) shadow-2xl">
-        <div className="flex items-center justify-between border-b border-(--sp-line) px-6 py-4">
+      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-2xl">
+        <div className="flex items-center justify-between border-b border-(--admin-border) px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-(--sp-ink)">{title}</h2>
-            <p className="text-xs text-(--sp-ink-2)">
+            <h2 className="text-lg font-bold text-(--admin-ink)">{title}</h2>
+            <p className="text-xs text-(--admin-muted)">
               PNG, JPEG hoặc WebP tối đa 5 MiB ({totalCount} ảnh trong thư viện)
             </p>
           </div>
@@ -141,7 +145,7 @@ export function KnowledgeMediaPickerModal({
               type="file"
             />
             <button
-              className="rounded-lg bg-(--sp-brand) px-3.5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className={`admin-primary-action inline-flex h-10 items-center justify-center rounded-lg px-3.5 text-sm font-bold ${adminFocus}`}
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
               type="button"
@@ -150,7 +154,7 @@ export function KnowledgeMediaPickerModal({
             </button>
             <button
               aria-label="Đóng thư viện ảnh"
-              className="rounded-lg border border-(--sp-line) px-3 py-2 text-sm text-(--sp-ink-2) hover:bg-(--sp-subtle)"
+              className={`${adminSecondary} h-10 px-3`}
               onClick={onClose}
               type="button"
             >
@@ -159,9 +163,9 @@ export function KnowledgeMediaPickerModal({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 border-b border-(--sp-line) bg-(--sp-subtle) px-6 py-3">
+        <div className="flex flex-wrap items-center gap-3 border-b border-(--admin-border) bg-(--admin-surface-muted) px-6 py-3">
           <input
-            className="min-w-55 flex-1 rounded-lg border border-(--sp-input-line) bg-white px-3 py-1.5 text-sm outline-none focus:border-(--sp-brand)"
+            className="min-w-55 flex-1 rounded-xl border border-(--admin-border) bg-white px-3 py-1.5 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100"
             onChange={(e) => {
               setQuery(e.target.value);
               setPageNumber(1);
@@ -172,7 +176,7 @@ export function KnowledgeMediaPickerModal({
           />
           <select
             aria-label="Lọc trạng thái sử dụng ảnh"
-            className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-1.5 text-sm"
+            className="rounded-xl border border-(--admin-border) bg-white px-3 py-1.5 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100"
             onChange={(e) => {
               setUnusedOnly(e.target.value);
               setPageNumber(1);
@@ -187,12 +191,12 @@ export function KnowledgeMediaPickerModal({
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+            <p className="py-12 text-center text-sm text-(--admin-muted)">
               Đang tải thư viện ảnh...
             </p>
           ) : items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-(--sp-line) py-12 text-center">
-              <p className="text-sm text-(--sp-ink-2)">
+            <div className="rounded-xl border border-dashed border-(--admin-border) py-12 text-center">
+              <p className="text-sm text-(--admin-muted)">
                 Chưa có hình ảnh nào phù hợp. Hãy tải ảnh mới lên.
               </p>
             </div>
@@ -203,11 +207,11 @@ export function KnowledgeMediaPickerModal({
                 const used = (asset.usageCount ?? 0) > 0;
                 return (
                   <div
-                    className="group flex flex-col overflow-hidden rounded-xl border border-(--sp-line) bg-white transition hover:border-(--sp-brand)"
+                    className="group flex flex-col overflow-hidden rounded-xl border border-(--admin-border) bg-white transition hover:border-(--admin-brand-red)"
                     key={asset.id}
                   >
                     <button
-                      className="relative aspect-4/3 w-full overflow-hidden bg-(--sp-subtle) text-left"
+                      className="relative aspect-4/3 w-full overflow-hidden bg-(--admin-surface-muted) text-left"
                       onClick={() => {
                         onSelect(asset);
                         onClose();
@@ -224,12 +228,12 @@ export function KnowledgeMediaPickerModal({
                     <div className="flex flex-1 flex-col justify-between gap-2 p-2.5">
                       <div>
                         <p
-                          className="truncate text-xs font-semibold text-(--sp-ink)"
+                          className="truncate text-xs font-semibold text-(--admin-ink)"
                           title={asset.originalFileName}
                         >
                           {asset.originalFileName}
                         </p>
-                        <p className="text-[11px] text-(--sp-ink-3)">
+                        <p className="text-[11px] text-(--admin-muted)">
                           {formatBytes(asset.byteLength)} ·{" "}
                           {used
                             ? `Dùng trong ${asset.usageCount} bài`
@@ -238,7 +242,7 @@ export function KnowledgeMediaPickerModal({
                       </div>
                       <div className="flex items-center justify-between gap-1.5">
                         <button
-                          className="flex-1 rounded-md bg-(--sp-orange-soft) px-2 py-1 text-xs font-semibold text-(--sp-brand) hover:bg-(--sp-brand) hover:text-white"
+                          className="flex-1 rounded-md bg-(--admin-nav-active) px-2 py-1 text-xs font-semibold text-(--admin-brand-red) hover:bg-(--admin-brand-red) hover:text-white"
                           onClick={() => {
                             onSelect(asset);
                             onClose();
@@ -248,7 +252,7 @@ export function KnowledgeMediaPickerModal({
                           Chọn
                         </button>
                         <button
-                          className="rounded-md border border-(--sp-line) px-2 py-1 text-xs text-(--sp-danger) hover:bg-(--sp-danger-bg) disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md border border-(--admin-border) px-2 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={used || deletingId === asset.id}
                           onClick={() => void handleDelete(asset)}
                           title={
@@ -270,7 +274,7 @@ export function KnowledgeMediaPickerModal({
         </div>
 
         <KnowledgePagination
-          className="border-t border-(--sp-line) px-6 py-3"
+          className="border-t border-(--admin-border) px-6 py-3"
           hasNextPage={pageNumber < totalPages}
           hasPreviousPage={pageNumber > 1}
           itemLabel="ảnh"

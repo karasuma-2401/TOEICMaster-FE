@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import { AdminPageHeader } from "@/features/admin/components/content/admin-page-header";
+import { adminFocus } from "@/features/admin/components/content/admin-styles";
+import { AdminUnderlineTabs } from "@/features/admin/components/content/content-tabs";
+import { toast } from "@/shared/ui/toast";
 import { listKnowledgeCategories, uploadKnowledgeImage } from "../admin-api";
 import type { KnowledgeCategory } from "../types";
 import { KnowledgeArticlesTab } from "./knowledge-articles-tab";
@@ -62,90 +65,62 @@ export function KnowledgeAdminHub() {
     }
   }
 
-  const tabClass = (active: boolean) =>
-    `rounded-lg px-4 py-2 text-sm font-semibold transition ${
-      active
-        ? "bg-(--sp-brand) text-white shadow-sm"
-        : "text-(--sp-ink-2) hover:bg-(--sp-subtle)"
-    }`;
+  const primaryActionClass = `admin-primary-action inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-bold ${adminFocus}`;
+
+  const headerAction =
+    tab === "categories" ? (
+      <button
+        className={primaryActionClass}
+        onClick={() => {
+          setEditingCategory(null);
+          setCategoryModalOpen(true);
+        }}
+        type="button"
+      >
+        + Tạo danh mục mới
+      </button>
+    ) : tab === "media" ? (
+      <>
+        <input
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={handleMediaUpload}
+          ref={mediaUploadRef}
+          type="file"
+        />
+        <button
+          className={primaryActionClass}
+          disabled={mediaUploading}
+          onClick={() => mediaUploadRef.current?.click()}
+          type="button"
+        >
+          {mediaUploading ? "Đang tải lên..." : "+ Tải hình ảnh mới"}
+        </button>
+      </>
+    ) : (
+      <Link className={primaryActionClass} href="/admin/knowledge/new">
+        + Tạo bài viết mới
+      </Link>
+    );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-(--sp-ink)">
-            Quản trị Kiến thức & Tài liệu mẫu
-          </h1>
-          <p className="mt-1 text-sm text-(--sp-ink-2)">
-            Soạn thảo, phân loại, xem trước và xuất bản bài viết hướng dẫn TOEIC
-            cho học viên.
-          </p>
-        </div>
+    <div>
+      <AdminPageHeader
+        actions={headerAction}
+        description="Soạn thảo, phân loại, xem trước và xuất bản bài viết hướng dẫn TOEIC cho học viên."
+        title="Quản trị Kiến thức & Tài liệu mẫu"
+      />
 
-        <div className="flex items-center gap-2">
-          {tab === "categories" ? (
-            <button
-              className="rounded-xl bg-(--sp-brand) px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
-              onClick={() => {
-                setEditingCategory(null);
-                setCategoryModalOpen(true);
-              }}
-              type="button"
-            >
-              + Tạo danh mục mới
-            </button>
-          ) : tab === "media" ? (
-            <>
-              <input
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={handleMediaUpload}
-                ref={mediaUploadRef}
-                type="file"
-              />
-              <button
-                className="rounded-xl bg-(--sp-brand) px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
-                disabled={mediaUploading}
-                onClick={() => mediaUploadRef.current?.click()}
-                type="button"
-              >
-                {mediaUploading ? "Đang tải lên..." : "+ Tải hình ảnh mới"}
-              </button>
-            </>
-          ) : (
-            <Link
-              className="rounded-xl bg-(--sp-brand) px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
-              href="/admin/knowledge/new"
-            >
-              + Tạo bài viết mới
-            </Link>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 rounded-xl border border-(--sp-line) bg-(--sp-surface) p-1.5">
-        <button
-          className={tabClass(tab === "articles")}
-          onClick={() => setTab("articles")}
-          type="button"
-        >
-          Bài viết
-        </button>
-        <button
-          className={tabClass(tab === "categories")}
-          onClick={() => setTab("categories")}
-          type="button"
-        >
-          Danh mục ({allCategories.length})
-        </button>
-        <button
-          className={tabClass(tab === "media")}
-          onClick={() => setTab("media")}
-          type="button"
-        >
-          Thư viện ảnh
-        </button>
-      </div>
+      <AdminUnderlineTabs
+        activeId={tab}
+        ariaLabel="Phân mục quản trị kiến thức"
+        items={[
+          { id: "articles", label: "Bài viết" },
+          { id: "categories", label: `Danh mục (${allCategories.length})` },
+          { id: "media", label: "Thư viện ảnh" },
+        ]}
+        onSelect={setTab}
+      />
 
       {tab === "articles" ? (
         <KnowledgeArticlesTab categories={allCategories} />

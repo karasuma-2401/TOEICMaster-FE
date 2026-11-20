@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import toast from "react-hot-toast";
+import {
+  adminFocus,
+  adminInput,
+  adminSecondary,
+  adminTextarea,
+} from "@/features/admin/components/content/admin-styles";
+import { toast } from "@/shared/ui/toast";
 import { createKnowledgeCategory, updateKnowledgeCategory } from "../admin-api";
 import { KnowledgeApiError } from "../http";
 import type { KnowledgeCategory } from "../types";
@@ -74,21 +80,21 @@ export function KnowledgeCategoryModal({
       open
     >
       <form
-        className="w-full max-w-md space-y-4 rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-6 shadow-2xl"
+        className="w-full max-w-md space-y-4 rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-2xl"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-lg font-bold text-(--sp-ink)">
+        <h2 className="text-lg font-bold text-(--admin-ink)">
           {editingCategory ? "Chỉnh sửa danh mục" : "Tạo danh mục mới"}
         </h2>
         <div>
           <label
-            className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+            className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-name"
           >
             Tên danh mục *
           </label>
           <input
-            className="w-full rounded-lg border border-(--sp-input-line) px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+            className={adminInput}
             id="cat-name"
             maxLength={100}
             onChange={(e) => setName(e.target.value)}
@@ -99,13 +105,13 @@ export function KnowledgeCategoryModal({
         </div>
         <div>
           <label
-            className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+            className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-slug"
           >
             Slug (để trống để tự sinh từ tên)
           </label>
           <input
-            className="w-full rounded-lg border border-(--sp-input-line) px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+            className={adminInput}
             id="cat-slug"
             maxLength={120}
             onChange={(e) => setSlug(e.target.value)}
@@ -115,13 +121,13 @@ export function KnowledgeCategoryModal({
         </div>
         <div>
           <label
-            className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+            className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-desc"
           >
             Mô tả ngắn
           </label>
           <textarea
-            className="w-full rounded-lg border border-(--sp-input-line) px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+            className={adminTextarea}
             id="cat-desc"
             maxLength={500}
             onChange={(e) => setDescription(e.target.value)}
@@ -131,13 +137,13 @@ export function KnowledgeCategoryModal({
         </div>
         <div>
           <label
-            className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+            className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-order"
           >
             Thứ tự hiển thị
           </label>
           <input
-            className="w-28 rounded-lg border border-(--sp-input-line) px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+            className={`${adminInput} max-w-28`}
             id="cat-order"
             min={0}
             onChange={(e) => setDisplayOrder(e.target.value)}
@@ -146,15 +152,11 @@ export function KnowledgeCategoryModal({
           />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button
-            className="rounded-lg border border-(--sp-line) px-4 py-2 text-sm text-(--sp-ink-2)"
-            onClick={onClose}
-            type="button"
-          >
+          <button className={adminSecondary} onClick={onClose} type="button">
             Hủy
           </button>
           <button
-            className="rounded-lg bg-(--sp-brand) px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className={`admin-primary-action inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-bold ${adminFocus}`}
             disabled={saving}
             type="submit"
           >

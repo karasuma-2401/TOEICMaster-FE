@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/shared/ui/toast";
 import { deleteKnowledgeCategory, listKnowledgeCategories } from "../admin-api";
 import { KnowledgeApiError } from "../http";
 import { formatDateTimeVi } from "../tiptap-utils";
@@ -78,11 +78,14 @@ export function KnowledgeCategoriesTab({
     }
   }
 
+  const fieldClass =
+    "h-10 rounded-xl border border-(--admin-border) bg-white px-3 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100";
+
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--sp-line) bg-(--sp-surface) p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--admin-border) bg-(--admin-surface) p-4 sm:grid-cols-3">
         <input
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+          className={fieldClass}
           onChange={(e) => {
             setQuery(e.target.value);
             setPageNumber(1);
@@ -93,7 +96,7 @@ export function KnowledgeCategoriesTab({
         />
         <select
           aria-label="Lọc danh mục theo bài viết"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setHasArticles(e.target.value);
             setPageNumber(1);
@@ -106,7 +109,7 @@ export function KnowledgeCategoriesTab({
         </select>
         <select
           aria-label="Sắp xếp danh mục"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
             setPageNumber(1);
@@ -119,19 +122,19 @@ export function KnowledgeCategoriesTab({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-(--sp-line) bg-(--sp-surface) shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-sm">
         {loading ? (
-          <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+          <p className="py-12 text-center text-sm text-(--admin-muted)">
             Đang tải danh mục...
           </p>
         ) : !data || data.items.length === 0 ? (
-          <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+          <p className="py-12 text-center text-sm text-(--admin-muted)">
             Chưa có danh mục nào. Hãy bấm &quot;+ Tạo danh mục mới&quot;.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-(--sp-line) bg-(--sp-subtle) text-xs font-bold uppercase text-(--sp-ink-2)">
+              <thead className="border-b border-(--admin-border) bg-(--admin-surface-muted) text-xs font-bold uppercase text-(--admin-muted)">
                 <tr>
                   <th className="px-4 py-3">Danh mục</th>
                   <th className="px-4 py-3">Thứ tự</th>
@@ -140,38 +143,38 @@ export function KnowledgeCategoriesTab({
                   <th className="px-4 py-3 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-(--sp-line)">
+              <tbody className="divide-y divide-(--admin-border)">
                 {data.items.map((cat) => (
-                  <tr className="hover:bg-(--sp-row-hover)" key={cat.id}>
+                  <tr className="hover:bg-(--admin-row-hover)" key={cat.id}>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-(--sp-ink)">
+                      <p className="font-semibold text-(--admin-ink)">
                         {cat.name}
                       </p>
-                      <p className="text-xs text-(--sp-ink-3)">
+                      <p className="text-xs text-(--admin-muted)">
                         /{cat.slug}
                         {cat.description ? ` · ${cat.description}` : ""}
                       </p>
                     </td>
-                    <td className="px-4 py-3 text-xs font-semibold">
+                    <td className="px-4 py-3 text-xs font-semibold text-(--admin-ink)">
                       {cat.displayOrder}
                     </td>
-                    <td className="px-4 py-3 text-xs font-semibold">
+                    <td className="px-4 py-3 text-xs font-semibold text-(--admin-ink)">
                       {cat.articleCount}
                     </td>
-                    <td className="px-4 py-3 text-xs text-(--sp-ink-2)">
+                    <td className="px-4 py-3 text-xs text-(--admin-muted)">
                       {formatDateTimeVi(cat.updatedAtUtc)}
                     </td>
                     <td aria-label="Thao tác" className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1.5">
                         <button
-                          className="rounded-md border border-(--sp-line) bg-white px-2.5 py-1 text-xs font-semibold text-(--sp-ink) hover:bg-(--sp-subtle)"
+                          className="rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) hover:bg-(--admin-surface-muted)"
                           onClick={() => onEdit(cat)}
                           type="button"
                         >
                           Sửa
                         </button>
                         <button
-                          className="rounded-md border border-(--sp-line) px-2.5 py-1 text-xs text-(--sp-danger) hover:bg-(--sp-danger-bg) disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={cat.articleCount > 0}
                           onClick={() => void handleDelete(cat)}
                           title={

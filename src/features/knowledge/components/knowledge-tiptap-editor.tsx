@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/shared/ui/toast";
 import { toAdminBffMediaUrl, uploadKnowledgeImage } from "../admin-api";
 import "../knowledge-editor.css";
 import type { KnowledgeMediaAsset, TiptapDoc } from "../types";
@@ -109,7 +109,7 @@ export function KnowledgeTiptapEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-(--sp-input-line) bg-white">
+    <div className="overflow-hidden rounded-xl border border-(--admin-border) bg-white">
       <KnowledgeTiptapToolbar
         editor={editor}
         onDirectImageUpload={(file) => void handleDirectImageUpload(file)}

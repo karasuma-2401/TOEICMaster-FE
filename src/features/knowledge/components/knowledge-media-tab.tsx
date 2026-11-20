@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/shared/ui/toast";
 import {
   deleteKnowledgeMedia,
   listKnowledgeMedia,
@@ -79,11 +79,14 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
     }
   }
 
+  const fieldClass =
+    "h-10 rounded-xl border border-(--admin-border) bg-white px-3 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100";
+
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--sp-line) bg-(--sp-surface) p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--admin-border) bg-(--admin-surface) p-4 sm:grid-cols-3">
         <input
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+          className={fieldClass}
           onChange={(e) => {
             setQuery(e.target.value);
             setPageNumber(1);
@@ -94,7 +97,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
         />
         <select
           aria-label="Lọc ảnh theo trạng thái sử dụng"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setUnusedOnly(e.target.value);
             setPageNumber(1);
@@ -107,7 +110,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
         </select>
         <select
           aria-label="Sắp xếp hình ảnh"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
             setPageNumber(1);
@@ -120,13 +123,13 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
         </select>
       </div>
 
-      <div className="rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-5 shadow-sm">
+      <div className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
         {loading ? (
-          <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+          <p className="py-12 text-center text-sm text-(--admin-muted)">
             Đang tải thư viện ảnh...
           </p>
         ) : !data || data.items.length === 0 ? (
-          <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+          <p className="py-12 text-center text-sm text-(--admin-muted)">
             Chưa có hình ảnh nào.
           </p>
         ) : (
@@ -135,10 +138,10 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
               const used = (asset.usageCount ?? 0) > 0;
               return (
                 <div
-                  className="flex flex-col overflow-hidden rounded-xl border border-(--sp-line) bg-white"
+                  className="flex flex-col overflow-hidden rounded-xl border border-(--admin-border) bg-white"
                   key={asset.id}
                 >
-                  <div className="aspect-4/3 w-full overflow-hidden bg-(--sp-subtle)">
+                  <div className="aspect-4/3 w-full overflow-hidden bg-(--admin-surface-muted)">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       alt={asset.originalFileName}
@@ -149,12 +152,12 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
                   <div className="flex flex-1 flex-col justify-between gap-2 p-3">
                     <div>
                       <p
-                        className="truncate text-xs font-semibold text-(--sp-ink)"
+                        className="truncate text-xs font-semibold text-(--admin-ink)"
                         title={asset.originalFileName}
                       >
                         {asset.originalFileName}
                       </p>
-                      <p className="text-[11px] text-(--sp-ink-3)">
+                      <p className="text-[11px] text-(--admin-muted)">
                         {formatBytes(asset.byteLength)} ·{" "}
                         {used
                           ? `Đang dùng (${asset.usageCount} bài)`
@@ -162,7 +165,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
                       </p>
                     </div>
                     <button
-                      className="w-full rounded-md border border-(--sp-line) py-1 text-xs font-semibold text-(--sp-danger) hover:bg-(--sp-danger-bg) disabled:cursor-not-allowed disabled:opacity-40"
+                      className="w-full rounded-md border border-(--admin-border) py-1 text-xs font-semibold text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={used}
                       onClick={() => void handleDelete(asset)}
                       title={
@@ -183,7 +186,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
 
         {data ? (
           <KnowledgePagination
-            className="mt-5 border-t border-(--sp-line) pt-3"
+            className="mt-5 border-t border-(--admin-border) pt-3"
             hasNextPage={data.hasNextPage}
             hasPreviousPage={data.hasPreviousPage}
             itemLabel="ảnh"

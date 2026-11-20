@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import {
+  adminInput,
+  adminTextarea,
+} from "@/features/admin/components/content/admin-styles";
+import { toast } from "@/shared/ui/toast";
 import {
   archiveKnowledgeArticle,
   createKnowledgeArticle,
@@ -214,7 +218,7 @@ export function KnowledgeArticleEditorPage({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-12 text-center text-sm text-(--sp-ink-2)">
+      <div className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-12 text-center text-sm text-(--admin-muted)">
         Đang tải trình soạn thảo bài viết...
       </div>
     );
@@ -248,16 +252,16 @@ export function KnowledgeArticleEditorPage({
         />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-4 rounded-2xl border border-(--sp-line) bg-(--sp-surface) p-5 shadow-sm">
+          <div className="space-y-4 rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
             <div>
               <label
-                className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+                className="block text-xs font-semibold text-(--admin-ink-soft)"
                 htmlFor="article-title"
               >
                 Tiêu đề bài viết *
               </label>
               <input
-                className="w-full rounded-lg border border-(--sp-input-line) px-3.5 py-2.5 text-base font-bold text-(--sp-ink) outline-none focus:border-(--sp-brand)"
+                className={`${adminInput} text-base font-bold text-(--admin-ink)`}
                 id="article-title"
                 maxLength={200}
                 onChange={(e) => setTitle(e.target.value)}
@@ -268,13 +272,13 @@ export function KnowledgeArticleEditorPage({
 
             <div>
               <label
-                className="mb-1 block text-xs font-semibold text-(--sp-ink-2)"
+                className="block text-xs font-semibold text-(--admin-ink-soft)"
                 htmlFor="article-summary"
               >
                 Tóm tắt ngắn (Summary) *
               </label>
               <textarea
-                className="w-full rounded-lg border border-(--sp-input-line) px-3.5 py-2 text-sm outline-none focus:border-(--sp-brand)"
+                className={`${adminTextarea} min-h-18 text-sm text-(--admin-ink)`}
                 id="article-summary"
                 maxLength={500}
                 onChange={(e) => setSummary(e.target.value)}
@@ -285,7 +289,7 @@ export function KnowledgeArticleEditorPage({
             </div>
 
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-(--sp-ink-2)">
+              <span className="mb-1.5 block text-xs font-semibold text-(--admin-ink-soft)">
                 Nội dung bài viết (Rich Text Editor) *
               </span>
               <KnowledgeTiptapEditor onChange={setContent} value={content} />

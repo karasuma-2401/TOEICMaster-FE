@@ -2,7 +2,7 @@
 
 import type { Editor } from "@tiptap/react";
 import { useRef, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/shared/ui/toast";
 
 interface KnowledgeTiptapToolbarProps {
   editor: Editor | null;
@@ -51,13 +51,13 @@ export function KnowledgeTiptapToolbar({
   const toolBtn = (active: boolean) =>
     `rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
       active
-        ? "bg-(--sp-brand) text-white"
-        : "text-(--sp-ink) hover:bg-(--sp-subtle)"
+        ? "bg-(--admin-brand-red) text-white"
+        : "text-(--admin-ink) hover:bg-(--admin-surface-muted)"
     }`;
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 border-b border-(--sp-line) bg-(--sp-subtle) px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-(--admin-border) bg-(--admin-surface-muted) px-3 py-2">
         <button
           className={toolBtn(Boolean(editor?.isActive("paragraph")))}
           onClick={() => editor?.chain().focus().setParagraph().run()}
@@ -78,7 +78,7 @@ export function KnowledgeTiptapToolbar({
           </button>
         ))}
 
-        <span className="mx-1 h-4 w-px bg-(--sp-line)" />
+        <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
           className={toolBtn(Boolean(editor?.isActive("bold")))}
@@ -113,7 +113,7 @@ export function KnowledgeTiptapToolbar({
           {"</>"}
         </button>
 
-        <span className="mx-1 h-4 w-px bg-(--sp-line)" />
+        <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
           className={toolBtn(Boolean(editor?.isActive("bulletList")))}
@@ -144,7 +144,7 @@ export function KnowledgeTiptapToolbar({
           ― Kẻ ngang
         </button>
 
-        <span className="mx-1 h-4 w-px bg-(--sp-line)" />
+        <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
           className={toolBtn(Boolean(editor?.isActive("link")) || linkOpen)}
@@ -185,7 +185,7 @@ export function KnowledgeTiptapToolbar({
           Thư viện ảnh
         </button>
 
-        <span className="mx-1 h-4 w-px bg-(--sp-line)" />
+        <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
           className={`${toolBtn(false)} disabled:opacity-40`}
@@ -206,9 +206,9 @@ export function KnowledgeTiptapToolbar({
       </div>
 
       {linkOpen ? (
-        <div className="flex flex-wrap items-center gap-2 border-b border-(--sp-line) bg-(--sp-cream) px-4 py-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-(--admin-border) bg-(--admin-row-hover) px-4 py-2">
           <input
-            className="min-w-[240px] flex-1 rounded-md border border-(--sp-input-line) bg-white px-2.5 py-1 text-xs outline-none focus:border-(--sp-brand)"
+            className="min-w-60 flex-1 rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs outline-none focus:border-(--admin-brand-orange)"
             onChange={(e) => setLinkUrl(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -221,14 +221,14 @@ export function KnowledgeTiptapToolbar({
             value={linkUrl}
           />
           <button
-            className="rounded-md bg-(--sp-brand) px-3 py-1 text-xs font-semibold text-white"
+            className="admin-primary-action rounded-md px-3 py-1 text-xs font-bold"
             onClick={applyLink}
             type="button"
           >
             Áp dụng
           </button>
           <button
-            className="rounded-md border border-(--sp-line) bg-white px-2.5 py-1 text-xs text-(--sp-ink-2)"
+            className="rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs text-(--admin-ink-soft) hover:bg-(--admin-surface-muted)"
             onClick={() => {
               editor?.chain().focus().extendMarkRange("link").unsetLink().run();
               setLinkOpen(false);

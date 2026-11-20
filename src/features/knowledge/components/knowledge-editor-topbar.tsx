@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { adminFocus } from "@/features/admin/components/content/admin-styles";
 import type { KnowledgeArticleDetail, KnowledgeArticleStatus } from "../types";
 
 interface KnowledgeEditorTopbarProps {
@@ -29,19 +30,19 @@ export function KnowledgeEditorTopbar({
   onStatusAction,
 }: KnowledgeEditorTopbarProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--sp-line) bg-(--sp-surface) px-5 py-3.5 shadow-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--admin-border) bg-(--admin-surface) px-5 py-3.5 shadow-sm">
       <div className="flex items-center gap-3">
         <Link
-          className="rounded-lg border border-(--sp-line) px-3 py-1.5 text-xs font-semibold text-(--sp-ink-2) hover:bg-(--sp-subtle)"
+          className={`rounded-lg border border-(--admin-border) bg-white px-3 py-1.5 text-xs font-semibold text-(--admin-ink-soft) transition hover:bg-(--admin-surface-muted) ${adminFocus}`}
           href="/admin/knowledge"
         >
           ← Danh sách
         </Link>
         <div>
-          <h1 className="text-base font-bold text-(--sp-ink)">
+          <h1 className="text-base font-bold text-(--admin-ink)">
             {article ? "Chỉnh sửa bài viết" : "Tạo bài viết kiến thức mới"}
           </h1>
-          <p className="text-xs text-(--sp-ink-3)">
+          <p className="text-xs text-(--admin-muted)">
             Trạng thái: <strong>{currentStatus}</strong> · {liveReadMinutes}{" "}
             phút đọc · {tocCount} mục lục
           </p>
@@ -49,12 +50,12 @@ export function KnowledgeEditorTopbar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex rounded-lg border border-(--sp-line) bg-(--sp-subtle) p-0.5 text-xs font-semibold">
+        <div className="flex rounded-lg border border-(--admin-border) bg-(--admin-surface-muted) p-0.5 text-xs font-semibold">
           <button
-            className={`rounded-md px-3 py-1.5 transition ${
+            className={`rounded-md px-3 py-1.5 transition ${adminFocus} ${
               mode === "edit"
-                ? "bg-white text-(--sp-ink) shadow-sm"
-                : "text-(--sp-ink-2)"
+                ? "bg-white text-(--admin-ink) shadow-sm"
+                : "text-(--admin-muted) hover:text-(--admin-ink-soft)"
             }`}
             onClick={() => onModeChange("edit")}
             type="button"
@@ -62,10 +63,10 @@ export function KnowledgeEditorTopbar({
             Soạn thảo
           </button>
           <button
-            className={`rounded-md px-3 py-1.5 transition ${
+            className={`rounded-md px-3 py-1.5 transition ${adminFocus} ${
               mode === "preview"
-                ? "bg-white text-(--sp-brand) shadow-sm"
-                : "text-(--sp-ink-2)"
+                ? "bg-white text-(--admin-brand-red) shadow-sm"
+                : "text-(--admin-muted) hover:text-(--admin-ink-soft)"
             }`}
             onClick={() => onModeChange("preview")}
             type="button"
@@ -75,7 +76,7 @@ export function KnowledgeEditorTopbar({
         </div>
 
         <button
-          className="rounded-lg bg-(--sp-brand) px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className={`admin-primary-action rounded-lg px-4 py-2 text-xs font-bold ${adminFocus}`}
           disabled={saving}
           onClick={onSave}
           type="button"
@@ -87,7 +88,7 @@ export function KnowledgeEditorTopbar({
           <>
             {article.status !== "Published" ? (
               <button
-                className="rounded-lg bg-(--sp-success) px-3.5 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                className={`rounded-lg bg-(--admin-success) px-3.5 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 ${adminFocus}`}
                 disabled={saving}
                 onClick={() => onStatusAction("publish")}
                 type="button"
@@ -96,7 +97,7 @@ export function KnowledgeEditorTopbar({
               </button>
             ) : (
               <button
-                className="rounded-lg bg-(--sp-warning-bg) px-3.5 py-2 text-xs font-semibold text-(--sp-warning) hover:opacity-90 disabled:opacity-50"
+                className={`rounded-lg bg-(--admin-warning-soft) px-3.5 py-2 text-xs font-semibold text-(--admin-warning) hover:opacity-90 disabled:opacity-50 ${adminFocus}`}
                 disabled={saving}
                 onClick={() => onStatusAction("unpublish")}
                 type="button"
@@ -106,7 +107,7 @@ export function KnowledgeEditorTopbar({
             )}
             {article.status !== "Archived" ? (
               <button
-                className="rounded-lg border border-(--sp-line) px-3 py-2 text-xs font-semibold text-(--sp-ink-2) hover:bg-(--sp-subtle)"
+                className={`rounded-lg border border-(--admin-border) bg-white px-3 py-2 text-xs font-semibold text-(--admin-ink-soft) hover:bg-(--admin-surface-muted) ${adminFocus}`}
                 disabled={saving}
                 onClick={() => onStatusAction("archive")}
                 type="button"
@@ -115,7 +116,7 @@ export function KnowledgeEditorTopbar({
               </button>
             ) : null}
             <button
-              className="rounded-lg border border-(--sp-line) px-3 py-2 text-xs font-semibold text-(--sp-danger) hover:bg-(--sp-danger-bg) disabled:cursor-not-allowed disabled:opacity-40"
+              className={`rounded-lg border border-(--admin-border) bg-white px-3 py-2 text-xs font-semibold text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40 ${adminFocus}`}
               disabled={saving || article.status === "Published"}
               onClick={() => onStatusAction("delete")}
               title={

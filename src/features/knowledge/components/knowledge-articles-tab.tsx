@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/shared/ui/toast";
 import {
   archiveKnowledgeArticle,
   deleteKnowledgeArticle,
@@ -114,11 +114,14 @@ export function KnowledgeArticlesTab({
     }
   }
 
+  const fieldClass =
+    "h-10 rounded-xl border border-(--admin-border) bg-white px-3 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100";
+
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--sp-line) bg-(--sp-surface) p-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-(--admin-border) bg-(--admin-surface) p-4 sm:grid-cols-2 lg:grid-cols-5">
         <input
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm outline-none focus:border-(--sp-brand)"
+          className={fieldClass}
           onChange={(e) => {
             setQuery(e.target.value);
             setPageNumber(1);
@@ -129,7 +132,7 @@ export function KnowledgeArticlesTab({
         />
         <select
           aria-label="Lọc theo kỹ năng"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setSkill(e.target.value);
             setPageNumber(1);
@@ -145,7 +148,7 @@ export function KnowledgeArticlesTab({
         </select>
         <select
           aria-label="Lọc theo danh mục"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setCategoryId(e.target.value);
             setPageNumber(1);
@@ -161,7 +164,7 @@ export function KnowledgeArticlesTab({
         </select>
         <select
           aria-label="Lọc theo trạng thái"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setStatus(e.target.value);
             setPageNumber(1);
@@ -177,7 +180,7 @@ export function KnowledgeArticlesTab({
         </select>
         <select
           aria-label="Sắp xếp bài viết"
-          className="rounded-lg border border-(--sp-input-line) bg-white px-3 py-2 text-sm"
+          className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
             setPageNumber(1);
@@ -191,18 +194,18 @@ export function KnowledgeArticlesTab({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-(--sp-line) bg-(--sp-surface) shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-sm">
         {loading ? (
-          <p className="py-12 text-center text-sm text-(--sp-ink-2)">
+          <p className="py-12 text-center text-sm text-(--admin-muted)">
             Đang tải danh sách bài viết...
           </p>
         ) : !data || data.items.length === 0 ? (
           <div className="py-14 text-center">
-            <p className="text-sm text-(--sp-ink-2)">
+            <p className="text-sm text-(--admin-muted)">
               Chưa có bài viết nào khớp với bộ lọc hiện tại.
             </p>
             <Link
-              className="mt-3 inline-block rounded-lg bg-(--sp-orange-soft) px-4 py-2 text-sm font-semibold text-(--sp-brand) hover:bg-(--sp-brand) hover:text-white"
+              className="admin-primary-action mt-3 inline-flex rounded-lg px-4 py-2 text-sm font-bold"
               href="/admin/knowledge/new"
             >
               + Viết bài kiến thức đầu tiên
@@ -211,7 +214,7 @@ export function KnowledgeArticlesTab({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-(--sp-line) bg-(--sp-subtle) text-xs font-bold uppercase text-(--sp-ink-2)">
+              <thead className="border-b border-(--admin-border) bg-(--admin-surface-muted) text-xs font-bold uppercase text-(--admin-muted)">
                 <tr>
                   <th className="px-4 py-3">Bài viết</th>
                   <th className="px-4 py-3">Phân loại</th>
@@ -220,31 +223,31 @@ export function KnowledgeArticlesTab({
                   <th className="px-4 py-3 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-(--sp-line)">
+              <tbody className="divide-y divide-(--admin-border)">
                 {data.items.map((article) => (
-                  <tr className="hover:bg-(--sp-row-hover)" key={article.id}>
+                  <tr className="hover:bg-(--admin-row-hover)" key={article.id}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {article.coverImageAssetId ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             alt={article.coverImageAlt || article.title}
-                            className="h-12 w-16 shrink-0 rounded-lg border border-(--sp-line) object-cover"
+                            className="h-12 w-16 shrink-0 rounded-lg border border-(--admin-border) object-cover"
                             src={toAdminBffMediaUrl(article.coverImageAssetId)}
                           />
                         ) : (
-                          <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg border border-(--sp-line) bg-(--sp-subtle) text-[10px] text-(--sp-ink-3)">
+                          <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg border border-(--admin-border) bg-(--admin-surface-muted) text-[10px] text-(--admin-muted)">
                             Không ảnh
                           </div>
                         )}
                         <div className="min-w-0">
                           <Link
-                            className="block truncate font-semibold text-(--sp-ink) hover:text-(--sp-brand)"
+                            className="block truncate font-semibold text-(--admin-ink) hover:text-(--admin-brand-red)"
                             href={`/admin/knowledge/${article.id}`}
                           >
                             {article.title}
                           </Link>
-                          <p className="truncate text-xs text-(--sp-ink-3)">
+                          <p className="truncate text-xs text-(--admin-muted)">
                             /{article.slug} · {article.estimatedReadMinutes}{" "}
                             phút đọc
                           </p>
@@ -253,10 +256,10 @@ export function KnowledgeArticlesTab({
                     </td>
                     <td aria-label="Phân loại" className="px-4 py-3">
                       <div className="flex flex-col gap-1">
-                        <span className="inline-flex w-fit rounded-md bg-(--sp-orange-soft) px-2 py-0.5 text-xs font-semibold text-(--sp-brand)">
+                        <span className="inline-flex w-fit rounded-md bg-(--admin-nav-active) px-2 py-0.5 text-xs font-semibold text-(--admin-brand-red)">
                           {article.skill}
                         </span>
-                        <span className="text-xs text-(--sp-ink-2)">
+                        <span className="text-xs text-(--admin-ink-soft)">
                           {article.categoryName}
                         </span>
                       </div>
@@ -264,20 +267,20 @@ export function KnowledgeArticlesTab({
                     <td className="px-4 py-3">
                       <KnowledgeStatusBadge status={article.status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-(--sp-ink-2)">
+                    <td className="px-4 py-3 text-xs text-(--admin-muted)">
                       {formatDateTimeVi(article.updatedAtUtc)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex flex-wrap justify-end gap-1.5">
                         <Link
-                          className="rounded-md border border-(--sp-line) bg-white px-2.5 py-1 text-xs font-semibold text-(--sp-ink) hover:bg-(--sp-subtle)"
+                          className="rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) hover:bg-(--admin-surface-muted)"
                           href={`/admin/knowledge/${article.id}`}
                         >
                           Sửa
                         </Link>
                         {article.status !== "Published" ? (
                           <button
-                            className="rounded-md bg-(--sp-success-bg) px-2.5 py-1 text-xs font-semibold text-(--sp-success) hover:opacity-85"
+                            className="rounded-md bg-(--admin-success-soft) px-2.5 py-1 text-xs font-semibold text-(--admin-success) hover:opacity-85"
                             onClick={() =>
                               void handleAction(article, "publish")
                             }
@@ -287,7 +290,7 @@ export function KnowledgeArticlesTab({
                           </button>
                         ) : (
                           <button
-                            className="rounded-md bg-(--sp-warning-bg) px-2.5 py-1 text-xs font-semibold text-(--sp-warning) hover:opacity-85"
+                            className="rounded-md bg-(--admin-warning-soft) px-2.5 py-1 text-xs font-semibold text-(--admin-warning) hover:opacity-85"
                             onClick={() =>
                               void handleAction(article, "unpublish")
                             }
@@ -298,7 +301,7 @@ export function KnowledgeArticlesTab({
                         )}
                         {article.status !== "Archived" ? (
                           <button
-                            className="rounded-md border border-(--sp-line) px-2.5 py-1 text-xs text-(--sp-ink-2) hover:bg-(--sp-subtle)"
+                            className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-ink-soft) hover:bg-(--admin-surface-muted)"
                             onClick={() =>
                               void handleAction(article, "archive")
                             }
@@ -308,7 +311,7 @@ export function KnowledgeArticlesTab({
                           </button>
                         ) : null}
                         <button
-                          className="rounded-md border border-(--sp-line) px-2.5 py-1 text-xs text-(--sp-danger) hover:bg-(--sp-danger-bg) disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={article.status === "Published"}
                           onClick={() => void handleAction(article, "delete")}
                           title={
