@@ -2,6 +2,7 @@ export interface AuthenticatedUser {
   id: string;
   displayName: string;
   email: string;
+  role?: "USER" | "ADMIN";
 }
 
 export type SessionState =
@@ -34,7 +35,22 @@ function userFrom(value: unknown): AuthenticatedUser | null {
     typeof value.email !== "string"
   )
     return null;
-  return { id: value.id, displayName: value.displayName, email: value.email };
+  const role =
+    value.role === "ADMIN" || value.role === "USER" ? value.role : undefined;
+  return {
+    id: value.id,
+    displayName: value.displayName,
+    email: value.email,
+    ...(role ? { role } : {}),
+  };
+}
+
+export function resolveLoginDestination(
+  user: AuthenticatedUser,
+  returnTo: string,
+): string {
+  if (user.role === "ADMIN" && returnTo === "/") return "/admin";
+  return returnTo;
 }
 
 async function errorFrom(response: Response): Promise<AuthError> {

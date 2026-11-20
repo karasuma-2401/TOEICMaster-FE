@@ -98,4 +98,28 @@ describe("LoginPanel", () => {
       screen.getByText("Đăng nhập bằng Google chưa được cấu hình."),
     ).toBeInTheDocument();
   });
+
+  it("redirects ADMIN users to /admin when no explicit next path is set", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          user: {
+            id: "admin-id",
+            displayName: "Admin",
+            email: "admin@example.com",
+            role: "ADMIN",
+          },
+        }),
+      ),
+    );
+    render(<LoginPanel />);
+
+    await user.type(screen.getByLabelText("Email"), "admin@example.com");
+    await user.type(screen.getByLabelText("Mật khẩu"), "password");
+    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    expect(navigation.replace).toHaveBeenCalledWith("/admin");
+  });
 });

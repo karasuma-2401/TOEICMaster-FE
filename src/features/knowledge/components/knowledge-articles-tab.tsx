@@ -21,12 +21,30 @@ import {
   type PageResult,
 } from "../types";
 import {
+  KnowledgeConfirmDialog,
   KnowledgePagination,
   KnowledgeStatusBadge,
 } from "./knowledge-ui-primitives";
 
 interface KnowledgeArticlesTabProps {
   categories: KnowledgeCategory[];
+}
+
+function ActionIcon({ d }: { d: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.85}
+      viewBox="0 0 24 24"
+    >
+      <path d={d} />
+    </svg>
+  );
 }
 
 export function KnowledgeArticlesTab({
@@ -43,6 +61,9 @@ export function KnowledgeArticlesTab({
   );
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+  const [confirmDeleteArticle, setConfirmDeleteArticle] =
+    useState<KnowledgeArticleSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,10 +105,8 @@ export function KnowledgeArticlesTab({
     article: KnowledgeArticleSummary,
     action: "publish" | "unpublish" | "archive" | "delete",
   ) {
-    if (
-      action === "delete" &&
-      !window.confirm(`Xóa vĩnh viễn bài viết "${article.title}"?`)
-    ) {
+    if (action === "delete") {
+      setConfirmDeleteArticle(article);
       return;
     }
     try {
@@ -100,9 +119,6 @@ export function KnowledgeArticlesTab({
       } else if (action === "archive") {
         await archiveKnowledgeArticle(article.id, article.version);
         toast.success("Đã chuyển bài viết sang lưu trữ.");
-      } else {
-        await deleteKnowledgeArticle(article.id, article.version);
-        toast.success("Đã xóa bài viết.");
       }
       setTick((t) => t + 1);
     } catch (err) {
@@ -111,6 +127,28 @@ export function KnowledgeArticlesTab({
           ? err.message
           : "Không thể thực hiện thao tác.",
       );
+    }
+  }
+
+  async function confirmDelete() {
+    if (!confirmDeleteArticle) return;
+    setDeleting(true);
+    try {
+      await deleteKnowledgeArticle(
+        confirmDeleteArticle.id,
+        confirmDeleteArticle.version,
+      );
+      toast.success("Đã xóa bài viết.");
+      setConfirmDeleteArticle(null);
+      setTick((t) => t + 1);
+    } catch (err) {
+      toast.error(
+        err instanceof KnowledgeApiError
+          ? err.message
+          : "Không thể xóa bài viết.",
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -248,7 +286,7 @@ export function KnowledgeArticlesTab({
                             {article.title}
                           </Link>
                           <p className="truncate text-xs text-(--admin-muted)">
-                            /{article.slug} · {article.estimatedReadMinutes}{" "}
+                            /{article.slug} - {article.estimatedReadMinutes}{" "}
                             phút đọc
                           </p>
                         </div>
@@ -264,54 +302,63 @@ export function KnowledgeArticlesTab({
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="whitespace-nowrap px-4 py-3">
                       <KnowledgeStatusBadge status={article.status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-(--admin-muted)">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-(--admin-muted)">
                       {formatDateTimeVi(article.updatedAtUtc)}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex flex-wrap justify-end gap-1.5">
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <div className="inline-grid grid-cols-2 gap-1.5">
                         <Link
-                          className="rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+                          aria-label="Chỉnh sửa bài viết"
+                          className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-ink-soft) transition duration-150 hover:border-(--admin-brand-orange) hover:bg-(--admin-row-hover) hover:text-(--admin-brand-red) hover:shadow-xs active:scale-95"
                           href={`/admin/knowledge/${article.id}`}
+                          title="Chỉnh sửa bài viết"
                         >
-                          Sửa
+                          <ActionIcon d="M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
                         </Link>
                         {article.status !== "Published" ? (
                           <button
-                            className="rounded-md bg-(--admin-success-soft) px-2.5 py-1 text-xs font-semibold text-(--admin-success) hover:opacity-85"
+                            aria-label="Xuất bản bài viết"
+                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-success)/25 bg-(--admin-success-soft) text-(--admin-success) transition duration-150 hover:bg-(--admin-success) hover:text-white hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "publish")
                             }
+                            title="Xuất bản bài viết"
                             type="button"
                           >
-                            Xuất bản
+                            <ActionIcon d="M5 13l4 4L19 7" />
                           </button>
                         ) : (
                           <button
-                            className="rounded-md bg-(--admin-warning-soft) px-2.5 py-1 text-xs font-semibold text-(--admin-warning) hover:opacity-85"
+                            aria-label="Gỡ bài viết về bản nháp"
+                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-warning)/25 bg-(--admin-warning-soft) text-(--admin-warning) transition duration-150 hover:bg-(--admin-warning) hover:text-white hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "unpublish")
                             }
+                            title="Gỡ về bản nháp"
                             type="button"
                           >
-                            Gỡ
+                            <ActionIcon d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5" />
                           </button>
                         )}
                         {article.status !== "Archived" ? (
                           <button
-                            className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-ink-soft) hover:bg-(--admin-surface-muted)"
+                            aria-label="Lưu trữ bài viết"
+                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-ink-soft) transition duration-150 hover:border-(--admin-ink-soft)/40 hover:bg-(--admin-surface-muted) hover:text-(--admin-ink) hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "archive")
                             }
+                            title="Chuyển vào lưu trữ"
                             type="button"
                           >
-                            Lưu trữ
+                            <ActionIcon d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm1-4h16l1 4H3l1-4Zm6 9h4" />
                           </button>
                         ) : null}
                         <button
-                          className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
+                          aria-label="Xóa bài viết"
+                          className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-danger) transition duration-150 hover:border-(--admin-danger) hover:bg-(--admin-danger) hover:text-white hover:shadow-xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--admin-border) disabled:hover:bg-white disabled:hover:text-(--admin-danger) disabled:hover:shadow-none"
                           disabled={article.status === "Published"}
                           onClick={() => void handleAction(article, "delete")}
                           title={
@@ -321,7 +368,7 @@ export function KnowledgeArticlesTab({
                           }
                           type="button"
                         >
-                          Xóa
+                          <ActionIcon d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v6M14 11v6" />
                         </button>
                       </div>
                     </td>
@@ -344,6 +391,16 @@ export function KnowledgeArticlesTab({
           />
         ) : null}
       </div>
+
+      <KnowledgeConfirmDialog
+        confirmLabel="Xóa bài viết"
+        description={`Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${confirmDeleteArticle?.title ?? ""}"? Hành động này không thể hoàn tác.`}
+        onCancel={() => setConfirmDeleteArticle(null)}
+        onConfirm={() => void confirmDelete()}
+        open={Boolean(confirmDeleteArticle)}
+        pending={deleting}
+        title="Xác nhận xóa bài viết"
+      />
     </section>
   );
 }

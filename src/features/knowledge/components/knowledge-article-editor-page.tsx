@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   adminInput,
   adminTextarea,
@@ -38,6 +38,7 @@ import { KnowledgeEditorSidebar } from "./knowledge-editor-sidebar";
 import { KnowledgeEditorTopbar } from "./knowledge-editor-topbar";
 import { KnowledgeMediaPickerModal } from "./knowledge-media-picker-modal";
 import { KnowledgeTiptapEditor } from "./knowledge-tiptap-editor";
+import { KnowledgeConfirmDialog } from "./knowledge-ui-primitives";
 
 interface KnowledgeArticleEditorPageProps {
   articleId?: string;
@@ -69,6 +70,7 @@ export function KnowledgeArticleEditorPage({
   const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState<TiptapDoc>(EMPTY_TIPTAP_DOC);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const applyDetail = useCallback((detail: KnowledgeArticleDetail) => {
     setArticle(detail);
@@ -123,6 +125,44 @@ export function KnowledgeArticleEditorPage({
   const liveToc = extractTocFromDoc(content);
   const liveReadMinutes = estimateReadMinutes(content);
   const currentStatus: KnowledgeArticleStatus = article?.status ?? "Draft";
+
+  const hasChanges = useMemo(() => {
+    if (!article) return true;
+    const initialSnapshot = JSON.stringify({
+      title: article.title,
+      slug: article.slug,
+      summary: article.summary,
+      skill: article.skill,
+      categoryId: article.categoryId,
+      coverImageAssetId: article.coverImageAssetId,
+      coverImageAlt: article.coverImageAlt ?? "",
+      tags: article.tags.map((t) => t.name),
+      content: article.content ?? EMPTY_TIPTAP_DOC,
+    });
+    const currentSnapshot = JSON.stringify({
+      title,
+      slug,
+      summary,
+      skill,
+      categoryId,
+      coverImageAssetId,
+      coverImageAlt,
+      tags,
+      content,
+    });
+    return initialSnapshot !== currentSnapshot;
+  }, [
+    article,
+    categoryId,
+    content,
+    coverImageAlt,
+    coverImageAssetId,
+    skill,
+    slug,
+    summary,
+    tags,
+    title,
+  ]);
 
   async function handleSave() {
     if (!title.trim()) {
@@ -180,10 +220,8 @@ export function KnowledgeArticleEditorPage({
     action: "publish" | "unpublish" | "archive" | "delete",
   ) {
     if (!article) return;
-    if (
-      action === "delete" &&
-      !window.confirm(`Xóa vĩnh viễn bài viết "${article.title}"?`)
-    ) {
+    if (action === "delete") {
+      setDeleteDialogOpen(true);
       return;
     }
 
@@ -200,16 +238,31 @@ export function KnowledgeArticleEditorPage({
       } else if (action === "archive") {
         applyDetail(await archiveKnowledgeArticle(article.id, article.version));
         toast.success("Đã chuyển bài viết vào lưu trữ.");
-      } else {
-        await deleteKnowledgeArticle(article.id, article.version);
-        toast.success("Đã xóa bài viết.");
-        router.push("/admin/knowledge");
       }
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
           : "Không thể cập nhật trạng thái bài viết.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function confirmDeleteArticle() {
+    if (!article) return;
+    setSaving(true);
+    try {
+      await deleteKnowledgeArticle(article.id, article.version);
+      toast.success("Đã xóa bài viết.");
+      setDeleteDialogOpen(false);
+      router.push("/admin/knowledge");
+    } catch (err) {
+      toast.error(
+        err instanceof KnowledgeApiError
+          ? err.message
+          : "Không thể xóa bài viết.",
       );
     } finally {
       setSaving(false);
@@ -229,6 +282,7 @@ export function KnowledgeArticleEditorPage({
       <KnowledgeEditorTopbar
         article={article}
         currentStatus={currentStatus}
+        hasChanges={hasChanges}
         liveReadMinutes={liveReadMinutes}
         mode={mode}
         onModeChange={setMode}
@@ -329,6 +383,16 @@ export function KnowledgeArticleEditorPage({
         }}
         open={coverPickerOpen}
         title="Chọn ảnh bìa bài viết"
+      />
+
+      <KnowledgeConfirmDialog
+        confirmLabel="Xóa bài viết"
+        description={`Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${article?.title ?? ""}"? Hành động này không thể hoàn tác.`}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={() => void confirmDeleteArticle()}
+        open={deleteDialogOpen}
+        pending={saving}
+        title="Xác nhận xóa bài viết"
       />
     </div>
   );
