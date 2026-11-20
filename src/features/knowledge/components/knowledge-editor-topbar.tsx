@@ -11,6 +11,7 @@ interface KnowledgeEditorTopbarProps {
   tocCount: number;
   mode: "edit" | "preview";
   saving: boolean;
+  hasChanges: boolean;
   onModeChange: (mode: "edit" | "preview") => void;
   onSave: () => void;
   onStatusAction: (
@@ -25,10 +26,13 @@ export function KnowledgeEditorTopbar({
   tocCount,
   mode,
   saving,
+  hasChanges,
   onModeChange,
   onSave,
   onStatusAction,
 }: KnowledgeEditorTopbarProps) {
+  const saveDisabled = saving || (Boolean(article) && !hasChanges);
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--admin-border) bg-(--admin-surface) px-5 py-3.5 shadow-sm">
       <div className="flex items-center gap-3">
@@ -43,8 +47,8 @@ export function KnowledgeEditorTopbar({
             {article ? "Chỉnh sửa bài viết" : "Tạo bài viết kiến thức mới"}
           </h1>
           <p className="text-xs text-(--admin-muted)">
-            Trạng thái: <strong>{currentStatus}</strong> · {liveReadMinutes}{" "}
-            phút đọc · {tocCount} mục lục
+            Trạng thái: <strong>{currentStatus}</strong> - {liveReadMinutes}{" "}
+            phút đọc - {tocCount} mục lục
           </p>
         </div>
       </div>
@@ -52,7 +56,7 @@ export function KnowledgeEditorTopbar({
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex rounded-lg border border-(--admin-border) bg-(--admin-surface-muted) p-0.5 text-xs font-semibold">
           <button
-            className={`rounded-md px-3 py-1.5 transition ${adminFocus} ${
+            className={`cursor-pointer rounded-md px-3 py-1.5 transition ${adminFocus} ${
               mode === "edit"
                 ? "bg-white text-(--admin-ink) shadow-sm"
                 : "text-(--admin-muted) hover:text-(--admin-ink-soft)"
@@ -63,7 +67,7 @@ export function KnowledgeEditorTopbar({
             Soạn thảo
           </button>
           <button
-            className={`rounded-md px-3 py-1.5 transition ${adminFocus} ${
+            className={`cursor-pointer rounded-md px-3 py-1.5 transition ${adminFocus} ${
               mode === "preview"
                 ? "bg-white text-(--admin-brand-red) shadow-sm"
                 : "text-(--admin-muted) hover:text-(--admin-ink-soft)"
@@ -76,9 +80,16 @@ export function KnowledgeEditorTopbar({
         </div>
 
         <button
-          className={`admin-primary-action rounded-lg px-4 py-2 text-xs font-bold ${adminFocus}`}
-          disabled={saving}
+          className={`admin-primary-action cursor-pointer rounded-lg px-4 py-2 text-xs font-bold ${adminFocus}`}
+          disabled={saveDisabled}
           onClick={onSave}
+          title={
+            article && !hasChanges
+              ? "Chưa có thay đổi nào để lưu"
+              : article
+                ? "Lưu thay đổi bài viết"
+                : "Lưu bài viết bản nháp"
+          }
           type="button"
         >
           {saving ? "Đang lưu..." : article ? "Lưu thay đổi" : "Lưu bản nháp"}

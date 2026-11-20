@@ -121,7 +121,7 @@ export function KnowledgeTiptapEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-(--admin-border) bg-white">
+    <div className="rounded-xl border border-(--admin-border) bg-white">
       <KnowledgeTiptapToolbar
         editor={editor}
         onDirectImageUpload={(file) => void handleDirectImageUpload(file)}
@@ -129,7 +129,7 @@ export function KnowledgeTiptapEditor({
         uploading={uploading}
       />
 
-      <div className="kn-prose px-5 py-4">
+      <div className="kn-prose rounded-b-xl px-5 py-4">
         <EditorContent editor={editor} />
       </div>
 

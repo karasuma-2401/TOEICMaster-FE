@@ -10,7 +10,10 @@ import {
 import { KnowledgeApiError } from "../http";
 import { formatBytes } from "../tiptap-utils";
 import type { KnowledgeMediaAsset, PageResult } from "../types";
-import { KnowledgePagination } from "./knowledge-ui-primitives";
+import {
+  KnowledgeConfirmDialog,
+  KnowledgePagination,
+} from "./knowledge-ui-primitives";
 
 interface KnowledgeMediaTabProps {
   refreshSignal: number;
@@ -26,6 +29,9 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
   );
   const [loading, setLoading] = useState(true);
   const [localTick, setLocalTick] = useState(0);
+  const [confirmDeleteAsset, setConfirmDeleteAsset] =
+    useState<KnowledgeMediaAsset | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -64,11 +70,13 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
     };
   }, [localTick, pageNumber, query, refreshSignal, sort, unusedOnly]);
 
-  async function handleDelete(asset: KnowledgeMediaAsset) {
-    if (!window.confirm(`Xóa hình ảnh "${asset.originalFileName}"?`)) return;
+  async function confirmDelete() {
+    if (!confirmDeleteAsset) return;
+    setDeleting(true);
     try {
-      await deleteKnowledgeMedia(asset.id);
+      await deleteKnowledgeMedia(confirmDeleteAsset.id);
       toast.success("Đã xóa hình ảnh.");
+      setConfirmDeleteAsset(null);
       setLocalTick((t) => t + 1);
     } catch (err) {
       toast.error(
@@ -76,6 +84,8 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
           ? err.message
           : "Không thể xóa hình ảnh.",
       );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -158,16 +168,16 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
                         {asset.originalFileName}
                       </p>
                       <p className="text-[11px] text-(--admin-muted)">
-                        {formatBytes(asset.byteLength)} ·{" "}
+                        {formatBytes(asset.byteLength)} -{" "}
                         {used
                           ? `Đang dùng (${asset.usageCount} bài)`
                           : "Chưa dùng"}
                       </p>
                     </div>
                     <button
-                      className="w-full rounded-md border border-(--admin-border) py-1 text-xs font-semibold text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
+                      className="w-full cursor-pointer rounded-md border border-(--admin-border) bg-white py-1 text-xs font-semibold text-(--admin-danger) transition duration-150 hover:border-(--admin-danger) hover:bg-(--admin-danger) hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--admin-border) disabled:hover:bg-white disabled:hover:text-(--admin-danger)"
                       disabled={used}
-                      onClick={() => void handleDelete(asset)}
+                      onClick={() => setConfirmDeleteAsset(asset)}
                       title={
                         used
                           ? "Ảnh đang được sử dụng trong bài viết"
@@ -197,6 +207,16 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
           />
         ) : null}
       </div>
+
+      <KnowledgeConfirmDialog
+        confirmLabel="Xóa hình ảnh"
+        description={`Bạn có chắc chắn muốn xóa hình ảnh "${confirmDeleteAsset?.originalFileName ?? ""}" khỏi thư viện?`}
+        onCancel={() => setConfirmDeleteAsset(null)}
+        onConfirm={() => void confirmDelete()}
+        open={Boolean(confirmDeleteAsset)}
+        pending={deleting}
+        title="Xác nhận xóa hình ảnh"
+      />
     </section>
   );
 }

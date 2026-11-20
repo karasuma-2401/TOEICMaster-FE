@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { AuthError, login } from "@/features/auth/api";
+import {
+  AuthError,
+  login,
+  resolveLoginDestination,
+} from "@/features/auth/api";
 import { validateLogin } from "@/features/auth/login";
 import { authUrl } from "@/features/auth/protected-routes";
 import { AuthTabs } from "./auth-layout";
@@ -130,8 +134,8 @@ export function LoginPanel({
     if (Object.keys(errors).length > 0) return;
     setPending(true);
     try {
-      await login(email, password, rememberMe);
-      router.replace(returnTo);
+      const user = await login(email, password, rememberMe);
+      router.replace(resolveLoginDestination(user, returnTo));
       router.refresh();
     } catch (reason) {
       if (reason instanceof AuthError) {
