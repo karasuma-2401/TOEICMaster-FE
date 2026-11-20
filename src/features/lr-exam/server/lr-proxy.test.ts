@@ -159,4 +159,119 @@ describe("LR BFF proxy (listening audio & legacy route removal)", () => {
     );
     expect(existsSync(legacyRoute)).toBe(false);
   });
+
+  it("allows public unauthenticated GET exams/lr", async () => {
+    const catalog = [{ examId: ATTEMPT_ID, code: "ETS-01" }];
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(catalog));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await forwardLr(
+      new NextRequest("http://localhost:3000/api/lr/exams/lr"),
+      ["exams", "lr"],
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(catalog);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      "http://api:8080/api/v1/exams/lr",
+    );
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(init.headers).get("Authorization")).toBeNull();
+  });
+
+  it("allows public unauthenticated GET lr-practice/parts/1/items", async () => {
+    const page = {
+      items: [],
+      pageNumber: 1,
+      pageSize: 50,
+      totalCount: 0,
+      totalPages: 0,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(page));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await forwardLr(
+      new NextRequest(
+        "http://localhost:3000/api/lr/lr-practice/parts/1/items?pageNumber=1&pageSize=50",
+      ),
+      ["lr-practice", "parts", "1", "items"],
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(page);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      "http://api:8080/api/v1/lr-practice/parts/1/items?pageNumber=1&pageSize=50",
+    );
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(init.headers).get("Authorization")).toBeNull();
+  });
+
+  it("rejects non-GET requests to lr-practice/parts/1/items with 405", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await forwardLr(
+      new NextRequest(
+        "http://localhost:3000/api/lr/lr-practice/parts/1/items",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie(),
+            Origin: "http://localhost:3000",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        },
+      ),
+      ["lr-practice", "parts", "1", "items"],
+      "POST",
+    );
+
+    expect(response.status).toBe(405);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards authenticated POST lr-practice/items/{id}/submit", async () => {
+    const result = {
+      itemId: ASSET_ID,
+      totalQuestions: 1,
+      correctCount: 1,
+      incorrectCount: 0,
+      questions: [],
+    };
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(result));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const payload = { answers: [{ questionId: ATTEMPT_ID, selectedKey: "A" }] };
+    const response = await forwardLr(
+      new NextRequest(
+        `http://localhost:3000/api/lr/lr-practice/items/${ASSET_ID}/submit`,
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie(),
+            Origin: "http://localhost:3000",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      ),
+      ["lr-practice", "items", ASSET_ID, "submit"],
+      "POST",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(result);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      `http://api:8080/api/v1/lr-practice/items/${ASSET_ID}/submit`,
+    );
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.method).toBe("POST");
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer access-token",
+    );
+    expect(init.body).toBe(JSON.stringify(payload));
+  });
 });

@@ -18,7 +18,14 @@ import type {
   ExamDifficulty,
   ExamLibraryItem,
 } from "@/shared/components/practice/exam-library-model";
+import {
+  isListeningReadingPart,
+  practiceParts,
+  type Skill,
+} from "@/features/listening-reading/utils/listening-reading-utils";
 import { SkillHeader } from "@/shared/components/practice/skill-header";
+
+export { isListeningReadingPart };
 
 const skills = {
   listening: {
@@ -39,32 +46,12 @@ const skills = {
     examHref: "/reading",
     exerciseHref: "/reading/practice/5",
   },
-} as const satisfies Record<string, ExamLibrarySkill>;
-
-type Skill = keyof typeof skills;
-
-const practiceParts = {
-  listening: {
-    1: { title: "Mô tả tranh", questions: 6 },
-    2: { title: "Hỏi – đáp", questions: 25 },
-    3: { title: "Đoạn hội thoại", questions: 39 },
-    4: { title: "Bài nói ngắn", questions: 30 },
-  },
-  reading: {
-    5: { title: "Hoàn thành câu", questions: 30 },
-    6: { title: "Hoàn thành đoạn văn", questions: 16 },
-    7: { title: "Đọc hiểu", questions: 54 },
-  },
-} as const;
+} as const satisfies Record<Skill, ExamLibrarySkill>;
 
 type PartInfo = { title: string; questions: number };
 
 const partsOf = (skill: Skill) =>
   Object.entries(practiceParts[skill]) as [string, PartInfo][];
-
-export function isListeningReadingPart(skill: Skill, part: string) {
-  return part in practiceParts[skill];
-}
 
 function toLibraryItem(exam: LrExamCatalogItemApi): ExamLibraryItem {
   return {
@@ -189,7 +176,8 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
         format: "200 câu · 120 phút · Listening & Reading",
         maxScore: 990,
         examHref: "/listening",
-        exerciseHref: "/listening/practice/1",
+        exerciseHref:
+          skill === "reading" ? "/reading/practice/5" : "/listening/practice/1",
       }}
     />
   );

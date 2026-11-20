@@ -3,6 +3,8 @@ import {
   getLrAttempt,
   getLrListeningPlaylist,
   getLrMediaUrl,
+  getLrPracticeDetail,
+  getLrPracticeStatistics,
   getLrReview,
   LrApiError,
 } from "./api";
@@ -297,5 +299,74 @@ describe("lr-exam API & mappers strict contract alignment", () => {
     fetchMock.mockClear();
     await expect(getLrMediaUrl(ATTEMPT_ID, "audio", "")).rejects.toThrow();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("validates part and boundary response in getLrPracticeStatistics", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getLrPracticeStatistics(0)).rejects.toMatchObject({
+      name: "LrApiError",
+      status: 400,
+    });
+    await expect(getLrPracticeStatistics(8)).rejects.toMatchObject({
+      name: "LrApiError",
+      status: 400,
+    });
+    await expect(getLrPracticeStatistics(1.5)).rejects.toMatchObject({
+      name: "LrApiError",
+      status: 400,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ itemId: ASSET_1_ID, attemptCount: "bad" }]),
+    );
+    await expect(getLrPracticeStatistics(1)).rejects.toMatchObject({
+      name: "LrApiError",
+      status: 502,
+    });
+
+    const stats = [
+      {
+        itemId: ASSET_1_ID,
+        attemptCount: 2,
+        bestScore: 5,
+        totalQuestions: 6,
+      },
+    ];
+    fetchMock.mockResolvedValueOnce(Response.json(stats));
+    await expect(getLrPracticeStatistics(1)).resolves.toEqual(stats);
+  });
+
+  it("parses getLrPracticeDetail when difficulty is null", async () => {
+    const payload = {
+      id: ASSET_1_ID,
+      part: 5,
+      kind: "single",
+      code: "P5-001",
+      topic: "Grammar",
+      difficulty: null,
+      context: null,
+      audioUrl: null,
+      imageUrl: null,
+      questions: [
+        {
+          id: QUESTION_1_ID,
+          ordinal: 1,
+          code: null,
+          prompt: "Choose the correct option.",
+          optionA: "A",
+          optionB: "B",
+          optionC: "C",
+          optionD: "D",
+        },
+      ],
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(payload)));
+
+    const detail = await getLrPracticeDetail(ASSET_1_ID);
+    expect(detail.difficulty).toBeNull();
+    expect(detail.questions).toHaveLength(1);
   });
 });

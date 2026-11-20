@@ -391,7 +391,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                 {/đăng nhập/i.test(error) && (
                   <div className="mt-3">
                     <Link
-                      href={`/login?returnUrl=/${skill}/practice/${part}/${encodeURIComponent(itemId)}`}
+                      href={`/login?next=${encodeURIComponent(`/${skill}/practice/${part}/${encodeURIComponent(itemId)}`)}`}
                       className="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
                     >
                       Đăng nhập ngay →

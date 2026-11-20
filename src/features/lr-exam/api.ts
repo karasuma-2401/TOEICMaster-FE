@@ -715,7 +715,7 @@ export interface LrPracticeItemPageApi {
 
 function parsePracticeItem(value: unknown): LrPracticeItemApi {
   if (!isRecord(value)) {
-    throw new Error("Dữ liệu bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Dữ liệu bài luyện không hợp lệ.");
   }
 
   const message = "Dữ liệu bài luyện không hợp lệ.";
@@ -741,7 +741,7 @@ export async function getLrPracticeItems(
   signal?: AbortSignal,
 ): Promise<LrPracticeItemPageApi> {
   if (!Number.isInteger(part) || part < 1 || part > 7) {
-    throw new Error("Part không hợp lệ.");
+    throw new LrApiError(400, "Part không hợp lệ.");
   }
 
   const query = new URLSearchParams({
@@ -755,7 +755,7 @@ export async function getLrPracticeItems(
   );
 
   if (!isRecord(value) || !Array.isArray(value.items)) {
-    throw new Error("Danh sách bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Danh sách bài luyện không hợp lệ.");
   }
 
   const message = "Thông tin phân trang không hợp lệ.";
@@ -789,7 +789,7 @@ export interface LrPracticeDetailApi {
   kind: string;
   code: string;
   topic: string | null;
-  difficulty: string;
+  difficulty: string | null;
   context: string | null;
   audioUrl: string | null;
   imageUrl: string | null;
@@ -821,7 +821,7 @@ export interface LrPracticeSubmitResultApi {
 
 function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
   if (!isRecord(value) || !Array.isArray(value.questions)) {
-    throw new Error("Chi tiết bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Chi tiết bài luyện không hợp lệ.");
   }
 
   const message = "Chi tiết bài luyện không hợp lệ.";
@@ -832,13 +832,13 @@ function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
     kind: requiredString(value.kind, message),
     code: requiredString(value.code, message),
     topic: nullableString(value.topic),
-    difficulty: requiredString(value.difficulty, message),
+    difficulty: nullableString(value.difficulty),
     context: nullableString(value.context),
     audioUrl: nullableString(value.audioUrl),
     imageUrl: nullableString(value.imageUrl),
     questions: value.questions.map((raw): LrPracticeQuestionApi => {
       if (!isRecord(raw)) {
-        throw new Error("Dữ liệu câu hỏi không hợp lệ.");
+        throw new LrApiError(502, "Dữ liệu câu hỏi không hợp lệ.");
       }
 
       return {
@@ -857,7 +857,7 @@ function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
 
 function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
   if (!isRecord(value) || !Array.isArray(value.questions)) {
-    throw new Error("Kết quả chấm bài không hợp lệ.");
+    throw new LrApiError(502, "Kết quả chấm bài không hợp lệ.");
   }
 
   const message = "Kết quả chấm bài không hợp lệ.";
@@ -869,7 +869,7 @@ function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
     incorrectCount: requiredNumber(value.incorrectCount, message),
     questions: value.questions.map((raw): LrPracticeQuestionResultApi => {
       if (!isRecord(raw)) {
-        throw new Error("Kết quả câu hỏi không hợp lệ.");
+        throw new LrApiError(502, "Kết quả câu hỏi không hợp lệ.");
       }
 
       return {
@@ -918,18 +918,38 @@ export interface LrPracticeItemStatisticsApi {
   totalQuestions: number;
 }
 
+function parsePracticeStatisticsItem(
+  value: unknown,
+): LrPracticeItemStatisticsApi {
+  const message = "Dữ liệu thống kê không hợp lệ.";
+  if (!isRecord(value)) {
+    throw new LrApiError(502, message);
+  }
+
+  return {
+    itemId: requiredString(value.itemId, message),
+    attemptCount: requiredNumber(value.attemptCount, message),
+    bestScore: requiredNumber(value.bestScore, message),
+    totalQuestions: requiredNumber(value.totalQuestions, message),
+  };
+}
+
 export async function getLrPracticeStatistics(
   part: number,
   signal?: AbortSignal,
 ): Promise<LrPracticeItemStatisticsApi[]> {
+  if (!Number.isInteger(part) || part < 1 || part > 7) {
+    throw new LrApiError(400, "Part không hợp lệ.");
+  }
+
   const value = await lrRequest(
     `/api/lr/lr-practice/parts/${part}/statistics`,
     { signal },
   );
 
   if (!Array.isArray(value)) {
-    throw new Error("Dữ liệu thống kê không hợp lệ.");
+    throw new LrApiError(502, "Dữ liệu thống kê không hợp lệ.");
   }
 
-  return value as LrPracticeItemStatisticsApi[];
+  return value.map(parsePracticeStatisticsItem);
 }

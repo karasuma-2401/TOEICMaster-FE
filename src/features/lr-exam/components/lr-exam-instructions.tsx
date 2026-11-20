@@ -169,7 +169,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
               {/đăng nhập/i.test(error) && (
                 <div>
                   <Link
-                    href={`/login?returnUrl=/exams/lr/${examId}`}
+                    href={`/login?next=${encodeURIComponent(`/exams/lr/${examId}`)}`}
                     className="inline-flex items-center rounded-md bg-[#ea580c] px-4 py-2 text-xs font-semibold text-white hover:bg-[#c2410c]"
                   >
                     Đăng nhập để vào thi →
