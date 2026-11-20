@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { UserMenu } from "@/features/user/components/user-menu";
 import {
   getLrCatalog,
@@ -78,30 +78,35 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
   const [items, setItems] = useState<ExamLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const catalog = await getLrCatalog(signal);
-      setItems(catalog.map(toLibraryItem));
-    } catch (cause) {
-      if (signal?.aborted) return;
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể tải danh sách đề thi.",
-      );
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, []);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
+    void getLrCatalog(controller.signal)
+      .then((catalog) => {
+        if (controller.signal.aborted) return;
+        setError(null);
+        setItems(catalog.map(toLibraryItem));
+      })
+      .catch((cause) => {
+        if (controller.signal.aborted) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể tải danh sách đề thi.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
     return () => controller.abort();
-  }, [load]);
+  }, [attempt]);
+
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    setAttempt((current) => current + 1);
+  }
 
   const { name } = skills[skill];
 
@@ -113,7 +118,7 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       items={items}
       loading={loading}
-      onRetry={() => void load()}
+      onRetry={handleRetry}
       skill={skills[skill]}
     />
   );
