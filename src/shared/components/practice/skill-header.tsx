@@ -14,6 +14,7 @@ const navigation = [
   },
   { id: "speaking", label: "Speaking", href: "/speaking" },
   { id: "writing", label: "Writing", href: "/writing" },
+  { id: "pronunciation", label: "Phát âm", href: "/pronunciation" },
   { id: "history", label: "Lịch sử", href: "/history" },
 ] as const;
 
@@ -23,6 +24,7 @@ export type PracticeNavId =
   | "reading"
   | "speaking"
   | "writing"
+  | "pronunciation"
   | "history";
 
 export function SkillHeader({

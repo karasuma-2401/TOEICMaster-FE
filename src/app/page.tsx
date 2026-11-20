@@ -27,6 +27,7 @@ const navigation = [
   { label: "Listening & Reading", href: "/listening-reading" },
   { label: "Speaking", href: "/speaking" },
   { label: "Writing", href: "/writing" },
+  { label: "Phát âm", href: "/pronunciation" },
   { label: "Lịch sử", href: "/history" },
 ];
 
