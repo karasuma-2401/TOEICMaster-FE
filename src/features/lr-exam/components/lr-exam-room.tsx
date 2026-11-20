@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveLrAnswers, startLrReading, submitLrAttempt } from "../api";
+import { formatClock } from "@/shared/ui/format-time";
+import {
+  saveLrAnswers,
+  startLrReading,
+  submitLrAttempt,
+  type LrListeningPlaylistApi,
+} from "../api";
+import {
+  useSequentialListeningPlayer,
+  type ListeningTrack,
+} from "../hooks/use-sequential-listening-player";
 import { findGroup, formatCountdown, summarizeSubmission } from "../session";
 import { sectionForQuestion } from "../parts";
 import type {
@@ -36,8 +46,7 @@ export interface LrExamRoomProps {
   attemptId?: string;
   phase?: "listening" | "reading";
   questionIds?: Record<number, string>;
-  masterAudioObjectKey?: string | null;
-  masterAudioUrl?: string;
+  playlist?: LrListeningPlaylistApi;
 }
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
@@ -68,7 +77,7 @@ export function LrExamRoom({
   attemptId,
   phase: initialPhase = "listening",
   questionIds,
-  masterAudioUrl,
+  playlist,
 }: LrExamRoomProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(initialNumber);
@@ -82,6 +91,34 @@ export function LrExamRoom({
   >("idle");
   const [actionError, setActionError] = useState<string | null>(null);
   const firstSave = useRef(true);
+
+  const listeningTracks = useMemo<ListeningTrack[]>(() => {
+    if (!playlist?.items.length) return [];
+    const groupById = new Map(groups.map((item) => [item.id, item]));
+    return [...playlist.items]
+      .sort(
+        (a, b) =>
+          a.part - b.part || a.firstQuestionNumber - b.firstQuestionNumber,
+      )
+      .map((item) => {
+        const matchedGroup = groupById.get(item.blockId);
+        return {
+          blockId: item.blockId,
+          part: item.part,
+          first: matchedGroup?.first ?? item.firstQuestionNumber,
+          last: matchedGroup?.last ?? item.firstQuestionNumber,
+          audioAssetId: item.audioAssetId,
+          url: item.url,
+          durationMs: item.durationMs ?? 0,
+        };
+      });
+  }, [groups, playlist]);
+
+  const listeningPlayer = useSequentialListeningPlayer({
+    attemptId,
+    tracks: listeningTracks,
+    enabled: phase === "listening" && listeningTracks.length > 0,
+  });
 
   const saveSnapshot = useCallback(
     async (nextAnswers: LrAnswers, nextFlags: LrFlags) => {
@@ -222,7 +259,7 @@ export function LrExamRoom({
 
   return (
     <div className="flex min-h-screen flex-col bg-[#faf7f5] text-[#4c4542]">
-      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
+      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-3 sm:gap-x-6 sm:px-8 sm:py-2">
         <ExamBrand />
         <div className="flex flex-col gap-0.5">
           <p className="text-[15px] font-semibold">{exam.identity}</p>
@@ -235,22 +272,22 @@ export function LrExamRoom({
             ? "SECTION 1 · LISTENING"
             : "SECTION 2 · READING"}
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-4">
           <div
             aria-label="Thời gian còn lại"
-            className="flex items-center gap-3 rounded-xl bg-[#fff7ed] px-5 py-2.5"
+            className="flex items-center gap-2.5 rounded-xl bg-[#fff7ed] px-4 py-2 sm:gap-3 sm:px-5 sm:py-2.5"
             role="timer"
           >
             <ExamIcon name="timer" />
             <span
-              className={`font-mono text-xl font-bold ${section === "listening" ? "text-[#b45309]" : "text-[#302c2a]"}`}
+              className={`font-mono text-lg font-bold sm:text-xl ${section === "listening" ? "text-[#b45309]" : "text-[#302c2a]"}`}
             >
               {formatCountdown(remaining)}
             </span>
           </div>
           {attemptId && section === "listening" ? (
             <button
-              className={secondaryButton}
+              className={`${secondaryButton} whitespace-nowrap`}
               onClick={() => void moveToReading()}
               type="button"
             >
@@ -258,7 +295,7 @@ export function LrExamRoom({
             </button>
           ) : null}
           <button
-            className={primaryButton}
+            className={`${primaryButton} whitespace-nowrap`}
             onClick={() => setConfirming(true)}
             type="button"
           >
@@ -288,18 +325,8 @@ export function LrExamRoom({
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
           <main className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9">
-            {masterAudioUrl ? (
-              <section className="flex flex-col gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4">
-                <p className="text-sm font-semibold">Audio Listening</p>
-                <audio
-                  aria-label="Audio toàn bộ phần Listening"
-                  className="w-full"
-                  controls
-                  controlsList="nodownload"
-                  preload="metadata"
-                  src={masterAudioUrl}
-                />
-              </section>
+            {phase === "listening" && listeningTracks.length > 0 ? (
+              <ListeningMasterPlayer player={listeningPlayer} />
             ) : null}
             {group ? (
               <ListeningGroup
@@ -421,6 +448,92 @@ function Choice({
   );
 }
 
+function ListeningMasterPlayer({
+  player,
+}: {
+  player: ReturnType<typeof useSequentialListeningPlayer>;
+}) {
+  const {
+    audioRef,
+    activeTrack,
+    isPlaying,
+    isBuffering,
+    error,
+    globalElapsedMs,
+    totalDurationMs,
+    togglePlay,
+    onLoadedMetadata,
+    onTimeUpdate,
+    onEnded,
+  } = player;
+  const progressPercent =
+    totalDurationMs > 0
+      ? Math.min(100, Math.max(0, (globalElapsedMs / totalDurationMs) * 100))
+      : 0;
+  const trackLabel = activeTrack
+    ? `Part ${activeTrack.part} · Câu ${activeTrack.first}${activeTrack.last > activeTrack.first ? `–${activeTrack.last}` : ""}`
+    : "Listening";
+
+  return (
+    <section
+      aria-label="Trình phát audio phần Listening"
+      className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
+      data-testid="lr-master-audio-player"
+    >
+      <audio
+        onEnded={onEnded}
+        onLoadedMetadata={onLoadedMetadata}
+        onTimeUpdate={onTimeUpdate}
+        preload="auto"
+        ref={audioRef}
+      >
+        <track kind="captions" />
+      </audio>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#ff5a1f]">
+            {trackLabel}
+          </p>
+          <p
+            className="text-xs font-semibold tabular-nums text-[#475569]"
+            data-testid="lr-master-audio-time"
+          >
+            {formatClock(globalElapsedMs / 1000)} /{" "}
+            {formatClock(totalDurationMs / 1000)}
+          </p>
+        </div>
+        <button
+          className={`${primaryButton} min-h-[44px] shrink-0`}
+          data-testid="lr-master-audio-toggle"
+          onClick={() => void togglePlay()}
+          type="button"
+        >
+          {isPlaying ? "Tạm dừng audio" : "Bắt đầu phát Listening"}
+        </button>
+      </div>
+      <div
+        aria-hidden="true"
+        className="h-2 w-full overflow-hidden rounded-full bg-[#e2e8f0]"
+      >
+        <div
+          className="h-full rounded-full bg-[#ff5a1f] transition-[width] duration-200"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+      {isBuffering ? (
+        <output className="block text-xs text-[#64748b]">
+          Đang đệm đoạn audio tiếp theo…
+        </output>
+      ) : null}
+      {error ? (
+        <p className="text-xs font-medium text-[#dc2626]" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 function ListeningGroup({
   group,
   answers,
@@ -439,28 +552,8 @@ function ListeningGroup({
   onToggleFlag: () => void;
 }) {
   const flagged = group.questions.every((item) => flags[item.number]);
-  const audio = group.audio;
   return (
     <>
-      {audio ? (
-        <section
-          aria-label="Trình phát âm thanh"
-          className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
-        >
-          <p className="text-[13px] font-bold text-[#1d4ed8]">
-            AUDIO PART {group.part}
-          </p>
-          <audio
-            aria-label={`Audio Part ${group.part}`}
-            className="w-full"
-            controls
-            controlsList="nodownload"
-            preload="metadata"
-            src={audio.src}
-          />
-        </section>
-      ) : null}
-
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-sm font-bold text-[#0f172a]">{group.heading}</h1>
         {group.description ? (
@@ -474,6 +567,7 @@ function ListeningGroup({
           key={question.number}
         >
           {question.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
             <img
               alt={`Hình minh họa câu ${question.number}`}
               className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
@@ -584,6 +678,7 @@ function ReadingQuestion({
     >
       <Pill>QUESTION {question.number}</Pill>
       {question.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
         <img
           alt={`Hình minh họa câu ${question.number}`}
           className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"

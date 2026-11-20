@@ -36,7 +36,6 @@ export interface LrRoomState {
   attemptId?: string;
   phase?: "listening" | "reading";
   questionIds?: Record<number, string>;
-  masterAudioObjectKey?: string | null;
 }
 
 export function loadExamSummary(_examId: string): LrExamSummary {
@@ -74,7 +73,7 @@ export interface LrReviewState {
   groups: LrReviewGroup[];
   /** Status per question number (serializable for client components). */
   statuses: Record<number, LrReviewStatus>;
-  counts: Record<LrReviewStatus, number>;
+  counts: Record<LrReviewStatus, number> & { flagged?: number };
   flags: LrFlags;
 }
 

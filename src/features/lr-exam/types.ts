@@ -43,7 +43,13 @@ export interface LrQuestionGroup {
   heading: string;
   description?: string;
   passage?: LrPassage;
-  audio?: { src?: string; currentSeconds?: number; totalSeconds?: number };
+  audio?: {
+    assetId?: string;
+    src?: string;
+    durationMs?: number | null;
+    currentSeconds?: number;
+    totalSeconds?: number;
+  };
   questions: LrQuestion[];
 }
 
@@ -77,7 +83,13 @@ export interface LrReviewQuestionDetail extends LrQuestion {
 export interface LrReviewGroup {
   id: string;
   passage?: LrPassage;
-  audio?: { currentSeconds: number; totalSeconds: number; note: string };
+  audio?: {
+    assetId?: string;
+    durationMs?: number | null;
+    currentSeconds?: number;
+    totalSeconds?: number;
+    note?: string;
+  };
   translation?: { quote: string; body: string; note: string };
   questions: LrReviewQuestionDetail[];
 }

@@ -10,7 +10,7 @@ const paths = [
   /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/answers$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/questions\/[0-9a-f-]{36}\/flag$/i,
-  /^exam-attempts\/[0-9a-f-]{36}\/(result|review|audio)$/i,
+  /^exam-attempts\/[0-9a-f-]{36}\/(result|review|listening-audio-urls)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(audio|images)\/[0-9a-f-]{36}$/i,
   /^exam-attempts\/history$/i,
 
@@ -21,8 +21,26 @@ const paths = [
   /^lr-practice\/items\/[0-9a-f-]{36}\/submit$/i,
 ];
 
+const getOnlyPaths = [
+  /^exams\/lr$/,
+  /^exams\/[0-9a-f-]{36}\/lr-overview$/i,
+  /^exam-attempts\/[0-9a-f-]{36}$/i,
+  /^exam-attempts\/[0-9a-f-]{36}\/(result|review|listening-audio-urls)$/i,
+  /^exam-attempts\/[0-9a-f-]{36}\/(audio|images)\/[0-9a-f-]{36}$/i,
+  /^exam-attempts\/history$/i,
+
+  // Learner Listening & Reading Practice (GET-only)
+  /^lr-practice\/parts\/[1-7]\/items$/i,
+  /^lr-practice\/parts\/[1-7]\/statistics$/i,
+  /^lr-practice\/items\/[0-9a-f-]{36}$/i,
+];
+
 function validPath(segments: string[]) {
   return paths.some((pattern) => pattern.test(segments.join("/")));
+}
+
+function isGetOnlyPath(segments: string[]) {
+  return getOnlyPaths.some((pattern) => pattern.test(segments.join("/")));
 }
 
 export async function forwardLr(
@@ -33,7 +51,9 @@ export async function forwardLr(
   if (!validPath(segments)) {
     return problem(404, "Không tìm thấy API Listening & Reading.");
   }
-
+  if (method !== "GET" && isGetOnlyPath(segments)) {
+    return problem(405, "Phương thức không được hỗ trợ.");
+  }
   if (method !== "GET" && !sameOrigin(request)) {
     return problem(403, "Yêu cầu không hợp lệ.");
   }

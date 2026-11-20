@@ -139,44 +139,34 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
   const [items, setItems] = useState<ExamLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const result = await getLrCatalog(signal);
-
-      if (signal?.aborted) return;
-      setItems(result.map((item) => toLibraryItem(item)));
-      setError(null);
-    } catch (cause) {
-      if (signal?.aborted) return;
-
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể tải danh sách đề thi.",
-      );
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, []);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    const task = window.setTimeout(
-      () => void fetchCatalog(controller.signal),
-      0,
-    );
-
-    return () => {
-      window.clearTimeout(task);
-      controller.abort();
-    };
-  }, [fetchCatalog]);
+    void getLrCatalog(controller.signal)
+      .then((catalog) => {
+        if (controller.signal.aborted) return;
+        setError(null);
+        setItems(catalog.map(toLibraryItem));
+      })
+      .catch((cause) => {
+        if (controller.signal.aborted) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể tải danh sách đề thi.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [attempt]);
 
   function handleRetry() {
     setLoading(true);
     setError(null);
-    void fetchCatalog();
+    setAttempt((current) => current + 1);
   }
 
   const name = "Listening & Reading";

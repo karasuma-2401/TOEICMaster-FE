@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLrAttempt, getLrMediaUrl, getLrResult, getLrReview } from "../api";
+import {
+  getLrAttempt,
+  getLrListeningPlaylist,
+  getLrMediaUrl,
+  getLrResult,
+  getLrReview,
+  type LrListeningPlaylistApi,
+} from "../api";
 import { resultToReport, reviewToState, sheetToRoomState } from "../mappers";
 import { LrExamRoom } from "./lr-exam-room";
 import { LrResultReportView } from "./lr-result-report";
@@ -43,34 +50,36 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
   const [state, setState] = useState<ReturnType<
     typeof sheetToRoomState
   > | null>(null);
-  const [masterAudioUrl, setMasterAudioUrl] = useState<string | null>(null);
+  const [playlist, setPlaylist] = useState<LrListeningPlaylistApi | undefined>(
+    undefined,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     void getLrAttempt(attemptId, controller.signal)
       .then(async (sheet) => {
-        const assetIds = new Set<string>();
+        const imageAssetIds = new Set<string>();
         for (const block of sheet.blocks) {
-          if (block.audioAssetId) assetIds.add(block.audioAssetId);
           for (const context of block.contextBlocks) {
-            if (context.imageAssetId) assetIds.add(context.imageAssetId);
+            if (context.imageAssetId) imageAssetIds.add(context.imageAssetId);
           }
           for (const question of block.questions) {
-            if (question.imageAssetId) assetIds.add(question.imageAssetId);
+            if (question.imageAssetId) imageAssetIds.add(question.imageAssetId);
           }
         }
+        const playlistPromise =
+          sheet.phase === "listening"
+            ? getLrListeningPlaylist(attemptId, controller.signal).catch(
+                () => undefined,
+              )
+            : Promise.resolve(undefined);
         const mediaEntries = await Promise.all(
-          [...assetIds].map(async (assetId) => {
-            const kind = sheet.blocks.some(
-              (block) => block.audioAssetId === assetId,
-            )
-              ? ("audio" as const)
-              : ("images" as const);
+          [...imageAssetIds].map(async (assetId) => {
             try {
               const media = await getLrMediaUrl(
                 attemptId,
-                kind,
+                "images",
                 assetId,
                 controller.signal,
               );
@@ -80,24 +89,14 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
             }
           }),
         );
+        const nextPlaylist = await playlistPromise;
+        if (controller.signal.aborted) return;
         const mediaUrls = Object.fromEntries(
           mediaEntries.filter(
             (entry): entry is readonly [string, string] => entry !== null,
           ),
         );
-        if (sheet.masterAudioObjectKey) {
-          try {
-            const media = await getLrMediaUrl(
-              attemptId,
-              "audio",
-              undefined,
-              controller.signal,
-            );
-            setMasterAudioUrl(media.url);
-          } catch {
-            setMasterAudioUrl(null);
-          }
-        }
+        setPlaylist(nextPlaylist);
         setState(sheetToRoomState(sheet, mediaUrls));
       })
       .catch((cause) => {
@@ -115,7 +114,7 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
   return (
     <LrExamRoom
       {...state}
-      masterAudioUrl={masterAudioUrl ?? undefined}
+      playlist={playlist}
       resultHref={`/exams/lr/attempts/${attemptId}/result`}
     />
   );
@@ -215,6 +214,7 @@ export function LrReviewPage({ attemptId }: { attemptId: string }) {
 
   return (
     <LrReview
+      attemptId={attemptId}
       resultHref={`/exams/lr/attempts/${attemptId}/result`}
       state={state}
     />

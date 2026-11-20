@@ -235,7 +235,7 @@ describe("DataBankCenter", () => {
     );
   });
 
-  it("offers the complete 200-question Excel template in the exam-import modal", async () => {
+  it("offers the complete 200-question Excel template in the exam-import modal without master-audio requirement", async () => {
     url = "tab=tests";
 
     render(<DataBankCenter />);
@@ -244,6 +244,9 @@ describe("DataBankCenter", () => {
     expect(
       await screen.findByRole("link", { name: /Tải file Excel mẫu/i }),
     ).toHaveAttribute("href", "/api/admin/exams/import-template");
+    expect(
+      screen.queryByText(/master audio là bắt buộc/i),
+    ).not.toBeInTheDocument();
   });
 
   it("shows only the question workspace after an admin opens a Part", async () => {

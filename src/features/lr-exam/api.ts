@@ -15,13 +15,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function requiredString(value: unknown, message: string): string {
-  if (typeof value !== "string") throw new Error(message);
+  if (typeof value !== "string") throw new LrApiError(502, message);
   return value;
 }
 
 function requiredNumber(value: unknown, message: string): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(message);
+    throw new LrApiError(502, message);
   }
   return value;
 }
@@ -30,6 +30,12 @@ function nullableString(value: unknown): string | null {
   return value === null || value === undefined
     ? null
     : requiredString(value, "Phản hồi L&R không hợp lệ.");
+}
+
+function nullableNumber(value: unknown): number | null {
+  return value === null || value === undefined
+    ? null
+    : requiredNumber(value, "Phản hồi L&R không hợp lệ.");
 }
 
 async function refreshOnce() {
@@ -140,6 +146,7 @@ export interface LrSheetBlockApi {
   part: number;
   firstQuestionNumber: number;
   audioAssetId: string | null;
+  audioDurationMs: number | null;
   contextBlocks: {
     id: string;
     ordinal: number;
@@ -155,7 +162,6 @@ export interface LrSheetApi {
   examCode: string;
   examTitle: string;
   versionNumber: number;
-  masterAudioObjectKey: string | null;
   phase: "listening" | "reading";
   startedAtUtc: string;
   readingStartedAtUtc: string | null;
@@ -213,6 +219,8 @@ export interface LrReviewApi {
     id: string;
     part: number;
     firstQuestionNumber: number;
+    audioAssetId: string | null;
+    audioDurationMs: number | null;
     contextBlocks: {
       id: string;
       ordinal: number;
@@ -297,6 +305,7 @@ function parseSheet(value: unknown): LrSheetApi {
         "Dữ liệu nhóm câu hỏi không hợp lệ.",
       ),
       audioAssetId: nullableString(rawBlock.audioAssetId),
+      audioDurationMs: nullableNumber(rawBlock.audioDurationMs),
       contextBlocks: rawBlock.contextBlocks.map((rawContext) => {
         if (!isRecord(rawContext)) {
           throw new Error("Dữ liệu ngữ cảnh không hợp lệ.");
@@ -350,7 +359,6 @@ function parseSheet(value: unknown): LrSheetApi {
     examCode: requiredString(value.examCode, message),
     examTitle: requiredString(value.examTitle, message),
     versionNumber: requiredNumber(value.versionNumber, message),
-    masterAudioObjectKey: nullableString(value.masterAudioObjectKey),
     phase,
     startedAtUtc: requiredString(value.startedAtUtc, message),
     readingStartedAtUtc: nullableString(value.readingStartedAtUtc),
@@ -420,7 +428,7 @@ function parseReview(value: unknown): LrReviewApi {
     !isRecord(value.counts) ||
     !Array.isArray(value.blocks)
   ) {
-    throw new Error("Dữ liệu xem lại không hợp lệ.");
+    throw new LrApiError(502, "Dữ liệu xem lại không hợp lệ.");
   }
   const message = "Dữ liệu xem lại không hợp lệ.";
 
@@ -445,7 +453,7 @@ function parseReview(value: unknown): LrReviewApi {
         !Array.isArray(rawBlock.questions) ||
         !Array.isArray(rawBlock.contextBlocks)
       ) {
-        throw new Error("Dữ liệu nhóm câu hỏi xem lại không hợp lệ.");
+        throw new LrApiError(502, "Dữ liệu nhóm câu hỏi xem lại không hợp lệ.");
       }
 
       return {
@@ -455,6 +463,8 @@ function parseReview(value: unknown): LrReviewApi {
           rawBlock.firstQuestionNumber,
           message,
         ),
+        audioAssetId: nullableString(rawBlock.audioAssetId),
+        audioDurationMs: nullableNumber(rawBlock.audioDurationMs),
         contextBlocks: rawBlock.contextBlocks.map((context) => {
           if (!isRecord(context)) {
             throw new Error("Dữ liệu ngữ cảnh không hợp lệ.");
@@ -605,18 +615,71 @@ export interface LrMediaUrlApi {
   expiresAtUtc: string;
 }
 
+export interface LrListeningPlaylistItemApi {
+  blockId: string;
+  part: number;
+  firstQuestionNumber: number;
+  audioAssetId: string;
+  durationMs: number | null;
+  url: string;
+  expiresAtUtc: string;
+}
+
+export interface LrListeningPlaylistApi {
+  items: LrListeningPlaylistItemApi[];
+}
+
+function parseListeningPlaylist(value: unknown): LrListeningPlaylistApi {
+  const message = "Danh sách audio Listening không hợp lệ.";
+  if (!isRecord(value) || !Array.isArray(value.items)) {
+    throw new LrApiError(502, message);
+  }
+  return {
+    items: value.items.map((item) => {
+      if (!isRecord(item)) {
+        throw new LrApiError(502, message);
+      }
+      return {
+        blockId: requiredString(item.blockId, message),
+        part: requiredNumber(item.part, message),
+        firstQuestionNumber: requiredNumber(item.firstQuestionNumber, message),
+        audioAssetId: requiredString(item.audioAssetId, message),
+        durationMs: nullableNumber(item.durationMs),
+        url: requiredString(item.url, message),
+        expiresAtUtc: requiredString(item.expiresAtUtc, message),
+      };
+    }),
+  };
+}
+
+export async function getLrListeningPlaylist(
+  attemptId: string,
+  signal?: AbortSignal,
+): Promise<LrListeningPlaylistApi> {
+  return parseListeningPlaylist(
+    await lrRequest(
+      `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/listening-audio-urls`,
+      { signal },
+    ),
+  );
+}
+
 export async function getLrMediaUrl(
   attemptId: string,
   kind: "audio" | "images",
-  assetId?: string,
+  assetId: string,
   signal?: AbortSignal,
 ): Promise<LrMediaUrlApi> {
-  const suffix = assetId ? `/${encodeURIComponent(assetId)}` : "";
+  if (!assetId.trim()) {
+    throw new LrApiError(400, "Thiếu mã asset media.");
+  }
   const value = await lrRequest(
-    `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/${kind}${suffix}`,
+    `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/${kind}/${encodeURIComponent(assetId)}`,
     { signal },
   );
-  if (!isRecord(value)) throw new Error("Đường dẫn media không hợp lệ.");
+  if (!isRecord(value)) {
+    throw new LrApiError(502, "Đường dẫn media không hợp lệ.");
+  }
   return {
     url: requiredString(value.url, "Đường dẫn media không hợp lệ."),
     expiresAtUtc: requiredString(
