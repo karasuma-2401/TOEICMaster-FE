@@ -160,7 +160,7 @@ export function KnowledgeConfirmDialog({
     <dialog
       aria-label={title}
       aria-modal="true"
-      className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4 backdrop-blur-[1px]"
+      className="fixed inset-0 z-50 m-0 hidden h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4 backdrop-blur-[1px] open:flex"
       ref={dialogRef}
     >
       <div className="w-full max-w-md rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-2xl">

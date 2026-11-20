@@ -90,6 +90,30 @@ function renderDialog({
 }
 
 describe("KnowledgeConfirmDialog", () => {
+  it("hides the dialog before opening and after closing", async () => {
+    const user = userEvent.setup();
+    installDialogMethods();
+    renderDialog();
+
+    const trigger = screen.getByRole("button", { name: "Open confirmation" });
+    const dialog = document.querySelector("dialog");
+
+    expect(dialog).not.toBeNull();
+    expect(dialog).toHaveClass("hidden");
+    expect(dialog).not.toHaveClass("flex");
+
+    await user.click(trigger);
+    expect(dialog).toHaveAttribute("open");
+    expect(dialog).toHaveClass("open:flex");
+
+    await user.click(
+      within(dialog as HTMLDialogElement).getByRole("button", { name: "Hủy" }),
+    );
+    expect(dialog).not.toHaveAttribute("open");
+    expect(dialog).toHaveClass("hidden");
+    expect(dialog).not.toHaveClass("flex");
+  });
+
   it("opens from the keyboard, contains focus, cancels on Escape, and restores focus", async () => {
     const user = userEvent.setup();
     const { showModal, close } = installDialogMethods();
