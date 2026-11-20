@@ -7,7 +7,7 @@ For feature work, read `docs/feature-development.md` for an implementation map, 
 ## Stack and versions
 
 - Node.js `24.21.0` in `.nvmrc` (`package.json` requires `>=24.21.0 <25`), npm 11; install from `package-lock.json` with `npm ci`.
-- Next.js `16.4.0` (App Router, Turbopack, standalone output); React and React DOM `19.3.0`.
+- Next.js `16.4.6` (App Router, Turbopack, standalone output); React and React DOM `19.3.0`.
 - TypeScript `^5` with `strict: true`; Tailwind CSS `^4`. For version ranges, use `package-lock.json` to find the exact installed version.
 - Oxlint `1.87.0`, Prettier `3.9.9`, Vitest `5.0.3`. Vite is a Vitest dependency, not the frontend runtime.
 - Version sources of truth: `.nvmrc`, `package.json`, `package-lock.json`, `next.config.ts`, and `tsconfig.json`.
