@@ -573,6 +573,7 @@ function ListeningGroup({
           key={question.number}
         >
           {question.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
             <img
               alt={`Hình minh họa câu ${question.number}`}
               className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
@@ -683,6 +684,7 @@ function ReadingQuestion({
     >
       <Pill>QUESTION {question.number}</Pill>
       {question.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
         <img
           alt={`Hình minh họa câu ${question.number}`}
           className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"
