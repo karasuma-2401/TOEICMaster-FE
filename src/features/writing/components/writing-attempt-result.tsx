@@ -194,6 +194,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
         {attempt && isComplete && evaluation && (
           <WritingEvaluationReport
             evaluation={evaluation}
+            partial={attempt.mode !== "FULL" || attempt.isPractice}
             practicePart={
               attempt.isPractice ? attempt.questions[0]?.part : undefined
             }

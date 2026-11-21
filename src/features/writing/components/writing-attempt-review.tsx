@@ -260,7 +260,9 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                       >
                         {attemptLabel(index)} ·{" "}
                         {formatDate(item.submittedAtUtc)} ·{" "}
-                        {item.estimatedScore ?? "—"}/200
+                        {item.mode === "FULL" && !item.isPractice
+                          ? `${item.estimatedScore ?? "—"}/200`
+                          : `${item.rawScore ?? "—"}/${item.maxRawScore ?? "—"} điểm tiêu chí`}
                       </Link>
                     </li>
                   ))}
