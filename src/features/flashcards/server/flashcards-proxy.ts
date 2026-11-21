@@ -9,6 +9,7 @@ const SLUG_PATTERN = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const DECKS_ROOT = /^decks$/i;
 const DECK_BY_SLUG = new RegExp(`^decks/${SLUG_PATTERN}$`, "i");
 const DECK_BY_ID = new RegExp(`^decks/${GUID_PATTERN}$`, "i");
+const DECK_CARDS = new RegExp(`^decks/${GUID_PATTERN}/cards$`, "i");
 const DECK_PROGRESS = new RegExp(`^decks/${GUID_PATTERN}/progress$`, "i");
 const CARD_PROGRESS = new RegExp(`^cards/${GUID_PATTERN}/progress$`, "i");
 
@@ -21,6 +22,7 @@ function isAllowedMethodForPath(
   if (DECKS_ROOT.test(path)) return method === "GET" || method === "POST";
   if (DECK_BY_ID.test(path)) return method === "DELETE";
   if (DECK_BY_SLUG.test(path)) return method === "GET";
+  if (DECK_CARDS.test(path)) return method === "POST";
   if (DECK_PROGRESS.test(path)) return method === "DELETE";
   if (CARD_PROGRESS.test(path)) return method === "PUT";
   return false;
@@ -31,6 +33,7 @@ function isKnownPath(path: string): boolean {
     DECKS_ROOT.test(path) ||
     DECK_BY_ID.test(path) ||
     DECK_BY_SLUG.test(path) ||
+    DECK_CARDS.test(path) ||
     DECK_PROGRESS.test(path) ||
     CARD_PROGRESS.test(path)
   );

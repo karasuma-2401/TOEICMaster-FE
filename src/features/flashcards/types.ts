@@ -52,7 +52,7 @@ export interface DeckProgressSummary {
   completionPercent: number;
 }
 
-export type StudyMode = "flip" | "quiz" | "list";
+export type StudyMode = "flip" | "quiz" | "match" | "list";
 
 export type CardFilter =
   "all" | "unmastered" | "review" | "mastered" | "starred";

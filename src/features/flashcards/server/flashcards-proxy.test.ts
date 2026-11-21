@@ -27,8 +27,8 @@ describe("flashcards server proxy", () => {
     expect(response.status).toBe(405);
   });
 
-  it("requires authentication for mutations such as creating a deck", async () => {
-    const request = new NextRequest(
+  it("requires authentication for mutations such as creating a deck or adding a card", async () => {
+    const createRequest = new NextRequest(
       "http://localhost:3000/api/flashcards/decks",
       {
         method: "POST",
@@ -39,8 +39,30 @@ describe("flashcards server proxy", () => {
         body: JSON.stringify({ title: "Test", cards: [] }),
       },
     );
-    const response = await forwardFlashcards(request, ["decks"], "POST");
-    expect(response.status).toBe(401);
+    const createResponse = await forwardFlashcards(
+      createRequest,
+      ["decks"],
+      "POST",
+    );
+    expect(createResponse.status).toBe(401);
+
+    const addCardRequest = new NextRequest(
+      "http://localhost:3000/api/flashcards/decks/10000000-0000-4000-8000-000000000001/cards",
+      {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ term: "invoice", meaningVi: "hóa đơn" }),
+      },
+    );
+    const addCardResponse = await forwardFlashcards(
+      addCardRequest,
+      ["decks", "10000000-0000-4000-8000-000000000001", "cards"],
+      "POST",
+    );
+    expect(addCardResponse.status).toBe(401);
   });
 
   it("allows public GET /decks and forwards to /api/v1/flashcards/decks", async () => {

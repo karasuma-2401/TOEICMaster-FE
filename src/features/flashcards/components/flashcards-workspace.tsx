@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   Cloud,
+  Grid2x2Check,
   HardDrive,
   HelpCircle,
   Layers,
@@ -22,12 +23,14 @@ import {
   secondaryAction,
 } from "@/shared/components/practice/styles";
 import {
+  addFlashcardCardApi,
   createFlashcardDeckApi,
   deleteFlashcardDeckApi,
   getFlashcardWorkspace,
   isServerGuid,
   resetFlashcardDeckProgressApi,
   upsertFlashcardProgressApi,
+  type CreateFlashcardCardPayload,
 } from "../api";
 import {
   BUILTIN_FLASHCARD_DECKS,
@@ -43,10 +46,13 @@ import type {
   CardMastery,
   FlashcardCategory,
   FlashcardDeck,
+  FlashcardItem,
   FlashcardStoreState,
   StudyMode,
 } from "../types";
+import { CardAddDialog } from "./card-add-dialog";
 import { DeckCreateDialog } from "./deck-create-dialog";
+import { FlashcardMatchGame } from "./flashcard-match-game";
 import { FlashcardQuizMode } from "./flashcard-quiz-mode";
 import { FlashcardStudyStage } from "./flashcard-study-stage";
 import { FlashcardWordList } from "./flashcard-word-list";
@@ -84,6 +90,7 @@ export function FlashcardsWorkspace({
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [addCardDialogOpen, setAddCardDialogOpen] = useState(false);
 
   useEffect(() => {
     const localState = readFlashcardStore();
@@ -300,6 +307,66 @@ export function FlashcardsWorkspace({
     [persistStore],
   );
 
+  const handleAddCardToDeck = useCallback(
+    async (deck: FlashcardDeck, payload: CreateFlashcardCardPayload) => {
+      const appendCard = (
+        targetDeck: FlashcardDeck,
+        newCard: FlashcardItem,
+      ) => ({
+        ...targetDeck,
+        estimatedMinutes: Math.max(
+          2,
+          Math.ceil((targetDeck.cards.length + 1) * 0.8),
+        ),
+        cards: [...targetDeck.cards, newCard],
+      });
+
+      if (isServerGuid(deck.id)) {
+        try {
+          const createdCard = await addFlashcardCardApi(deck.id, payload);
+          setServerDecks((prev) =>
+            prev
+              ? prev.map((item) =>
+                  item.id === deck.id ? appendCard(item, createdCard) : item,
+                )
+              : prev,
+          );
+          return;
+        } catch {
+          // Fall back to local persistence if offline or unauthenticated.
+        }
+      }
+
+      const localCard: FlashcardItem = {
+        id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        term: payload.term,
+        phonetic: payload.phonetic ?? "",
+        partOfSpeech: payload.partOfSpeech ?? "noun",
+        meaningVi: payload.meaningVi,
+        exampleEn: payload.exampleEn ?? "",
+        exampleVi: payload.exampleVi ?? "",
+        collocations: payload.collocations ?? [],
+        toeicPart: payload.toeicPart ?? "Từ vựng cá nhân",
+        level: payload.level ?? "B2",
+      };
+
+      persistStore((prev) => ({
+        ...prev,
+        customDecks: prev.customDecks.map((item) =>
+          item.id === deck.id ? appendCard(item, localCard) : item,
+        ),
+      }));
+      setServerDecks((prev) =>
+        prev
+          ? prev.map((item) =>
+              item.id === deck.id ? appendCard(item, localCard) : item,
+            )
+          : prev,
+      );
+    },
+    [persistStore],
+  );
+
   const handleDeleteCustomDeck = useCallback(
     (deckId: string) => {
       persistStore((prev) => ({
@@ -387,6 +454,17 @@ export function FlashcardsWorkspace({
               </div>
             </div>
 
+            {activeDeck.isCustom && (
+              <button
+                className={`${primaryAction} min-h-10 px-4 text-xs`}
+                onClick={() => setAddCardDialogOpen(true)}
+                type="button"
+              >
+                <Plus aria-hidden="true" className="size-4" strokeWidth={2.2} />
+                Thêm từ mới
+              </button>
+            )}
+
             {deckSummary.mastered + deckSummary.review + deckSummary.learning >
               0 && (
               <button
@@ -404,13 +482,14 @@ export function FlashcardsWorkspace({
         {/* Mode switcher */}
         <div
           aria-label="Chế độ học bộ thẻ"
-          className="inline-flex rounded-xl border border-[#ece9e5] bg-[#f4f1ee] p-1"
+          className="inline-flex flex-wrap gap-1 rounded-xl border border-[#ece9e5] bg-[#f4f1ee] p-1"
           role="tablist"
         >
           {(
             [
               { key: "flip", label: "Lật thẻ 3D", icon: Layers },
               { key: "quiz", label: "Trắc nghiệm nhanh", icon: HelpCircle },
+              { key: "match", label: "Ghép cặp tốc độ", icon: Grid2x2Check },
               {
                 key: "list",
                 label: `Danh sách (${activeDeck.cards.length})`,
@@ -463,12 +542,30 @@ export function FlashcardsWorkspace({
           />
         )}
 
+        {studyMode === "match" && (
+          <FlashcardMatchGame
+            cards={activeDeck.cards}
+            deckId={activeDeck.id}
+            key={`${activeDeck.id}-match`}
+            onRateCard={handleRateCard}
+          />
+        )}
+
         {studyMode === "list" && (
           <FlashcardWordList
             cards={activeDeck.cards}
             onRateCard={handleRateCard}
             onToggleStar={handleToggleStar}
             progress={store.progress}
+          />
+        )}
+
+        {activeDeck.isCustom && (
+          <CardAddDialog
+            deckTitle={activeDeck.title}
+            onAddCard={(payload) => handleAddCardToDeck(activeDeck, payload)}
+            onOpenChange={setAddCardDialogOpen}
+            open={addCardDialogOpen}
           />
         )}
       </div>
@@ -508,8 +605,8 @@ export function FlashcardsWorkspace({
           </div>
           <p className="text-[15px] leading-relaxed text-[#5f5953]">
             Ôn nhanh từ vựng trọng tâm theo chủ đề công sở TOEIC bằng thẻ lật
-            3D, phát âm chuẩn và trắc nghiệm củng cố. Tiến độ được tự động đồng
-            bộ khi bạn đăng nhập.
+            3D, phát âm chuẩn, ghép cặp tốc độ và trắc nghiệm củng cố. Tiến độ
+            được tự động đồng bộ khi bạn đăng nhập.
           </p>
         </div>
 

@@ -12,20 +12,22 @@ export interface FlashcardWorkspaceApiResponse {
   progress: Record<string, CardProgressRecord>;
 }
 
+export interface CreateFlashcardCardPayload {
+  term: string;
+  phonetic?: string;
+  partOfSpeech?: string;
+  meaningVi: string;
+  exampleEn?: string;
+  exampleVi?: string;
+  collocations?: string[];
+  toeicPart?: string;
+  level?: CefrLevel;
+}
+
 export interface CreateFlashcardDeckPayload {
   title: string;
   description: string;
-  cards: {
-    term: string;
-    phonetic?: string;
-    partOfSpeech?: string;
-    meaningVi: string;
-    exampleEn?: string;
-    exampleVi?: string;
-    collocations?: string[];
-    toeicPart?: string;
-    level?: CefrLevel;
-  }[];
+  cards: CreateFlashcardCardPayload[];
 }
 
 export class FlashcardsApiError extends Error {
@@ -66,7 +68,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseCard(raw: unknown): FlashcardItem {
+export function parseCard(raw: unknown): FlashcardItem {
   if (!isRecord(raw)) {
     throw new Error("Invalid flashcard card payload.");
   }
@@ -225,6 +227,27 @@ export async function createFlashcardDeckApi(
     );
   }
   return parseDeck(await response.json());
+}
+
+export async function addFlashcardCardApi(
+  deckId: string,
+  payload: CreateFlashcardCardPayload,
+): Promise<FlashcardItem> {
+  const response = await fetch(`/api/flashcards/decks/${deckId}/cards`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new FlashcardsApiError(
+      response.status,
+      await readErrorMessage(response),
+    );
+  }
+  return parseCard(await response.json());
 }
 
 export async function deleteFlashcardDeckApi(deckId: string): Promise<void> {
