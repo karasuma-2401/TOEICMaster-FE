@@ -110,11 +110,17 @@ function testBody(input: SpeakingTestInput) {
     description: input.description,
     contentMode: "EXERCISE_BANK",
     exercises: speakingParts.flatMap((part) =>
-      exerciseIds[part].map((exerciseId, index) => ({
-        exerciseId,
-        part,
-        sequenceNumber: index + 1,
-      })),
+      exerciseIds[part].flatMap((exerciseId, index) =>
+        exerciseId
+          ? [
+              {
+                exerciseId,
+                part,
+                sequenceNumber: index + 1,
+              },
+            ]
+          : [],
+      ),
     ),
   };
 }
@@ -278,5 +284,32 @@ export async function publishSpeakingTest(id: string, version: number) {
       refresh: true,
       fallback: "Không thể công bố đề Speaking.",
     }),
+  );
+}
+
+export async function cloneSpeakingTest(
+  id: string,
+  version: number,
+  code: string,
+  title: string,
+) {
+  return parseTestDetail(
+    await speakingRequest(`${base}/tests/${encodeURIComponent(id)}/clone`, {
+      method: "POST",
+      json: { version, code, title },
+      refresh: true,
+      fallback: "Không thể nhân bản đề Speaking.",
+    }),
+  );
+}
+
+export async function deleteSpeakingTest(id: string, version: number) {
+  await speakingRequest(
+    `${base}/tests/${encodeURIComponent(id)}?version=${version}`,
+    {
+      method: "DELETE",
+      refresh: true,
+      fallback: "Không thể xóa đề nháp Speaking.",
+    },
   );
 }

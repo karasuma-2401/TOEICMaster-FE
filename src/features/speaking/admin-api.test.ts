@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { refreshSession } from "@/features/auth/api";
+import { SpeakingApiError } from "./http";
 import {
   archiveSpeakingExercise,
   createSpeakingTest,
@@ -90,6 +91,47 @@ describe("Speaking admin API", () => {
       { exerciseId: "c", part: 2, sequenceNumber: 1 },
       { exerciseId: "d", part: 5, sequenceNumber: 1 },
     ]);
+  });
+
+  it("preserves a gap before the second slot when saving a draft", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(testDetailDto()));
+    vi.stubGlobal("fetch", fetchMock);
+    await createSpeakingTest({
+      code: "SPK",
+      title: "Test",
+      description: "",
+      exerciseIds: { 1: ["", "second"], 2: [], 3: [], 4: [], 5: [] },
+    });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).exercises).toEqual([
+      { exerciseId: "second", part: 1, sequenceNumber: 2 },
+    ]);
+  });
+
+  it("keeps every server error and the machine-readable conflict code", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            title: "Nội dung trùng",
+            code: "VERSION_CONFLICT",
+            errors: { Content: ["Câu 1 và Câu 2", "Câu 5 và Câu 8"] },
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+    const result = await createSpeakingTest({
+      code: "SPK",
+      title: "Test",
+      description: "",
+    }).catch((cause: unknown) => cause);
+    expect(result).toBeInstanceOf(SpeakingApiError);
+    expect(result).toMatchObject({
+      message: "Nội dung trùng",
+      code: "VERSION_CONFLICT",
+      fieldErrors: { content: ["Câu 1 và Câu 2", "Câu 5 và Câu 8"] },
+    });
   });
 
   it("sends direct test content without creating exercise-bank references", async () => {

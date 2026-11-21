@@ -83,4 +83,14 @@ describe("Speaking parsers", () => {
       parseTestListItem(testListItemDto({ partCounts: { "1": 2 } })),
     ).toThrow();
   });
+
+  it("restores an exercise to sequence two without moving it to sequence one", () => {
+    const fixture = testDetailDto();
+    fixture.exercises = fixture.exercises.filter(
+      (slot) => slot.part === 1 && slot.sequenceNumber === 2,
+    );
+    const { test } = parseTestDetail(fixture);
+    expect(test.exerciseIds[1][0]).toBeUndefined();
+    expect(test.exerciseIds[1][1]).toBe(fixture.exercises[0].exerciseId);
+  });
 });

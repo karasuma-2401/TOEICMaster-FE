@@ -5,7 +5,8 @@ export class SpeakingApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
-    public readonly fieldErrors: Record<string, string> = {},
+    public readonly fieldErrors: Record<string, string[]> = {},
+    public readonly code: string | null = null,
   ) {
     super(message);
     this.name = "SpeakingApiError";
@@ -16,13 +17,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-/** Maps `{ errors: { Field: ["msg"] } }` to `{ field: "msg" }`. */
+/** Preserve every validation message, including multiple duplicate-content pairs. */
 function fieldErrors(body: unknown) {
   if (!isRecord(body) || !isRecord(body.errors)) return {};
   return Object.fromEntries(
     Object.entries(body.errors).flatMap(([key, value]) =>
-      Array.isArray(value) && typeof value[0] === "string"
-        ? [[key.charAt(0).toLowerCase() + key.slice(1), value[0]]]
+      Array.isArray(value) && value.some((item) => typeof item === "string")
+        ? [
+            [
+              key.charAt(0).toLowerCase() + key.slice(1),
+              value.filter((item): item is string => typeof item === "string"),
+            ],
+          ]
         : [],
     ),
   );
@@ -32,7 +38,12 @@ async function failure(response: Response, fallback: string) {
   const body: unknown = await response.json().catch(() => null);
   const title =
     isRecord(body) && typeof body.title === "string" ? body.title : fallback;
-  return new SpeakingApiError(response.status, title, fieldErrors(body));
+  return new SpeakingApiError(
+    response.status,
+    title,
+    fieldErrors(body),
+    isRecord(body) && typeof body.code === "string" ? body.code : null,
+  );
 }
 
 async function refreshOnce() {

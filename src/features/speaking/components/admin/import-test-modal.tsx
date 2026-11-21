@@ -22,10 +22,14 @@ function importFailure(cause: unknown) {
       message: cause instanceof Error ? cause.message : "Không thể import đề.",
       details: [],
     };
-  const details = Object.entries(cause.fieldErrors).map(([key, message]) => {
-    const label = fieldLabel(key);
-    return label ? `${label}: ${message}` : message;
-  });
+  const details = Object.entries(cause.fieldErrors).flatMap(
+    ([key, messages]) => {
+      const label = fieldLabel(key);
+      return messages.map((message) =>
+        label ? `${label}: ${message}` : message,
+      );
+    },
+  );
   if (details.length > 0)
     return {
       message: "File Excel chưa hợp lệ. Chưa có dữ liệu nào được tạo.",

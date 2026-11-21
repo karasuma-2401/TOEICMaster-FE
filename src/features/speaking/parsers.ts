@@ -242,7 +242,7 @@ export function parseTestDetail(value: unknown): {
   for (const slot of [...slots].sort(
     (a, b) => a.sequenceNumber - b.sequenceNumber,
   ))
-    exerciseIds[slot.part].push(slot.exerciseId);
+    exerciseIds[slot.part][slot.sequenceNumber - 1] = slot.exerciseId;
   return {
     test: {
       id: value.id,
