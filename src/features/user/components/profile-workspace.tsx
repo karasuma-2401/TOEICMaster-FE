@@ -7,6 +7,7 @@ import { ProfileDetailsCard } from "./profile-details-card";
 import { ProfileGoalCard } from "./profile-goal-card";
 import { ProfileSettingsCard } from "./profile-settings-card";
 import { profileCard } from "./profile-styles";
+import { SavedLessons } from "@/features/knowledge/components/saved-lessons";
 
 function SectionHeading({
   id,
@@ -40,6 +41,7 @@ export function ProfileWorkspace({
 }) {
   return (
     <div className="flex flex-col gap-10">
+      <SavedLessons />
       <section
         aria-labelledby="profile-section-title"
         data-testid="profile-section-details"
