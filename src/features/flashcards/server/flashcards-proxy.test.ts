@@ -63,6 +63,24 @@ describe("flashcards server proxy", () => {
       "POST",
     );
     expect(addCardResponse.status).toBe(401);
+
+    const matchRequest = new NextRequest(
+      "http://localhost:3000/api/flashcards/decks/10000000-0000-4000-8000-000000000001/match-records",
+      {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ elapsedMs: 15000, maxCombo: 5 }),
+      },
+    );
+    const matchResponse = await forwardFlashcards(
+      matchRequest,
+      ["decks", "10000000-0000-4000-8000-000000000001", "match-records"],
+      "POST",
+    );
+    expect(matchResponse.status).toBe(401);
   });
 
   it("allows public GET /decks and forwards to /api/v1/flashcards/decks", async () => {

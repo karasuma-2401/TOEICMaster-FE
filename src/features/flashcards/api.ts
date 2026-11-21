@@ -5,11 +5,13 @@ import type {
   FlashcardCategory,
   FlashcardDeck,
   FlashcardItem,
+  MatchRecord,
 } from "./types";
 
 export interface FlashcardWorkspaceApiResponse {
   decks: FlashcardDeck[];
   progress: Record<string, CardProgressRecord>;
+  matchRecords: Record<string, MatchRecord>;
 }
 
 export interface CreateFlashcardCardPayload {
@@ -165,6 +167,32 @@ export function parseProgress(raw: unknown): CardProgressRecord {
   };
 }
 
+export function parseMatchRecord(raw: unknown): MatchRecord {
+  if (!isRecord(raw)) {
+    throw new Error("Invalid flashcard match record payload.");
+  }
+  if (typeof raw.bestTimeMs !== "number" || raw.bestTimeMs <= 0) {
+    throw new Error("Invalid bestTimeMs in match record.");
+  }
+  return {
+    bestTimeMs: raw.bestTimeMs,
+    bestCombo:
+      typeof raw.bestCombo === "number" && raw.bestCombo >= 0
+        ? raw.bestCombo
+        : 0,
+    playCount:
+      typeof raw.playCount === "number" && raw.playCount > 0
+        ? raw.playCount
+        : 1,
+    updatedAt:
+      typeof raw.updatedAt === "string"
+        ? raw.updatedAt
+        : new Date().toISOString(),
+    isNewRecord:
+      typeof raw.isNewRecord === "boolean" ? raw.isNewRecord : undefined,
+  };
+}
+
 export function parseWorkspace(raw: unknown): FlashcardWorkspaceApiResponse {
   if (!isRecord(raw) || !Array.isArray(raw.decks)) {
     throw new Error("Invalid flashcard workspace payload.");
@@ -177,9 +205,17 @@ export function parseWorkspace(raw: unknown): FlashcardWorkspaceApiResponse {
     }
   }
 
+  const matchRecords: Record<string, MatchRecord> = {};
+  if (isRecord(raw.matchRecords)) {
+    for (const [deckId, entry] of Object.entries(raw.matchRecords)) {
+      matchRecords[deckId] = parseMatchRecord(entry);
+    }
+  }
+
   return {
     decks: raw.decks.map(parseDeck),
     progress,
+    matchRecords,
   };
 }
 
@@ -298,4 +334,29 @@ export async function resetFlashcardDeckProgressApi(
       await readErrorMessage(response),
     );
   }
+}
+
+export async function recordFlashcardMatchApi(
+  deckId: string,
+  elapsedMs: number,
+  maxCombo: number,
+): Promise<MatchRecord> {
+  const response = await fetch(
+    `/api/flashcards/decks/${deckId}/match-records`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ elapsedMs, maxCombo }),
+    },
+  );
+  if (!response.ok) {
+    throw new FlashcardsApiError(
+      response.status,
+      await readErrorMessage(response),
+    );
+  }
+  return parseMatchRecord(await response.json());
 }

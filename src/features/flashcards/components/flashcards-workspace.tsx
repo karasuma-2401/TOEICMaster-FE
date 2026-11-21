@@ -28,6 +28,7 @@ import {
   deleteFlashcardDeckApi,
   getFlashcardWorkspace,
   isServerGuid,
+  recordFlashcardMatchApi,
   resetFlashcardDeckProgressApi,
   upsertFlashcardProgressApi,
   type CreateFlashcardCardPayload,
@@ -48,6 +49,7 @@ import type {
   FlashcardDeck,
   FlashcardItem,
   FlashcardStoreState,
+  MatchRecord,
   StudyMode,
 } from "../types";
 import { CardAddDialog } from "./card-add-dialog";
@@ -79,6 +81,9 @@ export function FlashcardsWorkspace({
     EMPTY_FLASHCARD_STORE,
   );
   const [serverDecks, setServerDecks] = useState<FlashcardDeck[] | null>(null);
+  const [matchRecords, setMatchRecords] = useState<Record<string, MatchRecord>>(
+    {},
+  );
   const [syncMode, setSyncMode] = useState<SyncMode>("loading");
   const [hydrated, setHydrated] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(
@@ -104,6 +109,9 @@ export function FlashcardsWorkspace({
         if (cancelled) return;
         if (remote.decks.length > 0) {
           setServerDecks(remote.decks);
+        }
+        if (Object.keys(remote.matchRecords).length > 0) {
+          setMatchRecords(remote.matchRecords);
         }
         if (Object.keys(remote.progress).length > 0) {
           setStore((prev) => ({
@@ -389,6 +397,20 @@ export function FlashcardsWorkspace({
     [activeDeck?.id, persistStore],
   );
 
+  const handleRecordMatchRun = useCallback(
+    (deckId: string, elapsedMs: number, maxCombo: number) => {
+      if (!isServerGuid(deckId)) return;
+      void recordFlashcardMatchApi(deckId, elapsedMs, maxCombo)
+        .then((saved) => {
+          setMatchRecords((prev) => ({ ...prev, [deckId]: saved }));
+        })
+        .catch(() => {
+          // Keep localStorage best time fallback for guests or offline sessions.
+        });
+    },
+    [],
+  );
+
   const handleResetDeckProgress = useCallback(
     (deck: FlashcardDeck) => {
       persistStore((prev) => {
@@ -547,7 +569,11 @@ export function FlashcardsWorkspace({
             cards={activeDeck.cards}
             deckId={activeDeck.id}
             key={`${activeDeck.id}-match`}
+            onCompleteRun={(elapsedMs, maxCombo) =>
+              handleRecordMatchRun(activeDeck.id, elapsedMs, maxCombo)
+            }
             onRateCard={handleRateCard}
+            serverBestMs={matchRecords[activeDeck.id]?.bestTimeMs ?? null}
           />
         )}
 

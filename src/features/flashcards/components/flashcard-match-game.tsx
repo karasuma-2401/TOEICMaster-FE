@@ -62,19 +62,27 @@ function writeBestTime(deckId: string, ms: number): void {
 export function FlashcardMatchGame({
   deckId,
   cards,
+  serverBestMs = null,
   onRateCard,
+  onCompleteRun,
 }: {
   deckId: string;
   cards: readonly FlashcardItem[];
+  serverBestMs?: number | null;
   onRateCard: (cardId: string, status: CardMastery) => void;
+  onCompleteRun?: (elapsedMs: number, maxCombo: number) => void;
 }) {
   const { supported: speechSupported, speak } = useWordSpeech();
   const [audioOnMatch, setAudioOnMatch] = useState(true);
   const [roundIndex, setRoundIndex] = useState(0);
   const [replaySeed, setReplaySeed] = useState(0);
-  const [bestMs, setBestMs] = useState<number | null>(() =>
+  const [localBestMs, setLocalBestMs] = useState<number | null>(() =>
     readBestTime(deckId),
   );
+  const bestMs =
+    serverBestMs !== null && localBestMs !== null
+      ? Math.min(serverBestMs, localBestMs)
+      : (serverBestMs ?? localBestMs);
 
   const totalRounds = Math.max(
     1,
@@ -206,11 +214,13 @@ export function FlashcardMatchGame({
           now - activeStart + mistakes * PENALTY_MS,
         );
         setElapsedMs(finalMs);
+        const finalMaxCombo = Math.max(maxCombo, nextCombo);
         if (bestMs === null || finalMs < bestMs) {
-          setBestMs(finalMs);
+          setLocalBestMs(finalMs);
           setIsNewRecord(true);
           writeBestTime(deckId, finalMs);
         }
+        onCompleteRun?.(finalMs, finalMaxCombo);
       }
     } else {
       const nextMistakes = mistakes + 1;

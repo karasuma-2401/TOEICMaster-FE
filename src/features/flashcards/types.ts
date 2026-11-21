@@ -65,3 +65,11 @@ export interface QuizQuestion {
     isCorrect: boolean;
   }[];
 }
+
+export interface MatchRecord {
+  bestTimeMs: number;
+  bestCombo: number;
+  playCount: number;
+  updatedAt: string;
+  isNewRecord?: boolean;
+}

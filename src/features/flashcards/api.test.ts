@@ -44,6 +44,14 @@ describe("flashcards api parsers", () => {
           updatedAt: "2026-11-21T10:00:00Z",
         },
       },
+      matchRecords: {
+        "10000000-0000-4000-8000-000000000001": {
+          bestTimeMs: 14200,
+          bestCombo: 6,
+          playCount: 3,
+          updatedAt: "2026-11-21T10:05:00Z",
+        },
+      },
     };
 
     const parsed = parseWorkspace(payload);
@@ -52,6 +60,9 @@ describe("flashcards api parsers", () => {
     expect(
       parsed.progress["10000001-0000-4000-8000-000000000001"]?.status,
     ).toBe("mastered");
+    expect(
+      parsed.matchRecords["10000000-0000-4000-8000-000000000001"]?.bestTimeMs,
+    ).toBe(14200);
   });
 
   it("rejects malformed deck or progress payloads", () => {
