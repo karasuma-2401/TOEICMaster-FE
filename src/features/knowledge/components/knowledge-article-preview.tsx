@@ -18,6 +18,7 @@ import type {
 } from "../types";
 
 interface KnowledgeArticlePreviewProps {
+  publicView?: boolean;
   title: string;
   summary: string;
   skill: KnowledgeSkill;
@@ -62,6 +63,7 @@ function renderTextWithMarks(node: TiptapNode, key: string): ReactNode {
 }
 
 export function KnowledgeArticlePreview({
+  publicView = false,
   title,
   summary,
   skill,
@@ -191,8 +193,15 @@ export function KnowledgeArticlePreview({
           typeof node.attrs?.src === "string" ? node.attrs.src : "";
         const src =
           assetId && isKnowledgeMediaUuid(assetId)
-            ? toAdminBffMediaUrl(assetId)
-            : normalizeMediaSrcForBff(rawSrc);
+            ? publicView
+              ? `/api/knowledge/media/${assetId}`
+              : toAdminBffMediaUrl(assetId)
+            : publicView
+              ? normalizeMediaSrcForBff(rawSrc).replace(
+                  "/api/admin/knowledge/media/",
+                  "/api/knowledge/media/",
+                )
+              : normalizeMediaSrcForBff(rawSrc);
         const alt =
           typeof node.attrs?.alt === "string"
             ? node.attrs.alt
@@ -216,18 +225,26 @@ export function KnowledgeArticlePreview({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-xl border border-(--admin-warning)/25 bg-(--admin-warning-soft) px-4 py-2.5 text-xs font-medium text-(--admin-warning)">
-        <span>
-          Chế độ xem trước Admin (Preview Mode) — Hiển thị giống bố cục bài báo
-          hoàn thiện dành cho Học viên.
-        </span>
-        <span className="rounded-full bg-white/80 px-2.5 py-0.5 font-semibold">
-          Trạng thái: {status}
-        </span>
-      </div>
+    <div className={publicView ? "knowledge-public-article" : "space-y-4"}>
+      {!publicView && (
+        <div className="flex items-center justify-between rounded-xl border border-(--admin-warning)/25 bg-(--admin-warning-soft) px-4 py-2.5 text-xs font-medium text-(--admin-warning)">
+          <span>
+            Chế độ xem trước Admin (Preview Mode) — Hiển thị giống bố cục bài
+            báo hoàn thiện dành cho Học viên.
+          </span>
+          <span className="rounded-full bg-white/80 px-2.5 py-0.5 font-semibold">
+            Trạng thái: {status}
+          </span>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div
+        className={
+          publicView
+            ? "space-y-6"
+            : "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]"
+        }
+      >
         <article className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-sm sm:p-8">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
             <span className="rounded-full bg-(--admin-nav-active) px-3 py-1 text-(--admin-brand-red)">
@@ -273,7 +290,14 @@ export function KnowledgeArticlePreview({
               <img
                 alt={coverImageAlt || title}
                 className="max-h-95 w-full object-cover"
-                src={toAdminBffMediaUrl(coverImageAssetId.trim())}
+                onError={(event) => {
+                  event.currentTarget.parentElement?.remove();
+                }}
+                src={
+                  publicView
+                    ? `/api/knowledge/media/${coverImageAssetId.trim()}`
+                    : toAdminBffMediaUrl(coverImageAssetId.trim())
+                }
               />
             </div>
           ) : null}
