@@ -30,7 +30,7 @@ export function SkillHeader({
       <PracticeSidebar />
       <header className="sticky top-0 z-50 border-b border-[#ece9e5] bg-white">
         <div
-          className={`${wide ? wideContainer : pageContainer} grid min-h-[72px] grid-cols-[1fr_auto] items-center gap-x-6 gap-y-1 py-2 lg:grid-cols-[1fr_auto_1fr]`}
+          className={`${wide ? wideContainer : pageContainer} grid min-h-[72px] grid-cols-[1fr_auto] items-center gap-x-6 gap-y-1 py-2`}
         >
           <Link
             className={`flex w-fit items-center gap-2 text-xl font-bold tracking-tight text-[#2f2b28] md:hidden ${focusRing}`}
@@ -39,10 +39,12 @@ export function SkillHeader({
             <BrandMark className="h-8 w-8" />
             TOEICMaster
           </Link>
-          {center && (
-            <div className="order-last col-span-2 min-w-0 lg:order-none lg:col-span-1">
+          {center ? (
+            <div className="order-last col-span-2 min-w-0 md:order-none md:col-span-1">
               {center}
             </div>
+          ) : (
+            <span aria-hidden="true" className="hidden md:block" />
           )}
           <HeaderMenu>
             <div className="md:hidden">
