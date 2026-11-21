@@ -241,6 +241,23 @@ test.describe("Practice Sidebar Navigation", () => {
       page.locator('a[href="/"]:has-text("TOEICMaster"):visible'),
     ).toHaveCount(1);
 
+    // Home milestoneLinks card links remain intact
+    const milestoneRegion = page
+      .locator("section, div")
+      .filter({ hasText: "YOUR NEXT MILESTONE" })
+      .first();
+    await expect(
+      milestoneRegion
+        .getByRole("link", { name: "Listening & Reading" })
+        .first(),
+    ).toHaveAttribute("href", "/listening-reading");
+    await expect(
+      milestoneRegion.getByRole("link", { name: "Speaking" }).first(),
+    ).toHaveAttribute("href", "/speaking");
+    await expect(
+      milestoneRegion.getByRole("link", { name: "Writing" }).first(),
+    ).toHaveAttribute("href", "/writing");
+
     // Expanded width (w-60 = 240px) and matching body left padding (15rem = 240px)
     const expandedBox = await sidebar.boundingBox();
     expect(expandedBox?.width).toBeCloseTo(240, 0);
@@ -400,6 +417,7 @@ test.describe("Practice Sidebar Navigation", () => {
     await expect(drawer).toBeVisible();
     await expect(drawer.getByText("Đề thi", { exact: true })).toBeVisible();
     await expect(drawer.getByText("Bài tập", { exact: true })).toBeVisible();
+    await expect(drawer.getByTestId("user-menu-trigger")).toBeVisible();
 
     const activeDrawerLink = drawer.locator('[aria-current="page"]');
     await expect(activeDrawerLink).toHaveCount(1);
