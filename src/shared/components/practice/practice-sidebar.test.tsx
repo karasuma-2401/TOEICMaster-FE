@@ -25,9 +25,17 @@ describe("PracticeSidebar", () => {
 
     expect(screen.getByText("Thi")).toBeInTheDocument();
     expect(screen.getByText("Tập")).toBeInTheDocument();
+    expect(screen.getByText("IPA")).toBeInTheDocument();
+    expect(screen.getByText("Sử")).toBeInTheDocument();
+    expect(screen.getAllByText("L&R")).toHaveLength(2);
+    expect(screen.getAllByText("S")).toHaveLength(2);
+    expect(screen.getAllByText("W")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
       "aria-current",
       "page",
+    );
+    expect(screen.getByRole("link", { name: "Lịch sử" })).not.toHaveAttribute(
+      "aria-current",
     );
     const listeningReadingLinks = screen.getAllByRole("link", {
       name: "Listening & Reading",
@@ -38,20 +46,31 @@ describe("PracticeSidebar", () => {
     );
   });
 
-  it("toggles width state and persists the preference", async () => {
+  it("toggles width state in both directions and persists the preference", async () => {
     const user = userEvent.setup();
     render(<PracticeSidebar />);
 
     const sidebar = screen.getByTestId("practice-sidebar");
+    const toggle = screen.getByTestId("practice-sidebar-toggle");
     expect(sidebar).toHaveAttribute("data-collapsed", "false");
-    await user.click(screen.getByRole("button", { name: "Thu gọn thanh bên" }));
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-label", "Thu gọn thanh bên");
+
+    await user.click(toggle);
     expect(sidebar).toHaveAttribute("data-collapsed", "true");
-    expect(
-      screen.getByRole("button", { name: "Mở rộng thanh bên" }),
-    ).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-label", "Mở rộng thanh bên");
     expect(window.localStorage.getItem("toeicmaster.sidebar.collapsed")).toBe(
       "1",
     );
+
+    await user.click(toggle);
+    expect(sidebar).toHaveAttribute("data-collapsed", "false");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-label", "Thu gọn thanh bên");
+    expect(
+      window.localStorage.getItem("toeicmaster.sidebar.collapsed"),
+    ).not.toBe("1");
   });
 
   it("loads the saved collapsed preference", () => {
@@ -102,5 +121,35 @@ describe("PracticeSidebar", () => {
       );
     expect(link).toBeDefined();
     expect(link).toHaveAttribute("aria-current", "page");
+
+    const examSpeakingLink = screen
+      .getAllByRole("link", { name: "Speaking" })
+      .find((candidate) => candidate.getAttribute("href") === "/speaking");
+    expect(examSpeakingLink).toBeDefined();
+    expect(examSpeakingLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("marks exam L&R active on /exams/lr/* and leaves all items inactive on / and /profile", () => {
+    navigation.pathname = "/exams/lr/123";
+    const { rerender } = render(<PracticeSidebarNav />);
+
+    const examLr = screen
+      .getAllByRole("link", { name: "Listening & Reading" })
+      .find(
+        (candidate) => candidate.getAttribute("href") === "/listening-reading",
+      );
+    expect(examLr).toHaveAttribute("aria-current", "page");
+
+    navigation.pathname = "/";
+    rerender(<PracticeSidebarNav />);
+    for (const link of screen.getAllByRole("link")) {
+      expect(link).not.toHaveAttribute("aria-current", "page");
+    }
+
+    navigation.pathname = "/profile";
+    rerender(<PracticeSidebarNav />);
+    for (const link of screen.getAllByRole("link")) {
+      expect(link).not.toHaveAttribute("aria-current", "page");
+    }
   });
 });

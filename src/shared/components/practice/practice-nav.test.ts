@@ -7,22 +7,48 @@ import {
 
 describe("practice navigation", () => {
   it.each([
+    ["/listening/practice", "exercise-lr"],
     ["/listening/practice/2", "exercise-lr"],
+    ["/reading/practice", "exercise-lr"],
     ["/reading/practice/3/item", "exercise-lr"],
+    ["/speaking/parts", "exercise-speaking"],
     ["/speaking/parts/2", "exercise-speaking"],
+    ["/speaking/exercises", "exercise-speaking"],
     ["/speaking/exercises/abc", "exercise-speaking"],
+    ["/writing/practice", "exercise-writing"],
     ["/writing/practice/1", "exercise-writing"],
     ["/listening-reading", "exam-lr"],
     ["/exams/lr/123", "exam-lr"],
     ["/speaking", "exam-speaking"],
     ["/writing", "exam-writing"],
     ["/pronunciation", "pronunciation"],
+    ["/pronunciation/ipa", "pronunciation"],
+    ["/history", "history"],
     ["/history/writing", "history"],
     ["/", null],
     ["/profile", null],
+    ["/admin", null],
+    ["/login", null],
+    ["/register", null],
+    ["", null],
     [null, null],
   ])("matches %s to %s", (pathname, expected) => {
     expect(activeNavKey(pathname)).toBe(expected);
+  });
+
+  it("exposes grouped exam/exercise sections and standalone links", () => {
+    expect(
+      practiceNavGroups.map((group) => [group.label, group.short]),
+    ).toEqual([
+      ["Đề thi", "Thi"],
+      ["Bài tập", "Tập"],
+    ]);
+    expect(
+      practiceNavLinks.map((link) => [link.label, link.short, link.href]),
+    ).toEqual([
+      ["Phát âm", "IPA", "/pronunciation"],
+      ["Lịch sử", "Sử", "/history"],
+    ]);
   });
 
   it("keeps every navigation link uniquely addressable", () => {
