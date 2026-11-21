@@ -18,6 +18,39 @@ const recording = {
 };
 
 describe("useRecordingUploads", () => {
+  it("serializes a replacement take after microphone recovery", async () => {
+    let resolve: (attempt: ReturnType<typeof parseAttempt>) => void = () =>
+      undefined;
+    vi.mocked(uploadSpeakingRecording)
+      .mockReturnValueOnce(
+        new Promise((done) => {
+          resolve = done;
+        }),
+      )
+      .mockResolvedValueOnce(parseAttempt(attemptDto()));
+    const replacement = {
+      ...recording,
+      blob: new Blob(["new take"], { type: "audio/webm" }),
+    };
+    const onAttempt = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ recordings }) =>
+        useRecordingUploads(ids.attempt, recordings, onAttempt),
+      { initialProps: { recordings: { 2: recording } } },
+    );
+    await waitFor(() => expect(uploadSpeakingRecording).toHaveBeenCalledOnce());
+    rerender({ recordings: { 2: replacement } });
+    expect(uploadSpeakingRecording).toHaveBeenCalledOnce();
+    await act(async () => resolve(parseAttempt(attemptDto())));
+    await waitFor(() => expect(result.current.states[2]).toBe("uploaded"));
+    expect(uploadSpeakingRecording).toHaveBeenCalledTimes(2);
+    expect(uploadSpeakingRecording).toHaveBeenLastCalledWith(
+      ids.attempt,
+      2,
+      replacement.blob,
+      12,
+    );
+  });
   it("uploads each recording once and retries a failed upload", async () => {
     vi.mocked(uploadSpeakingRecording)
       .mockRejectedValueOnce(new Error("offline"))

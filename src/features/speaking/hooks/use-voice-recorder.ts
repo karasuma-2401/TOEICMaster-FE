@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-export type MicrophoneStatus =
-  "idle" | "requesting" | "ready" | "denied" | "unsupported";
+import { useMicSession } from "@/features/speaking/mic/mic-session-provider";
+export type { MicrophoneStatus } from "@/features/speaking/mic/mic-session-provider";
 
 export interface Recording {
   blob: Blob;
@@ -11,151 +10,99 @@ export interface Recording {
   durationSeconds: number;
 }
 
-function isSupported() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.MediaRecorder !== "undefined" &&
-    Boolean(navigator.mediaDevices?.getUserMedia)
-  );
-}
-
-/**
- * Records one answer at a time from the microphone and keeps an object URL
- * per key. Callers upload the blob; the URL serves instant local playback.
- */
+/** Records answers without owning or reopening the layout's microphone stream. */
 export function useVoiceRecorder() {
-  const [status, setStatus] = useState<MicrophoneStatus>("idle");
+  const mic = useMicSession();
+  const { stream, markLost } = mic;
   const [recordingKey, setRecordingKey] = useState<number | null>(null);
-  const [level, setLevel] = useState(0);
   const [recordings, setRecordings] = useState<Record<number, Recording>>({});
-  const [micLost, setMicLost] = useState(false);
-  const [deviceLabel, setDeviceLabel] = useState("");
-  const stream = useRef<MediaStream | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
-  const audioContext = useRef<AudioContext | null>(null);
-  const analyser = useRef<AnalyserNode | null>(null);
-  const frame = useRef<number | null>(null);
+  const endTimes = useRef(new WeakMap<MediaRecorder, number>());
   const urls = useRef<string[]>([]);
-
-  const requestAccess = useCallback(async () => {
-    if (!isSupported()) {
-      setStatus("unsupported");
-      return false;
-    }
-    if (stream.current) return true;
-    setStatus("requesting");
-    try {
-      stream.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      const context = new AudioContext();
-      const node = context.createAnalyser();
-      node.fftSize = 256;
-      context.createMediaStreamSource(stream.current).connect(node);
-      audioContext.current = context;
-      analyser.current = node;
-      const track = stream.current.getAudioTracks()[0];
-      setDeviceLabel(track?.label ?? "");
-      track?.addEventListener("ended", () => {
-        // The device is gone: the next requestAccess opens a fresh stream.
-        stream.current = null;
-        recorder.current = null;
-        if (frame.current !== null) cancelAnimationFrame(frame.current);
-        frame.current = null;
-        void audioContext.current?.close();
-        setRecordingKey(null);
-        setLevel(0);
-        setMicLost(true);
-      });
-      setMicLost(false);
-      setStatus("ready");
-      return true;
-    } catch {
-      setStatus("denied");
-      return false;
-    }
-  }, []);
-
-  const stopMeter = useCallback(() => {
-    if (frame.current !== null) cancelAnimationFrame(frame.current);
-    frame.current = null;
-    setLevel(0);
-  }, []);
-
-  const startMeter = useCallback(() => {
-    const node = analyser.current;
-    if (!node || frame.current !== null) return;
-    const samples = new Uint8Array(node.frequencyBinCount);
-    const read = () => {
-      node.getByteTimeDomainData(samples);
-      let peak = 0;
-      for (const sample of samples)
-        peak = Math.max(peak, Math.abs(sample - 128));
-      setLevel(Math.min(1, peak / 64));
-      frame.current = requestAnimationFrame(read);
-    };
-    read();
-  }, []);
+  const mounted = useRef(true);
 
   const start = useCallback(
     (key: number) => {
-      if (!stream.current || recorder.current) return;
-      const chunks: Blob[] = [];
-      const startedAt = Date.now();
-      const next = new MediaRecorder(stream.current);
-      next.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.push(event.data);
-      };
-      next.onstop = () => {
-        const blob = new Blob(chunks, {
-          type: next.mimeType || "audio/webm",
-        });
-        const url = URL.createObjectURL(blob);
-        urls.current.push(url);
-        setRecordings((current) => ({
-          ...current,
-          [key]: {
-            blob,
-            url,
-            durationSeconds: Math.round((Date.now() - startedAt) / 1000),
-          },
-        }));
-      };
-      next.start();
-      recorder.current = next;
-      setRecordingKey(key);
-      startMeter();
+      const source = stream.current;
+      if (
+        !source
+          ?.getAudioTracks()
+          .some((track) => track.readyState === "live") ||
+        recorder.current
+      )
+        return;
+      try {
+        const chunks: Blob[] = [];
+        const startedAt = Date.now();
+        const next = new MediaRecorder(source);
+        next.ondataavailable = (event) => {
+          if (event.data.size > 0) chunks.push(event.data);
+        };
+        next.onstop = () => {
+          if (!mounted.current || chunks.length === 0) return;
+          const blob = new Blob(chunks, {
+            type: next.mimeType || "audio/webm",
+          });
+          const url = URL.createObjectURL(blob);
+          urls.current.push(url);
+          setRecordings((current) => ({
+            ...current,
+            [key]: {
+              blob,
+              url,
+              durationSeconds: Math.max(
+                1,
+                Math.ceil(
+                  ((endTimes.current.get(next) ?? Date.now()) - startedAt) /
+                    1000,
+                ),
+              ),
+            },
+          }));
+        };
+        next.onerror = () => {
+          recorder.current = null;
+          setRecordingKey(null);
+          markLost();
+        };
+        next.start();
+        recorder.current = next;
+        setRecordingKey(key);
+      } catch {
+        markLost();
+      }
     },
-    [startMeter],
+    [stream, markLost],
   );
 
   const stop = useCallback(() => {
-    if (recorder.current?.state === "recording") recorder.current.stop();
+    if (recorder.current?.state === "recording") {
+      endTimes.current.set(recorder.current, Date.now());
+      recorder.current.stop();
+    }
     recorder.current = null;
     setRecordingKey(null);
-    stopMeter();
-  }, [stopMeter]);
+  }, []);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    const objectUrls = urls.current;
+    return () => {
+      mounted.current = false;
       if (recorder.current?.state === "recording") recorder.current.stop();
-      if (frame.current !== null) cancelAnimationFrame(frame.current);
-      stream.current?.getTracks().forEach((track) => track.stop());
-      void audioContext.current?.close();
-      urls.current.forEach((url) => URL.revokeObjectURL(url));
-    },
-    [],
-  );
+      recorder.current = null;
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   return {
-    status,
-    micLost,
-    deviceLabel,
-    level,
+    status: mic.status,
+    micLost: mic.status === "lost",
+    deviceLabel: mic.deviceLabel,
+    level: mic.level,
     recordingKey,
     recordings,
-    requestAccess,
-    monitor: startMeter,
+    requestAccess: mic.acquire,
     start,
     stop,
   };

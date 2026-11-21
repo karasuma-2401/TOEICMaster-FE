@@ -74,6 +74,7 @@ export function SessionStage({
   recording,
   level,
   onSkip,
+  allowSkip = true,
 }: {
   question: SpeakingAttemptQuestion;
   total: number;
@@ -85,6 +86,7 @@ export function SessionStage({
   recording: boolean;
   level: number;
   onSkip: () => void;
+  allowSkip?: boolean;
 }) {
   const copy = phaseCopy[phase];
   const responding = phase === "RESPONDING";
@@ -130,7 +132,7 @@ export function SessionStage({
               <>
                 <MicOffIcon className="text-(--sp-ink-3)" />
                 <span className="text-sm text-(--sp-ink-2)">
-                  {responding ? "Không ghi âm" : `${copy.label} · Micro tắt`}
+                  {responding ? "Không ghi âm" : `${copy.label} · Không ghi âm`}
                 </span>
               </>
             )}
@@ -140,14 +142,16 @@ export function SessionStage({
           >
             {formatClock(seconds)}
           </p>
-          <button
-            className={`sp-btn sp-btn-lg min-w-52 ${responding ? "sp-btn-cta" : "sp-btn-outline"}`}
-            disabled={busy}
-            onClick={onSkip}
-            type="button"
-          >
-            {skipLabel}
-          </button>
+          {allowSkip && (
+            <button
+              className={`sp-btn sp-btn-lg min-w-52 ${responding ? "sp-btn-cta" : "sp-btn-outline"}`}
+              disabled={busy}
+              onClick={onSkip}
+              type="button"
+            >
+              {skipLabel}
+            </button>
+          )}
         </div>
       </div>
     </>
