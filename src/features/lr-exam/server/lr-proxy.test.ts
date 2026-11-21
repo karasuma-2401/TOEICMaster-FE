@@ -180,6 +180,27 @@ describe("LR BFF proxy (listening audio & legacy route removal)", () => {
     expect(new Headers(init.headers).get("Authorization")).toBeNull();
   });
 
+  it("forwards Authorization header on GET exams/lr when a valid session cookie is present", async () => {
+    const catalog = [{ examId: ATTEMPT_ID, code: "ETS-01" }];
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(catalog));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await forwardLr(
+      new NextRequest("http://localhost:3000/api/lr/exams/lr", {
+        headers: { Cookie: authCookie() },
+      }),
+      ["exams", "lr"],
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(catalog);
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer access-token",
+    );
+  });
+
   it("allows public unauthenticated GET lr-practice/parts/1/items", async () => {
     const page = {
       items: [],

@@ -70,6 +70,9 @@ describe("LrExamInstructions", () => {
         name: "ETS 2026 Test 01",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "← Về danh sách đề" }),
+    ).toHaveAttribute("href", "/listening-reading");
   });
 
   it("links to /login?next=... when starting an attempt requires authentication", async () => {

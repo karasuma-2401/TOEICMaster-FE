@@ -28,8 +28,8 @@ describe("parentPath", () => {
     ["/writing/practice/1", "/writing"],
     ["/writing/attempts/a1", "/writing"],
     ["/writing/attempts/a1/result", "/history"],
-    ["/listening/practice/1", "/listening"],
-    ["/reading/practice/5", "/reading"],
+    ["/listening/practice/1", "/listening-reading"],
+    ["/reading/practice/5", "/listening-reading"],
     ["/history", "/"],
   ])("%s goes back to %s", (path, parent) => {
     expect(parentPath(path)).toBe(parent);
