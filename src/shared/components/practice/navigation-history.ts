@@ -29,8 +29,8 @@ const parents: [RegExp, string | ((match: RegExpMatchArray) => string)][] = [
   [/^\/speaking\/.+/, "/speaking"],
   [/^\/writing\/attempts\/[^/]+\/result$/, "/history"],
   [/^\/writing\/.+/, "/writing"],
-  [/^\/listening\/.+/, "/listening"],
-  [/^\/reading\/.+/, "/reading"],
+  [/^\/listening\/.+/, "/listening-reading"],
+  [/^\/reading\/.+/, "/listening-reading"],
 ];
 
 /** Where "back" leads when the page was opened directly. */

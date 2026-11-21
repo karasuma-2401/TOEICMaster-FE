@@ -9,7 +9,7 @@ import {
   startSpeakingExercisePractice,
   type SpeakingPartSummary,
 } from "@/features/speaking/api";
-import { useVoiceRecorder } from "@/features/speaking/hooks/use-voice-recorder";
+import { useMicSession } from "@/features/speaking/mic/mic-session-provider";
 import {
   displaySpeakingMode,
   modeFromRoute,
@@ -66,7 +66,7 @@ async function loadInfo(
 /** Pre-attempt screen: microphone check, then creates a server attempt. */
 export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
   const router = useRouter();
-  const recorder = useVoiceRecorder();
+  const mic = useMicSession();
   const [info, setInfo] = useState<SessionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
@@ -105,7 +105,21 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
     };
   }, [load]);
 
-  const start = async () => {
+  const requireDevices =
+    source.kind === "test" && modeFromRoute(source.mode) === "FULL";
+  const start = async (withoutRecording = false) => {
+    if (starting || (withoutRecording && requireDevices)) return;
+    if (
+      !withoutRecording &&
+      (!mic.verified ||
+        mic.status !== "ready" ||
+        !mic.stream.current
+          ?.getAudioTracks()
+          .some((track) => track.readyState === "live"))
+    )
+      return;
+    if (withoutRecording) mic.release();
+    mic.setWithoutRecording(withoutRecording);
     setStarting(true);
     setStartError(null);
     try {
@@ -126,15 +140,6 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
       setStarting(false);
     }
   };
-
-  const { status, monitor, requestAccess } = recorder;
-  useEffect(() => {
-    const task = window.setTimeout(() => void requestAccess(), 0);
-    return () => window.clearTimeout(task);
-  }, [requestAccess]);
-  useEffect(() => {
-    if (status === "ready") monitor();
-  }, [monitor, status]);
 
   if (!info)
     return (
@@ -166,13 +171,9 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
         </div>
       )}
       <MicCheckPanel
-        deviceLabel={recorder.deviceLabel}
-        level={recorder.level}
-        onRequestAccess={() => void recorder.requestAccess()}
-        onStart={() => void start()}
-        requireDevices={source.kind === "test"}
+        onStart={(withoutRecording) => void start(withoutRecording)}
+        requireDevices={requireDevices}
         starting={starting}
-        status={recorder.status}
       />
     </SpPage>
   );

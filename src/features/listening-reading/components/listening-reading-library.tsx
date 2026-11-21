@@ -38,7 +38,7 @@ const skills = {
     tagline: "Luyện nghe theo 4 Part với audio phát liên tục như phòng thi.",
     format: "100 câu · 45 phút · 5–495 điểm · 4 Parts",
     maxScore: 990,
-    examHref: "/listening",
+    examHref: "/listening-reading",
     exerciseHref: "/listening/practice/1",
   },
   reading: {
@@ -47,7 +47,7 @@ const skills = {
     tagline: "Luyện đọc theo 3 Part và quản lý thời gian cho 100 câu hỏi.",
     format: "100 câu · 75 phút · 5–495 điểm · 3 Parts",
     maxScore: 990,
-    examHref: "/reading",
+    examHref: "/listening-reading",
     exerciseHref: "/reading/practice/5",
   },
   "listening-reading": {

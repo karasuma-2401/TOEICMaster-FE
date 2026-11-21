@@ -99,6 +99,9 @@ export interface WritingEvaluationApi {
   completedAtUtc: string | null;
   retryCount: number;
   failureMessage: string | null;
+  rawScore?: number | null;
+  maxRawScore?: number | null;
+  scorePercentage?: number | null;
 }
 
 export interface WritingAttemptApi {
@@ -135,6 +138,24 @@ export interface WritingAttemptSummaryApi {
   updatedAtUtc: string;
   evaluationStatus: EvaluationStatus | null;
   estimatedScore: number | null;
+  rawScore?: number | null;
+  maxRawScore?: number | null;
+  scorePercentage?: number | null;
+}
+
+function validateScoreDetails(value: Record<string, unknown>) {
+  for (const key of ["rawScore", "maxRawScore", "scorePercentage"]) {
+    const score = value[key];
+    if (
+      score !== undefined &&
+      score !== null &&
+      (typeof score !== "number" ||
+        !Number.isFinite(score) ||
+        score < 0 ||
+        (key === "scorePercentage" ? score > 100 : !Number.isInteger(score)))
+    )
+      throw new Error("Phản hồi điểm Writing không hợp lệ.");
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -286,6 +307,7 @@ function parseEvaluation(value: unknown): WritingEvaluationApi | null {
       throw new Error("Phản hồi chấm Writing không hợp lệ.");
     return item as unknown as WritingEvaluationFeedbackApi;
   });
+  validateScoreDetails(value);
   return {
     ...(value as Omit<
       WritingEvaluationApi,
@@ -563,6 +585,7 @@ export async function getWritingHistory(
       !(item.estimatedScore === null || Number.isInteger(item.estimatedScore))
     )
       throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
+    validateScoreDetails(item);
     return {
       ...item,
       isPractice: item.isPractice === true,

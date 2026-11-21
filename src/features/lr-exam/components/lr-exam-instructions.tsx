@@ -180,7 +180,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link className={secondaryButton} href="/listening">
+            <Link className={secondaryButton} href="/listening-reading">
               ← Về danh sách đề
             </Link>
             <button

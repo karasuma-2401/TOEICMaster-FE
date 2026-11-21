@@ -38,6 +38,7 @@ const routes: { pattern: RegExp; methods: Method[]; uploadLimit?: number }[] = [
     methods: ["GET", "PUT", "DELETE"],
   },
   { pattern: new RegExp(`^tests/${id}/publish$`, "i"), methods: ["POST"] },
+  { pattern: new RegExp(`^tests/${id}/clone$`, "i"), methods: ["POST"] },
 ];
 
 export async function forwardAdminSpeaking(

@@ -1,116 +1,197 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { MicrophoneStatus } from "@/features/speaking/hooks/use-voice-recorder";
-import { CheckCircleIcon, MicIcon, MicOffIcon } from "../ui/icons";
+import { useEffect, useRef, useState } from "react";
+import { useVoiceRecorder } from "@/features/speaking/hooks/use-voice-recorder";
+import {
+  microphoneMessages,
+  useMicSession,
+} from "@/features/speaking/mic/mic-session-provider";
 import { Waveform } from "../ui/primitives";
 
-/** Peak level that proves the microphone actually picks up a voice. */
-const levelThreshold = 0.15;
-
-/** The only step before an attempt: allow the microphone and say a few words. */
+/** Permission, a five-second test, then explicit playback confirmation. */
 export function MicCheckPanel({
-  status,
-  level = 0,
-  deviceLabel = "",
-  onRequestAccess,
   onStart,
   starting = false,
   requireDevices = true,
 }: {
-  status: MicrophoneStatus;
-  level?: number;
-  deviceLabel?: string;
-  onRequestAccess: () => void;
-  onStart: () => void;
+  onStart: (withoutRecording?: boolean) => void;
   starting?: boolean;
-  /** Mock tests need a working microphone; Part practice may run on timers. */
   requireDevices?: boolean;
 }) {
+  const mic = useMicSession();
+  const recorder = useVoiceRecorder();
+  const [testing, setTesting] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [heard, setHeard] = useState(false);
+  const [listened, setListened] = useState(false);
+  const [take, setTake] = useState(0);
+  const [testError, setTestError] = useState<string | null>(null);
+  const currentLevel = useRef(mic.level);
   useEffect(() => {
-    if (status !== "ready" || level < levelThreshold) return;
-    const task = window.setTimeout(() => setHeard(true), 0);
+    currentLevel.current = mic.level;
+  }, [mic.level]);
+  const { stop } = recorder;
+  useEffect(() => {
+    if (mic.status === "ready") return;
+    stop();
+    const task = window.setTimeout(() => {
+      setHeard(false);
+      setListened(false);
+      setTesting(false);
+      setTake(0);
+    }, 0);
     return () => window.clearTimeout(task);
-  }, [level, status]);
+  }, [mic.status, stop]);
+  useEffect(() => {
+    if (!testing) return;
+    const startedAt = performance.now();
+    let previous = startedAt;
+    let voiceMilliseconds = 0;
+    const timer = window.setInterval(() => {
+      const now = performance.now();
+      // Bound gaps so returning from a background tab cannot count as sustained voice.
+      if (currentLevel.current >= 0.15)
+        voiceMilliseconds += Math.min(150, now - previous);
+      previous = now;
+      setElapsed(Math.min(5, Math.floor((now - startedAt) / 1000)));
+      if (now - startedAt >= 5000) {
+        stop();
+        setTesting(false);
+        setHeard(voiceMilliseconds >= 1000);
+        if (voiceMilliseconds < 1000)
+          setTestError(
+            "Chưa nhận đủ tín hiệu giọng nói. Hãy kiểm tra micro và thu thử lại.",
+          );
+      }
+    }, 100);
+    return () => {
+      window.clearInterval(timer);
+      stop();
+    };
+  }, [testing, stop]);
 
-  const granted = status === "ready";
-  const blocked = status === "denied" || status === "unsupported";
-  const passed = granted && heard;
-  const canStart = requireDevices ? passed : granted || blocked;
-
-  const title = passed
-    ? "Micro hoạt động tốt"
-    : granted
-      ? "Hãy đọc thử: “Testing 1 2 3”"
-      : status === "denied"
-        ? "Micro đang bị chặn"
-        : status === "unsupported"
-          ? "Trình duyệt không hỗ trợ ghi âm"
-          : "Đang chờ quyền micro…";
-
+  const recordTest = () => {
+    mic.resetVerification();
+    setHeard(false);
+    setListened(false);
+    setTestError(null);
+    const next = take + 1;
+    setTake(next);
+    recorder.start(next);
+    setElapsed(0);
+    setTesting(true);
+  };
+  const recording = recorder.recordings[take];
+  const ready = mic.status === "ready";
   return (
-    <section className="sp-card mx-auto max-w-[640px] p-8 text-center">
-      <span
-        className={`mx-auto grid size-16 place-items-center rounded-full ${passed ? "bg-(--sp-success-bg) text-(--sp-success)" : blocked ? "bg-(--sp-danger-bg) text-(--sp-danger)" : "bg-(--sp-orange-soft) text-(--sp-brand)"}`}
-      >
-        {passed ? (
-          <CheckCircleIcon size={32} />
-        ) : blocked ? (
-          <MicOffIcon size={32} />
-        ) : (
-          <MicIcon size={32} />
-        )}
-      </span>
-      <h2 aria-live="polite" className="mt-4 text-2xl font-semibold">
-        {title}
-      </h2>
-      {deviceLabel && (
-        <p className="mt-1 text-[13px] text-(--sp-ink-2)">{deviceLabel}</p>
-      )}
-
-      {status === "denied" ? (
-        <p className="mx-auto mt-3 max-w-md text-sm text-(--sp-ink-2)">
-          Bấm biểu tượng ổ khóa cạnh thanh URL, chọn Microphone → Cho phép, rồi
-          thử lại.
+    <section className="sp-card mx-auto max-w-[640px] space-y-5 p-6">
+      <h2 className="text-xl font-semibold">Kiểm tra thiết bị · 3 bước</h2>
+      <div>
+        <h3 className="font-semibold">1. Cấp quyền và chọn micro</h3>
+        <p aria-live="polite" className="mt-2 text-sm">
+          {microphoneMessages[mic.status]}
         </p>
-      ) : (
-        !blocked && (
-          <div className="mt-5 flex justify-center">
-            <Waveform
-              bars={36}
-              className={
-                passed ? "text-(--sp-success-line)" : "text-(--sp-brand)"
-              }
-              level={granted ? Math.max(level, 0.12) : 0.12}
-            />
-          </div>
-        )
-      )}
-
-      <div className="mt-6 flex flex-col items-center gap-3">
-        {!granted && status !== "unsupported" && (
-          <button
-            className="sp-btn sp-btn-outline"
-            disabled={status === "requesting"}
-            onClick={onRequestAccess}
-            type="button"
-          >
-            {status === "denied" ? "Thử cấp quyền lại" : "Cho phép micro"}
-          </button>
-        )}
         <button
-          className="sp-btn sp-btn-cta sp-btn-locked sp-btn-lg w-full max-w-xs"
-          disabled={!canStart || starting}
-          onClick={onStart}
+          className="sp-btn sp-btn-outline mt-3"
+          disabled={starting || testing || mic.status === "requesting"}
+          onClick={() => void mic.acquire()}
           type="button"
         >
-          {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài →"}
+          Cho phép micro
         </button>
-        <p className="text-xs text-(--sp-ink-3)">
-          Âm thanh chỉ được thu trong pha trả lời của từng câu.
+        {ready && mic.devices.length > 0 && (
+          <label className="mt-3 block text-sm">
+            Micro
+            <select
+              className="mt-1 block w-full rounded-lg border p-2"
+              disabled={starting || testing}
+              value={mic.deviceId}
+              onChange={(event) => {
+                setHeard(false);
+                setListened(false);
+                setTake(0);
+                void mic.acquire(event.target.value);
+              }}
+            >
+              {mic.devices.map((device) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || "Micro"}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <div>
+        <h3 className="font-semibold">2. Nói thử trong 5 giây</h3>
+        <p className="mt-2 text-sm" lang="en">
+          Hello, I am ready for the TOEIC Speaking test.
+        </p>
+        <Waveform bars={36} level={ready ? mic.level : 0} />
+        <button
+          className="sp-btn sp-btn-outline mt-3"
+          disabled={!ready || testing || starting}
+          onClick={recordTest}
+          type="button"
+        >
+          {testing ? `Đang thu thử ${elapsed}/5 giây…` : "Thu thử 5 giây"}
+        </button>
+        {testError && (
+          <p role="alert" className="mt-2 text-sm text-(--sp-danger)">
+            {testError}
+          </p>
+        )}
+      </div>
+      <div>
+        <h3 className="font-semibold">3. Nghe lại và xác nhận</h3>
+        {recording && !testing && (
+          <audio
+            aria-label="Bản thu kiểm tra"
+            className="mt-3 w-full"
+            controls
+            src={recording.url}
+            onEnded={() => setListened(true)}
+          >
+            <track kind="captions" />
+          </audio>
+        )}
+        <button
+          className="sp-btn sp-btn-outline mt-3"
+          disabled={!ready || !heard || !listened || testing || starting}
+          onClick={mic.verify}
+          type="button"
+        >
+          Tôi nghe rõ bản thu
+        </button>
+        <p aria-live="polite" className="mt-2 text-sm">
+          {mic.verified
+            ? "Kiểm tra thiết bị đã đạt."
+            : "Nghe hết bản thu rồi xác nhận trước khi bắt đầu."}
         </p>
       </div>
+      <button
+        className="sp-btn sp-btn-cta sp-btn-lg w-full"
+        disabled={!ready || !mic.verified || testing || starting}
+        onClick={() => onStart(false)}
+        type="button"
+      >
+        {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài →"}
+      </button>
+      {!requireDevices && (
+        <button
+          className="sp-btn sp-btn-outline w-full"
+          disabled={starting || testing}
+          onClick={() => onStart(true)}
+          type="button"
+        >
+          Luyện không ghi âm
+        </button>
+      )}
+      <p className="text-xs text-(--sp-ink-3)">
+        Micro được giữ kết nối trong lượt làm để tránh xin quyền lại. Ngoài bản
+        thu thử trên máy, âm thanh chỉ được ghi trong pha trả lời; bản thu thử
+        không được gửi lên máy chủ.
+      </p>
     </section>
   );
 }
