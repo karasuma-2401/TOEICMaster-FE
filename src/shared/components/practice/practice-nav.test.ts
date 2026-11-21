@@ -21,6 +21,8 @@ describe("practice navigation", () => {
     ["/exams/lr/123", "exam-lr"],
     ["/speaking", "exam-speaking"],
     ["/writing", "exam-writing"],
+    ["/flashcards", "flashcards"],
+    ["/flashcards/office-operations", "flashcards"],
     ["/pronunciation", "pronunciation"],
     ["/pronunciation/ipa", "pronunciation"],
     ["/history", "history"],
@@ -42,6 +44,8 @@ describe("practice navigation", () => {
       "Bài tập",
     ]);
     expect(practiceNavLinks.map((link) => [link.label, link.href])).toEqual([
+      ["Kiến thức", "/knowledge"],
+      ["Flashcards", "/flashcards"],
       ["Phát âm", "/pronunciation"],
       ["Lịch sử", "/history"],
     ]);
@@ -62,6 +66,8 @@ describe("practice navigation", () => {
         "/speaking/parts/1",
         "/writing",
         "/writing/practice/1",
+        "/knowledge",
+        "/flashcards",
         "/pronunciation",
         "/history",
       ]),

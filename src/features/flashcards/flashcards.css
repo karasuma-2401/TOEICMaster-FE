@@ -1,0 +1,42 @@
+/* Scoped 3D flip card motion for the Flashcards study stage. */
+.fc-scene {
+  perspective: 1400px;
+}
+
+.fc-card {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fc-card-flipped {
+  transform: rotateY(180deg);
+}
+
+.fc-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.fc-face-back {
+  transform: rotateY(180deg);
+}
+
+@media (max-width: 639px) {
+  .fc-card {
+    min-height: 390px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-card {
+    transition: none;
+  }
+}

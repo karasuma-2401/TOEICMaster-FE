@@ -25,7 +25,7 @@ describe("PracticeSidebar", () => {
     render(<PracticeSidebarNav />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(10);
     links.forEach((link) => {
       expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
     });
@@ -35,6 +35,7 @@ describe("PracticeSidebar", () => {
       "href",
       "/knowledge",
     );
+    expect(screen.getByText("Flashcards")).toBeVisible();
     expect(screen.getByText("Phát âm")).toBeVisible();
     expect(screen.getByText("Lịch sử")).toBeVisible();
   });
@@ -43,12 +44,13 @@ describe("PracticeSidebar", () => {
     render(<PracticeSidebarNav collapsed />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(10);
     links.forEach((link) => {
       expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
       expect(link.textContent?.trim()).toBe("");
     });
     expect(screen.queryByText("Listening & Reading")).not.toBeInTheDocument();
+    expect(screen.queryByText("Flashcards")).not.toBeInTheDocument();
     expect(screen.queryByText("Phát âm")).not.toBeInTheDocument();
     expect(screen.queryByText("Lịch sử")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(

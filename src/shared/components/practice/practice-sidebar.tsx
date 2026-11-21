@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   Headphones,
   History,
+  Layers,
   Mic,
   Pencil,
   SquarePen,
@@ -33,6 +34,7 @@ const navIcons: Record<PracticeNavKey, LucideIcon> = {
   "exercise-lr": BookOpen,
   "exercise-speaking": AudioLines,
   "exercise-writing": SquarePen,
+  flashcards: Layers,
   pronunciation: Volume2,
   history: History,
 };
