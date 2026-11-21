@@ -17,22 +17,43 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("PracticeSidebar", () => {
-  it("renders active links and full accessible names when collapsed", () => {
+  it("renders icons alongside labels when expanded", () => {
+    render(<PracticeSidebarNav />);
+
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(8);
+    links.forEach((link) => {
+      expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Đề thi")).toBeVisible();
+    expect(screen.getByText("Bài tập")).toBeVisible();
+    expect(screen.getByText("Phát âm")).toBeVisible();
+    expect(screen.getByText("Lịch sử")).toBeVisible();
+  });
+
+  it("renders icon-only links with accessible names and tooltips when collapsed", () => {
     render(<PracticeSidebarNav collapsed />);
 
-    expect(screen.getByText("Thi")).toBeInTheDocument();
-    expect(screen.getByText("Tập")).toBeInTheDocument();
-    expect(screen.getByText("IPA")).toBeInTheDocument();
-    expect(screen.getByText("Sử")).toBeInTheDocument();
-    expect(screen.getAllByText("L&R")).toHaveLength(2);
-    expect(screen.getAllByText("S")).toHaveLength(2);
-    expect(screen.getAllByText("W")).toHaveLength(2);
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(8);
+    links.forEach((link) => {
+      expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
+      expect(link.textContent?.trim()).toBe("");
+    });
+    expect(screen.queryByText("Listening & Reading")).not.toBeInTheDocument();
+    expect(screen.queryByText("Phát âm")).not.toBeInTheDocument();
+    expect(screen.queryByText("Lịch sử")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
       "aria-current",
       "page",
+    );
+    expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
+      "title",
+      "Phát âm",
     );
     expect(screen.getByRole("link", { name: "Lịch sử" })).not.toHaveAttribute(
       "aria-current",
@@ -41,8 +62,13 @@ describe("PracticeSidebar", () => {
       name: "Listening & Reading",
     });
     expect(listeningReadingLinks).toHaveLength(2);
-    listeningReadingLinks.forEach((link) =>
-      expect(link).toHaveTextContent("L&R"),
+    expect(listeningReadingLinks[0]).toHaveAttribute(
+      "title",
+      "Đề thi · Listening & Reading",
+    );
+    expect(listeningReadingLinks[1]).toHaveAttribute(
+      "title",
+      "Bài tập · Listening & Reading",
     );
   });
 

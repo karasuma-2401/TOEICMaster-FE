@@ -37,17 +37,13 @@ describe("practice navigation", () => {
   });
 
   it("exposes grouped exam/exercise sections and standalone links", () => {
-    expect(
-      practiceNavGroups.map((group) => [group.label, group.short]),
-    ).toEqual([
-      ["Đề thi", "Thi"],
-      ["Bài tập", "Tập"],
+    expect(practiceNavGroups.map((group) => group.label)).toEqual([
+      "Đề thi",
+      "Bài tập",
     ]);
-    expect(
-      practiceNavLinks.map((link) => [link.label, link.short, link.href]),
-    ).toEqual([
-      ["Phát âm", "IPA", "/pronunciation"],
-      ["Lịch sử", "Sử", "/history"],
+    expect(practiceNavLinks.map((link) => [link.label, link.href])).toEqual([
+      ["Phát âm", "/pronunciation"],
+      ["Lịch sử", "/history"],
     ]);
   });
 

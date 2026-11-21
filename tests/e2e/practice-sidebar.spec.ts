@@ -297,12 +297,20 @@ test.describe("Practice Sidebar Navigation", () => {
       )
       .toBe("64px");
 
-    // Short labels visible while accessible names remain intact
-    await expect(nav.getByText("Thi", { exact: true })).toBeVisible();
-    await expect(nav.getByText("Tập", { exact: true })).toBeVisible();
-    await expect(nav.getByText("IPA", { exact: true })).toBeVisible();
-    await expect(nav.getByText("Sử", { exact: true })).toBeVisible();
+    // Collapsed rail renders icon-only links while accessible names and tooltips remain intact
+    const collapsedLinks = nav.getByRole("link");
+    await expect(collapsedLinks).toHaveCount(8);
+    for (let i = 0; i < 8; i++) {
+      const link = collapsedLinks.nth(i);
+      await expect(link.locator("svg")).toBeVisible();
+      expect((await link.innerText()).trim()).toBe("");
+    }
     await expect(nav.getByRole("link", { name: "Phát âm" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
+      "title",
+      "Phát âm",
+    );
+    await expect(nav.getByRole("link", { name: "Lịch sử" })).toBeVisible();
 
     await assertCleanDomGeometry(page);
     await captureScreenshot(

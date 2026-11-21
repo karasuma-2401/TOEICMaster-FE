@@ -1,14 +1,22 @@
+export type PracticeNavKey =
+  | "exam-lr"
+  | "exam-speaking"
+  | "exam-writing"
+  | "exercise-lr"
+  | "exercise-speaking"
+  | "exercise-writing"
+  | "pronunciation"
+  | "history";
+
 export interface PracticeNavLink {
-  key: string;
+  key: PracticeNavKey;
   label: string;
-  short: string;
   href: string;
 }
 
 export interface PracticeNavGroup {
   key: string;
   label: string;
-  short: string;
   links: readonly PracticeNavLink[];
 }
 
@@ -16,44 +24,37 @@ export const practiceNavGroups: readonly PracticeNavGroup[] = [
   {
     key: "exam",
     label: "Đề thi",
-    short: "Thi",
     links: [
       {
         key: "exam-lr",
         label: "Listening & Reading",
-        short: "L&R",
         href: "/listening-reading",
       },
       {
         key: "exam-speaking",
         label: "Speaking",
-        short: "S",
         href: "/speaking",
       },
-      { key: "exam-writing", label: "Writing", short: "W", href: "/writing" },
+      { key: "exam-writing", label: "Writing", href: "/writing" },
     ],
   },
   {
     key: "exercise",
     label: "Bài tập",
-    short: "Tập",
     links: [
       {
         key: "exercise-lr",
         label: "Listening & Reading",
-        short: "L&R",
         href: "/listening/practice/1",
       },
       {
         key: "exercise-speaking",
         label: "Speaking",
-        short: "S",
         href: "/speaking/parts/1",
       },
       {
         key: "exercise-writing",
         label: "Writing",
-        short: "W",
         href: "/writing/practice/1",
       },
     ],
@@ -64,13 +65,12 @@ export const practiceNavLinks: readonly PracticeNavLink[] = [
   {
     key: "pronunciation",
     label: "Phát âm",
-    short: "IPA",
     href: "/pronunciation",
   },
-  { key: "history", label: "Lịch sử", short: "Sử", href: "/history" },
+  { key: "history", label: "Lịch sử", href: "/history" },
 ];
 
-const rules: readonly [RegExp, string][] = [
+const rules: readonly [RegExp, PracticeNavKey][] = [
   [/^\/(listening|reading)\/practice(\/|$)/, "exercise-lr"],
   [/^\/speaking\/(parts|exercises)(\/|$)/, "exercise-speaking"],
   [/^\/writing\/practice(\/|$)/, "exercise-writing"],
@@ -82,7 +82,7 @@ const rules: readonly [RegExp, string][] = [
   [/^\/history(\/|$)/, "history"],
 ];
 
-export function activeNavKey(pathname: string | null): string | null {
+export function activeNavKey(pathname: string | null): PracticeNavKey | null {
   if (!pathname) return null;
   return rules.find(([pattern]) => pattern.test(pathname))?.[1] ?? null;
 }

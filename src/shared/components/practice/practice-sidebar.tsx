@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  AudioLines,
+  BookOpen,
+  ChevronLeft,
+  Headphones,
+  History,
+  Mic,
+  Pencil,
+  SquarePen,
+  Volume2,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useId, useSyncExternalStore } from "react";
@@ -8,9 +20,21 @@ import {
   activeNavKey,
   practiceNavGroups,
   practiceNavLinks,
+  type PracticeNavKey,
   type PracticeNavLink,
 } from "./practice-nav";
 import { focusRing } from "./styles";
+
+const navIcons: Record<PracticeNavKey, LucideIcon> = {
+  "exam-lr": Headphones,
+  "exam-speaking": Mic,
+  "exam-writing": Pencil,
+  "exercise-lr": BookOpen,
+  "exercise-speaking": AudioLines,
+  "exercise-writing": SquarePen,
+  pronunciation: Volume2,
+  history: History,
+};
 
 export function PracticeSidebarNav({
   collapsed = false,
@@ -19,18 +43,25 @@ export function PracticeSidebarNav({
 }) {
   const active = activeNavKey(usePathname());
   const idPrefix = useId();
-  const renderLink = (link: PracticeNavLink) => {
+  const renderLink = (link: PracticeNavLink, groupLabel?: string) => {
     const current = link.key === active;
+    const Icon = navIcons[link.key];
+    const tooltip = groupLabel ? `${groupLabel} · ${link.label}` : link.label;
     return (
       <li key={link.key}>
         <Link
           aria-current={current ? "page" : undefined}
           aria-label={collapsed ? link.label : undefined}
-          className={`flex min-h-11 items-center rounded-lg py-2 transition hover:text-[#df5a28] ${focusRing} ${current ? "bg-[#fff1ea] font-semibold text-[#df5a28]" : "text-[#4a4541]"} ${collapsed ? "justify-center px-1 text-[13px]" : "px-3 text-[15px]"}`}
+          className={`flex min-h-11 items-center rounded-lg py-2 transition hover:text-[#df5a28] ${focusRing} ${current ? "bg-[#fff1ea] font-semibold text-[#df5a28]" : "text-[#4a4541] hover:bg-[#faf7f5]"} ${collapsed ? "justify-center px-0" : "gap-2.5 px-3 text-[15px]"}`}
           href={link.href}
-          title={collapsed ? link.label : undefined}
+          title={collapsed ? tooltip : undefined}
         >
-          {collapsed ? link.short : link.label}
+          <Icon
+            aria-hidden="true"
+            className="size-[18px] shrink-0"
+            strokeWidth={1.75}
+          />
+          {!collapsed && <span className="truncate">{link.label}</span>}
         </Link>
       </li>
     );
@@ -39,34 +70,39 @@ export function PracticeSidebarNav({
   return (
     <nav
       aria-label="Luyện tập"
-      className={`flex flex-col ${collapsed ? "gap-4" : "gap-5"}`}
+      className={`flex flex-col ${collapsed ? "gap-3" : "gap-5"}`}
     >
-      {practiceNavGroups.map((group) => (
-        <div key={group.key}>
+      {practiceNavGroups.map((group, index) => (
+        <div
+          className={
+            collapsed && index > 0
+              ? "border-t border-[#ece9e5] pt-3"
+              : undefined
+          }
+          key={group.key}
+        >
           <p
-            className={`text-[13px] font-semibold text-[#2f2b28] ${collapsed ? "text-center text-[11px]" : "px-3"}`}
+            className={
+              collapsed
+                ? "sr-only"
+                : "px-3 text-[13px] font-semibold text-[#2f2b28]"
+            }
             id={`${idPrefix}-${group.key}`}
-            title={collapsed ? group.label : undefined}
           >
-            {collapsed ? (
-              <>
-                <span aria-hidden="true">{group.short}</span>
-                <span className="sr-only">{group.label}</span>
-              </>
-            ) : (
-              group.label
-            )}
+            {group.label}
           </p>
           <ul
             aria-labelledby={`${idPrefix}-${group.key}`}
-            className={`mt-1 flex flex-col gap-0.5 ${collapsed ? "" : "ml-3 border-l border-[#ece9e5] pl-1"}`}
+            className={`flex flex-col ${collapsed ? "gap-1" : "mt-1 ml-3 gap-0.5 border-l border-[#ece9e5] pl-1"}`}
           >
-            {group.links.map(renderLink)}
+            {group.links.map((link) => renderLink(link, group.label))}
           </ul>
         </div>
       ))}
-      <ul className="flex flex-col gap-0.5 border-t border-[#ece9e5] pt-4">
-        {practiceNavLinks.map(renderLink)}
+      <ul
+        className={`flex flex-col border-t border-[#ece9e5] ${collapsed ? "gap-1 pt-3" : "gap-0.5 pt-4"}`}
+      >
+        {practiceNavLinks.map((link) => renderLink(link))}
       </ul>
     </nav>
   );
@@ -97,25 +133,6 @@ function writeCollapsed(value: boolean) {
     window.localStorage.setItem(storageKey, value ? "1" : "0");
   } catch {}
   listeners.forEach((listener) => listener());
-}
-
-function Chevron({ flipped }: { flipped: boolean }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={`size-3.5 transition-transform duration-200 ${flipped ? "rotate-180" : ""}`}
-      fill="none"
-      viewBox="0 0 16 16"
-    >
-      <path
-        d="M10 3.5 5.5 8l4.5 4.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
 }
 
 export function PracticeSidebar() {
@@ -158,7 +175,11 @@ export function PracticeSidebar() {
         title={collapsed ? "Mở rộng" : "Thu gọn"}
         type="button"
       >
-        <Chevron flipped={collapsed} />
+        <ChevronLeft
+          aria-hidden="true"
+          className={`size-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+          strokeWidth={2}
+        />
       </button>
     </aside>
   );
