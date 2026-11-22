@@ -21,9 +21,9 @@ For a new API: confirm the backend contract first; put the typed API function un
 
 ## Tests and local environment
 
-- Vitest currently runs in Node and includes `src/**/*.test.ts`; use it for API helpers, parsers, and route handlers. Mock `fetch`/environment as in the ping tests and clean up mocks after each test.
+- Vitest runs in Node for `src/**/*.test.ts` and `scripts/**/*.test.ts` (use it for API helpers, parsers, scripts, and route handlers). Mock `fetch`/environment as in the ping tests and clean up mocks after each test.
 - Test success, unexpected data, HTTP/upstream errors, and cancellation when relevant. Assert observable outputs and boundary calls, not just implementation details.
-- DOM/browser testing is not configured yet. When a feature needs browser-level verification, add suitable tooling and tests with that feature; `*.test.tsx` will not automatically run under the current setup.
+- Component and DOM tests run under the `jsdom` Vitest project using `*.test.tsx`; end-to-end Playwright specs live under `tests/e2e/`.
 - `npm test` and `npm run check` do not need a live backend; current tests mock `fetch`. For the live UI, copy `.env.example` to `.env.local`, start the backend as its README describes, then run `npm ci` and `npm run dev`. `/api/health` checks only Next.js; the connection status shown on the page checks the backend.
 
 ```sh
@@ -31,7 +31,7 @@ npm ci
 npm run check
 ```
 
-`npm run check` covers formatting, Oxlint, type checking, Vitest, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient. For new APIs, consult `TOEICMaster-BE/docs/api-contract.md` when that repository is in the workspace; when cloned alone, use the backend's Development OpenAPI document and the issue's contract description.
+`npm run check` covers formatting, OpenAPI contract drift detection, Oxlint, type checking, Vitest, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient. For new APIs, consult `../TOEICMaster-BE/docs/contracts/api-contract.md` when that repository is in the workspace; when cloned alone, use the backend's Development OpenAPI document and the issue's contract description.
 
 ## User profile modal flow
 

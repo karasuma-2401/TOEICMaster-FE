@@ -36,10 +36,13 @@ For feature work, read `docs/feature-development.md` for an implementation map, 
 npm ci
 npm run dev
 npm run format:check
+npm run contract:sync
+npm run contract:generate
+npm run contract:check
 npm run lint
 npm run typecheck
 npm test
 npm run check
 ```
 
-Run commands from the frontend repository root. `npm run check` covers formatting, lint, type checking, tests, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient; an application build is unnecessary.
+Run commands from the frontend repository root. `npm run check` covers formatting, contract drift detection, lint, type checking, tests, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient; an application build is unnecessary.

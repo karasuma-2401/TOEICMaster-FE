@@ -1,6 +1,6 @@
-import { readFile, writeFile, copyFile, mkdir, stat } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import openapiTS, { astToString } from "openapi-typescript";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -76,8 +76,12 @@ async function readSpec(filePath) {
   if (
     !spec ||
     typeof spec !== "object" ||
-    spec.openapi === undefined ||
-    !spec.paths
+    Array.isArray(spec) ||
+    typeof spec.openapi !== "string" ||
+    spec.openapi.length === 0 ||
+    !spec.paths ||
+    typeof spec.paths !== "object" ||
+    Array.isArray(spec.paths)
   ) {
     throw new Error(
       `OpenAPI source must contain "openapi" and "paths": ${filePath}`,
@@ -140,21 +144,29 @@ export async function runContractCommand({
   return { changed: false, drifted: false, snapshotPath, outputPath };
 }
 
-function parseArgs(argv) {
+const USAGE_MESSAGE =
+  "Usage: node scripts/sync-openapi-types.mjs <sync|generate|check> [--source <path>]";
+
+export function parseArgs(argv) {
   const mode = argv[0];
   if (!mode || !["sync", "generate", "check"].includes(mode)) {
-    throw new Error(
-      "Usage: node scripts/sync-openapi-types.mjs <sync|generate|check> [--source <path>]",
-    );
+    throw new Error(USAGE_MESSAGE);
   }
   const sourceIndex = argv.indexOf("--source");
-  return {
-    mode,
-    sourcePath: sourceIndex >= 0 ? argv[sourceIndex + 1] : undefined,
-  };
+  if (sourceIndex >= 0) {
+    const sourceValue = argv[sourceIndex + 1];
+    if (!sourceValue || sourceValue.startsWith("--")) {
+      throw new Error(`Missing value for --source. ${USAGE_MESSAGE}`);
+    }
+    return { mode, sourcePath: sourceValue };
+  }
+  return { mode, sourcePath: undefined };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+) {
   try {
     await runContractCommand(parseArgs(process.argv.slice(2)));
   } catch (error) {
