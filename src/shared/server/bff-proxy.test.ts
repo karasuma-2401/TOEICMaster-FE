@@ -278,4 +278,81 @@ describe("shared/server/bff-proxy", () => {
     expect(empty.headers.get("cache-control")).toBe("no-store");
     expect(empty.body).toBeNull();
   });
+
+  it("handles optional auth with valid session vs fully expired session, and user auth with expired access", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    // optional with valid session forwards Authorization
+    const validCookie = makeSessionCookie();
+    const optValid = await forwardBffRequest(
+      makeRequest({ method: "GET", cookie: validCookie }),
+      { upstreamPath: "/api/v1/optional", method: "GET", auth: "optional" },
+    );
+    expect(optValid.status).toBe(200);
+    expect(
+      new Headers((fetchMock.mock.calls[0][1] as RequestInit).headers).get(
+        "authorization",
+      ),
+    ).toBe("Bearer access-token");
+
+    // optional with BOTH expired access and expired refresh degrades to anonymous (not 401)
+    const fullyExpiredCookie = makeSessionCookie({
+      accessTokenExpiresAtUtc: new Date(Date.now() - 20_000).toISOString(),
+      refreshTokenExpiresAtUtc: new Date(Date.now() - 10_000).toISOString(),
+    });
+    const optExpiredBoth = await forwardBffRequest(
+      makeRequest({ method: "GET", cookie: fullyExpiredCookie }),
+      { upstreamPath: "/api/v1/optional", method: "GET", auth: "optional" },
+    );
+    expect(optExpiredBoth.status).toBe(200);
+    expect(
+      new Headers((fetchMock.mock.calls[1][1] as RequestInit).headers).has(
+        "authorization",
+      ),
+    ).toBe(false);
+
+    // user with expired access + valid refresh returns 401 without calling upstream
+    const expiredAccessCookie = makeSessionCookie({
+      accessTokenExpiresAtUtc: new Date(Date.now() - 10_000).toISOString(),
+      refreshTokenExpiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+    });
+    const userExpiredAccess = await forwardBffRequest(
+      makeRequest({ method: "GET", cookie: expiredAccessCookie }),
+      { upstreamPath: "/api/v1/me", method: "GET", auth: "user" },
+    );
+    expect(userExpiredAccess.status).toBe(401);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("enforces sameOrigin on mutating methods and handles missing API_BASE_URL safely", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    for (const method of ["PUT", "PATCH", "DELETE"] as const) {
+      const missingOrigin = await forwardBffRequest(
+        makeRequest({ method, origin: null }),
+        { upstreamPath: "/api/v1/items", method, auth: "public" },
+      );
+      expect(missingOrigin.status).toBe(403);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    vi.stubEnv("API_BASE_URL", "");
+    const missingBase = await forwardBffRequest(
+      makeRequest({ method: "GET" }),
+      {
+        upstreamPath: "/api/v1/items",
+        method: "GET",
+        auth: "public",
+        missingBaseUrlMessage: "Backend chưa cấu hình",
+      },
+    );
+    expect(missingBase.status).toBe(503);
+    expect(await missingBase.text()).toContain("Backend chưa cấu hình");
+  });
 });

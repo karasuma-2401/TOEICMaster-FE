@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ApiError, getJson } from "./client";
 import {
   fetchWithAuthRefresh,
   HttpError,
@@ -205,5 +206,87 @@ describe("shared/api/http", () => {
     await expect(
       requestVoid("/api/action", { method: "POST" }),
     ).rejects.toMatchObject({ status: 403, message: "Forbidden" });
+  });
+
+  it("retries at most once on 401 and skips refresh when refreshOn401 is false or signal is pre-aborted", async () => {
+    vi.stubGlobal("navigator", {});
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 401 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const refreshFn = vi.fn().mockResolvedValue(undefined);
+
+    const retried = await fetchWithAuthRefresh("/api/protected", { refreshFn });
+    expect(retried.status).toBe(401);
+    expect(refreshFn).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    refreshFn.mockClear();
+    fetchMock.mockClear();
+    const noRefresh = await fetchWithAuthRefresh("/api/protected", {
+      refreshOn401: false,
+      refreshFn,
+    });
+    expect(noRefresh.status).toBe(401);
+    expect(refreshFn).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const preAborted = new AbortController();
+    preAborted.abort();
+    fetchMock.mockRejectedValueOnce(new DOMException("Aborted", "AbortError"));
+    await expect(
+      fetchWithAuthRefresh("/api/protected", {
+        signal: preAborted.signal,
+        refreshFn,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(refreshFn).not.toHaveBeenCalled();
+  });
+
+  it("requestJson maps HTTP error ProblemDetails into HttpError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            title: "Yêu cầu không hợp lệ",
+            code: "BAD_INPUT",
+            traceId: "tr-9",
+            errors: { Title: ["Không được để trống"] },
+          }),
+          { status: 422, headers: { "retry-after": "12" } },
+        ),
+      ),
+    );
+
+    await expect(
+      requestJson("/api/item", { parse: (raw) => raw }),
+    ).rejects.toMatchObject({
+      name: "HttpError",
+      status: 422,
+      code: "BAD_INPUT",
+      traceId: "tr-9",
+      retryAfterSeconds: 12,
+      fieldErrors: { title: ["Không được để trống"] },
+    });
+  });
+
+  it("keeps backward-compatible client.ts ApiError and getJson exports working", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ status: "ok" }), { status: 200 }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ title: "Down" }), { status: 503 }),
+        ),
+    );
+
+    await expect(getJson("/api/system/ping")).resolves.toEqual({
+      status: "ok",
+    });
+    await expect(getJson("/api/system/ping")).rejects.toBeInstanceOf(ApiError);
   });
 });

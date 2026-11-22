@@ -204,4 +204,51 @@ describe("scripts/check-guardrails", () => {
       },
     ]);
   });
+
+  it("enforces single-fault isolated sibling patterns across rules", () => {
+    expect(
+      runGuardrails({
+        baseline: {},
+        files: {
+          "src/features/demo/alert.tsx": `export const notify = () => globalThis.alert("Hi");`,
+        },
+      }).violations[0]?.rule,
+    ).toBe("no-browser-dialogs");
+
+    expect(
+      runGuardrails({
+        baseline: {},
+        files: {
+          "src/features/demo/refresh.ts": `export const run = () => refreshSession();`,
+        },
+      }).violations[0]?.rule,
+    ).toBe("no-duplicate-auth-refresh");
+
+    expect(
+      runGuardrails({
+        baseline: {},
+        files: {
+          "src/features/demo/ts-ignore.ts": `// @ts-ignore\nexport const a = 1;`,
+        },
+      }).violations[0]?.rule,
+    ).toBe("no-ts-suppress");
+
+    expect(
+      runGuardrails({
+        baseline: {},
+        files: {
+          "src/features/demo/oxlint.tsx": `// oxlint-disable-next-line react/rules-of-hooks\nexport const x = 1;`,
+        },
+      }).violations[0]?.rule,
+    ).toBe("no-unjustified-lint-disable");
+
+    expect(
+      runGuardrails({
+        baseline: {},
+        files: {
+          "src/features/demo/server/legacy-upstream.ts": `export const proxy = () => fetch("http://api");`,
+        },
+      }).violations[0]?.rule,
+    ).toBe("no-new-legacy-proxy");
+  });
 });

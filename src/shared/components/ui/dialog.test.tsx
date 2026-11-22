@@ -131,10 +131,33 @@ describe("ui/dialog", () => {
     await user.click(confirmBtn);
     expect(onConfirm).toHaveBeenCalledTimes(1);
 
-    await user.keyboard("{Escape}");
+    await user.click(cancelBtn);
     expect(onCancel).toHaveBeenCalledTimes(1);
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
+  });
+
+  it("ConfirmDialog invokes onCancel on Escape and DialogContent respects showCloseButton=false", async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+
+    render(
+      <ConfirmDialog
+        cancelLabel="Hủy"
+        confirmLabel="Xóa"
+        id="esc-title"
+        onCancel={onCancel}
+        onConfirm={vi.fn()}
+        title="Xác nhận xóa"
+      >
+        Không thể hoàn tác.
+      </ConfirmDialog>,
+    );
+
+    const dialog = await screen.findByRole("dialog", { name: "Xác nhận xóa" });
+    expect(dialog.querySelector('button[aria-label="Đóng"]')).toBeNull();
+    await user.keyboard("{Escape}");
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });

@@ -65,6 +65,18 @@ describe("ui/form-field and ui/password-input", () => {
     expect(select).not.toHaveAttribute("aria-invalid");
   });
 
+  it("links only error ID in aria-describedby when hint is omitted", () => {
+    render(
+      <FormField error="Trường bắt buộc." id="full-name" label="Họ tên">
+        <FormInput />
+      </FormField>,
+    );
+
+    const input = screen.getByLabelText("Họ tên");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAttribute("aria-describedby", "full-name-error");
+  });
+
   it("PasswordInput toggles input type between password and text with accessible button state", async () => {
     const user = userEvent.setup();
     render(
