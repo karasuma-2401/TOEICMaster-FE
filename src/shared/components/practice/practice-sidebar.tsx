@@ -26,6 +26,7 @@ import {
 import { focusRing } from "./styles";
 
 const navIcons: Record<PracticeNavKey, LucideIcon> = {
+  knowledge: BookOpen,
   "exam-lr": Headphones,
   "exam-speaking": Mic,
   "exam-writing": Pencil,

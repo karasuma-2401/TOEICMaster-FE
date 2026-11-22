@@ -42,6 +42,7 @@ describe("practice navigation", () => {
       "Bài tập",
     ]);
     expect(practiceNavLinks.map((link) => [link.label, link.href])).toEqual([
+      ["Kiến thức", "/knowledge"],
       ["Phát âm", "/pronunciation"],
       ["Lịch sử", "/history"],
     ]);

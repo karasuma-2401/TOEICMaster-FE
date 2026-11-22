@@ -1,0 +1,20 @@
+import { knowledgeAdminRequest } from "./http";
+
+export interface SavedArticle {
+  articleId: string;
+  title: string;
+  url: string;
+  available: boolean;
+}
+
+export function knowledgeRequest<T>(
+  path: string,
+  method: "GET" | "PUT" | "DELETE" = "GET",
+  signal?: AbortSignal,
+) {
+  return knowledgeAdminRequest<T>(`/api/knowledge/${path}`, {
+    method,
+    signal,
+    fallback: "Không thể tải bài học. Vui lòng thử lại.",
+  });
+}

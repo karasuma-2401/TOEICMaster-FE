@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <NavigationTracker />
         {children}
         <ToastProvider />
