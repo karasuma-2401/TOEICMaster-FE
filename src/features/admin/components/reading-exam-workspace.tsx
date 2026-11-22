@@ -432,7 +432,11 @@ export function ReadingExamWorkspace({
         </div>
       </header>
       <div className="grid gap-0 border border-t-0 border-[var(--admin-border)] bg-white xl:grid-cols-[minmax(0,1fr)_330px]">
-        <main className="min-w-0 space-y-4 bg-[#f8fafc] p-5">
+        <main
+          className="min-w-0 space-y-4 bg-[#f8fafc] p-5"
+          id="main-content"
+          tabIndex={-1}
+        >
           <section className="rounded-lg border border-[var(--admin-border)] bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>

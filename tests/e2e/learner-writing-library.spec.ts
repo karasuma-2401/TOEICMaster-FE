@@ -22,21 +22,36 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
     ).toBeVisible();
 
     // Hiển thị các đề thi Full test
+    const catalog = page.locator(
+      'section[aria-labelledby="exam-library-count"]',
+    );
     await expect(
-      page.getByText("TOEIC Writing Simulation Test 01"),
+      catalog.getByRole("heading", {
+        name: "TOEIC Writing Simulation Test 01",
+        level: 3,
+      }),
     ).toBeVisible();
     await expect(
-      page.getByText("TOEIC Writing Simulation Test 02"),
+      catalog.getByRole("heading", {
+        name: "TOEIC Writing Simulation Test 02",
+        level: 3,
+      }),
     ).toBeVisible();
 
     // Tìm kiếm đề thi theo mã
     const searchInput = page.getByPlaceholder("Tìm kiếm tên đề Writing...");
     await searchInput.fill("WT-PUB-FULL-01");
     await expect(
-      page.getByText("TOEIC Writing Simulation Test 01"),
+      catalog.getByRole("heading", {
+        name: "TOEIC Writing Simulation Test 01",
+        level: 3,
+      }),
     ).toBeVisible();
     await expect(
-      page.getByText("TOEIC Writing Simulation Test 02"),
+      catalog.getByRole("heading", {
+        name: "TOEIC Writing Simulation Test 02",
+        level: 3,
+      }),
     ).not.toBeVisible();
   });
 

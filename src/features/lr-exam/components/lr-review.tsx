@@ -127,7 +127,11 @@ export function LrReview({
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6 xl:flex-row">
-        <main className="flex min-w-0 flex-1 flex-col gap-5">
+        <main
+          className="flex min-w-0 flex-1 flex-col gap-5"
+          id="main-content"
+          tabIndex={-1}
+        >
           <div
             className="flex flex-wrap items-center gap-2"
             role="tablist"

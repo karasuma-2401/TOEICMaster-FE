@@ -93,7 +93,7 @@ function AuthHero() {
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="auth-page min-h-dvh">
+    <main className="auth-page min-h-dvh" id="main-content" tabIndex={-1}>
       <div className="auth-card grid min-h-dvh w-full overflow-hidden bg-white lg:min-h-screen lg:grid-cols-[47.5%_52.5%]">
         <AuthHero />
         <section className="flex min-h-dvh items-center justify-center bg-[#fffdfc] px-7 py-12 sm:px-14 lg:min-h-0 lg:px-[6rem] lg:py-12">

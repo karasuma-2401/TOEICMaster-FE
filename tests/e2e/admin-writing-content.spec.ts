@@ -3,7 +3,6 @@ import path from "node:path";
 import {
   MockWritingAdminBackend,
   FIXTURES_DIR,
-  chooseFilter,
   loginAsAdmin,
 } from "./admin-writing-helpers";
 
@@ -14,9 +13,9 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     await loginAsAdmin(context);
     backend = new MockWritingAdminBackend();
     await backend.setupRoutes(page);
-    await page.goto("/admin/content/writing");
+    await page.goto("/admin/content/writing/part-1");
     await expect(
-      page.getByRole("heading", { name: "Ngân hàng bài tập Writing" }),
+      page.getByRole("heading", { name: "Writing Part 1" }),
     ).toBeVisible();
   });
 
@@ -28,12 +27,18 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     await expect(page.getByText("Office Workspace")).toBeVisible();
 
     // Chuyển sang Part 2
-    await page.getByRole("button", { name: "Part 2" }).click();
+    await page.getByRole("link", { name: /Part 2/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Writing Part 2" }),
+    ).toBeVisible();
     await expect(page.getByText("WP2-SEED-01")).toBeVisible();
     await expect(page.getByText("Customer Meeting")).toBeVisible();
 
     // Chuyển sang Part 3
-    await page.getByRole("button", { name: "Part 3" }).click();
+    await page.getByRole("link", { name: /Part 3/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Writing Part 3" }),
+    ).toBeVisible();
     await expect(page.getByText("WP3-SEED-01")).toBeVisible();
     await expect(page.getByText("Remote Work Opinion")).toBeVisible();
   });
@@ -54,12 +59,12 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
 
     // Xóa tìm kiếm và lọc trạng thái
     await searchInput.clear();
-    await chooseFilter(page, /^Lọc trạng thái/, "Bản nháp");
+    await page.getByLabel("Lọc trạng thái").selectOption("DRAFT");
     await expect(
       page.getByText("Không tìm thấy bài tập phù hợp"),
     ).toBeVisible();
 
-    await chooseFilter(page, /^Lọc trạng thái/, "Hiển thị");
+    await page.getByLabel("Lọc trạng thái").selectOption("PUBLISHED");
     await expect(page.getByText("WP1-SEED-01")).toBeVisible();
   });
 
@@ -163,7 +168,10 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     page,
   }) => {
     // Chuyển tab Part 2
-    await page.getByRole("button", { name: "Part 2" }).click();
+    await page.getByRole("link", { name: /Part 2/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Writing Part 2" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
     const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
     await expect(dialog.getByText("WRITING PART 2")).toBeVisible();
@@ -198,7 +206,10 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     page,
   }) => {
     // Chuyển tab Part 3
-    await page.getByRole("button", { name: "Part 3" }).click();
+    await page.getByRole("link", { name: /Part 3/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Writing Part 3" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
     const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
     await expect(dialog.getByText("WRITING PART 3")).toBeVisible();

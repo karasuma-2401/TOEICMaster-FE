@@ -17,13 +17,13 @@ Prefer Server Components for server-rendered screens. Add `"use client"` at the 
 
 `ConnectionStatus` calls `ping(signal)` → `getJson` calls same-origin `/api/system/ping` → the Next.js route handler calls backend `/api/v1/system/ping` using `API_BASE_URL` → the UI shows ready/error and offers retry. During the local route migration, it retries `/api/system/ping` only after a `404`. The route handler validates the URL and upstream response, times out after five seconds, and returns a generic 502 on failure. The component aborts the request on unmount; tests cover the contract, errors, and cancellation.
 
-For a new API: confirm the backend contract first; put the typed API function under the feature; validate network JSON before using it when its shape controls important behavior. Add a route handler when server-side processing, a same-origin proxy, or secret handling is needed. Never expose `API_BASE_URL` or credentials through `NEXT_PUBLIC_*`.
+For a new API: confirm the backend contract first; put the typed API function under the feature; validate network JSON before using it when its shape controls important behavior. The FE contract snapshot is `docs/contracts/openapi.json`, generated types are `src/shared/api/generated/openapi.types.ts`, and the stable facade is `src/shared/api/openapi.ts`. Refresh after backend changes with `npm run contract:sync -- --source <path>` or `OPENAPI_SOURCE_PATH=<path> npm run contract:sync`; use `npm run contract:generate` for local generation and `npm run contract:check` to detect drift. Add a route handler when server-side processing, a same-origin proxy, or secret handling is needed. Never expose `API_BASE_URL` or credentials through `NEXT_PUBLIC_*`.
 
 ## Tests and local environment
 
-- Vitest currently runs in Node and includes `src/**/*.test.ts`; use it for API helpers, parsers, and route handlers. Mock `fetch`/environment as in the ping tests and clean up mocks after each test.
+- Vitest runs in Node for `src/**/*.test.ts` and `scripts/**/*.test.ts` (use it for API helpers, parsers, scripts, and route handlers). Mock `fetch`/environment as in the ping tests and clean up mocks after each test.
 - Test success, unexpected data, HTTP/upstream errors, and cancellation when relevant. Assert observable outputs and boundary calls, not just implementation details.
-- DOM/browser testing is not configured yet. When a feature needs browser-level verification, add suitable tooling and tests with that feature; `*.test.tsx` will not automatically run under the current setup.
+- Component and DOM tests run under the `jsdom` Vitest project using `*.test.tsx`; end-to-end Playwright specs live under `tests/e2e/`.
 - `npm test` and `npm run check` do not need a live backend; current tests mock `fetch`. For the live UI, copy `.env.example` to `.env.local`, start the backend as its README describes, then run `npm ci` and `npm run dev`. `/api/health` checks only Next.js; the connection status shown on the page checks the backend.
 
 ```sh
@@ -31,7 +31,7 @@ npm ci
 npm run check
 ```
 
-`npm run check` covers formatting, Oxlint, type checking, Vitest, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient. For new APIs, consult `TOEICMaster-BE/docs/api-contract.md` when that repository is in the workspace; when cloned alone, use the backend's Development OpenAPI document and the issue's contract description.
+`npm run check` covers formatting, OpenAPI contract drift detection, Oxlint, type checking, Vitest, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient. For new APIs, consult `../TOEICMaster-BE/docs/contracts/api-contract.md` when that repository is in the workspace; when cloned alone, use the backend's Development OpenAPI document and the issue's contract description.
 
 ## User profile modal flow
 

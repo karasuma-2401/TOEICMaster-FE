@@ -17,6 +17,7 @@ For feature work, read `docs/feature-development.md` for an implementation map, 
 - `src/app/`: Next.js routes, layouts, and route handlers. `src/features/<feature>/`: feature UI, logic, and API functions. `src/shared/`: genuinely shared code, currently including the HTTP client.
 - Prefer React Server Components. Add `"use client"` only where state, effects, event handlers, or browser APIs are needed. Never put secrets or `API_BASE_URL` in the client bundle. The browser calls same-origin routes; server route handlers call the backend.
 - Keep strict TypeScript types. Treat HTTP data as `unknown` and validate it at the boundary; do not use `any` to bypass errors. Use the `@/*` alias for internal imports when appropriate. Follow existing naming.
+- The versioned OpenAPI snapshot is `docs/contracts/openapi.json`; deterministic generated types are in `src/shared/api/generated/openapi.types.ts`, with the stable facade at `src/shared/api/openapi.ts`. After a backend contract change, run `npm run contract:sync -- --source <path>` (or set `OPENAPI_SOURCE_PATH`) to copy and regenerate; use `npm run contract:generate` for local regeneration and `npm run contract:check` to detect drift.
 - Use Tailwind CSS 4 with `shadcn/ui` (`radix-ui` primitives, `class-variance-authority`, `clsx` + `tailwind-merge` via `cn()`, and `tw-animate-css`) for shared UI components and overlays, and `recharts` for charts/analytics. Prefer accessible UI primitives over hand-rolled dialogs, drawers, dropdowns, or tabs, and preserve semantic HTML, visible focus states, design tokens, and responsive layouts.
 - `.editorconfig`: UTF-8, LF, two-space indentation, and a final newline. Prettier: double quotes, semicolons, trailing commas. Format affected files; avoid unrelated mass formatting.
 - Place Vitest tests next to code as `*.test.ts`. The current configuration uses Node and includes only `src/**/*.test.ts`. Mock HTTP/environment boundaries and test behavior, errors, and cancellation where relevant. For DOM/browser tests, deliberately add suitable tooling; the current setup does not include jsdom.
@@ -35,10 +36,13 @@ For feature work, read `docs/feature-development.md` for an implementation map, 
 npm ci
 npm run dev
 npm run format:check
+npm run contract:sync
+npm run contract:generate
+npm run contract:check
 npm run lint
 npm run typecheck
 npm test
 npm run check
 ```
 
-Run commands from the frontend repository root. `npm run check` covers formatting, lint, type checking, tests, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient; an application build is unnecessary.
+Run commands from the frontend repository root. `npm run check` covers formatting, contract drift detection, lint, type checking, tests, and a production build. For documentation-only changes, checking Markdown and the diff is sufficient; an application build is unnecessary.

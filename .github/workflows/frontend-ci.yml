@@ -45,6 +45,9 @@ jobs:
       - name: Verify formatting
         run: npm run format:check
 
+      - name: Verify OpenAPI contract sync
+        run: npm run contract:check
+
       - name: Run unit tests
         run: npm test
 

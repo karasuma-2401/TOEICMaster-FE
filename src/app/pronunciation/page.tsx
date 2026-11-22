@@ -29,7 +29,11 @@ export default async function PronunciationPage({
   return (
     <div className="sp-theme min-h-dvh bg-white">
       <PronunciationHeader />
-      <main className={`${wideContainer} pb-12 pt-6`}>
+      <main
+        className={`${wideContainer} pb-12 pt-6`}
+        id="main-content"
+        tabIndex={-1}
+      >
         <Breadcrumbs
           items={[{ label: "Trang chủ", href: "/" }, { label: "Phát âm" }]}
         />

@@ -116,7 +116,11 @@ export default async function Home(props: {
         </div>
       </header>
 
-      <main className={`${wideContainer} pb-8 pt-10`}>
+      <main
+        className={`${wideContainer} pb-8 pt-10`}
+        id="main-content"
+        tabIndex={-1}
+      >
         <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           <div className="min-w-0">
             <p className="w-fit rounded-lg bg-(--sp-orange-soft) px-3 py-1.5 text-xs font-medium uppercase text-(--sp-brand)">

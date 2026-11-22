@@ -224,6 +224,35 @@ describe("forwardPronunciationAssessment", () => {
     expect((await response).status).toBe(502);
   });
 
+  it("forwards X-Forwarded-For and X-Forwarded-Proto client headers via bff-proxy", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const headers = new Headers({
+      "content-type": "multipart/form-data; boundary=x",
+      origin,
+      "x-forwarded-for": "203.0.113.42, 10.0.0.2",
+      "x-forwarded-proto": "https",
+    });
+    const req = new NextRequest(`${origin}/api/pronunciation/assessments`, {
+      method: "POST",
+      headers,
+      body: "--x--",
+    });
+
+    const response = await forwardPronunciationAssessment(req);
+    expect(response.status).toBe(200);
+    const forwardedHeaders = new Headers(
+      (fetchMock.mock.calls[0][1] as RequestInit).headers,
+    );
+    expect(forwardedHeaders.get("x-forwarded-for")).toBe(
+      "203.0.113.42, 10.0.0.2",
+    );
+    expect(forwardedHeaders.get("x-forwarded-proto")).toBe("https");
+  });
+
   it("refuses an API_BASE_URL that is not http(s)", () => {
     vi.stubEnv("API_BASE_URL", "file:///etc/passwd");
     expect(() => backendBase()).toThrow();

@@ -13,6 +13,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <a
+          className="tm-skip-link"
+          data-testid="skip-to-main-link"
+          href="#main-content"
+        >
+          Skip to main content
+        </a>
         <NavigationTracker />
         {children}
         <ToastProvider />
