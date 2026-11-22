@@ -17,7 +17,7 @@ Prefer Server Components for server-rendered screens. Add `"use client"` at the 
 
 `ConnectionStatus` calls `ping(signal)` → `getJson` calls same-origin `/api/system/ping` → the Next.js route handler calls backend `/api/v1/system/ping` using `API_BASE_URL` → the UI shows ready/error and offers retry. During the local route migration, it retries `/api/system/ping` only after a `404`. The route handler validates the URL and upstream response, times out after five seconds, and returns a generic 502 on failure. The component aborts the request on unmount; tests cover the contract, errors, and cancellation.
 
-For a new API: confirm the backend contract first; put the typed API function under the feature; validate network JSON before using it when its shape controls important behavior. Add a route handler when server-side processing, a same-origin proxy, or secret handling is needed. Never expose `API_BASE_URL` or credentials through `NEXT_PUBLIC_*`.
+For a new API: confirm the backend contract first; put the typed API function under the feature; validate network JSON before using it when its shape controls important behavior. The FE contract snapshot is `docs/contracts/openapi.json`, generated types are `src/shared/api/generated/openapi.types.ts`, and the stable facade is `src/shared/api/openapi.ts`. Refresh after backend changes with `npm run contract:sync -- --source <path>` or `OPENAPI_SOURCE_PATH=<path> npm run contract:sync`; use `npm run contract:generate` for local generation and `npm run contract:check` to detect drift. Add a route handler when server-side processing, a same-origin proxy, or secret handling is needed. Never expose `API_BASE_URL` or credentials through `NEXT_PUBLIC_*`.
 
 ## Tests and local environment
 

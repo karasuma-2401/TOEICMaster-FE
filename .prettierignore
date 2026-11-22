@@ -6,3 +6,5 @@ next-env.d.ts
 pnpm-lock.yaml
 .pipeline
 .agents
+docs/contracts/openapi.json
+src/shared/api/generated
