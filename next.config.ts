@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  experimental: { agentUpgrade: "security" },
   output: "standalone",
   poweredByHeader: false,
   // Dev only: let phones on the local network load dev resources, otherwise
