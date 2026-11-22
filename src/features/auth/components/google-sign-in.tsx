@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { loginWithGoogle } from "@/features/auth/api";
+import { loginWithGoogle, resolveLoginDestination } from "@/features/auth/api";
 
 declare global {
   interface Window {
@@ -67,8 +67,8 @@ export function GoogleSignIn({
         setPending(true);
         setError(undefined);
         try {
-          await loginWithGoogle(credential, rememberMeRef.current);
-          router.replace(returnTo);
+          const user = await loginWithGoogle(credential, rememberMeRef.current);
+          router.replace(resolveLoginDestination(user, returnTo));
           router.refresh();
         } catch (reason) {
           setError(

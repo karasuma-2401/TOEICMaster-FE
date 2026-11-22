@@ -70,7 +70,7 @@ export function SpeakingExerciseEditor({
           ? "Bài tập đã bị thay đổi ở nơi khác hoặc trùng mã. Đóng và mở lại để tải bản mới."
           : cause instanceof SpeakingApiError &&
               Object.keys(cause.fieldErrors).length > 0
-            ? Object.values(cause.fieldErrors).join(" ")
+            ? Object.values(cause.fieldErrors).flat().join(" ")
             : cause instanceof Error
               ? cause.message
               : "Không thể lưu bài tập Speaking.",

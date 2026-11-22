@@ -170,7 +170,7 @@ export async function authenticationResult(
 
 export function success(session: AuthSession) {
   return NextResponse.json(
-    { user: session.user },
+    { user: { ...session.user, role: session.role } },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

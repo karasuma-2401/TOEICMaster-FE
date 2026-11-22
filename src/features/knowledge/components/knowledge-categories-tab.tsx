@@ -6,7 +6,10 @@ import { deleteKnowledgeCategory, listKnowledgeCategories } from "../admin-api";
 import { KnowledgeApiError } from "../http";
 import { formatDateTimeVi } from "../tiptap-utils";
 import type { KnowledgeCategory, PageResult } from "../types";
-import { KnowledgePagination } from "./knowledge-ui-primitives";
+import {
+  KnowledgeConfirmDialog,
+  KnowledgePagination,
+} from "./knowledge-ui-primitives";
 
 interface KnowledgeCategoriesTabProps {
   refreshSignal: number;
@@ -25,6 +28,9 @@ export function KnowledgeCategoriesTab({
   const [pageNumber, setPageNumber] = useState(1);
   const [data, setData] = useState<PageResult<KnowledgeCategory> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteCat, setConfirmDeleteCat] =
+    useState<KnowledgeCategory | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -63,11 +69,16 @@ export function KnowledgeCategoriesTab({
     };
   }, [hasArticles, pageNumber, query, refreshSignal, sort]);
 
-  async function handleDelete(cat: KnowledgeCategory) {
-    if (!window.confirm(`Xóa danh mục "${cat.name}"?`)) return;
+  async function confirmDelete() {
+    if (!confirmDeleteCat) return;
+    setDeleting(true);
     try {
-      await deleteKnowledgeCategory(cat.id, cat.version);
+      await deleteKnowledgeCategory(
+        confirmDeleteCat.id,
+        confirmDeleteCat.version,
+      );
       toast.success("Đã xóa danh mục.");
+      setConfirmDeleteCat(null);
       onChanged();
     } catch (err) {
       toast.error(
@@ -75,6 +86,8 @@ export function KnowledgeCategoriesTab({
           ? err.message
           : "Không thể xóa danh mục.",
       );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -152,7 +165,7 @@ export function KnowledgeCategoriesTab({
                       </p>
                       <p className="text-xs text-(--admin-muted)">
                         /{cat.slug}
-                        {cat.description ? ` · ${cat.description}` : ""}
+                        {cat.description ? ` - ${cat.description}` : ""}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-xs font-semibold text-(--admin-ink)">
@@ -167,16 +180,16 @@ export function KnowledgeCategoriesTab({
                     <td aria-label="Thao tác" className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1.5">
                         <button
-                          className="rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) hover:bg-(--admin-surface-muted)"
+                          className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) transition duration-150 hover:border-(--admin-brand-orange) hover:bg-(--admin-row-hover) hover:text-(--admin-brand-red) hover:shadow-xs active:scale-95"
                           onClick={() => onEdit(cat)}
                           type="button"
                         >
                           Sửa
                         </button>
                         <button
-                          className="rounded-md border border-(--admin-border) px-2.5 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
+                          className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-medium text-(--admin-danger) transition duration-150 hover:border-(--admin-danger) hover:bg-(--admin-danger) hover:text-white hover:shadow-xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--admin-border) disabled:hover:bg-white disabled:hover:text-(--admin-danger) disabled:hover:shadow-none"
                           disabled={cat.articleCount > 0}
-                          onClick={() => void handleDelete(cat)}
+                          onClick={() => setConfirmDeleteCat(cat)}
                           title={
                             cat.articleCount > 0
                               ? "Không thể xóa danh mục đang có bài viết"
@@ -207,6 +220,16 @@ export function KnowledgeCategoriesTab({
           />
         ) : null}
       </div>
+
+      <KnowledgeConfirmDialog
+        confirmLabel="Xóa danh mục"
+        description={`Bạn có chắc chắn muốn xóa danh mục "${confirmDeleteCat?.name ?? ""}"?`}
+        onCancel={() => setConfirmDeleteCat(null)}
+        onConfirm={() => void confirmDelete()}
+        open={Boolean(confirmDeleteCat)}
+        pending={deleting}
+        title="Xác nhận xóa danh mục"
+      />
     </section>
   );
 }

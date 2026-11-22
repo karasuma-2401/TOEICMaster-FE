@@ -109,7 +109,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
     const results = summarizeExamAttempts(
       attempts.flatMap((attempt) =>
         attempt.isPractice && attempt.status === "SUBMITTED_AWAITING_EVALUATION"
-          ? [{ id: attempt.testCode, score: attempt.estimatedScore }]
+          ? [{ id: attempt.testCode, score: attempt.rawScore ?? null }]
           : [],
       ),
     );
@@ -120,7 +120,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
         code: exercise.code,
         title: exercise.topic,
         badge: `Part ${part} · ${difficulty ? difficultyLabels[difficulty] : exercise.difficulty}`,
-        meta: "1 câu · Không tính giờ · 0–200 điểm",
+        meta: `1 câu · Không tính giờ · Điểm tiêu chí 0–${part === 1 ? 3 : part === 2 ? 4 : 5}`,
         action: {
           onStart: () => void start(exercise.id),
           starting: starting === exercise.id,
@@ -154,7 +154,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
         name: "Writing",
         tagline: parts[part].description,
         format: `Part ${part} · ${parts[part].subtitle} · Phản hồi từ AI`,
-        maxScore: 200,
+        maxScore: part === 1 ? 3 : part === 2 ? 4 : 5,
         examHref: "/writing",
         exerciseHref: "/writing/practice/1",
       }}

@@ -107,7 +107,7 @@ export function SpeakingTestOverview({
                   "Trình duyệt sẽ xin quyền micro trước khi bắt đầu.",
                   "Mỗi câu có pha chuẩn bị, sau đó tự động ghi âm trong pha trả lời.",
                   "Hết thời gian, câu hiện tại được khóa và chuyển sang câu kế tiếp.",
-                  "Bản ghi chỉ lưu trong tab hiện tại để bạn nghe lại cuối bài.",
+                  "Bản ghi từng câu được tải lên máy chủ để nghe lại; chấm AI chỉ bắt đầu khi bạn đồng ý.",
                 ]}
               />
               <Link

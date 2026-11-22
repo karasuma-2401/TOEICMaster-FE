@@ -2,7 +2,7 @@
 
 Frontend của phần mềm hỗ trợ học và luyện thi TOEIC.
 
-**Công nghệ:** React 19, Next.js 16 (App Router), TypeScript, TailwindCSS 4. Dùng npm, Oxlint, Prettier và Vitest.
+**Công nghệ:** React 19, Next.js 16 (App Router), TypeScript, TailwindCSS 4, shadcn/ui (Radix UI) và Recharts. Dùng npm, Oxlint, Prettier và Vitest.
 
 Ứng dụng chạy bằng Next.js. Vite xuất hiện trong dependencies vì Vitest dùng nó để chạy test, không phải công cụ chạy frontend của project.
 

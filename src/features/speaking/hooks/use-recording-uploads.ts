@@ -14,24 +14,33 @@ export function useRecordingUploads(
   onAttempt: (attempt: SpeakingAttempt) => void,
 ) {
   const [states, setStates] = useState<Record<number, UploadState>>({});
-  const started = useRef(new Set<number>());
+  const started = useRef(new Map<number, Recording>());
+  const queues = useRef(new Map<number, Promise<void>>());
 
   const upload = useCallback(
-    async (position: number, recording: Recording) => {
-      setStates((current) => ({ ...current, [position]: "uploading" }));
-      try {
-        onAttempt(
-          await uploadSpeakingRecording(
-            attemptId,
-            position,
-            recording.blob,
-            recording.durationSeconds,
-          ),
-        );
-        setStates((current) => ({ ...current, [position]: "uploaded" }));
-      } catch {
-        setStates((current) => ({ ...current, [position]: "failed" }));
-      }
+    (position: number, recording: Recording) => {
+      // A recovered microphone may produce a new take for the same position.
+      // Serialize replacements so a slower, earlier upload cannot overwrite the newer one.
+      const task = (queues.current.get(position) ?? Promise.resolve()).then(
+        async () => {
+          setStates((current) => ({ ...current, [position]: "uploading" }));
+          try {
+            onAttempt(
+              await uploadSpeakingRecording(
+                attemptId,
+                position,
+                recording.blob,
+                recording.durationSeconds,
+              ),
+            );
+            setStates((current) => ({ ...current, [position]: "uploaded" }));
+          } catch {
+            setStates((current) => ({ ...current, [position]: "failed" }));
+          }
+        },
+      );
+      queues.current.set(position, task);
+      return task;
     },
     [attemptId, onAttempt],
   );
@@ -39,8 +48,8 @@ export function useRecordingUploads(
   useEffect(() => {
     for (const [key, recording] of Object.entries(recordings)) {
       const position = Number(key);
-      if (started.current.has(position)) continue;
-      started.current.add(position);
+      if (started.current.get(position) === recording) continue;
+      started.current.set(position, recording);
       void upload(position, recording);
     }
   }, [recordings, upload]);

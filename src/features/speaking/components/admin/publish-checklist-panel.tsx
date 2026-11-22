@@ -4,9 +4,11 @@ import { AlertCircleIcon, CheckCircleIcon } from "../ui/icons";
 export function PublishChecklistPanel({
   items,
   errors,
+  errorTitle = "Chưa thể công bố",
 }: {
   items: ChecklistItem[];
   errors: string[];
+  errorTitle?: string;
 }) {
   return (
     <section className="sp-card p-4">
@@ -36,10 +38,10 @@ export function PublishChecklistPanel({
           className="mt-3 rounded-[10px] bg-(--sp-danger-bg) p-3 text-[13px] text-(--sp-danger)"
           role="alert"
         >
-          <b>Chưa thể công bố</b>
+          <b>{errorTitle}</b>
           <ul className="mt-1 list-disc pl-5">
-            {errors.map((error) => (
-              <li key={error}>{error}</li>
+            {errors.map((error, index) => (
+              <li key={`${index}-${error}`}>{error}</li>
             ))}
           </ul>
         </div>

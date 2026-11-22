@@ -100,7 +100,8 @@ export function WritingHistoryPlaceholder() {
                       className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${!submitted ? "bg-amber-50 text-amber-700 ring-amber-100" : attempt.evaluationStatus === "FAILED" ? "bg-red-50 text-red-700 ring-red-100" : score !== null ? "bg-emerald-50 text-emerald-700 ring-emerald-100" : "bg-orange-50 text-orange-700 ring-orange-100"}`}
                     >
                       {submitted
-                        ? score !== null && attempt.isPractice
+                        ? attempt.evaluationStatus === "COMPLETED" &&
+                          (attempt.isPractice || attempt.mode !== "FULL")
                           ? "Đã chấm AI"
                           : score !== null
                             ? `AI ước tính ${score}/200`

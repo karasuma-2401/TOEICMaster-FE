@@ -137,6 +137,7 @@ export function mapWritingAttempt(
 ): UnifiedAttemptItem {
   const status = unifiedStatusFromAttemptStatus(attempt.status);
   const base = `/writing/attempts/${encodeURIComponent(attempt.id)}`;
+  const fullTest = attempt.mode === "FULL" && !attempt.isPractice;
   return {
     id: attempt.id,
     skill: "writing",
@@ -145,9 +146,13 @@ export function mapWritingAttempt(
     title: attempt.testTitle,
     modeLabel: writingModeLabel(attempt.mode),
     status,
-    score: attempt.estimatedScore,
-    maxScore: 200,
-    subScoreLabel: null,
+    score: fullTest ? attempt.estimatedScore : (attempt.rawScore ?? null),
+    maxScore: fullTest
+      ? 200
+      : (attempt.maxRawScore ??
+        attempt.questionCount *
+          (attempt.mode === "PART_1" ? 3 : attempt.mode === "PART_2" ? 4 : 5)),
+    subScoreLabel: fullTest ? null : "Điểm tiêu chí AI",
     evaluationStatus: attempt.evaluationStatus,
     timestampUtc: attempt.submittedAtUtc ?? attempt.createdAtUtc,
     durationSeconds: null,

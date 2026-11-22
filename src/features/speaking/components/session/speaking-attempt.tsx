@@ -6,7 +6,10 @@ import { currentQuestion } from "@/features/speaking/attempt";
 import { useRecordingUploads } from "@/features/speaking/hooks/use-recording-uploads";
 import { useSpeakingAttempt } from "@/features/speaking/hooks/use-speaking-attempt";
 import { useVoiceRecorder } from "@/features/speaking/hooks/use-voice-recorder";
-import { playBeep } from "../ui/beep";
+import {
+  microphoneMessages,
+  useMicSession,
+} from "@/features/speaking/mic/mic-session-provider";
 import { AlertTriangleIcon, XIcon } from "../ui/icons";
 import { SpPage } from "../ui/page";
 import { SpError, SpLoading, SpeakingLogo } from "../ui/primitives";
@@ -18,6 +21,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const session = useSpeakingAttempt(attemptId);
   const recorder = useVoiceRecorder();
+  const mic = useMicSession();
   const uploads = useRecordingUploads(
     attemptId,
     recorder.recordings,
@@ -30,26 +34,66 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
   const respondingPosition =
     phase === "RESPONDING" ? (question?.position ?? null) : null;
 
-  // Permission granted on the start screen is remembered by the browser, so
-  // this usually resolves without a prompt (also after a reload).
+  const { restoreIfGranted, release, beep, withoutRecording } = mic;
+  const attemptStatus = attempt?.status;
   useEffect(() => {
-    const task = window.setTimeout(() => void requestAccess(), 0);
-    return () => window.clearTimeout(task);
-  }, [requestAccess]);
+    if (attemptStatus === "IN_PROGRESS" && !withoutRecording)
+      void restoreIfGranted();
+  }, [attemptStatus, restoreIfGranted, withoutRecording]);
 
-  useEffect(() => {
-    if (respondingPosition === null || recorder.status !== "ready") return;
-    start(respondingPosition);
-    return () => stop();
-  }, [recorder.micLost, recorder.status, respondingPosition, start, stop]);
-
-  // The tone marks the live PREPARING → RESPONDING change, not a reload.
   const previousPhase = useRef(phase);
   useEffect(() => {
-    if (previousPhase.current === "PREPARING" && phase === "RESPONDING")
-      playBeep();
+    const shouldBeep =
+      previousPhase.current === "PREPARING" && phase === "RESPONDING";
     previousPhase.current = phase;
-  }, [phase]);
+    if (
+      respondingPosition === null ||
+      recorder.status !== "ready" ||
+      withoutRecording
+    )
+      return;
+    let cancelled = false;
+    const begin = async () => {
+      if (shouldBeep) await beep();
+      if (!cancelled) start(respondingPosition);
+    };
+    void begin();
+    return () => {
+      cancelled = true;
+      stop();
+    };
+  }, [
+    phase,
+    recorder.status,
+    respondingPosition,
+    start,
+    stop,
+    beep,
+    withoutRecording,
+  ]);
+
+  // Stop the last MediaRecorder before releasing its underlying tracks.
+  useEffect(() => {
+    if (attemptStatus === "SUBMITTED") {
+      stop();
+      release();
+    }
+  }, [attemptStatus, stop, release]);
+
+  useEffect(() => {
+    if (recorder.status === "lost" && !withoutRecording)
+      void restoreIfGranted();
+  }, [recorder.status, restoreIfGranted, withoutRecording]);
+
+  useEffect(() => {
+    if (respondingPosition === null) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [respondingPosition]);
 
   if (!attempt)
     return (
@@ -80,10 +124,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
     )
       router.push("/speaking");
   };
-  const micDown =
-    recorder.micLost ||
-    recorder.status === "denied" ||
-    recorder.status === "unsupported";
+  const micDown = recorder.status !== "ready" && !withoutRecording;
 
   return (
     <div className="sp-page flex flex-col overflow-x-clip">
@@ -126,16 +167,17 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
               <AlertTriangleIcon className="text-(--sp-danger)" size={24} />
               <div>
                 <p className="font-semibold text-(--sp-danger)">
-                  Không nhận được tín hiệu micro.
+                  {microphoneMessages[recorder.status]}
                 </p>
                 <p className="text-[13px] text-(--sp-danger)">
-                  Đồng hồ vẫn tiếp tục chạy theo quy chế ETS!
+                  Đồng hồ vẫn tiếp tục chạy trên máy chủ.
                 </p>
               </div>
             </div>
             {recorder.status !== "unsupported" && (
               <button
                 className="sp-btn sp-btn-cta"
+                disabled={recorder.status === "requesting"}
                 onClick={() => void requestAccess()}
                 type="button"
               >
@@ -156,6 +198,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
             level={recorder.level}
             micStatus={recorder.status}
             onSkip={() => void session.skipPhase()}
+            allowSkip={attempt.mode !== "FULL"}
             phase={attempt.currentPhase}
             question={question}
             recording={recorder.recordingKey !== null}

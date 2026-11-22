@@ -33,13 +33,24 @@ export function WritingEvaluationReport({
   evaluation,
   practicePart,
   questions,
+  partial = false,
 }: {
   evaluation: WritingEvaluationApi;
   practicePart?: 1 | 2 | 3;
   questions: WritingAttemptQuestionApi[];
+  partial?: boolean;
 }) {
-  const rawScore = evaluation.feedback[0]?.criterionScore;
-  const maximumScore = practicePart === 1 ? 3 : practicePart === 2 ? 4 : 5;
+  const useRawScore =
+    Boolean(practicePart) || partial || evaluation.estimatedScore === null;
+  const rawScore =
+    evaluation.rawScore ??
+    evaluation.feedback.reduce((sum, item) => sum + item.criterionScore, 0);
+  const maximumScore =
+    evaluation.maxRawScore ??
+    questions.reduce(
+      (sum, item) => sum + (item.part === 1 ? 3 : item.part === 2 ? 4 : 5),
+      0,
+    );
   const parts = ([1, 2, 3] as const).flatMap((part) => {
     const partQuestions = questions.filter(
       (question) => question.part === part,
@@ -64,13 +75,13 @@ export function WritingEvaluationReport({
     <section className="mt-7 space-y-5">
       <div className="rounded-3xl border border-orange-100 bg-orange-50/70 p-6 sm:p-7">
         <p className="text-sm font-bold uppercase tracking-wide">
-          {practicePart
+          {useRawScore
             ? "Điểm bài tập theo tiêu chí AI"
             : "Điểm TOEIC Writing ước tính bởi AI"}
         </p>
         <p className="mt-2 text-5xl font-black text-orange-700">
-          {practicePart ? (rawScore ?? "—") : evaluation.estimatedScore}
-          <span className="text-2xl">/{practicePart ? maximumScore : 200}</span>
+          {useRawScore ? rawScore : evaluation.estimatedScore}
+          <span className="text-2xl">/{useRawScore ? maximumScore : 200}</span>
         </p>
         <p className="mt-3 text-sm text-slate-600">
           Điểm AI phục vụ luyện tập, không phải kết quả ETS chính thức.

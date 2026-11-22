@@ -13,6 +13,8 @@ import {
 } from "@/features/admin/components/content/admin-workspace";
 import {
   createSpeakingTest,
+  cloneSpeakingTest,
+  deleteSpeakingTest,
   getSpeakingTestDetail,
   publishSpeakingTest,
   updateSpeakingTest,
@@ -33,11 +35,15 @@ import {
   type SpeakingPart,
   type SpeakingTest,
   type SpeakingTestQuestion,
+  type SpeakingTestContentMode,
 } from "@/features/speaking/types";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { PublishChecklistPanel } from "./publish-checklist-panel";
 import { SpeakingExerciseFields } from "./speaking-exercise-fields";
 import { TestInfoPanel } from "./test-info-panel";
+import { ExercisePickerPanel } from "./exercise-picker-panel";
+import { slotLabels } from "./test-slot-picker";
+import { SpeakingPrompt } from "../prompts/speaking-prompt";
 
 type TestMetadata = Pick<SpeakingTest, "code" | "title" | "description">;
 type DirectQuestionDrafts = Record<SpeakingPart, SpeakingDraft[]>;
@@ -161,10 +167,6 @@ function isDirectQuestionComplete(draft: SpeakingDraft) {
 }
 
 function saveError(cause: unknown) {
-  if (cause instanceof SpeakingApiError && cause.status === 409)
-    return [
-      "Đề đã bị thay đổi ở nơi khác hoặc trùng mã. Hãy tải lại để so sánh.",
-    ];
   if (
     cause instanceof SpeakingApiError &&
     Object.keys(cause.fieldErrors).length > 0
@@ -195,6 +197,26 @@ export function SpeakingTestWorkspace({
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [contentMode, setContentMode] =
+    useState<SpeakingTestContentMode>("DIRECT");
+  const [exerciseIds, setExerciseIds] = useState<SpeakingTest["exerciseIds"]>({
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+  });
+  const [picker, setPicker] = useState<{
+    part: SpeakingPart;
+    index: number;
+  } | null>(null);
+  const [savedSignature, setSavedSignature] = useState("");
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState("Chưa lưu được");
+  const [conflicted, setConflicted] = useState(false);
+  const [latest, setLatest] = useState<SpeakingTest | null>(null);
+  const [cloneCode, setCloneCode] = useState("");
+  const [cloneTitle, setCloneTitle] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -207,6 +229,12 @@ export function SpeakingTestWorkspace({
           setMetadata(emptyMetadata);
           setQuestions(emptyQuestions());
           setLegacyExercises([]);
+          setContentMode("DIRECT");
+          const ids = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+          setExerciseIds(ids);
+          setSavedSignature(
+            JSON.stringify([emptyMetadata, emptyQuestions(), ids, "DIRECT"]),
+          );
           return;
         }
         const detail = await getSpeakingTestDetail(testId, controller.signal);
@@ -218,6 +246,20 @@ export function SpeakingTestWorkspace({
         });
         setQuestions(questionDrafts(detail.test));
         setLegacyExercises(detail.exercises);
+        setContentMode(detail.test.contentMode);
+        setExerciseIds(detail.test.exerciseIds);
+        setSavedSignature(
+          JSON.stringify([
+            {
+              code: detail.test.code,
+              title: detail.test.title,
+              description: detail.test.description,
+            },
+            questionDrafts(detail.test),
+            detail.test.exerciseIds,
+            detail.test.contentMode,
+          ]),
+        );
       } catch (cause) {
         if (!controller.signal.aborted)
           setLoadError(errorMessage(cause, "Không thể tải đề Speaking."));
@@ -231,8 +273,35 @@ export function SpeakingTestWorkspace({
     };
   }, [attempt, testId]);
 
-  const legacy = saved?.contentMode === "EXERCISE_BANK";
-  const readOnly = saved?.status === "PUBLISHED" && !legacy;
+  const legacy = contentMode === "EXERCISE_BANK";
+  const readOnly = saved?.status === "PUBLISHED";
+  const dirty =
+    !loading &&
+    savedSignature !==
+      JSON.stringify([metadata, questions, exerciseIds, contentMode]);
+  const close = () => {
+    if (
+      !busy &&
+      (!dirty || window.confirm("Có thay đổi chưa lưu. Bạn muốn đóng builder?"))
+    )
+      onClose();
+  };
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  const chosen = Object.fromEntries(
+    speakingParts.flatMap((part) =>
+      exerciseIds[part].flatMap((id, index) =>
+        id ? [[id, slotLabels[part][index]]] : [],
+      ),
+    ),
+  );
   const directQuestions = useMemo(
     () =>
       speakingParts.flatMap((part) =>
@@ -284,7 +353,7 @@ export function SpeakingTestWorkspace({
       ? {
           ...metadata,
           contentMode: "EXERCISE_BANK",
-          exerciseIds: undefined,
+          exerciseIds,
         }
       : {
           ...metadata,
@@ -293,6 +362,7 @@ export function SpeakingTestWorkspace({
         };
 
   const persist = async (publish: boolean) => {
+    setErrorTitle(publish ? "Chưa thể công bố" : "Chưa lưu được");
     if (!metadata.code.trim() || !metadata.title.trim()) {
       setErrors(["Mã đề và tên đề là bắt buộc."]);
       return;
@@ -314,6 +384,10 @@ export function SpeakingTestWorkspace({
         ? (await updateSpeakingTest(saved.id, saved.version, input())).test
         : (await createSpeakingTest(input())).test;
       setSaved(current);
+      setSavedSignature(
+        JSON.stringify([metadata, questions, exerciseIds, contentMode]),
+      );
+      setSavedAt(new Date().toLocaleTimeString("vi-VN"));
       if (publish)
         current = (await publishSpeakingTest(current.id, current.version)).test;
       setSaved(current);
@@ -324,7 +398,63 @@ export function SpeakingTestWorkspace({
       );
     } catch (cause) {
       setErrors(saveError(cause));
+      setConflicted(
+        cause instanceof SpeakingApiError && cause.code === "VERSION_CONFLICT",
+      );
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const clone = async () => {
+    if (!saved || !cloneCode.trim() || !cloneTitle.trim() || busy) return;
+    setBusy(true);
+    setErrors([]);
+    setErrorTitle("Chưa nhân bản được");
+    try {
+      const detail = await cloneSpeakingTest(
+        saved.id,
+        saved.version,
+        cloneCode.trim(),
+        cloneTitle.trim(),
+      );
+      const nextMetadata = {
+        code: detail.test.code,
+        title: detail.test.title,
+        description: detail.test.description,
+      };
+      setSaved(detail.test);
+      setMetadata(nextMetadata);
+      setQuestions(questionDrafts(detail.test));
+      setExerciseIds(detail.test.exerciseIds);
+      setContentMode(detail.test.contentMode);
+      setSavedSignature(
+        JSON.stringify([
+          nextMetadata,
+          questionDrafts(detail.test),
+          detail.test.exerciseIds,
+          detail.test.contentMode,
+        ]),
+      );
+      setCloneCode("");
+      setCloneTitle("");
+      onSaved(`Đã nhân bản thành nháp ${detail.test.code}.`);
+    } catch (cause) {
+      setErrors(saveError(cause));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!saved || !window.confirm(`Xóa bản nháp ${saved.code}?`)) return;
+    setBusy(true);
+    try {
+      await deleteSpeakingTest(saved.id, saved.version);
+      onSaved(`Đã xóa ${saved.code}.`);
+      onClose();
+    } catch (cause) {
+      setErrors(saveError(cause));
       setBusy(false);
     }
   };
@@ -333,7 +463,12 @@ export function SpeakingTestWorkspace({
     <AdminWorkspace
       actions={
         <>
-          <button className={adminSecondary} onClick={onClose} type="button">
+          <button
+            className={adminSecondary}
+            disabled={busy}
+            onClick={close}
+            type="button"
+          >
             {readOnly ? "Đóng" : "Đóng builder"}
           </button>
           {!readOnly && (
@@ -346,7 +481,7 @@ export function SpeakingTestWorkspace({
               >
                 {busy ? "Đang lưu…" : "Lưu bản nháp"}
               </button>
-              {!legacy && (
+              {
                 <button
                   className={adminPrimary}
                   disabled={busy || loading}
@@ -356,8 +491,18 @@ export function SpeakingTestWorkspace({
                 >
                   Xuất bản đề
                 </button>
-              )}
+              }
             </>
+          )}
+          {saved?.status === "DRAFT" && (
+            <button
+              className={adminSecondary}
+              disabled={busy}
+              onClick={() => void remove()}
+              type="button"
+            >
+              Xóa bản nháp
+            </button>
           )}
         </>
       }
@@ -368,11 +513,92 @@ export function SpeakingTestWorkspace({
           {readOnly ? "Công bố" : saved ? "Bản nháp" : "Chưa lưu"}
         </span>
       }
-      eyebrow="TEST BUILDER · 2/2/3/3/1 CÂU"
+      eyebrow={`TEST BUILDER · 11 CÂU · 7 BÀI${savedAt ? ` · Đã lưu ${savedAt}` : ""}`}
       label="Soạn đề Speaking trực tiếp"
-      onClose={onClose}
+      onClose={close}
       title={metadata.code || "Đề Speaking mới"}
     >
+      {!loading && !loadError && (
+        <div className="mb-5 space-y-3">
+          {!saved && (
+            <label className="block text-sm font-semibold">
+              Cách tạo đề{" "}
+              <select
+                className="ml-3 rounded-lg border p-2"
+                value={contentMode}
+                disabled={busy}
+                onChange={(event) =>
+                  setContentMode(event.target.value as SpeakingTestContentMode)
+                }
+              >
+                <option value="DIRECT">Nhập nội dung trực tiếp</option>
+                <option value="EXERCISE_BANK">Chọn từ ngân hàng bài tập</option>
+              </select>
+            </label>
+          )}
+          {errors.length > 0 && legacy && (
+            <PublishChecklistPanel
+              errors={errors}
+              errorTitle={errorTitle}
+              items={[]}
+            />
+          )}
+          {conflicted && (
+            <div role="alert">
+              <button
+                className={adminSecondary}
+                onClick={async () => {
+                  if (!saved) return;
+                  try {
+                    setLatest((await getSpeakingTestDetail(saved.id)).test);
+                  } catch (cause) {
+                    setErrors(saveError(cause));
+                  }
+                }}
+                type="button"
+              >
+                Tải lại bản mới để so sánh
+              </button>
+              <p>Thay đổi đang sửa được giữ nguyên.</p>
+              {latest && (
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl border p-3">
+                  {JSON.stringify(latest, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
+          {readOnly && (
+            <div className="flex flex-wrap gap-3 rounded-xl border p-3">
+              <label>
+                Mã đề mới
+                <input
+                  aria-label="Mã đề nhân bản"
+                  className="ml-2 rounded border p-2"
+                  value={cloneCode}
+                  onChange={(event) => setCloneCode(event.target.value)}
+                />
+              </label>
+              <label>
+                Tên đề mới
+                <input
+                  aria-label="Tên đề nhân bản"
+                  className="ml-2 rounded border p-2"
+                  value={cloneTitle}
+                  onChange={(event) => setCloneTitle(event.target.value)}
+                />
+              </label>
+              <button
+                className={adminSecondary}
+                disabled={busy || !cloneCode.trim() || !cloneTitle.trim()}
+                onClick={() => void clone()}
+                type="button"
+              >
+                Nhân bản thành nháp
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {loading || loadError ? (
         <div className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
           <AdminLoadState
@@ -384,32 +610,103 @@ export function SpeakingTestWorkspace({
       ) : legacy ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]">
           <TestInfoPanel
-            disabled={false}
+            disabled={Boolean(readOnly) || busy}
             onChange={(next) =>
               setMetadata((current) => ({ ...current, ...next }))
             }
             value={metadata}
           />
           <AdminPanel
-            description="Đề cũ tiếp tục dùng các bài tập đã gắn. Nội dung không được chuyển sang ngân hàng hay builder mới."
-            title="Nội dung đề cũ"
+            description="Chọn bài cho từng vị trí. Câu 5–7 và 8–10 mỗi nhóm dùng một bài tập."
+            title="Nội dung từ ngân hàng · 11 câu · 7 bài"
           >
-            <ul className="divide-y divide-[var(--admin-border)] text-sm">
-              {legacyExercises.map((exercise) => (
-                <li
-                  className="flex items-center justify-between gap-4 py-3"
-                  key={exercise.id}
-                >
-                  <span>
-                    <b>{exercise.code}</b> · Part {exercise.part} ·{" "}
-                    {exercise.topic}
-                  </span>
-                  <span className="text-xs font-bold text-[var(--admin-muted)]">
-                    {exercise.status}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-4">
+              {speakingParts.flatMap((part) =>
+                Array.from(
+                  { length: speakingPartSpecs[part].slots },
+                  (_, index) => {
+                    const id = exerciseIds[part][index];
+                    const exercise = legacyExercises.find(
+                      (item) => item.id === id,
+                    );
+                    return (
+                      <section
+                        className="rounded-xl border p-3"
+                        key={`${part}-${index}`}
+                      >
+                        <h3 className="font-semibold">
+                          {slotLabels[part][index]} · Part {part}
+                        </h3>
+                        <p className="my-2 text-sm">
+                          {exercise
+                            ? `${exercise.code} · ${exercise.topic} · ${exercise.status}`
+                            : "Chưa chọn bài"}
+                        </p>
+                        {!readOnly && (
+                          <div className="flex gap-2">
+                            <button
+                              className={adminSecondary}
+                              disabled={busy}
+                              onClick={() => setPicker({ part, index })}
+                              type="button"
+                            >
+                              Chọn bài cho {slotLabels[part][index]}
+                            </button>
+                            <button
+                              className={adminSecondary}
+                              disabled={!id || busy}
+                              onClick={() =>
+                                setExerciseIds((current) => {
+                                  const next = [...current[part]];
+                                  next[index] = "";
+                                  return { ...current, [part]: next };
+                                })
+                              }
+                              type="button"
+                            >
+                              Gỡ {slotLabels[part][index]}
+                            </button>
+                          </div>
+                        )}
+                        {picker?.part === part && picker.index === index && (
+                          <ExercisePickerPanel
+                            part={part}
+                            selected={chosen}
+                            onClose={() => setPicker(null)}
+                            onPick={(item) => {
+                              setLegacyExercises((current) => [
+                                ...current.filter(
+                                  (candidate) => candidate.id !== item.id,
+                                ),
+                                item,
+                              ]);
+                              setExerciseIds((current) => {
+                                const next = [...current[part]];
+                                next[index] = item.id;
+                                return { ...current, [part]: next };
+                              });
+                              setPicker(null);
+                              setErrors([]);
+                            }}
+                          />
+                        )}
+                        {exercise && (
+                          <details className="mt-3">
+                            <summary>
+                              Xem trước {slotLabels[part][index]}
+                            </summary>
+                            <SpeakingPrompt
+                              content={exercise}
+                              showAllQuestions
+                            />
+                          </details>
+                        )}
+                      </section>
+                    );
+                  },
+                ),
+              )}
+            </div>
           </AdminPanel>
         </div>
       ) : (
@@ -423,7 +720,11 @@ export function SpeakingTestWorkspace({
               }}
               value={metadata}
             />
-            <PublishChecklistPanel errors={errors} items={checklist} />
+            <PublishChecklistPanel
+              errors={errors}
+              errorTitle={errorTitle}
+              items={checklist}
+            />
             <p className="rounded-xl border border-[#ffd8cb] bg-[#fff9f6] p-3 text-xs leading-5 text-[var(--admin-muted)]">
               Nội dung ở đây chỉ thuộc đề này. Bản nháp lưu cả những nhóm đang
               soạn dở; chỉ khi xuất bản hệ thống mới yêu cầu đủ 7 nhóm / 11 câu.

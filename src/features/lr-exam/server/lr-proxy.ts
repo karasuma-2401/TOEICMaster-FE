@@ -69,18 +69,21 @@ export async function forwardLr(
 
   const isPublic = isPublicCatalog || isPublicPractice;
 
-  const session = isPublic ? null : sessionCookie(request);
+  const session = sessionCookie(request);
+  const hasValidRefresh =
+    session !== null &&
+    Date.parse(session.refreshTokenExpiresAtUtc) > Date.now();
 
-  if (
-    !isPublic &&
-    (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
-  ) {
+  if (!isPublic && !hasValidRefresh) {
     return problem(401, "Vui lòng đăng nhập để làm bài thi.");
   }
 
   const headers = new Headers({ Accept: "application/json" });
 
-  if (session) {
+  if (
+    hasValidRefresh &&
+    Date.parse(session.accessTokenExpiresAtUtc) > Date.now()
+  ) {
     headers.set("Authorization", `Bearer ${session.accessToken}`);
   }
 

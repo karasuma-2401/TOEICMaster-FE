@@ -239,7 +239,7 @@ export function KnowledgeArticlePreview({
               </span>
             ) : null}
             <span className="text-(--admin-muted)">
-              · {readMinutes} phút đọc
+              - {readMinutes} phút đọc
             </span>
           </div>
 

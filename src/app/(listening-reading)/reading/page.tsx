@@ -1,5 +1,5 @@
-import { ListeningReadingLibrary } from "@/features/listening-reading/components/listening-reading-library";
+import { redirect } from "next/navigation";
 
 export default function ReadingLibraryRoute() {
-  return <ListeningReadingLibrary skill="reading" />;
+  redirect("/listening-reading");
 }

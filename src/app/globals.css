@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --background: #fdfafa;
@@ -44,6 +45,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Poppins, "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+@media (min-width: 48rem) {
+  body:has(.practice-sidebar) {
+    padding-left: 15rem;
+    transition: padding-left 200ms;
+  }
+
+  body:has(.practice-sidebar[data-collapsed="true"]) {
+    padding-left: 4rem;
+  }
 }
 
 /* Shared admin actions use the TOEICMaster red-to-orange brand gradient. */
