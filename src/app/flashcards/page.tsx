@@ -25,7 +25,11 @@ export default async function FlashcardsPage({
   return (
     <div className="sp-theme min-h-dvh bg-white">
       <FlashcardsHeader />
-      <main className={`${wideContainer} pb-12 pt-6`}>
+      <main
+        className={`${wideContainer} pb-12 pt-6`}
+        id="main-content"
+        tabIndex={-1}
+      >
         <Breadcrumbs
           items={[{ label: "Trang chủ", href: "/" }, { label: "Flashcards" }]}
         />

@@ -14,7 +14,13 @@ export function PracticePage({
   return (
     <div className="min-h-dvh bg-[#f7f6f4] text-slate-900">
       {header}
-      <main className={`${pageContainer} ${className}`}>{children}</main>
+      <main
+        className={`${pageContainer} ${className}`}
+        id="main-content"
+        tabIndex={-1}
+      >
+        {children}
+      </main>
     </div>
   );
 }

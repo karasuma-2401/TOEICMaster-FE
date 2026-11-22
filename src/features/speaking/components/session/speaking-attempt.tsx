@@ -157,7 +157,11 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
           })}
         </ol>
       </header>
-      <main className="sp-container flex flex-1 flex-col pt-6">
+      <main
+        className="sp-container flex flex-1 flex-col pt-6"
+        id="main-content"
+        tabIndex={-1}
+      >
         {micDown && (
           <div
             className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border-[1.5px] border-(--sp-danger-line) bg-(--sp-danger-bg) p-4"

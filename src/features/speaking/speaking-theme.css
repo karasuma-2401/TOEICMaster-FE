@@ -20,7 +20,7 @@
   --sp-outline-line: #c9bdb1;
   --sp-ink: #2b2724;
   --sp-ink-2: #5f5953;
-  --sp-ink-3: #948d86;
+  --sp-ink-3: var(--tm-ink-subtle, #6b655f);
   --sp-disabled-bg: #ece8e5;
   --sp-disabled-fg: #8f8984;
   --sp-disabled-cta: #f2b8a6;

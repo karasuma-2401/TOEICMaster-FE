@@ -8,7 +8,11 @@ export default function ProfilePage() {
   return (
     <div className={`sp-font ${speakingFontClasses} min-h-dvh bg-[#f7f6f4]`}>
       <SkillHeader account={<UserMenu />} />
-      <main className="mx-auto w-full max-w-[1240px] px-4 py-8 md:px-8">
+      <main
+        className="mx-auto w-full max-w-[1240px] px-4 py-8 md:px-8"
+        id="main-content"
+        tabIndex={-1}
+      >
         <ProfilePanel />
       </main>
     </div>

@@ -278,7 +278,11 @@ export function ExamLibrary({
   return (
     <div className="sp-theme min-h-dvh bg-white">
       {header}
-      <main className={`${wideContainer} pb-12 pt-6`}>
+      <main
+        className={`${wideContainer} pb-12 pt-6`}
+        id="main-content"
+        tabIndex={-1}
+      >
         <nav aria-label="Đường dẫn" className="text-[13px] text-(--sp-ink-2)">
           <ol className="flex flex-wrap gap-1">
             <li>

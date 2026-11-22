@@ -324,7 +324,11 @@ export function LrExamRoom({
 
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
-          <main className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9">
+          <main
+            className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9"
+            id="main-content"
+            tabIndex={-1}
+          >
             {phase === "listening" && listeningTracks.length > 0 ? (
               <ListeningMasterPlayer player={listeningPlayer} />
             ) : null}
@@ -346,7 +350,11 @@ export function LrExamRoom({
         </div>
       ) : (
         <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6 xl:flex-row">
-          <main className="flex w-full flex-col gap-5 xl:w-[948px] xl:shrink-0">
+          <main
+            className="flex w-full flex-col gap-5 xl:w-[948px] xl:shrink-0"
+            id="main-content"
+            tabIndex={-1}
+          >
             {group ? (
               <ReadingContext group={group} />
             ) : (

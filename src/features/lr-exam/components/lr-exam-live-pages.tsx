@@ -22,7 +22,11 @@ function LoadingOrError({
   error: string | null;
 }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 bg-[#faf7f5] p-8 text-center text-[#4c4542]">
+    <main
+      className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 bg-[#faf7f5] p-8 text-center text-[#4c4542]"
+      id="main-content"
+      tabIndex={-1}
+    >
       <p className="text-lg font-semibold">
         {loading
           ? "Đang tải dữ liệu bài thi…"

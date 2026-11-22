@@ -100,7 +100,11 @@ export function LrExamInstructions({ examId }: { examId: string }) {
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
-      <main className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]">
+      <main
+        className="mx-auto flex max-w-[1282px] flex-col gap-6 px-4 py-10 sm:px-12 lg:px-[220px]"
+        id="main-content"
+        tabIndex={-1}
+      >
         <p className="text-[13px] text-[#77716e]">
           Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}
         </p>

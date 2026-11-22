@@ -299,8 +299,8 @@ test.describe("Practice Sidebar Navigation", () => {
 
     // Collapsed rail renders icon-only links while accessible names and tooltips remain intact
     const collapsedLinks = nav.getByRole("link");
-    await expect(collapsedLinks).toHaveCount(8);
-    for (let i = 0; i < 8; i++) {
+    await expect(collapsedLinks).toHaveCount(10);
+    for (let i = 0; i < 10; i++) {
       const link = collapsedLinks.nth(i);
       await expect(link.locator("svg")).toBeVisible();
       expect((await link.innerText()).trim()).toBe("");

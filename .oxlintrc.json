@@ -4,7 +4,9 @@
   "categories": { "correctness": "error" },
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/exhaustive-deps": "error"
+    "react/exhaustive-deps": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": "error"
   },
   "ignorePatterns": [".next/**", "node_modules/**", "coverage/**"]
 }

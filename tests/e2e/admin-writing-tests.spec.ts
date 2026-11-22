@@ -23,31 +23,33 @@ test.describe("Admin Writing - Quản lý Đề thi Writing độc lập (/admin
   test("TC-TEST-01: Hiển thị danh sách đề thi độc lập, tìm kiếm và lọc theo trạng thái", async ({
     page,
   }) => {
+    const tableBody = page.locator("tbody");
+
     // Kiểm tra danh sách đề khởi tạo
-    await expect(page.getByText("WT-DRAFT-01")).toBeVisible();
-    await expect(page.getByText("WT-PUB-01")).toBeVisible();
-    await expect(page.getByText("WT-ARC-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-DRAFT-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-PUB-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-ARC-01")).toBeVisible();
 
     // Lọc theo từ khóa tìm kiếm
     const searchInput = page.getByLabel("Tìm đề Writing");
     await searchInput.fill("PUB");
-    await expect(page.getByText("WT-PUB-01")).toBeVisible();
-    await expect(page.getByText("WT-DRAFT-01")).not.toBeVisible();
+    await expect(tableBody.getByText("WT-PUB-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-DRAFT-01")).not.toBeVisible();
 
     // Lọc theo trạng thái Đã công bố
     await searchInput.clear();
     await chooseFilter(page, /^Lọc trạng thái đề/, "Đã công bố");
-    await expect(page.getByText("WT-PUB-01")).toBeVisible();
-    await expect(page.getByText("WT-DRAFT-01")).not.toBeVisible();
+    await expect(tableBody.getByText("WT-PUB-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-DRAFT-01")).not.toBeVisible();
 
     // Lọc theo trạng thái Bản nháp
     await chooseFilter(page, /^Lọc trạng thái đề/, "Bản nháp");
-    await expect(page.getByText("WT-DRAFT-01")).toBeVisible();
-    await expect(page.getByText("WT-PUB-01")).not.toBeVisible();
+    await expect(tableBody.getByText("WT-DRAFT-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-PUB-01")).not.toBeVisible();
 
     // Lọc theo trạng thái Đã lưu trữ
     await chooseFilter(page, /^Lọc trạng thái đề/, "Đã lưu trữ");
-    await expect(page.getByText("WT-ARC-01")).toBeVisible();
+    await expect(tableBody.getByText("WT-ARC-01")).toBeVisible();
   });
 
   test("TC-TEST-02: Tạo đề thi mới trực tiếp (nhập trọn gói 8 câu 5/2/1) và Lưu nháp thành công", async ({

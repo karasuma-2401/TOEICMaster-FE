@@ -10,7 +10,7 @@ export default function HistoryPage() {
   return (
     <div className={`sp-font ${speakingFontClasses} min-h-dvh bg-[#faf7f5]`}>
       <SkillHeader active="history" account={<UserMenu />} />
-      <main className={`${wideContainer} py-8`}>
+      <main className={`${wideContainer} py-8`} id="main-content" tabIndex={-1}>
         <Breadcrumbs
           items={[{ label: "Trang chủ", href: "/" }, { label: "Lịch sử" }]}
         />

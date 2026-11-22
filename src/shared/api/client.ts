@@ -1,3 +1,4 @@
+/** @deprecated Use `HttpError` from `@/shared/api/http` for new code. */
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -8,6 +9,7 @@ export class ApiError extends Error {
   }
 }
 
+/** @deprecated Use `requestJson` from `@/shared/api/http` with an explicit boundary parser. */
 export async function getJson<T>(
   path: string,
   signal?: AbortSignal,

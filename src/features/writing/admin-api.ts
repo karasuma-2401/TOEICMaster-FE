@@ -1,6 +1,6 @@
 import { writingRequest } from "./http";
 import type { WritingDifficulty, WritingPart } from "./types";
-import type { AdminWritingQuestion, AdminWritingTest } from "./admin-mock";
+import type { AdminWritingQuestion, AdminWritingTest } from "./admin-types";
 
 const base = "/api/admin/writing";
 

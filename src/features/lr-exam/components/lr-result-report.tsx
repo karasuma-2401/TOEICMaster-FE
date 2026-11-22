@@ -94,7 +94,11 @@ export function LrResultReportView({
   return (
     <div className="min-h-screen bg-[#faf7f5] text-[#4c4542]">
       <LearnerNav />
-      <main className="mx-auto flex max-w-[1100px] flex-col gap-6 px-4 py-10 sm:px-8">
+      <main
+        className="mx-auto flex max-w-[1100px] flex-col gap-6 px-4 py-10 sm:px-8"
+        id="main-content"
+        tabIndex={-1}
+      >
         <header className="flex flex-col gap-2">
           <Pill>BÁO CÁO KẾT QUẢ · {report.scale}</Pill>
           <h1 className="text-[28px] leading-tight font-bold text-[#302C2A]">

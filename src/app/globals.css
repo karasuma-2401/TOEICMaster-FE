@@ -2,31 +2,75 @@
 @import "tw-animate-css";
 
 :root {
-  --background: #fdfafa;
-  --foreground: #302b29;
-  --admin-brand-red: #e34229;
-  --admin-brand-red-dark: #c92e1c;
-  --admin-brand-orange: #fb6b24;
-  --admin-brand-gradient: linear-gradient(100deg, #e34229, #f26a23);
-  --admin-action-shadow: 0 5px 14px rgb(227 66 41 / 18%);
+  --tm-brand: #c93b0b;
+  --tm-brand-hover: #b33208;
+  --tm-brand-strong: #c70e1a;
+  --tm-brand-soft: #fff7ed;
+  --tm-brand-accent: #ff5a1f;
+  --tm-brand-gradient: linear-gradient(100deg, #c92e1c, #e04810);
+  --tm-page: #faf7f5;
+  --tm-surface: #ffffff;
+  --tm-surface-muted: #f5f2f0;
+  --tm-ink: #302c2a;
+  --tm-ink-soft: #4c4542;
+  --tm-ink-muted: #5f5953;
+  --tm-ink-subtle: #6b655f;
+  --tm-border: #e8e3e0;
+  --tm-border-strong: #d9d2ce;
+  --tm-ring: #c93b0b;
+  --tm-success: #047857;
+  --tm-success-soft: #ecfdf5;
+  --tm-warning: #9a3412;
+  --tm-warning-soft: #fef3c7;
+  --tm-danger: #b91c1c;
+  --tm-danger-soft: #fee2e2;
+  --tm-info: #1d4ed8;
+  --tm-info-soft: #eff6ff;
+
+  --background: var(--tm-page);
+  --foreground: var(--tm-ink);
+  --card: var(--tm-surface);
+  --card-foreground: var(--tm-ink);
+  --popover: var(--tm-surface);
+  --popover-foreground: var(--tm-ink);
+  --primary: var(--tm-brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--tm-surface-muted);
+  --secondary-foreground: var(--tm-ink);
+  --muted: var(--tm-surface-muted);
+  --muted-foreground: var(--tm-ink-muted);
+  --accent: var(--tm-brand-soft);
+  --accent-foreground: var(--tm-ink);
+  --destructive: var(--tm-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--tm-border);
+  --input: var(--tm-border-strong);
+  --ring: var(--tm-ring);
+  --radius: 0.75rem;
+
+  --admin-brand-red: #c92e1c;
+  --admin-brand-red-dark: #a62214;
+  --admin-brand-orange: #e04810;
+  --admin-brand-gradient: var(--tm-brand-gradient);
+  --admin-action-shadow: 0 5px 14px rgb(201 46 28 / 20%);
   --admin-highlight: #ffd361;
   --admin-avatar-border: #ffd49e;
   --admin-avatar-orange: #f17939;
   --admin-page: #fdfafa;
-  --admin-surface: #ffffff;
-  --admin-surface-muted: #f5f2f0;
-  --admin-ink: #302b29;
-  --admin-ink-soft: #4c4542;
-  --admin-muted: #817a76;
-  --admin-border: #e8e3e0;
+  --admin-surface: var(--tm-surface);
+  --admin-surface-muted: var(--tm-surface-muted);
+  --admin-ink: var(--tm-ink);
+  --admin-ink-soft: var(--tm-ink-soft);
+  --admin-muted: var(--tm-ink-subtle);
+  --admin-border: var(--tm-border);
   --admin-nav-active: #fbe9df;
-  --admin-success: #047857;
-  --admin-success-soft: #ecfdf5;
-  --admin-warning: #b45309;
-  --admin-warning-soft: #fef3c7;
-  --admin-danger: #b31322;
-  --admin-danger-soft: #fcebed;
-  --admin-role-admin: #c2570c;
+  --admin-success: var(--tm-success);
+  --admin-success-soft: var(--tm-success-soft);
+  --admin-warning: var(--tm-warning);
+  --admin-warning-soft: var(--tm-warning-soft);
+  --admin-danger: var(--tm-danger);
+  --admin-danger-soft: var(--tm-danger-soft);
+  --admin-role-admin: #c2410c;
   --admin-role-admin-soft: #ffe9d6;
   --admin-row-hover: #fffaf7;
   --admin-skeleton: #eee8e5;
@@ -34,6 +78,23 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --font-sans: Poppins, "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
 html {
@@ -45,6 +106,29 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Poppins, "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+.tm-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 9999px;
+  background: var(--tm-ink);
+  color: var(--tm-surface);
+  padding: 0.625rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
+  transition: transform 120ms ease;
+}
+
+.tm-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid var(--tm-brand-accent);
+  outline-offset: 2px;
 }
 
 @media (min-width: 48rem) {
