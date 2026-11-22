@@ -11,6 +11,7 @@ export type PracticeNavId =
   | "reading"
   | "speaking"
   | "writing"
+  | "flashcards"
   | "pronunciation"
   | "history";
 

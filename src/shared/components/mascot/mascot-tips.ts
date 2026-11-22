@@ -63,6 +63,16 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
     },
   },
   {
+    match: /^\/flashcards/,
+    guide: {
+      title: "Học Flashcards nhanh",
+      tips: [
+        "Dùng phím Space để lật thẻ, phím S để nghe phát âm và 1 / 2 / 3 để đánh dấu mức độ nhớ.",
+        "Chuyển sang tab Trắc nghiệm nhanh sau khi lật thẻ để kiểm tra lại trí nhớ.",
+      ],
+    },
+  },
+  {
     match: /^\/history/,
     guide: {
       title: "Lịch sử học tập",

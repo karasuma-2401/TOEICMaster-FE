@@ -6,6 +6,7 @@ export type PracticeNavKey =
   | "exercise-lr"
   | "exercise-speaking"
   | "exercise-writing"
+  | "flashcards"
   | "pronunciation"
   | "history";
 
@@ -64,6 +65,7 @@ export const practiceNavGroups: readonly PracticeNavGroup[] = [
 
 export const practiceNavLinks: readonly PracticeNavLink[] = [
   { key: "knowledge", label: "Kiến thức", href: "/knowledge" },
+  { key: "flashcards", label: "Flashcards", href: "/flashcards" },
   {
     key: "pronunciation",
     label: "Phát âm",
@@ -81,6 +83,7 @@ const rules: readonly [RegExp, PracticeNavKey][] = [
   [/^\/exams\/lr(\/|$)/, "exam-lr"],
   [/^\/speaking(\/|$)/, "exam-speaking"],
   [/^\/writing(\/|$)/, "exam-writing"],
+  [/^\/flashcards(\/|$)/, "flashcards"],
   [/^\/pronunciation(\/|$)/, "pronunciation"],
   [/^\/history(\/|$)/, "history"],
 ];
