@@ -25,16 +25,12 @@ describe("PracticeSidebar", () => {
     render(<PracticeSidebarNav />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(8);
     links.forEach((link) => {
       expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
     });
     expect(screen.getByText("Đề thi")).toBeVisible();
     expect(screen.getByText("Bài tập")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Kiến thức" })).toHaveAttribute(
-      "href",
-      "/knowledge",
-    );
     expect(screen.getByText("Phát âm")).toBeVisible();
     expect(screen.getByText("Lịch sử")).toBeVisible();
   });
@@ -43,7 +39,7 @@ describe("PracticeSidebar", () => {
     render(<PracticeSidebarNav collapsed />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(8);
     links.forEach((link) => {
       expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
       expect(link.textContent?.trim()).toBe("");
