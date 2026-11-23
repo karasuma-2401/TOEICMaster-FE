@@ -349,10 +349,10 @@ describe("shared/server/bff-proxy", () => {
         upstreamPath: "/api/v1/items",
         method: "GET",
         auth: "public",
-        missingBaseUrlMessage: "Backend chưa cấu hình",
+        missingBaseUrlMessage: "Backend is not configured",
       },
     );
     expect(missingBase.status).toBe(503);
-    expect(await missingBase.text()).toContain("Backend chưa cấu hình");
+    expect(await missingBase.text()).toContain("Backend is not configured");
   });
 });

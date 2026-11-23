@@ -7,7 +7,7 @@ import {
   sanitizeEvaluation,
 } from "./learner-writing-helpers";
 
-test.describe("Bảo mật & Hạn mức (Writing Security & Limits)", () => {
+test.describe("Writing Security & Limits", () => {
   let backend: MockWritingLearnerBackend;
 
   test.beforeEach(async ({ page }) => {
@@ -15,11 +15,11 @@ test.describe("Bảo mật & Hạn mức (Writing Security & Limits)", () => {
     await backend.setupRoutes(page);
   });
 
-  test("TC-SEC-01: Hạn mức khách vãng lai - Chỉ được chấm AI tối đa 1 lần trong 24 giờ", async ({
+  test("TC-SEC-01: Guest limit - Only allowed 1 AI evaluation in 24 hours", async ({
     page,
   }) => {
-    // Không đăng nhập (khách vãng lai / anonymous)
-    // 1. Tạo bài thi khách thứ nhất
+    // Anonymous / guest user (not logged in)
+    // 1. Create first guest attempt
     const guestAttempt1 = sanitizeAttempt({
       id: "att-guest-01",
       testCode: "WT-PUB-FULL-01",
@@ -45,22 +45,22 @@ test.describe("Bảo mật & Hạn mức (Writing Security & Limits)", () => {
     });
     backend.attempts.push(guestAttempt1);
 
-    // Lần 1: Khách yêu cầu chấm AI -> Thành công
+    // First time: Guest requests AI grading -> Succeeds
     await page.goto("/writing/attempts/att-guest-01/result");
     await page
       .getByRole("checkbox", {
-        name: "Tôi đồng ý gửi bài làm đến dịch vụ AI để chấm ước tính.",
+        name: "I agree to send my writing to the AI service for estimated scoring.",
       })
       .check();
-    await page.getByRole("button", { name: "Đồng ý và chấm bài" }).click();
+    await page.getByRole("button", { name: "Agree and grade" }).click();
 
-    // Hệ thống chấp nhận lần chấm thứ nhất
+    // System accepts the first grading request
     await expect(
-      page.getByRole("heading", { name: "AI đang chấm bài" }),
+      page.getByRole("heading", { name: "AI is grading your writing" }),
     ).toBeVisible();
     expect(backend.guestConsentUsed).toBe(true);
 
-    // 2. Tạo bài thi khách thứ hai trong vòng 24 giờ
+    // 2. Create second guest attempt within 24 hours
     const guestAttempt2 = sanitizeAttempt({
       id: "att-guest-02",
       testCode: "WT-PUB-FULL-01",
@@ -86,95 +86,95 @@ test.describe("Bảo mật & Hạn mức (Writing Security & Limits)", () => {
     });
     backend.attempts.push(guestAttempt2);
 
-    // Lần 2: Khách yêu cầu chấm tiếp -> Bị chặn 409 Conflict
+    // Second time: Guest requests grading again -> Blocked with 409 Conflict
     await page.goto("/writing/attempts/att-guest-02/result");
     await page
       .getByRole("checkbox", {
-        name: "Tôi đồng ý gửi bài làm đến dịch vụ AI để chấm ước tính.",
+        name: "I agree to send my writing to the AI service for estimated scoring.",
       })
       .check();
-    await page.getByRole("button", { name: "Đồng ý và chấm bài" }).click();
+    await page.getByRole("button", { name: "Agree and grade" }).click();
 
-    // Hiển thị thông báo vượt quá hạn mức khách ẩn danh
+    // Displays anonymous guest limit exceeded message
     await expect(
       page.getByText(
-        "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua. Hãy đăng nhập hoặc thử lại sau.",
+        "This anonymous session has already used its AI evaluation in the past 24 hours. Please log in or try again later.",
       ),
     ).toBeVisible();
   });
 
-  test("TC-SEC-02: Bảo mật bài làm - Không thể truy cập bài làm của người khác bằng link trực tiếp", async ({
+  test("TC-SEC-02: Attempt security - Cannot access another user's attempt via direct link", async ({
     page,
     context,
   }) => {
-    // Đăng nhập tài khoản học viên thông thường
+    // Log in with regular learner account
     await loginAsUser(context, "user-learner-01", "learner@example.com");
 
-    // Thử truy cập trực tiếp bài làm của người dùng khác (att-other-user-99 thuộc về victim-user-99)
+    // Try to directly access another user's attempt (att-other-user-99 belongs to victim-user-99)
     await page.goto("/writing/attempts/att-other-user-99");
 
-    // Hệ thống chặn truy cập và hiển thị thông báo lỗi 404
-    await expect(page.getByText("Không tìm thấy lượt làm bài.")).toBeVisible();
+    // System blocks access and displays 404 error message
+    await expect(page.getByText("Attempt not found.")).toBeVisible();
 
-    // Xác nhận nội dung riêng tư của người khác không bị rò rỉ trên giao diện
+    // Confirm private content of the other user is not leaked in the UI
     await expect(
       page.getByText("Private Attempt of Another User"),
     ).not.toBeVisible();
   });
 
-  test("TC-SEC-03: Bảo mật nội dung - Giao diện học viên không hiển thị đáp án mẫu (Model Answer) hay prompt nội bộ", async ({
+  test("TC-SEC-03: Content security - Learner UI does not render Model Answer or internal prompts", async ({
     page,
     context,
   }) => {
     await loginAsUser(context);
 
-    // Mở trang kết quả bài thi đã chấm
+    // Open graded attempt results page
     await page.goto("/writing/attempts/att-completed-01/result");
 
     await expect(
-      page.getByRole("heading", { name: "Kết quả Writing" }),
+      page.getByRole("heading", { name: "Writing Results" }),
     ).toBeVisible();
 
-    // Lấy toàn bộ nội dung HTML được render trên trang học viên
+    // Get all rendered HTML content on learner page
     const pageContent = await page.content();
 
-    // Đảm bảo không chứa prompt nội bộ của hệ thống AI hoặc system instruction bí mật
+    // Ensure no internal AI system prompt or secret system instruction is present
     expect(pageContent).not.toContain(
       "You are an expert TOEIC Writing evaluator",
     );
     expect(pageContent).not.toContain("System Prompt:");
     expect(pageContent).not.toContain("Internal rubric prompt");
 
-    // Đảm bảo không render đáp án mẫu nội bộ bí mật
+    // Ensure no secret internal model answer is rendered
     expect(pageContent).not.toContain("Secret Model Answer:");
     expect(pageContent).not.toContain("OFFICIAL_ETS_SAMPLE_ANSWER");
   });
 
-  test("TC-SEC-04: Phân quyền Route - Khách và tài khoản thường không thể truy cập vào các trang /admin/*", async ({
+  test("TC-SEC-04: Route authorization - Guests and regular users cannot access /admin/* pages", async ({
     page,
     context,
   }) => {
-    // 1. Trường hợp Khách vãng lai (Chưa đăng nhập):
-    // Truy cập trực tiếp vào Quản lý câu hỏi lẻ Writing
+    // 1. Guest user (Not logged in):
+    // Directly access Writing exercise management
     await page.goto("/admin/content/writing");
-    // Bị chuyển hướng sang trang đăng nhập với tham số next
+    // Redirected to login page with next parameter
     await expect(page).toHaveURL(/\/login\?next=%2Fadmin%2Fcontent%2Fwriting/);
 
-    // Truy cập trực tiếp vào Quản lý đề thi Writing
+    // Directly access Writing test management
     await page.goto("/admin/tests/writing");
     await expect(page).toHaveURL(/\/login\?next=%2Fadmin%2Ftests%2Fwriting/);
 
-    // 2. Trường hợp Học viên thường đã đăng nhập (role: 'USER'):
+    // 2. Logged-in regular learner (role: 'USER'):
     await loginAsUser(context, "normal-user-01", "normal@example.com");
 
-    // Cố truy cập trang quản trị câu hỏi
+    // Attempt to access exercise management page
     await page.goto("/admin/content/writing");
-    // Bị chuyển hướng về trang chủ /
+    // Redirected to home page /
     await expect(page).toHaveURL("http://localhost:3000/");
 
-    // Cố truy cập trang quản trị đề thi
+    // Attempt to access test management page
     await page.goto("/admin/tests/writing");
-    // Bị chuyển hướng về trang chủ /
+    // Redirected to home page /
     await expect(page).toHaveURL("http://localhost:3000/");
   });
 });

@@ -21,7 +21,7 @@ export const demoExam: LrExamSummary = {
   id: "ets-2024-test-01",
   title: "TOEIC Full Test 2024 - Test 01",
   identity: "ETS 2024 · Test 01",
-  breadcrumb: "Trang chủ / Đề thi thử ETS / ETS 2024 Test 01",
+  breadcrumb: "Home / ETS Mock Tests / ETS 2024 Test 01",
   totalQuestions: 200,
   durationMinutes: 120,
   scoreScale: "10–990",
@@ -56,8 +56,8 @@ export const demoGroups: LrQuestionGroup[] = [
     part: 3,
     first: 32,
     last: 34,
-    heading: "PART 3: SHORT CONVERSATIONS · CÂU 32 - 34",
-    description: "Hội thoại 2 người · Nghe và trả lời 3 câu hỏi",
+    heading: "PART 3: SHORT CONVERSATIONS · QUESTIONS 32 - 34",
+    description: "2-speaker conversation · Listen and answer 3 questions",
     audio: { currentSeconds: 22, totalSeconds: 48 },
     questions: [
       {
@@ -87,7 +87,7 @@ export const demoGroups: LrQuestionGroup[] = [
     part: 7,
     first: 147,
     last: 149,
-    heading: "PART 7: READING COMPREHENSION · CÂU 147 - 149",
+    heading: "PART 7: READING COMPREHENSION · QUESTIONS 147 - 149",
     description: "Single passage",
     passage: emailPassage,
     questions: [
@@ -126,10 +126,10 @@ export const demoReadingAnswers: LrAnswers = Object.fromEntries(
 export const demoReadingFlags: LrFlags = { 32: true, 65: true, 112: true };
 
 export const demoResult: LrResultReport = {
-  examTitle: "Kết quả bài thi Listening & Reading - ETS 2024 Test 1",
+  examTitle: "Listening & Reading Exam Result - ETS 2024 Test 1",
   examIdentity: "ETS 2024 Test 01",
-  takenAt: "06/11/2026",
-  durationLabel: "112 phút 45 giây",
+  takenAt: "11/06/2026",
+  durationLabel: "112 minutes 45 seconds",
   scale: "ETS Standard",
   totalScore: 855,
   maxScore: 990,
@@ -174,12 +174,13 @@ export const demoReviewGroups: LrReviewGroup[] = [
     audio: {
       currentSeconds: 24,
       totalSeconds: 58,
-      note: "Audio luyện tập · US / UK",
+      note: "Practice audio · US / UK",
     },
     translation: {
-      quote: "Chúng tôi vui mừng thông báo cập nhật chính sách làm việc từ xa.",
-      body: "Từ ngày 1/11, nhân viên có thể làm việc tại nhà tối đa hai ngày mỗi tuần với sự đồng ý của trưởng bộ phận.",
-      note: "Dẫn chứng đã được bôi vàng trên email · Đọc cùng audio 00:18–00:25",
+      quote:
+        "We are pleased to announce an update to our remote working policy.",
+      body: "Starting November 1, employees may work from home up to two days a week with approval from their department manager.",
+      note: "Evidence highlighted in the email · Read along with audio 00:18–00:25",
     },
     questions: [
       {
@@ -195,13 +196,13 @@ export const demoReviewGroups: LrReviewGroup[] = [
         correct: "A",
         analysis: {
           summary:
-            "“Announce an update” tương đương “announce a new policy”. Câu đầu tiên nêu trực tiếp mục đích của email, vì vậy A là đáp án chính xác.",
-          trap: "Bẫy B: “Dear colleagues” chỉ là lời chào tập thể. Email không nhắc đến lời mời, bữa tiệc hay sự kiện.",
+            '"Announce an update" is equivalent to "announce a new policy". The first sentence directly states the purpose of the email, so A is the correct answer.',
+          trap: 'Trap B: "Dear colleagues" is only a group greeting. The email makes no mention of an invitation, party, or event.',
           notes: [
-            "C: Không có yêu cầu duyệt ngân sách.",
-            "D: Không đề cập giao hàng hay xác nhận đơn hàng.",
+            "C: There is no request for budget approval.",
+            "D: There is no mention of delivery or order confirmation.",
           ],
-          skill: "Kỹ năng: xác định mục đích văn bản",
+          skill: "Skill: Identifying text purpose",
         },
       },
     ],

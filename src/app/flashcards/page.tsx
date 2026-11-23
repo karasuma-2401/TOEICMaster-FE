@@ -5,9 +5,9 @@ import { Breadcrumbs } from "@/shared/components/practice/breadcrumbs";
 import { wideContainer } from "@/shared/components/practice/styles";
 
 export const metadata: Metadata = {
-  title: "Flashcards Từ Vựng TOEIC | TOEICMaster",
+  title: "TOEIC Vocabulary Flashcards | TOEICMaster",
   description:
-    "Học và ôn tập từ vựng TOEIC theo chủ đề bằng thẻ lật 3D, phát âm chuẩn và trắc nghiệm nhanh.",
+    "Learn and review TOEIC vocabulary by topic with 3D flip cards, standard pronunciation, and quick quizzes.",
 };
 
 function first(value: string | string[] | undefined) {
@@ -31,7 +31,7 @@ export default async function FlashcardsPage({
         tabIndex={-1}
       >
         <Breadcrumbs
-          items={[{ label: "Trang chủ", href: "/" }, { label: "Flashcards" }]}
+          items={[{ label: "Home", href: "/" }, { label: "Flashcards" }]}
         />
         <FlashcardsWorkspace initialDeckSlug={deck} />
       </main>

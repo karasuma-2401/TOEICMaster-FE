@@ -71,7 +71,7 @@ describe("LrExamInstructions", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "← Về danh sách đề" }),
+      screen.getByRole("link", { name: "← Back to exam list" }),
     ).toHaveAttribute("href", "/listening-reading");
   });
 
@@ -89,7 +89,7 @@ describe("LrExamInstructions", () => {
       activeAttemptId: null,
     });
     mockedStartLrAttempt.mockRejectedValue(
-      new LrApiError(401, "Phiên đăng nhập đã hết hạn."),
+      new LrApiError(401, "Your session has expired. Please sign in again."),
     );
 
     render(<LrExamInstructions examId="demo-exam-id" />);
@@ -97,12 +97,10 @@ describe("LrExamInstructions", () => {
     await screen.findByRole("heading", { level: 1, name: "ETS 2026 Test 01" });
 
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(
-      screen.getByRole("button", { name: "BẮT ĐẦU LÀM BÀI THI L&R" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "START L&R EXAM" }));
 
     const loginLink = await screen.findByRole("link", {
-      name: /Đăng nhập để vào thi/i,
+      name: /Sign in to start exam/i,
     });
     await waitFor(() => {
       expect(loginLink).toHaveAttribute(

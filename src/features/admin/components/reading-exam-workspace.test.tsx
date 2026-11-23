@@ -142,7 +142,7 @@ describe("ReadingExamWorkspace presigned media & durationMs", () => {
   it("extracts durationMs via readAudioDurationMs and forwards it to createMediaUploadIntent", async () => {
     render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
 
-    const audioInput = await screen.findByLabelText("Tải audio");
+    const audioInput = await screen.findByLabelText("Upload audio");
     const file = new File(["mp3"], "p2-q7.mp3", { type: "audio/mpeg" });
     fireEvent.change(audioInput, { target: { files: [file] } });
 
@@ -181,7 +181,9 @@ describe("ReadingExamWorkspace presigned media & durationMs", () => {
 
     render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
 
-    const imageInput = await screen.findByLabelText("Tải ảnh minh họa");
+    const imageInput = await screen.findByLabelText(
+      "Upload illustration image",
+    );
     const imageFile = new File(["png"], "q1.png", { type: "image/png" });
     fireEvent.change(imageInput, { target: { files: [imageFile] } });
 

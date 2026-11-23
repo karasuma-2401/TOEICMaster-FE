@@ -46,13 +46,13 @@ export function AdminWorkspace({
     >
       <header className="sticky top-0 z-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4 sm:px-8">
         <button
-          aria-label={`Đóng ${label.toLocaleLowerCase("vi-VN")}`}
+          aria-label={`Close ${label.toLocaleLowerCase("en-US")}`}
           className={`inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] px-3 text-sm font-bold hover:bg-[var(--admin-surface-muted)] ${adminFocus}`}
           onClick={onClose}
           type="button"
         >
           <span aria-hidden="true">←</span>
-          <span className="hidden sm:inline">Danh sách</span>
+          <span className="hidden sm:inline">List</span>
         </button>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">

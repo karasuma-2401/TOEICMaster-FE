@@ -56,7 +56,7 @@ export function KnowledgeCategoriesTab({
       } catch (err) {
         if (!active || controller.signal.aborted) return;
         toast.error(
-          err instanceof Error ? err.message : "Không thể tải danh mục.",
+          err instanceof Error ? err.message : "Could not load categories.",
         );
       } finally {
         if (active) setLoading(false);
@@ -77,14 +77,14 @@ export function KnowledgeCategoriesTab({
         confirmDeleteCat.id,
         confirmDeleteCat.version,
       );
-      toast.success("Đã xóa danh mục.");
+      toast.success("Category deleted.");
       setConfirmDeleteCat(null);
       onChanged();
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể xóa danh mục.",
+          : "Could not delete category.",
       );
     } finally {
       setDeleting(false);
@@ -103,12 +103,12 @@ export function KnowledgeCategoriesTab({
             setQuery(e.target.value);
             setPageNumber(1);
           }}
-          placeholder="Tìm theo tên hoặc slug danh mục..."
+          placeholder="Search by category name or slug..."
           type="search"
           value={query}
         />
         <select
-          aria-label="Lọc danh mục theo bài viết"
+          aria-label="Filter categories by articles"
           className={fieldClass}
           onChange={(e) => {
             setHasArticles(e.target.value);
@@ -116,12 +116,12 @@ export function KnowledgeCategoriesTab({
           }}
           value={hasArticles}
         >
-          <option value="all">Tất cả danh mục</option>
-          <option value="yes">Đang có bài viết</option>
-          <option value="no">Danh mục trống</option>
+          <option value="all">All categories</option>
+          <option value="yes">With articles</option>
+          <option value="no">Empty categories</option>
         </select>
         <select
-          aria-label="Sắp xếp danh mục"
+          aria-label="Sort categories"
           className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
@@ -129,31 +129,31 @@ export function KnowledgeCategoriesTab({
           }}
           value={sort}
         >
-          <option value="displayOrder:asc">Thứ tự hiển thị (tăng)</option>
-          <option value="name:asc">Tên A → Z</option>
-          <option value="updatedAt:desc">Mới cập nhật</option>
+          <option value="displayOrder:asc">Display order (ascending)</option>
+          <option value="name:asc">Name A → Z</option>
+          <option value="updatedAt:desc">Recently updated</option>
         </select>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-sm">
         {loading ? (
           <p className="py-12 text-center text-sm text-(--admin-muted)">
-            Đang tải danh mục...
+            Loading categories...
           </p>
         ) : !data || data.items.length === 0 ? (
           <p className="py-12 text-center text-sm text-(--admin-muted)">
-            Chưa có danh mục nào. Hãy bấm &quot;+ Tạo danh mục mới&quot;.
+            No categories yet. Click &quot;+ New category&quot; to create one.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-(--admin-border) bg-(--admin-surface-muted) text-xs font-bold uppercase text-(--admin-muted)">
                 <tr>
-                  <th className="px-4 py-3">Danh mục</th>
-                  <th className="px-4 py-3">Thứ tự</th>
-                  <th className="px-4 py-3">Số bài viết</th>
-                  <th className="px-4 py-3">Cập nhật</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Order</th>
+                  <th className="px-4 py-3">Articles</th>
+                  <th className="px-4 py-3">Updated</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-(--admin-border)">
@@ -177,14 +177,14 @@ export function KnowledgeCategoriesTab({
                     <td className="px-4 py-3 text-xs text-(--admin-muted)">
                       {formatDateTimeVi(cat.updatedAtUtc)}
                     </td>
-                    <td aria-label="Thao tác" className="px-4 py-3 text-right">
+                    <td aria-label="Actions" className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1.5">
                         <button
                           className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-semibold text-(--admin-ink) transition duration-150 hover:border-(--admin-brand-orange) hover:bg-(--admin-row-hover) hover:text-(--admin-brand-red) hover:shadow-xs active:scale-95"
                           onClick={() => onEdit(cat)}
                           type="button"
                         >
-                          Sửa
+                          Edit
                         </button>
                         <button
                           className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs font-medium text-(--admin-danger) transition duration-150 hover:border-(--admin-danger) hover:bg-(--admin-danger) hover:text-white hover:shadow-xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--admin-border) disabled:hover:bg-white disabled:hover:text-(--admin-danger) disabled:hover:shadow-none"
@@ -192,12 +192,12 @@ export function KnowledgeCategoriesTab({
                           onClick={() => setConfirmDeleteCat(cat)}
                           title={
                             cat.articleCount > 0
-                              ? "Không thể xóa danh mục đang có bài viết"
-                              : "Xóa danh mục"
+                              ? "Cannot delete a category that has articles"
+                              : "Delete category"
                           }
                           type="button"
                         >
-                          Xóa
+                          Delete
                         </button>
                       </div>
                     </td>
@@ -212,7 +212,7 @@ export function KnowledgeCategoriesTab({
           <KnowledgePagination
             hasNextPage={data.hasNextPage}
             hasPreviousPage={data.hasPreviousPage}
-            itemLabel="danh mục"
+            itemLabel="categories"
             onPageChange={setPageNumber}
             pageNumber={data.pageNumber}
             totalCount={data.totalCount}
@@ -222,13 +222,13 @@ export function KnowledgeCategoriesTab({
       </div>
 
       <KnowledgeConfirmDialog
-        confirmLabel="Xóa danh mục"
-        description={`Bạn có chắc chắn muốn xóa danh mục "${confirmDeleteCat?.name ?? ""}"?`}
+        confirmLabel="Delete category"
+        description={`Are you sure you want to delete category "${confirmDeleteCat?.name ?? ""}"?`}
         onCancel={() => setConfirmDeleteCat(null)}
         onConfirm={() => void confirmDelete()}
         open={Boolean(confirmDeleteCat)}
         pending={deleting}
-        title="Xác nhận xóa danh mục"
+        title="Confirm category deletion"
       />
     </section>
   );

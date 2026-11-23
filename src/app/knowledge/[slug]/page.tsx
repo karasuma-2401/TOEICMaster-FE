@@ -45,7 +45,7 @@ export default function KnowledgeArticlePage({
         (cause) =>
           !controller.signal.aborted &&
           setNotice(
-            cause instanceof Error ? cause.message : "Không thể mở bài học.",
+            cause instanceof Error ? cause.message : "Unable to open article.",
           ),
       );
     knowledgeRequest<KnowledgeArticleSummary[]>(
@@ -64,29 +64,33 @@ export default function KnowledgeArticlePage({
     try {
       await knowledgeRequest(`saved/${article.id}`, saved ? "DELETE" : "PUT");
       setSaved(!saved);
-      setNotice(saved ? "Đã bỏ lưu bài học." : "Đã lưu bài học vào hồ sơ.");
+      setNotice(
+        saved
+          ? "Removed from saved articles."
+          : "Article saved to your profile.",
+      );
     } catch (cause) {
       setNotice(
         cause instanceof KnowledgeApiError && cause.status === 401
-          ? "Hãy đăng nhập để lưu bài học."
+          ? "Please sign in to save this article."
           : cause instanceof Error
             ? cause.message
-            : "Không thể lưu bài học.",
+            : "Unable to save article.",
       );
     } finally {
       setPending(false);
     }
   }
 
-  if (!article) return <output>{notice || "Đang mở bài học…"}</output>;
+  if (!article) return <output>{notice || "Opening article…"}</output>;
   return (
     <div className="knowledge-reading">
       <Link className="font-semibold text-[#c74422]" href="/knowledge">
-        ← Thư viện kiến thức
+        ← Knowledge Library
       </Link>
       <div className="knowledge-reading-toolbar">
         <p className="knowledge-reading-eyebrow">
-          GÓC TỰ HỌC <span>/</span> {article.categoryName}
+          STUDY CORNER <span>/</span> {article.categoryName}
         </p>
         <button
           aria-pressed={saved}
@@ -94,17 +98,17 @@ export default function KnowledgeArticlePage({
           className="knowledge-save-button"
           onClick={() => void toggleSaved()}
         >
-          {pending ? "Đang lưu…" : saved ? "♥ Đã lưu bài học" : "♡ Lưu bài học"}
+          {pending ? "Saving…" : saved ? "♥ Saved" : "♡ Save article"}
         </button>
       </div>
       {notice && (
         <output className="knowledge-reading-notice">
           {notice}{" "}
-          {notice.includes("đăng nhập") && (
+          {notice.includes("sign in") && (
             <Link
               href={`/login?next=${encodeURIComponent(`/knowledge/${articleSlug}`)}`}
             >
-              Đăng nhập →
+              Sign in →
             </Link>
           )}
         </output>
@@ -116,11 +120,11 @@ export default function KnowledgeArticlePage({
           tags={article.tags.map((tag) => tag.name)}
         />
         <aside className="knowledge-related">
-          <span className="knowledge-related-index">ĐỌC TIẾP / 01</span>
-          <h2>Bài học kế tiếp</h2>
+          <span className="knowledge-related-index">UP NEXT / 01</span>
+          <h2>Next Articles</h2>
           {related.length === 0 ? (
             <p className="mt-3 text-sm text-[#6b655f]">
-              Chưa có bài cùng chủ đề.
+              No related articles yet.
             </p>
           ) : (
             related.map((item) => (

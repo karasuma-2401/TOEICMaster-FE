@@ -16,13 +16,13 @@ function renderSlot(file: File | null = null) {
       onSelect={onSelect}
     />,
   );
-  return { onSelect, onReject, input: screen.getByLabelText(/File Excel/) };
+  return { onSelect, onReject, input: screen.getByLabelText(/Excel file/) };
 }
 
 describe("ExcelFileSlot", () => {
   it("accepts a dropped workbook", () => {
     const { onSelect, input } = renderSlot();
-    const file = new File(["x"], "de.XLSX");
+    const file = new File(["x"], "exam.XLSX");
 
     fireEvent.drop(input, {
       dataTransfer: { files: [file] },
@@ -35,24 +35,24 @@ describe("ExcelFileSlot", () => {
     const { onSelect, onReject, input } = renderSlot();
 
     fireEvent.change(input, {
-      target: { files: [new File(["x"], "de.csv")] },
+      target: { files: [new File(["x"], "exam.csv")] },
     });
     fireEvent.change(input, {
-      target: { files: [new File([new Uint8Array(2 ** 20 + 1)], "de.xlsx")] },
+      target: { files: [new File([new Uint8Array(2 ** 20 + 1)], "exam.xlsx")] },
     });
 
-    expect(onReject).toHaveBeenCalledWith("Chỉ hỗ trợ file Excel .xlsx.");
     expect(onReject).toHaveBeenCalledWith(
-      "File Excel không được vượt quá 1 MiB.",
+      "Only .xlsx Excel files are supported.",
     );
+    expect(onReject).toHaveBeenCalledWith("Excel file must not exceed 1 MiB.");
     expect(onSelect).not.toHaveBeenCalled();
   });
 
   it("shows the chosen file", () => {
-    renderSlot(new File(["x"], "de-thi.xlsx"));
+    renderSlot(new File(["x"], "test-exam.xlsx"));
 
-    expect(screen.getByText("de-thi.xlsx")).toBeInTheDocument();
-    expect(screen.getByText("Đổi file")).toBeInTheDocument();
+    expect(screen.getByText("test-exam.xlsx")).toBeInTheDocument();
+    expect(screen.getByText("Change file")).toBeInTheDocument();
   });
 });
 
@@ -65,7 +65,7 @@ describe("ExcelImportDialog", () => {
         onClose={onClose}
         onSubmit={vi.fn()}
         submitLabel="Import"
-        summary="Tóm tắt"
+        summary="Summary"
         title="Import"
       >
         <span />
@@ -88,6 +88,6 @@ describe("ExcelImportDialog", () => {
     fireEvent.keyDown(window, { key: "Escape" });
 
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Hủy" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });
 });

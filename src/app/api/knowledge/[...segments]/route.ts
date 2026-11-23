@@ -23,7 +23,7 @@ async function handle(
     (!saved && method !== "GET") ||
     (path === "saved" && method !== "GET")
   )
-    return problem(404, "Không tìm thấy API.");
+    return problem(404, "API endpoint not found.");
 
   const target = `/api/v1/knowledge/${path}${request.nextUrl.search}`;
   if (saved) return forward(request, target, { method });
@@ -36,7 +36,7 @@ async function handle(
       }),
     );
   } catch {
-    return problem(502, "Không thể tải kiến thức. Vui lòng thử lại.");
+    return problem(502, "Unable to load knowledge content. Please try again.");
   }
 }
 

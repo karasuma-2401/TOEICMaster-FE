@@ -39,7 +39,7 @@ export async function GET() {
     return NextResponse.json({ service: value.service, status: value.status });
   } catch {
     return NextResponse.json(
-      { title: "Dịch vụ chưa sẵn sàng", status: 502 },
+      { title: "Service unavailable", status: 502 },
       { status: 502, headers: { "Content-Type": "application/problem+json" } },
     );
   }

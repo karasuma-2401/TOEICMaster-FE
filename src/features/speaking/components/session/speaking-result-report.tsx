@@ -23,76 +23,67 @@ type ScoreKey = keyof Pick<
 
 type Band = "good" | "fair" | "low";
 
-// `speech` marks the criteria Azure Speech measures, shown with an English level.
+// `speech` marks the criteria Azure Speech measures.
 const criteria: {
   key: ScoreKey;
-  vi: string;
-  en: string;
+  label: string;
   speech?: boolean;
   /** One line per score band; the backend returns scores, not per-criterion notes. */
   notes: Record<Band, string>;
 }[] = [
   {
     key: "pronunciationScore",
-    vi: "Phát âm",
-    en: "Pronunciation",
+    label: "Pronunciation",
     speech: true,
     notes: {
-      good: "Phát âm rõ ở phần lớn các từ.",
-      fair: "Một số từ chưa rõ, xem chi tiết từng câu.",
-      low: "Nhiều từ chưa rõ, nên luyện lại từng âm.",
+      good: "Clear pronunciation on most words.",
+      fair: "Some words were unclear; see question details.",
+      low: "Many words were unclear; practice individual sounds.",
     },
   },
   {
     key: "prosodyScore",
-    vi: "Ngữ điệu & Trọng âm",
-    en: "Intonation & Stress",
+    label: "Intonation & Stress",
     speech: true,
     notes: {
-      good: "Ngữ điệu và trọng âm tự nhiên.",
-      fair: "Cần chú ý ngữ điệu và trọng âm ở một số câu.",
-      low: "Ngữ điệu còn đều, nên nghe mẫu và nhại lại.",
+      good: "Natural intonation and stress.",
+      fair: "Pay attention to intonation and stress in some sentences.",
+      low: "Intonation sounds flat; listen to sample audio and shadow.",
     },
   },
   {
     key: "grammarScore",
-    vi: "Ngữ pháp",
-    en: "Grammar",
+    label: "Grammar",
     notes: {
-      good: "Cấu trúc câu chính xác.",
-      fair: "Còn một số lỗi ngữ pháp.",
-      low: "Cần ôn lại cấu trúc câu cơ bản.",
+      good: "Accurate sentence structures.",
+      fair: "A few grammar errors remain.",
+      low: "Review basic sentence structures.",
     },
   },
   {
     key: "vocabularyScore",
-    vi: "Từ vựng",
-    en: "Vocabulary",
+    label: "Vocabulary",
     notes: {
-      good: "Dùng từ đa dạng, phù hợp.",
-      fair: "Từ vựng đủ ý, có thể đa dạng hơn.",
-      low: "Vốn từ còn hạn chế, cần mở rộng.",
+      good: "Varied and appropriate word choice.",
+      fair: "Adequate vocabulary; could be more varied.",
+      low: "Limited vocabulary; work on expanding word choice.",
     },
   },
   {
     key: "relevanceScore",
-    vi: "Tính liên kết & Phù hợp",
-    en: "Cohesion & Relevance",
+    label: "Cohesion & Relevance",
     notes: {
-      good: "Trả lời đúng trọng tâm, mạch lạc.",
-      fair: "Có chỗ chưa bám sát câu hỏi.",
-      low: "Câu trả lời chưa đúng trọng tâm.",
+      good: "On-topic and coherent responses.",
+      fair: "Some parts did not directly address the prompt.",
+      low: "Responses were off-topic.",
     },
   },
 ];
 
-const bandLook: Record<
-  Band,
-  { label: string; english: string; tone: ChipTone }
-> = {
-  good: { label: "Tốt", english: "High", tone: "success" },
-  fair: { label: "Khá", english: "Medium", tone: "warning" },
-  low: { label: "Cần cải thiện", english: "Low", tone: "danger" },
+const bandLook: Record<Band, { label: string; tone: ChipTone }> = {
+  good: { label: "High", tone: "success" },
+  fair: { label: "Medium", tone: "warning" },
+  low: { label: "Low", tone: "danger" },
 };
 
 const bandOf = (score: number): Band =>
@@ -125,7 +116,7 @@ function weakestPart(items: SpeakingEvaluationItem[]) {
 
 const joinNames = (names: string[]) =>
   names.length > 1
-    ? `${names.slice(0, -1).join(", ")} và ${names.at(-1)}`
+    ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`
     : (names[0] ?? "");
 
 export function SpeakingResultReport({
@@ -155,19 +146,17 @@ export function SpeakingResultReport({
   const recorded = attempt.questions.filter((item) => item.recording).length;
   const partCount = new Set(attempt.questions.map((item) => item.part)).size;
   const attemptLabel =
-    number === null ? null : `Lần thi ${formatAttemptNumber(number)}`;
+    number === null ? null : `Attempt ${formatAttemptNumber(number)}`;
 
   return (
     <SpPage narrow>
       <Breadcrumb
         items={[
-          { label: "Trang chủ", href: "/" },
-          { label: "Đề thi thử", href: "/speaking" },
+          { label: "Home", href: "/" },
+          { label: "Practice Tests", href: "/speaking" },
           { label: "Speaking", href: "/speaking" },
           {
-            label: attemptLabel
-              ? `Kết quả ${attemptLabel.toLowerCase()}`
-              : "Kết quả lần thi",
+            label: attemptLabel ? `${attemptLabel} results` : "Attempt results",
           },
         ]}
       />
@@ -179,14 +168,12 @@ export function SpeakingResultReport({
         <Chip className="uppercase" tone="speak">
           SPEAKING · PERSONAL SCORE REPORT
         </Chip>
-        <h1 className="mt-2 text-2xl font-semibold">
-          Kết quả bài thi Speaking
-        </h1>
+        <h1 className="mt-2 text-2xl font-semibold">Speaking Test Results</h1>
         <p className="text-[13px] text-(--sp-ink-2)">
           {attempt.testTitle} · {formatDate(attempt.createdAtUtc)} ·{" "}
           {attemptLabel && `${attemptLabel} · `}
-          {formatElapsed(attempt.createdAtUtc, attempt.submittedAtUtc)} · Trạng
-          thái: COMPLETED
+          {formatElapsed(attempt.createdAtUtc, attempt.submittedAtUtc)} ·
+          Status: COMPLETED
         </p>
         <div className="mt-4 grid gap-5 md:grid-cols-[1fr_1fr_2fr]">
           <div>
@@ -194,25 +181,25 @@ export function SpeakingResultReport({
               {score} / 200
             </p>
             <p className="mt-1 text-xs text-(--sp-ink-2)">
-              Điểm TOEIC Speaking ước tính bởi AI · Bước 10 điểm
+              AI-estimated TOEIC Speaking score · 10-point increments
             </p>
           </div>
           <div>
             <p className="text-xl font-semibold">
-              {recorded} / {attempt.questions.length} câu
+              {recorded} / {attempt.questions.length} questions
             </p>
             <p className="mt-1 text-xs text-(--sp-ink-2)">
-              Đã hoàn thành ·{" "}
+              Completed ·{" "}
               {partCount > 1
                 ? `${partCount} Parts`
                 : `Part ${attempt.questions[0]?.part}`}
             </p>
           </div>
           <div>
-            <p className="font-semibold">Bài thi Speaking độc lập</p>
+            <p className="font-semibold">Standalone Speaking Test</p>
             <p className="mt-1 text-xs text-(--sp-ink-2)">
-              Điểm tham khảo theo tiêu chí ETS, không thay thế kết quả thi chính
-              thức.
+              Reference score based on ETS criteria; does not replace official
+              test results.
             </p>
           </div>
         </div>
@@ -221,14 +208,14 @@ export function SpeakingResultReport({
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[2.3fr_1fr]">
         <section className="sp-card min-w-0 overflow-x-auto p-6">
           <h2 className="text-lg font-semibold">
-            Đánh giá 5 tiêu chí chuẩn ETS
+            Evaluation across 5 ETS criteria
           </h2>
           <table className="mt-3 w-full min-w-[480px] text-left">
             <thead>
               <tr className="sp-overline text-(--sp-ink-3)">
-                <th className="py-2 font-semibold">TIÊU CHÍ</th>
-                <th className="py-2 font-semibold">MỨC ĐÁNH GIÁ</th>
-                <th className="py-2 font-semibold">NHẬN XÉT</th>
+                <th className="py-2 font-semibold">CRITERION</th>
+                <th className="py-2 font-semibold">LEVEL</th>
+                <th className="py-2 font-semibold">FEEDBACK</th>
               </tr>
             </thead>
             <tbody>
@@ -238,15 +225,10 @@ export function SpeakingResultReport({
                 return (
                   <tr className="border-t border-(--sp-line)" key={row.key}>
                     <td className="py-3">
-                      <p className="font-semibold">{row.vi}</p>
-                      <p className="text-xs text-(--sp-ink-2)">{row.en}</p>
+                      <p className="font-semibold">{row.label}</p>
                     </td>
                     <td>
-                      <Chip tone={look.tone}>
-                        {row.speech
-                          ? `${look.label} (${look.english})`
-                          : look.label}
-                      </Chip>
+                      <Chip tone={look.tone}>{look.label}</Chip>
                     </td>
                     <td className="text-[13px]">
                       <span className="font-semibold">
@@ -265,13 +247,13 @@ export function SpeakingResultReport({
         <aside className="min-w-0 space-y-4">
           {evaluation.summary && (
             <section className="rounded-2xl border border-(--sp-hero-line) bg-(--sp-cream) p-5">
-              <h2 className="font-semibold">Bước tiếp theo của bạn</h2>
+              <h2 className="font-semibold">Your next steps</h2>
               <p className="mt-2 text-[13px] text-(--sp-ink-2)">
                 {evaluation.summary}
               </p>
               {lowest && (
                 <p className="mt-2 text-xs text-(--sp-ink-2)">
-                  Ưu tiên: {lowest.en}
+                  Priority: {lowest.label}
                   {part !== undefined && ` · Part ${part}`}
                 </p>
               )}
@@ -279,7 +261,7 @@ export function SpeakingResultReport({
           )}
           {recent.length > 0 && (
             <section className="sp-card p-5">
-              <h2 className="font-semibold">Lịch sử Speaking riêng</h2>
+              <h2 className="font-semibold">Your Speaking history</h2>
               <p className="mt-2 text-[13px] text-(--sp-ink-2)">
                 {recent
                   .map(
@@ -293,7 +275,7 @@ export function SpeakingResultReport({
                   className="mt-2"
                   tone={change >= 0 ? "success" : "warning"}
                 >
-                  {change >= 0 ? `+${change}` : change} điểm so với lần trước
+                  {change >= 0 ? `+${change}` : change} pts vs. previous
                 </Chip>
               )}
             </section>
@@ -304,23 +286,23 @@ export function SpeakingResultReport({
       <div className="mt-6 grid items-start gap-6 md:grid-cols-2">
         <section className="rounded-2xl border border-(--sp-success-border-soft) bg-(--sp-success-bg) p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-semibold">Điểm mạnh nổi bật</h2>
+            <h2 className="text-lg font-semibold">Key strengths</h2>
             {strong.length > 0 && (
               <p className="text-xs text-(--sp-success)">
-                {strong.length} tiêu chí tốt
+                {strong.length} strong criteria
               </p>
             )}
           </div>
           {strong.length > 0 && (
             <p className="mt-2 text-[13px]">
-              {joinNames(strong.map((row) => row.vi))} đang là những điểm mạnh
-              nổi bật trong bài Speaking lần này.
+              {joinNames(strong.map((row) => row.label))} are your standout
+              strengths in this Speaking attempt.
             </p>
           )}
           <ul className="mt-3 space-y-2 text-[13px]">
             {(evaluation.strengths.length
               ? evaluation.strengths
-              : ["Chưa có nhận xét."]
+              : ["No feedback yet."]
             ).map((item) => (
               <li className="flex gap-2" key={item}>
                 <CheckIcon
@@ -334,23 +316,23 @@ export function SpeakingResultReport({
         </section>
         <section className="rounded-2xl border border-(--sp-warning-line) bg-(--sp-warning-bg) p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-semibold">Cần ưu tiên cải thiện</h2>
+            <h2 className="text-lg font-semibold">Areas to prioritize</h2>
             {weak.length > 0 && (
               <p className="text-xs text-(--sp-warning)">
-                {weak.length} tiêu chí cần cải thiện
+                {weak.length} criteria to improve
               </p>
             )}
           </div>
           {weak.length > 0 && (
             <p className="mt-2 text-[13px]">
-              {joinNames(weak.map((row) => row.vi))} cần được ưu tiên cải thiện
-              để nâng cao điểm Speaking.
+              {joinNames(weak.map((row) => row.label))} should be prioritized to
+              raise your Speaking score.
             </p>
           )}
           <ul className="mt-3 space-y-2 text-[13px]">
             {(evaluation.improvements.length
               ? evaluation.improvements
-              : ["Chưa có nhận xét."]
+              : ["No feedback yet."]
             ).map((item) => (
               <li className="flex gap-2" key={item}>
                 <AlertCircleIcon
@@ -369,13 +351,13 @@ export function SpeakingResultReport({
           className="sp-btn sp-btn-cta"
           href={`/speaking/attempts/${encodeURIComponent(attempt.id)}/review/1`}
         >
-          Xem lại & Nghe lại chi tiết bài làm
+          Review & listen back to details
         </Link>
         <Link className="sp-btn sp-btn-outline" href="/history">
-          Về lịch sử làm bài
+          Go to attempt history
         </Link>
         <Link className="sp-btn sp-btn-outline" href="/speaking">
-          Về danh sách đề Speaking
+          Back to Speaking tests
         </Link>
       </div>
     </SpPage>

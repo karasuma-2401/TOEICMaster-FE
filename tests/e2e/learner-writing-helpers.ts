@@ -239,7 +239,7 @@ export class MockWritingLearnerBackend {
         id: "test-pub-01",
         code: "WT-PUB-FULL-01",
         title: "TOEIC Writing Simulation Test 01",
-        description: "Đề thi chuẩn 8 câu với đầy đủ 3 phần thi theo chuẩn ETS.",
+        description: "Standard 8-question test with all 3 ETS sections.",
         publishedAtUtc: "2026-11-01T00:00:00Z",
         parts: [
           {
@@ -266,7 +266,7 @@ export class MockWritingLearnerBackend {
         id: "test-pub-02",
         code: "WT-PUB-FULL-02",
         title: "TOEIC Writing Simulation Test 02",
-        description: "Đề thi luyện tập hoàn chỉnh số 2.",
+        description: "Complete practice test #2.",
         publishedAtUtc: "2026-11-02T00:00:00Z",
         parts: [
           {
@@ -415,20 +415,21 @@ export class MockWritingLearnerBackend {
           status: "COMPLETED",
           estimatedScore: 170,
           summary:
-            "Bài viết có ngữ pháp vững vàng, sử dụng từ vựng phong phú và cấu trúc câu mạch lạc.",
+            "The writing demonstrates strong grammar, rich vocabulary, and coherent sentence structure.",
           strengths: [
-            "Sử dụng đúng thì và hòa hợp chủ vị chính xác.",
-            "Bố cục bài viết rõ ràng, logic lập luận chặt chẽ.",
+            "Accurate verb tenses and subject-verb agreement.",
+            "Clear essay organization and well-structured arguments.",
           ],
           improvements: [
-            "Chú ý đa dạng hóa liên từ nối câu.",
-            "Phát triển thêm ví dụ thực tế cho luận điểm thứ 2.",
+            "Use a wider variety of linking words.",
+            "Provide more concrete examples for the second supporting point.",
           ],
           feedback: [
             {
               questionPosition: 1,
               criterionScore: 3,
-              feedback: "Câu văn hoàn chỉnh, đáp ứng đúng 2 từ khóa cho trước.",
+              feedback:
+                "Complete sentence that accurately uses both given keywords.",
               suggestedRevision:
                 "The person is typing diligently on the office computer.",
             },
@@ -559,7 +560,7 @@ export class MockWritingLearnerBackend {
         const newAtt = sanitizeAttempt({
           id: `att-prac-${Date.now()}`,
           testCode: "PRACTICE-EX",
-          testTitle: "Bài tập luyện Part",
+          testTitle: "Part Practice Exercise",
           ownerId: "user-learner-01",
           isPractice: true,
           mode: "PART_1",
@@ -686,7 +687,7 @@ export class MockWritingLearnerBackend {
             contentType: "application/json",
             body: JSON.stringify({
               status: 404,
-              title: "Không tìm thấy lượt làm bài.",
+              title: "Attempt not found.",
             }),
           });
         }
@@ -771,7 +772,7 @@ export class MockWritingLearnerBackend {
               body: JSON.stringify({
                 status: 409,
                 title:
-                  "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua. Hãy đăng nhập hoặc thử lại sau.",
+                  "This anonymous session has already used its AI evaluation in the past 24 hours. Please log in or try again later.",
               }),
             });
           }

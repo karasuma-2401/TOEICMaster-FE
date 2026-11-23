@@ -154,7 +154,7 @@ function validateScoreDetails(value: Record<string, unknown>) {
         score < 0 ||
         (key === "scorePercentage" ? score > 100 : !Number.isInteger(score)))
     )
-      throw new Error("Phản hồi điểm Writing không hợp lệ.");
+      throw new Error("Invalid Writing score response.");
   }
 }
 
@@ -210,7 +210,7 @@ function parsePart(value: unknown): WritingPartSummary {
     !Number.isInteger(value.preparationSeconds) ||
     !Number.isInteger(value.responseSeconds)
   )
-    throw new Error("Phản hồi đề Writing không hợp lệ.");
+    throw new Error("Invalid Writing test response.");
   return {
     part: value.part,
     questionCount: Number(value.questionCount),
@@ -229,7 +229,7 @@ function parseTest(value: unknown): WritingTestSummaryApi {
     !Array.isArray(value.parts) ||
     !isDate(value.publishedAtUtc)
   )
-    throw new Error("Phản hồi đề Writing không hợp lệ.");
+    throw new Error("Invalid Writing test response.");
   return {
     id: value.id,
     code: value.code,
@@ -266,13 +266,13 @@ function parseQuestion(value: unknown): WritingAttemptQuestionApi {
     !nullableDate(value.lastSavedAtUtc) ||
     !nullableDate(value.lockedAtUtc)
   )
-    throw new Error("Phản hồi câu hỏi Writing không hợp lệ.");
+    throw new Error("Invalid Writing question response.");
   return value as unknown as WritingAttemptQuestionApi;
 }
 
 function parseStringList(value: unknown): string[] {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string"))
-    throw new Error("Phản hồi chấm Writing không hợp lệ.");
+    throw new Error("Invalid Writing evaluation response.");
   return value as string[];
 }
 
@@ -295,7 +295,7 @@ function parseEvaluation(value: unknown): WritingEvaluationApi | null {
     !nullableDate(value.completedAtUtc) ||
     !Number.isInteger(value.retryCount)
   )
-    throw new Error("Phản hồi chấm Writing không hợp lệ.");
+    throw new Error("Invalid Writing evaluation response.");
   const feedback = value.feedback.map((item) => {
     if (
       !isRecord(item) ||
@@ -304,7 +304,7 @@ function parseEvaluation(value: unknown): WritingEvaluationApi | null {
       typeof item.feedback !== "string" ||
       typeof item.suggestedRevision !== "string"
     )
-      throw new Error("Phản hồi chấm Writing không hợp lệ.");
+      throw new Error("Invalid Writing evaluation response.");
     return item as unknown as WritingEvaluationFeedbackApi;
   });
   validateScoreDetails(value);
@@ -344,7 +344,7 @@ function parseAttempt(value: unknown): WritingAttemptApi {
     !Array.isArray(value.questions) ||
     !Array.isArray(value.reviewQuestions)
   )
-    throw new Error("Phản hồi lượt làm Writing không hợp lệ.");
+    throw new Error("Invalid Writing attempt response.");
   return {
     ...value,
     isPractice: value.isPractice === true,
@@ -356,7 +356,7 @@ function parseAttempt(value: unknown): WritingAttemptApi {
         !Number.isInteger(item.position) ||
         typeof item.modelAnswer !== "string"
       )
-        throw new Error("Phản hồi lượt làm Writing không hợp lệ.");
+        throw new Error("Invalid Writing attempt response.");
       return item as unknown as WritingAttemptReviewQuestionApi;
     }),
   } as WritingAttemptApi;
@@ -372,7 +372,7 @@ async function requestJson(
       json: typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
       signal: init?.signal ?? undefined,
       refresh: true,
-      fallback: "Không thể xử lý yêu cầu Writing.",
+      fallback: "Could not process Writing request.",
     });
   } catch (cause) {
     if (
@@ -380,7 +380,7 @@ async function requestJson(
       cause.message === "One or more validation errors occurred."
     )
       throw new Error(
-        "Thông tin yêu cầu không hợp lệ. Vui lòng tải lại trang và thử lại.",
+        "Invalid request information. Please reload the page and try again.",
       );
     throw cause;
   }
@@ -406,7 +406,7 @@ export async function getWritingTests(
     !Number.isInteger(value.totalCount) ||
     !Number.isInteger(value.totalPages)
   )
-    throw new Error("Phản hồi danh sách đề Writing không hợp lệ.");
+    throw new Error("Invalid Writing test list response.");
   return { ...value, items: value.items.map(parseTest) } as WritingTestPageApi;
 }
 
@@ -444,7 +444,7 @@ export async function getWritingPracticeExercises(
     !Number.isInteger(value.pageSize) ||
     !Number.isInteger(value.totalCount)
   )
-    throw new Error("Phản hồi danh sách bài tập Writing không hợp lệ.");
+    throw new Error("Invalid Writing exercise list response.");
   const items = value.items.map((item) => {
     if (
       !isRecord(item) ||
@@ -454,7 +454,7 @@ export async function getWritingPracticeExercises(
       typeof item.topic !== "string" ||
       typeof item.difficulty !== "string"
     )
-      throw new Error("Phản hồi bài tập Writing không hợp lệ.");
+      throw new Error("Invalid Writing exercise response.");
     return item as unknown as WritingPracticeExerciseApi;
   });
   return { ...value, items } as WritingPracticeExercisePageApi;
@@ -560,7 +560,7 @@ export async function getWritingHistory(
 ): Promise<WritingAttemptSummaryApi[]> {
   const value = await requestJson("/api/writing/attempts", { signal });
   if (!isRecord(value) || !Array.isArray(value.items))
-    throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
+    throw new Error("Invalid Writing history response.");
   return value.items.map((item) => {
     if (
       !isRecord(item) ||
@@ -584,7 +584,7 @@ export async function getWritingHistory(
       ) ||
       !(item.estimatedScore === null || Number.isInteger(item.estimatedScore))
     )
-      throw new Error("Phản hồi lịch sử Writing không hợp lệ.");
+      throw new Error("Invalid Writing history response.");
     validateScoreDetails(item);
     return {
       ...item,

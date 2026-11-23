@@ -67,13 +67,13 @@ export function SpeakingExerciseEditor({
     } catch (cause) {
       setError(
         cause instanceof SpeakingApiError && cause.status === 409
-          ? "Bài tập đã bị thay đổi ở nơi khác hoặc trùng mã. Đóng và mở lại để tải bản mới."
+          ? "This exercise was modified elsewhere or has a duplicate code. Close and reopen to load the latest version."
           : cause instanceof SpeakingApiError &&
               Object.keys(cause.fieldErrors).length > 0
             ? Object.values(cause.fieldErrors).flat().join(" ")
             : cause instanceof Error
               ? cause.message
-              : "Không thể lưu bài tập Speaking.",
+              : "Unable to save Speaking exercise.",
       );
     } finally {
       setSaving(false);
@@ -84,7 +84,7 @@ export function SpeakingExerciseEditor({
       actions={
         <>
           <button className={adminSecondary} onClick={onClose} type="button">
-            Hủy
+            Cancel
           </button>
           <button
             className={adminPrimary}
@@ -93,7 +93,7 @@ export function SpeakingExerciseEditor({
             style={adminGradient}
             type="button"
           >
-            {saving ? "Đang lưu…" : "Lưu bài tập"}
+            {saving ? "Saving..." : "Save exercise"}
           </button>
         </>
       }
@@ -103,9 +103,9 @@ export function SpeakingExerciseEditor({
         </span>
       }
       eyebrow={`SPEAKING PART ${draft.part} · ${spec.title.toUpperCase()}`}
-      label="Form bài tập Speaking"
+      label="Speaking exercise form"
       onClose={onClose}
-      title={draft.code || "Bài tập mới"}
+      title={draft.code || "New exercise"}
     >
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
@@ -118,12 +118,12 @@ export function SpeakingExerciseEditor({
             </p>
           )}
           <AdminPanel
-            description="Dùng để tìm kiếm, lọc và chọn bài khi lắp đề."
-            title="Thông tin chung"
+            description="Used for searching, filtering, and selecting exercises when assembling tests."
+            title="General information"
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold">
-                Mã bài *
+                Exercise code *
                 <input
                   className={adminInput}
                   onChange={(event) => update("code", event.target.value)}
@@ -131,7 +131,7 @@ export function SpeakingExerciseEditor({
                 />
               </label>
               <label className="text-sm font-semibold">
-                Chủ đề *
+                Topic *
                 <input
                   className={adminInput}
                   onChange={(event) => update("topic", event.target.value)}
@@ -139,9 +139,9 @@ export function SpeakingExerciseEditor({
                 />
               </label>
               <div className="text-sm font-semibold">
-                Độ khó
+                Difficulty
                 <AdminFilterSelect
-                  ariaLabel="Độ khó"
+                  ariaLabel="Difficulty"
                   onChange={(value: SpeakingDraft["difficulty"]) =>
                     update("difficulty", value)
                   }
@@ -154,9 +154,9 @@ export function SpeakingExerciseEditor({
                 />
               </div>
               <div className="text-sm font-semibold">
-                Trạng thái
+                Status
                 <AdminFilterSelect
-                  ariaLabel="Trạng thái"
+                  ariaLabel="Status"
                   onChange={(value: SpeakingDraft["status"]) =>
                     update("status", value)
                   }
@@ -170,18 +170,18 @@ export function SpeakingExerciseEditor({
               </div>
             </div>
           </AdminPanel>
-          <AdminPanel description={spec.description} title="Nội dung đề">
+          <AdminPanel description={spec.description} title="Prompt content">
             <div className="space-y-4">
               <SpeakingExerciseFields draft={draft} update={update} />
             </div>
           </AdminPanel>
           <AdminPanel
-            description="Không hiển thị khi User đang làm bài; dùng cho phần tự đánh giá và chấm AI sau này."
-            title="Chấm điểm"
+            description="Hidden while the learner is taking the test; used for self-assessment and future AI grading."
+            title="Scoring"
           >
             <div className="grid gap-4 xl:grid-cols-2">
               <label className="block text-sm font-semibold">
-                Tiêu chí chấm
+                Rubric notes
                 <textarea
                   className={`${adminTextarea} min-h-32`}
                   onChange={(event) =>
@@ -191,7 +191,7 @@ export function SpeakingExerciseEditor({
                 />
               </label>
               <label className="block text-sm font-semibold">
-                Bài mẫu / gợi ý trả lời *
+                Model answer / sample response *
                 <textarea
                   className={`${adminTextarea} min-h-32`}
                   onChange={(event) =>

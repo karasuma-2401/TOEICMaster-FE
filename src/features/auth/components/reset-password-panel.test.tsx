@@ -27,13 +27,13 @@ describe("ResetPasswordPanel", () => {
       />,
     );
 
-    const password = screen.getByLabelText("Mật khẩu mới");
-    const confirmation = screen.getByLabelText("Xác nhận mật khẩu mới");
+    const password = screen.getByLabelText("New password");
+    const confirmation = screen.getByLabelText("Confirm new password");
     expect(password).toHaveAttribute("type", "password");
     expect(confirmation).toHaveAttribute("type", "password");
 
     await user.click(
-      screen.getAllByRole("button", { name: "Hiện mật khẩu" })[0],
+      screen.getAllByRole("button", { name: "Show password" })[0],
     );
     expect(password).toHaveAttribute("type", "text");
     expect(confirmation).toHaveAttribute("type", "password");
@@ -53,15 +53,15 @@ describe("ResetPasswordPanel", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Mật khẩu mới"), "new-password");
+    await user.type(screen.getByLabelText("New password"), "new-password");
     await user.type(
-      screen.getByLabelText("Xác nhận mật khẩu mới"),
+      screen.getByLabelText("Confirm new password"),
       "new-password",
     );
-    await user.click(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Reset password" }));
 
     expect(toast.success).toHaveBeenCalledWith(
-      "Mật khẩu của bạn đã được đặt lại. Hãy đăng nhập bằng mật khẩu mới.",
+      "Your password has been reset. Please sign in with your new password.",
     );
     expect(navigation.replace).toHaveBeenCalledWith("/login");
     expect(fetchMock).toHaveBeenCalledWith(
@@ -83,7 +83,7 @@ describe("ResetPasswordPanel", () => {
         .fn()
         .mockResolvedValue(
           Response.json(
-            { title: "Yêu cầu đặt lại mật khẩu không hợp lệ." },
+            { title: "Invalid password reset request." },
             { status: 400 },
           ),
         ),
@@ -96,18 +96,18 @@ describe("ResetPasswordPanel", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Mật khẩu mới"), "new-password");
+    await user.type(screen.getByLabelText("New password"), "new-password");
     await user.type(
-      screen.getByLabelText("Xác nhận mật khẩu mới"),
+      screen.getByLabelText("Confirm new password"),
       "new-password",
     );
-    await user.click(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Reset password" }));
 
     expect(
-      await screen.findByText("Yêu cầu đặt lại mật khẩu không hợp lệ."),
+      await screen.findByText("Invalid password reset request."),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Đặt lại mật khẩu" }),
+      screen.getByRole("button", { name: "Reset password" }),
     ).toBeInTheDocument();
   });
 });

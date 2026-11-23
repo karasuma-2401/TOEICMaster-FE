@@ -19,11 +19,11 @@ function RobotArtwork() {
     <div aria-hidden="true" className="auth-artwork">
       <div className="auth-speech auth-speech-left">
         <strong>Hello!</strong>
-        <span>Xin chào</span>
+        <span>Hi there</span>
       </div>
       <div className="auth-speech auth-speech-right">
         <strong>Great!</strong>
-        <span>Rất tốt</span>
+        <span>Very good</span>
       </div>
       <div className="auth-robot-orbit">
         <span className="auth-orbit-dot" />
@@ -40,7 +40,7 @@ function RobotArtwork() {
       <div className="auth-progress">
         <span>↗</span>
         <p>
-          Tiến bộ tuần này
+          This week&apos;s progress
           <br />
           <strong>+24%</strong>
         </p>
@@ -52,7 +52,7 @@ function RobotArtwork() {
 function AuthHero() {
   return (
     <section
-      aria-label="Giới thiệu TOEICMaster"
+      aria-label="About TOEICMaster"
       className="auth-hero relative hidden overflow-hidden text-white lg:block"
     >
       <div className="auth-hero-sun" />
@@ -65,15 +65,15 @@ function AuthHero() {
         </span>
         <div className="mt-16 max-w-[26rem] lg:mt-[4.6rem]">
           <p className="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-[#fff4e9] before:h-px before:w-6 before:bg-white">
-            HỌC THEO MỤC TIÊU CỦA BẠN
+            LEARN TOWARD YOUR GOALS
           </p>
           <h1 className="mt-5 text-[3.1rem] font-medium leading-[1.14] tracking-[-0.055em] sm:text-[3.45rem]">
-            Mỗi cuộc trò chuyện, một bước{" "}
-            <em className="not-italic text-[#ffd361]">tiến bộ.</em>
+            Every conversation, a step{" "}
+            <em className="not-italic text-[#ffd361]">forward.</em>
           </h1>
           <p className="mt-6 max-w-[23rem] text-[15px] leading-6 text-[#fff6ef]">
-            Luyện tập mỗi ngày, học cùng AI và tự tin sử dụng tiếng Anh trong
-            mọi tình huống.
+            Practice every day, learn with AI, and use English confidently in
+            every situation.
           </p>
         </div>
         <RobotArtwork />
@@ -83,7 +83,7 @@ function AuthHero() {
           </span>
           <span className="leading-5">
             <b className="block tracking-[0.18em] text-[#ffd361]">★★★★★</b>
-            “Mình đã tự tin giao tiếp chỉ sau 8 tuần!”
+            “I became confident communicating in just 8 weeks!”
           </span>
         </div>
       </div>
@@ -113,7 +113,7 @@ export function AuthTabs({
 }) {
   return (
     <nav
-      aria-label="Tài khoản"
+      aria-label="Account"
       className="mt-7 grid grid-cols-2 rounded-xl bg-[#f5f1ef] p-1 text-sm font-bold"
     >
       <Link
@@ -125,7 +125,7 @@ export function AuthTabs({
         }`}
         href={authUrl("/login", returnTo)}
       >
-        Đăng nhập
+        Sign in
       </Link>
       <Link
         aria-current={current === "register" ? "page" : undefined}
@@ -136,7 +136,7 @@ export function AuthTabs({
         }`}
         href={authUrl("/register", returnTo)}
       >
-        Đăng ký
+        Sign up
       </Link>
     </nav>
   );

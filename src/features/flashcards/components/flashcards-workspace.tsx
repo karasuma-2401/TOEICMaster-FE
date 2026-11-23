@@ -354,7 +354,7 @@ export function FlashcardsWorkspace({
         exampleEn: payload.exampleEn ?? "",
         exampleVi: payload.exampleVi ?? "",
         collocations: payload.collocations ?? [],
-        toeicPart: payload.toeicPart ?? "Từ vựng cá nhân",
+        toeicPart: payload.toeicPart ?? "Personal Vocab",
         level: payload.level ?? "B2",
       };
 
@@ -444,7 +444,7 @@ export function FlashcardsWorkspace({
               type="button"
             >
               <ArrowLeft aria-hidden="true" className="size-4" />
-              Tất cả bộ Flashcard
+              All Flashcard Decks
             </button>
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl font-bold tracking-tight text-[#2b2724] sm:text-3xl">
@@ -462,14 +462,14 @@ export function FlashcardsWorkspace({
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-3 rounded-xl border border-[#ece9e5] bg-[#faf7f5] px-4 py-2.5 text-xs">
               <div>
-                <span className="text-[#5f5953]">Đã thuộc</span>
+                <span className="text-[#5f5953]">Mastered</span>
                 <p className="sp-mono text-base font-bold text-[#3f7a52]">
                   {deckSummary.mastered}/{deckSummary.total}
                 </p>
               </div>
               <div className="h-7 w-px bg-[#dacfc5]" />
               <div>
-                <span className="text-[#5f5953]">Cần ôn</span>
+                <span className="text-[#5f5953]">Needs review</span>
                 <p className="sp-mono text-base font-bold text-[#a16207]">
                   {deckSummary.review + deckSummary.learning}
                 </p>
@@ -483,7 +483,7 @@ export function FlashcardsWorkspace({
                 type="button"
               >
                 <Plus aria-hidden="true" className="size-4" strokeWidth={2.2} />
-                Thêm từ mới
+                Add new word
               </button>
             )}
 
@@ -495,7 +495,7 @@ export function FlashcardsWorkspace({
                 type="button"
               >
                 <RotateCcw aria-hidden="true" className="size-3.5" />
-                Đặt lại tiến độ
+                Reset progress
               </button>
             )}
           </div>
@@ -503,18 +503,18 @@ export function FlashcardsWorkspace({
 
         {/* Mode switcher */}
         <div
-          aria-label="Chế độ học bộ thẻ"
+          aria-label="Deck study modes"
           className="inline-flex flex-wrap gap-1 rounded-xl border border-[#ece9e5] bg-[#f4f1ee] p-1"
           role="tablist"
         >
           {(
             [
-              { key: "flip", label: "Lật thẻ 3D", icon: Layers },
-              { key: "quiz", label: "Trắc nghiệm nhanh", icon: HelpCircle },
-              { key: "match", label: "Ghép cặp tốc độ", icon: Grid2x2Check },
+              { key: "flip", label: "3D Flip Cards", icon: Layers },
+              { key: "quiz", label: "Quick Quiz", icon: HelpCircle },
+              { key: "match", label: "Speed Match", icon: Grid2x2Check },
               {
                 key: "list",
-                label: `Danh sách (${activeDeck.cards.length})`,
+                label: `Word List (${activeDeck.cards.length})`,
                 icon: List,
               },
             ] as const
@@ -605,7 +605,7 @@ export function FlashcardsWorkspace({
         <div className="max-w-2xl space-y-2.5">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight text-[#2b2724] sm:text-4xl">
-              Flashcards Từ Vựng TOEIC
+              TOEIC Vocabulary Flashcards
             </h1>
             {syncMode !== "loading" && (
               <span
@@ -618,28 +618,28 @@ export function FlashcardsWorkspace({
                 {syncMode === "synced" ? (
                   <>
                     <Cloud aria-hidden="true" className="size-3.5" />
-                    Đã kết nối máy chủ
+                    Synced with server
                   </>
                 ) : (
                   <>
                     <HardDrive aria-hidden="true" className="size-3.5" />
-                    Lưu trên thiết bị
+                    Saved on device
                   </>
                 )}
               </span>
             )}
           </div>
           <p className="text-[15px] leading-relaxed text-[#5f5953]">
-            Ôn nhanh từ vựng trọng tâm theo chủ đề công sở TOEIC bằng thẻ lật
-            3D, phát âm chuẩn, ghép cặp tốc độ và trắc nghiệm củng cố. Tiến độ
-            được tự động đồng bộ khi bạn đăng nhập.
+            Review essential TOEIC workplace vocabulary by topic with 3D flip
+            cards, clear pronunciation, speed matching, and quick reinforcement
+            quizzes. Progress syncs automatically when you sign in.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-4 rounded-2xl border border-[#ece9e5] bg-[#fdf7ed] px-5 py-3">
             <div>
-              <p className="text-xs font-medium text-[#5f5953]">Đã thuộc</p>
+              <p className="text-xs font-medium text-[#5f5953]">Mastered</p>
               <p className="sp-mono text-xl font-bold text-[#3f7a52]">
                 {hydrated ? overallSummary.mastered : 0}
                 <span className="text-sm font-normal text-[#948d86]">
@@ -649,7 +649,7 @@ export function FlashcardsWorkspace({
             </div>
             <div className="h-8 w-px bg-[#e9c6a4]" />
             <div>
-              <p className="text-xs font-medium text-[#5f5953]">Cần ôn lại</p>
+              <p className="text-xs font-medium text-[#5f5953]">Needs review</p>
               <p className="sp-mono text-xl font-bold text-[#a16207]">
                 {hydrated ? overallSummary.review + overallSummary.learning : 0}
               </p>
@@ -662,7 +662,7 @@ export function FlashcardsWorkspace({
             type="button"
           >
             <Plus aria-hidden="true" className="size-4" strokeWidth={2.2} />
-            Tạo bộ thẻ mới
+            Create new deck
           </button>
         </div>
       </section>
@@ -671,12 +671,12 @@ export function FlashcardsWorkspace({
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <fieldset className="flex flex-wrap gap-1.5 border-0 p-0">
-            <legend className="sr-only">Lọc bộ thẻ theo chủ đề</legend>
+            <legend className="sr-only">Filter decks by category</legend>
             {CATEGORY_FILTER_ORDER.map((category) => {
               const active = categoryFilter === category;
               const label =
                 category === "all"
-                  ? "Tất cả chủ đề"
+                  ? "All categories"
                   : FLASHCARD_CATEGORY_LABELS[category];
               return (
                 <button
@@ -702,10 +702,10 @@ export function FlashcardsWorkspace({
               className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#948d86]"
             />
             <input
-              aria-label="Tìm bộ thẻ hoặc từ vựng"
+              aria-label="Search decks or vocabulary"
               className="sp-input min-h-10 pl-10"
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm chủ đề hoặc từ vựng..."
+              placeholder="Search topics or vocabulary..."
               type="search"
               value={searchQuery}
             />
@@ -717,13 +717,13 @@ export function FlashcardsWorkspace({
           <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
             <p className="text-base font-semibold text-[#2b2724]">
               {categoryFilter === "custom"
-                ? "Bạn chưa tạo bộ thẻ cá nhân nào"
-                : "Không tìm thấy bộ thẻ phù hợp"}
+                ? "You haven't created any custom decks yet"
+                : "No matching decks found"}
             </p>
             <p className="mt-1.5 text-sm text-[#5f5953]">
               {categoryFilter === "custom"
-                ? "Tạo bộ thẻ đầu tiên để lưu các từ vựng TOEIC bạn hay quên."
-                : "Thử xóa từ khóa tìm kiếm hoặc chọn chủ đề khác."}
+                ? "Create your first deck to save TOEIC words you often forget."
+                : "Try clearing your search query or choosing another category."}
             </p>
             <div className="mt-5 flex justify-center gap-3">
               {categoryFilter === "custom" ? (
@@ -733,7 +733,7 @@ export function FlashcardsWorkspace({
                   type="button"
                 >
                   <Plus aria-hidden="true" className="size-4" />
-                  Tạo bộ thẻ đầu tiên
+                  Create your first deck
                 </button>
               ) : (
                 <button
@@ -744,7 +744,7 @@ export function FlashcardsWorkspace({
                   }}
                   type="button"
                 >
-                  Xem tất cả bộ thẻ
+                  View all decks
                 </button>
               )}
             </div>
@@ -772,7 +772,7 @@ export function FlashcardsWorkspace({
                         </span>
                         {deck.isCustom && (
                           <button
-                            aria-label={`Xóa bộ thẻ ${deck.title}`}
+                            aria-label={`Delete deck ${deck.title}`}
                             className={`grid size-7 cursor-pointer place-items-center rounded-md text-[#948d86] transition hover:bg-[#f6e1e1] hover:text-[#bd2a2a] ${focusRing}`}
                             onClick={() => handleDeleteCustomDeck(deck.id)}
                             type="button"
@@ -793,11 +793,11 @@ export function FlashcardsWorkspace({
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#5f5953]">
                       <span className="inline-flex items-center gap-1.5">
                         <BookOpen aria-hidden="true" className="size-3.5" />
-                        {summary.total} thẻ
+                        {summary.total} cards
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <Clock aria-hidden="true" className="size-3.5" />~
-                        {deck.estimatedMinutes} phút
+                        {deck.estimatedMinutes} min
                       </span>
                       {summary.mastered > 0 && (
                         <span className="inline-flex items-center gap-1 text-[#3f7a52]">
@@ -805,7 +805,7 @@ export function FlashcardsWorkspace({
                             aria-hidden="true"
                             className="size-3.5"
                           />
-                          {summary.mastered} đã thuộc
+                          {summary.mastered} mastered
                         </span>
                       )}
                     </div>
@@ -814,7 +814,7 @@ export function FlashcardsWorkspace({
                   <div className="mt-5 space-y-3 border-t border-[#ece9e5] pt-4">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-[#5f5953]">
-                        Tiến độ ghi nhớ
+                        Mastery progress
                       </span>
                       <span className="sp-mono font-bold text-[#2b2724]">
                         {summary.completionPercent}%
@@ -832,8 +832,8 @@ export function FlashcardsWorkspace({
                       type="button"
                     >
                       {summary.mastered > 0 || summary.review > 0
-                        ? "Tiếp tục ôn tập →"
-                        : "Bắt đầu học →"}
+                        ? "Continue studying →"
+                        : "Start studying →"}
                     </button>
                   </div>
                 </article>

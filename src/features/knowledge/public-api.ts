@@ -15,6 +15,6 @@ export function knowledgeRequest<T>(
   return knowledgeAdminRequest<T>(`/api/knowledge/${path}`, {
     method,
     signal,
-    fallback: "Không thể tải bài học. Vui lòng thử lại.",
+    fallback: "Could not load lessons. Please try again.",
   });
 }

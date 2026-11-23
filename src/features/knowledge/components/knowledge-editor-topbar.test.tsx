@@ -54,7 +54,7 @@ function renderTopbar({
 describe("KnowledgeEditorTopbar save gating", () => {
   it("disables saving unchanged existing articles but allows new drafts", () => {
     const { rerender } = renderTopbar();
-    const save = screen.getByRole("button", { name: "Lưu thay đổi" });
+    const save = screen.getByRole("button", { name: "Save changes" });
     expect(save).toBeDisabled();
 
     rerender(
@@ -71,12 +71,12 @@ describe("KnowledgeEditorTopbar save gating", () => {
         tocCount={0}
       />,
     );
-    expect(screen.getByRole("button", { name: "Lưu bản nháp" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
   });
 
   it("enables changed articles and disables them while a save is pending", () => {
     const { rerender } = renderTopbar({ hasChanges: true });
-    expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
 
     rerender(
       <KnowledgeEditorTopbar
@@ -92,6 +92,6 @@ describe("KnowledgeEditorTopbar save gating", () => {
         tocCount={0}
       />,
     );
-    expect(screen.getByRole("button", { name: "Đang lưu..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
   });
 });

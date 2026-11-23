@@ -56,7 +56,7 @@ export function CardAddDialog({
     const cleanTerm = term.trim();
     const cleanMeaning = meaningVi.trim();
     if (!cleanTerm || !cleanMeaning) {
-      setError("Vui lòng nhập đầy đủ từ tiếng Anh và nghĩa tiếng Việt.");
+      setError("Please enter both the English term and its meaning.");
       return;
     }
 
@@ -76,11 +76,11 @@ export function CardAddDialog({
         exampleEn: exampleEn.trim() || undefined,
         exampleVi: exampleVi.trim() || undefined,
         collocations,
-        toeicPart: "Từ vựng cá nhân",
+        toeicPart: "Personal Vocab",
       });
       handleOpenChange(false);
     } catch {
-      setError("Không thể thêm từ vào bộ thẻ. Vui lòng thử lại.");
+      setError("Could not add word to the deck. Please try again.");
       setSubmitting(false);
     }
   };
@@ -96,13 +96,13 @@ export function CardAddDialog({
           <div className="flex items-start justify-between gap-4 border-b border-[#ece9e5] px-6 py-5">
             <div>
               <Dialog.Title className="text-xl font-bold text-[#2b2724]">
-                Thêm từ vào bộ thẻ
+                Add Word to Deck
               </Dialog.Title>
               <Dialog.Description
                 className="mt-1 text-sm text-[#5f5953]"
                 id="add-card-description"
               >
-                Bộ thẻ:{" "}
+                Deck:{" "}
                 <span className="font-semibold text-[#2b2724]">
                   {deckTitle}
                 </span>
@@ -110,7 +110,7 @@ export function CardAddDialog({
             </div>
             <Dialog.Close asChild>
               <button
-                aria-label="Đóng hộp thoại"
+                aria-label="Close dialog"
                 className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg text-[#5f5953] transition hover:bg-[#f4f1ee] hover:text-[#2b2724] ${focusRing}`}
                 type="button"
               >
@@ -127,7 +127,7 @@ export function CardAddDialog({
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Từ tiếng Anh <span className="text-[#bd2a2a]">*</span>
+                    English term <span className="text-[#bd2a2a]">*</span>
                   </span>
                   <input
                     className="sp-input min-h-10"
@@ -136,7 +136,7 @@ export function CardAddDialog({
                       setTerm(e.target.value);
                       if (error) setError(null);
                     }}
-                    placeholder="Ví dụ: invoice"
+                    placeholder="e.g. invoice"
                     type="text"
                     value={term}
                   />
@@ -144,7 +144,7 @@ export function CardAddDialog({
 
                 <label className="block space-y-1.5">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Nghĩa tiếng Việt <span className="text-[#bd2a2a]">*</span>
+                    Meaning <span className="text-[#bd2a2a]">*</span>
                   </span>
                   <input
                     className="sp-input min-h-10"
@@ -153,7 +153,7 @@ export function CardAddDialog({
                       setMeaningVi(e.target.value);
                       if (error) setError(null);
                     }}
-                    placeholder="Ví dụ: hóa đơn thanh toán"
+                    placeholder="e.g. payment bill or statement"
                     type="text"
                     value={meaningVi}
                   />
@@ -161,13 +161,13 @@ export function CardAddDialog({
 
                 <label className="block space-y-1.5">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Phiên âm IPA
+                    IPA pronunciation
                   </span>
                   <input
                     className="sp-input min-h-10"
                     maxLength={120}
                     onChange={(e) => setPhonetic(e.target.value)}
-                    placeholder="Ví dụ: /ˈɪn.vɔɪs/"
+                    placeholder="e.g. /ˈɪn.vɔɪs/"
                     type="text"
                     value={phonetic}
                   />
@@ -176,7 +176,7 @@ export function CardAddDialog({
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block space-y-1.5">
                     <span className="text-sm font-semibold text-[#2b2724]">
-                      Từ loại
+                      Part of speech
                     </span>
                     <select
                       className="sp-input min-h-10"
@@ -193,7 +193,7 @@ export function CardAddDialog({
 
                   <label className="block space-y-1.5">
                     <span className="text-sm font-semibold text-[#2b2724]">
-                      Trình độ
+                      Level
                     </span>
                     <select
                       className="sp-input min-h-10"
@@ -209,7 +209,7 @@ export function CardAddDialog({
 
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Câu ví dụ tiếng Anh
+                    Example sentence
                   </span>
                   <input
                     className="sp-input min-h-10"
@@ -223,13 +223,13 @@ export function CardAddDialog({
 
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Dịch nghĩa câu ví dụ
+                    Example explanation
                   </span>
                   <input
                     className="sp-input min-h-10"
                     maxLength={400}
                     onChange={(e) => setExampleVi(e.target.value)}
-                    placeholder="Vui lòng kiểm tra hóa đơn trước thứ Sáu."
+                    placeholder="Please review the payment bill before Friday."
                     type="text"
                     value={exampleVi}
                   />
@@ -237,7 +237,7 @@ export function CardAddDialog({
 
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Cụm từ đi kèm (phân cách bằng dấu phẩy)
+                    Collocations (comma-separated)
                   </span>
                   <input
                     className="sp-input min-h-10"
@@ -263,7 +263,7 @@ export function CardAddDialog({
             <div className="flex items-center justify-end gap-3 border-t border-[#ece9e5] px-6 py-4">
               <Dialog.Close asChild>
                 <button className={secondaryAction} type="button">
-                  Hủy
+                  Cancel
                 </button>
               </Dialog.Close>
               <button
@@ -271,7 +271,7 @@ export function CardAddDialog({
                 disabled={submitting}
                 type="submit"
               >
-                {submitting ? "Đang lưu..." : "Thêm vào bộ thẻ"}
+                {submitting ? "Saving..." : "Add to Deck"}
               </button>
             </div>
           </form>

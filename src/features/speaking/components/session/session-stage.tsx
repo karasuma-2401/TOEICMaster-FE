@@ -13,9 +13,9 @@ import { phaseCopy } from "./phase-copy";
 
 const order: SpeakingPhase[] = ["READING", "PREPARING", "RESPONDING"];
 const trackLabel: Record<SpeakingPhase, string> = {
-  READING: "Đọc",
-  PREPARING: "Chuẩn bị",
-  RESPONDING: "Trả lời",
+  READING: "Read",
+  PREPARING: "Prepare",
+  RESPONDING: "Respond",
 };
 
 /** The phases of one question as a track; the active one fills as time runs. */
@@ -91,7 +91,7 @@ export function SessionStage({
   const copy = phaseCopy[phase];
   const responding = phase === "RESPONDING";
   const live = responding && micStatus === "ready" && recording;
-  const skipLabel = responding && isLast ? "Xong, nộp bài →" : copy.skipLabel;
+  const skipLabel = responding && isLast ? "Done, submit →" : copy.skipLabel;
   const spec = speakingPartSpecs[question.part];
   return (
     <>
@@ -119,7 +119,7 @@ export function SessionStage({
               <>
                 <span className="size-3 animate-pulse rounded-full bg-(--sp-rec)" />
                 <span className="text-sm font-semibold text-(--sp-rec)">
-                  Đang ghi âm
+                  Recording
                 </span>
                 <Waveform
                   bars={12}
@@ -132,7 +132,9 @@ export function SessionStage({
               <>
                 <MicOffIcon className="text-(--sp-ink-3)" />
                 <span className="text-sm text-(--sp-ink-2)">
-                  {responding ? "Không ghi âm" : `${copy.label} · Không ghi âm`}
+                  {responding
+                    ? "Not recording"
+                    : `${copy.label} · Not recording`}
                 </span>
               </>
             )}

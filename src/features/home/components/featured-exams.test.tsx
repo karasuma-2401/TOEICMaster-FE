@@ -14,7 +14,7 @@ afterEach(cleanup);
 const lrTest = (id: string, day: number) => ({
   examId: id,
   code: id,
-  title: `Đề ${id}`,
+  title: `Test ${id}`,
   versionNumber: 1,
   totalQuestions: 200,
   listeningQuestions: 100,
@@ -29,7 +29,7 @@ const lrTest = (id: string, day: number) => ({
 const test = (id: string, day: number) => ({
   id,
   code: id,
-  title: `Đề ${id}`,
+  title: `Test ${id}`,
   description: "",
   publishedAtUtc: `2026-01-${String(day).padStart(2, "0")}T00:00:00Z`,
   parts: [],
@@ -56,14 +56,14 @@ describe("FeaturedExams", () => {
       page([test("w1", 4), test("w2", 2)]) as never,
     );
     render(<FeaturedExams />);
-    await screen.findByText("Đề lr1");
-    expect(titles()).toEqual(["Đề lr1", "Đề s2", "Đề w1", "Đề s3"]);
-    expect(screen.getByText("Mới nhất")).toBeInTheDocument();
+    await screen.findByText("Test lr1");
+    expect(titles()).toEqual(["Test lr1", "Test s2", "Test w1", "Test s3"]);
+    expect(screen.getByText("Newest")).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: "Làm bài ngay" })[0],
+      screen.getAllByRole("link", { name: "Start Test" })[0],
     ).toHaveAttribute("href", "/exams/lr/lr1");
     expect(
-      screen.getAllByRole("link", { name: "Làm bài ngay" })[2],
+      screen.getAllByRole("link", { name: "Start Test" })[2],
     ).toHaveAttribute("href", "/writing/tests/w1?mode=full");
   });
 
@@ -74,7 +74,7 @@ describe("FeaturedExams", () => {
       page([test("w1", 4)]) as never,
     );
     render(<FeaturedExams />);
-    expect(await screen.findByText("Đề w1")).toBeInTheDocument();
+    expect(await screen.findByText("Test w1")).toBeInTheDocument();
   });
 
   it("explains when nothing is published", async () => {
@@ -83,7 +83,7 @@ describe("FeaturedExams", () => {
     vi.mocked(getWritingTests).mockResolvedValue(page([]) as never);
     render(<FeaturedExams />);
     expect(
-      await screen.findByText("Chưa có đề thi được công bố"),
+      await screen.findByText("No tests published yet"),
     ).toBeInTheDocument();
   });
 });

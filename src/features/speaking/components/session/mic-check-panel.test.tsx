@@ -51,38 +51,42 @@ describe("MicCheckPanel", () => {
     const onStart = vi.fn();
     const { rerender } = render(<MicCheckPanel onStart={onStart} />);
     expect(mocks.mic.acquire).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", { name: "Bắt đầu làm bài →" }),
-    ).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Cho phép micro" }));
+    expect(screen.getByRole("button", { name: "Start test →" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Allow microphone" }));
     expect(mocks.mic.acquire).toHaveBeenCalledOnce();
     Object.assign(mocks.mic, { status: "ready", level: 0.5 });
     rerender(<MicCheckPanel onStart={onStart} />);
-    fireEvent.click(screen.getByRole("button", { name: "Thu thử 5 giây" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record 5-second test" }),
+    );
     act(() => vi.advanceTimersByTime(5000));
-    const confirm = screen.getByRole("button", { name: "Tôi nghe rõ bản thu" });
+    const confirm = screen.getByRole("button", {
+      name: "I can hear my recording clearly",
+    });
     expect(confirm).toBeDisabled();
-    fireEvent.ended(screen.getByLabelText("Bản thu kiểm tra"));
+    fireEvent.ended(screen.getByLabelText("Test recording"));
     expect(confirm).toBeEnabled();
     fireEvent.click(confirm);
     expect(mocks.mic.verify).toHaveBeenCalledOnce();
     mocks.mic.verified = true;
     rerender(<MicCheckPanel onStart={onStart} />);
-    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu làm bài →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start test →" }));
     expect(onStart).toHaveBeenCalledWith(false);
   });
 
   it("does not pass a silent recording", () => {
     Object.assign(mocks.mic, { status: "ready", level: 0 });
     render(<MicCheckPanel onStart={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Thu thử 5 giây" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record 5-second test" }),
+    );
     act(() => vi.advanceTimersByTime(5000));
-    fireEvent.ended(screen.getByLabelText("Bản thu kiểm tra"));
+    fireEvent.ended(screen.getByLabelText("Test recording"));
     expect(
-      screen.getByRole("button", { name: "Tôi nghe rõ bản thu" }),
+      screen.getByRole("button", { name: "I can hear my recording clearly" }),
     ).toBeDisabled();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Chưa nhận đủ tín hiệu",
+      "Not enough voice signal detected",
     );
   });
 
@@ -90,10 +94,12 @@ describe("MicCheckPanel", () => {
     const onStart = vi.fn();
     const { rerender } = render(<MicCheckPanel onStart={onStart} />);
     expect(
-      screen.queryByRole("button", { name: "Luyện không ghi âm" }),
+      screen.queryByRole("button", { name: "Practice without recording" }),
     ).not.toBeInTheDocument();
     rerender(<MicCheckPanel onStart={onStart} requireDevices={false} />);
-    fireEvent.click(screen.getByRole("button", { name: "Luyện không ghi âm" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Practice without recording" }),
+    );
     expect(onStart).toHaveBeenCalledWith(true);
   });
 });

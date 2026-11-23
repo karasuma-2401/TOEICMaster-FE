@@ -31,7 +31,7 @@ export interface SpeakingTestSummary {
 }
 
 function parseTestSummary(value: unknown): SpeakingTestSummary {
-  const what = "đề Speaking";
+  const what = "Speaking test";
   if (
     !isRecord(value) ||
     !isString(value.id) ||
@@ -81,7 +81,7 @@ const isDifficulty = (value: unknown): value is SpeakingDifficulty =>
   value === "EASY" || value === "MEDIUM" || value === "HARD";
 
 function parseExerciseSummary(value: unknown): SpeakingExerciseSummary {
-  const what = "bài tập Speaking";
+  const what = "Speaking exercise";
   if (
     !isRecord(value) ||
     !isString(value.id) ||
@@ -113,10 +113,10 @@ export async function getSpeakingTests(signal?: AbortSignal) {
   return parsePage(
     await speakingRequest(`${base}/tests?pageNumber=1&pageSize=50`, {
       signal,
-      fallback: "Không thể tải đề Speaking.",
+      fallback: "Could not load Speaking tests.",
     }),
     parseTestSummary,
-    "danh sách đề Speaking",
+    "Speaking test list",
   ).items;
 }
 
@@ -124,7 +124,7 @@ export async function getSpeakingTest(testId: string, signal?: AbortSignal) {
   return parseTestSummary(
     await speakingRequest(`${base}/tests/${encodeURIComponent(testId)}`, {
       signal,
-      fallback: "Không thể tải đề Speaking.",
+      fallback: "Could not load the Speaking test.",
     }),
   );
 }
@@ -136,10 +136,10 @@ export async function getSpeakingExercises(
   return parsePage(
     await speakingRequest(
       `${base}/exercises?part=${part}&pageNumber=1&pageSize=100`,
-      { signal, fallback: "Không thể tải bài tập Speaking." },
+      { signal, fallback: "Could not load Speaking exercises." },
     ),
     parseExerciseSummary,
-    "danh sách bài tập Speaking",
+    "Speaking exercise list",
   ).items;
 }
 
@@ -150,7 +150,7 @@ export async function getSpeakingExercise(
   return parseExerciseSummary(
     await speakingRequest(
       `${base}/exercises/${encodeURIComponent(exerciseId)}`,
-      { signal, fallback: "Không thể tải bài tập Speaking." },
+      { signal, fallback: "Could not load the Speaking exercise." },
     ),
   );
 }
@@ -161,7 +161,7 @@ export async function startSpeakingExercisePractice(exerciseId: string) {
     await speakingRequest(`${base}/attempts`, {
       method: "POST",
       json: { exerciseId },
-      fallback: "Không thể bắt đầu lượt luyện Speaking.",
+      fallback: "Could not start the Speaking practice session.",
     }),
   );
 }
@@ -171,7 +171,7 @@ export async function startSpeakingAttempt(testId: string, mode: SpeakingMode) {
     await speakingRequest(`${base}/attempts`, {
       method: "POST",
       json: { testId, mode },
-      fallback: "Không thể bắt đầu lượt làm Speaking.",
+      fallback: "Could not start the Speaking attempt.",
     }),
   );
 }
@@ -197,7 +197,7 @@ export interface SpeakingAttemptSummary {
 }
 
 function parseAttemptSummary(value: unknown): SpeakingAttemptSummary {
-  const what = "lịch sử Speaking";
+  const what = "Speaking history";
   if (
     !isRecord(value) ||
     !isString(value.id) ||
@@ -237,10 +237,10 @@ export async function getSpeakingAttempts(signal?: AbortSignal) {
   return parsePage(
     await speakingRequest(`${base}/attempts`, {
       signal,
-      fallback: "Không thể tải lịch sử Speaking.",
+      fallback: "Could not load Speaking history.",
     }),
     parseAttemptSummary,
-    "lịch sử Speaking",
+    "Speaking history",
   ).items;
 }
 
@@ -251,7 +251,7 @@ export async function getSpeakingAttempt(
   return parseAttempt(
     await speakingRequest(attemptPath(attemptId), {
       signal,
-      fallback: "Không thể tải lượt làm Speaking.",
+      fallback: "Could not load the Speaking attempt.",
     }),
   );
 }
@@ -262,7 +262,7 @@ export async function nextSpeakingPhase(attemptId: string) {
     await speakingRequest(`${attemptPath(attemptId)}/next`, {
       method: "POST",
       json: {},
-      fallback: "Không thể chuyển sang bước tiếp theo.",
+      fallback: "Could not advance to the next step.",
     }),
   );
 }
@@ -273,7 +273,7 @@ export async function submitSpeakingAttempt(attemptId: string) {
     await speakingRequest(`${attemptPath(attemptId)}/submit`, {
       method: "POST",
       json: {},
-      fallback: "Không thể nộp bài Speaking.",
+      fallback: "Could not submit the Speaking attempt.",
     }),
   );
 }
@@ -285,7 +285,10 @@ export async function uploadSpeakingRecording(
   durationSeconds: number,
 ) {
   if (recording.size === 0)
-    throw new SpeakingApiError(400, "Bản ghi trống, không thể tải lên.");
+    throw new SpeakingApiError(
+      400,
+      "Recording is empty and cannot be uploaded.",
+    );
   const form = new FormData();
   form.set("file", recording, `answer-${position}`);
   form.set("durationSeconds", String(durationSeconds));
@@ -293,7 +296,7 @@ export async function uploadSpeakingRecording(
     await speakingRequest(`${attemptPath(attemptId)}/recordings/${position}`, {
       method: "PUT",
       form,
-      fallback: "Không thể tải bản ghi lên.",
+      fallback: "Could not upload the recording.",
     }),
   );
 }
@@ -302,10 +305,10 @@ export async function uploadSpeakingRecording(
 export async function getSpeakingEvaluationAvailability(signal?: AbortSignal) {
   const value = await speakingRequest(`${base}/evaluation-availability`, {
     signal,
-    fallback: "Không thể kiểm tra dịch vụ chấm AI.",
+    fallback: "Could not check AI evaluation availability.",
   });
   if (!isRecord(value) || typeof value.available !== "boolean")
-    invalid("trạng thái dịch vụ chấm AI");
+    invalid("AI evaluation availability status");
   return value.available;
 }
 
@@ -318,7 +321,7 @@ export async function grantSpeakingEvaluationConsent(attemptId: string) {
     await speakingRequest(`${attemptPath(attemptId)}/evaluation-consent`, {
       method: "POST",
       json: { accepted: true },
-      fallback: "Không thể yêu cầu chấm AI lúc này.",
+      fallback: "Could not request AI evaluation right now.",
     }),
   );
 }

@@ -97,7 +97,7 @@ export function WritingAttemptPlaceholder({
       setError(null);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể tải lượt làm bài.",
+        cause instanceof Error ? cause.message : "Could not load attempt.",
       );
     } finally {
       refreshInFlight.current = false;
@@ -168,7 +168,7 @@ export function WritingAttemptPlaceholder({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể autosave bài viết.",
+              : "Could not autosave your answer.",
           );
           return false;
         }
@@ -190,10 +190,10 @@ export function WritingAttemptPlaceholder({
           <ErrorPanel
             message={error}
             onRetry={() => void refresh()}
-            retryLabel="Thử tải lại"
+            retryLabel="Retry"
           />
         ) : (
-          <LoadingPanel label="Đang tải lượt làm Writing…" />
+          <LoadingPanel label="Loading Writing attempt…" />
         )}
       </PracticePage>
     );
@@ -207,12 +207,12 @@ export function WritingAttemptPlaceholder({
   if (!current)
     return (
       <PracticePage header={<WritingHeader />}>
-        <ErrorPanel message="Không tìm thấy câu đang làm." />
+        <ErrorPanel message="Current question not found." />
         <Link
           className={`mt-5 inline-block ${textLink}`}
           href="/history/writing"
         >
-          Xem lịch sử
+          View history
         </Link>
       </PracticePage>
     );
@@ -261,7 +261,7 @@ export function WritingAttemptPlaceholder({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Không thể chuyển câu tiếp theo.",
+          : "Could not move to the next question.",
       );
       await refresh();
     } finally {
@@ -282,7 +282,9 @@ export function WritingAttemptPlaceholder({
       mutationRevision.current++;
       acceptAttempt(result);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể nộp bài.");
+      setError(
+        cause instanceof Error ? cause.message : "Could not submit attempt.",
+      );
     } finally {
       setTransitioning(false);
     }
@@ -307,7 +309,7 @@ export function WritingAttemptPlaceholder({
                 })),
               },
             ]}
-            hint="Câu đã khóa không thể mở lại."
+            hint="Locked questions cannot be reopened."
           />
         }
         main={
@@ -315,7 +317,7 @@ export function WritingAttemptPlaceholder({
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
               <div>
                 <p className={eyebrow}>
-                  {attempt.testCode} · CÂU {current.position}/
+                  {attempt.testCode} · QUESTION {current.position}/
                   {attempt.questions.length}
                 </p>
                 <h1 className="mt-2 text-xl font-bold">{attempt.testTitle}</h1>
@@ -324,12 +326,10 @@ export function WritingAttemptPlaceholder({
                 </p>
               </div>
               {attempt.isPractice ? (
-                <span className="text-sm text-slate-600">
-                  Luyện tập không giới hạn thời gian
-                </span>
+                <span className="text-sm text-slate-600">Untimed practice</span>
               ) : (
                 <PhaseTimer
-                  label={preparing ? "Chuẩn bị" : "Làm bài"}
+                  label={preparing ? "Prepare" : "Respond"}
                   seconds={seconds}
                   tone={preparing ? "prepare" : "active"}
                 />
@@ -343,13 +343,13 @@ export function WritingAttemptPlaceholder({
             <div className="mt-6 grid gap-6 xl:grid-cols-2">
               <div className="min-w-0">
                 <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Đề bài
+                  Prompt
                 </p>
                 <WritingQuestionPrompt question={current} />
               </div>
               <div className="min-w-0 rounded-2xl border border-slate-200 bg-stone-50/60 p-4 sm:p-5">
                 <label className="text-sm font-bold" htmlFor="writing-answer">
-                  Bài làm của bạn
+                  Your response
                 </label>
                 <textarea
                   className="mt-2 min-h-64 w-full rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 xl:min-h-80"
@@ -361,9 +361,9 @@ export function WritingAttemptPlaceholder({
                   onChange={(event) => saveLocalAnswer(event.target.value)}
                   placeholder={
                     preparing
-                      ? "Editor sẽ mở khi hết thời gian chuẩn bị."
+                      ? "The editor will open when preparation time ends."
                       : current.part === 1
-                        ? "Viết một câu tiếng Anh…"
+                        ? "Write an English sentence…"
                         : current.part === 2
                           ? "Dear …"
                           : "Write your essay here…"
@@ -384,12 +384,12 @@ export function WritingAttemptPlaceholder({
                       className={`size-1.5 rounded-full ${preparing ? "bg-amber-500" : saving ? "animate-pulse bg-orange-500" : "bg-emerald-500"}`}
                     />
                     {preparing
-                      ? "Editor đang khóa trong pha chuẩn bị."
+                      ? "Editor is locked during preparation."
                       : saving
-                        ? "Đang autosave…"
+                        ? "Autosaving…"
                         : hasPendingSave
-                          ? "Chưa lưu trên server"
-                          : "Đã autosave trên server"}
+                          ? "Not saved on server yet"
+                          : "Autosaved on server"}
                   </span>
                   {current.part === 3 && (
                     <span
@@ -399,7 +399,7 @@ export function WritingAttemptPlaceholder({
                           : "font-semibold text-orange-700"
                       }
                     >
-                      {words}/{current.minimumWordCount} từ
+                      {words}/{current.minimumWordCount} words
                     </span>
                   )}
                 </div>
@@ -408,7 +408,8 @@ export function WritingAttemptPlaceholder({
             <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-5">
               {preparing ? (
                 <p className="text-sm font-semibold text-slate-500">
-                  Đọc đề và chuẩn bị ý. Editor sẽ mở khi timer về 00:00.
+                  Read the prompt and prepare your ideas. The editor will open
+                  when the timer reaches 00:00.
                 </p>
               ) : (
                 <button
@@ -417,7 +418,7 @@ export function WritingAttemptPlaceholder({
                   onClick={() => (isLast ? setConfirming(true) : void next())}
                   type="button"
                 >
-                  {isLast ? "Nộp bài" : "Next · khóa câu này"}
+                  {isLast ? "Submit" : "Next · lock this question"}
                 </button>
               )}
             </div>
@@ -426,14 +427,14 @@ export function WritingAttemptPlaceholder({
       />
       {confirming && (
         <ConfirmDialog
-          confirmLabel="Xác nhận nộp"
+          confirmLabel="Confirm submit"
           id="writing-submit-dialog-title"
           onCancel={closeConfirm}
           onConfirm={() => void submit()}
-          title="Nộp bài Writing?"
+          title="Submit Writing attempt?"
         >
-          Câu cuối sẽ bị khóa và bài được chuyển sang trạng thái chờ chấm AI.
-          Bạn không thể quay lại chỉnh sửa.
+          The final question will be locked and your attempt will be queued for
+          AI evaluation. You cannot go back to edit.
         </ConfirmDialog>
       )}
     </PracticePage>

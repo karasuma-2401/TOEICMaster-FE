@@ -66,7 +66,7 @@ describe("assessPronunciation", () => {
     const error = await failure(assessPronunciation(new Blob(["x"]), "think"));
     expect(error.code).toBe("RATE_LIMITED");
     expect(error.retryAfterSeconds).toBe(12);
-    expect(error.message).toContain("12 giây");
+    expect(error.message).toContain("12 seconds");
   });
 
   it("rejects a malformed body", async () => {

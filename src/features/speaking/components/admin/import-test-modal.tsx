@@ -12,14 +12,15 @@ import { SpeakingApiError } from "@/features/speaking/http";
 /** Turns `rows[5].Passage` into a label the admin can find in the workbook. */
 function fieldLabel(key: string) {
   const row = /^rows\[(\d+)\]\.(.+)$/i.exec(key);
-  if (row) return `Dòng ${row[1]} · ${row[2]}`;
+  if (row) return `Row ${row[1]} · ${row[2]}`;
   return /^(exercises|content)$/i.test(key) ? "" : key;
 }
 
 function importFailure(cause: unknown) {
   if (!(cause instanceof SpeakingApiError))
     return {
-      message: cause instanceof Error ? cause.message : "Không thể import đề.",
+      message:
+        cause instanceof Error ? cause.message : "Unable to import test.",
       details: [],
     };
   const details = Object.entries(cause.fieldErrors).flatMap(
@@ -32,11 +33,11 @@ function importFailure(cause: unknown) {
   );
   if (details.length > 0)
     return {
-      message: "File Excel chưa hợp lệ. Chưa có dữ liệu nào được tạo.",
+      message: "Invalid Excel file. No data was created.",
       details,
     };
   return {
-    message: cause.status === 409 ? "Mã đề đã tồn tại." : cause.message,
+    message: cause.status === 409 ? "Test code already exists." : cause.message,
     details: [],
   };
 }
@@ -78,20 +79,20 @@ export function ImportTestModal({
 
   return (
     <ExcelImportDialog
-      ariaLabel="Import đề Speaking từ Excel"
+      ariaLabel="Import Speaking test from Excel"
       busy={busy}
       canSubmit={Boolean(file)}
       error={error}
       errorDetails={details}
       onClose={onClose}
       onSubmit={() => void submit()}
-      submitLabel={busy ? "Đang import…" : "Import bản nháp"}
-      summary="Tạo 7 bài tập và 1 đề nháp từ một file."
-      title="Import đề Speaking"
+      submitLabel={busy ? "Importing..." : "Import draft"}
+      summary="Create 7 exercises and 1 draft test from a single file."
+      title="Import Speaking test"
     >
       <ExcelFileSlot
         busy={busy}
-        busyLabel="Đang import…"
+        busyLabel="Importing..."
         file={file}
         maxMb={16}
         onReject={(message) => reset(null, message)}
@@ -100,8 +101,8 @@ export function ImportTestModal({
       <ImportSpec
         rows={[
           ["Sheet", "Test, Exercises"],
-          ["Số bài", "7 dòng · Part 1–5: 2/2/1/1/1"],
-          ["Ảnh Part 2", "Place over Cells · JPEG, PNG · ≤ 5 MB"],
+          ["Exercises", "7 rows · Part 1-5: 2/2/1/1/1"],
+          ["Part 2 images", "Place over Cells · JPEG, PNG · ≤ 5 MB"],
         ]}
       />
     </ExcelImportDialog>

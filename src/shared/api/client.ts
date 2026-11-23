@@ -20,7 +20,7 @@ export async function getJson<T>(
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new ApiError(response.status, "Không thể kết nối dịch vụ.");
+    throw new ApiError(response.status, "Unable to connect to the service.");
   }
   return (await response.json()) as T;
 }

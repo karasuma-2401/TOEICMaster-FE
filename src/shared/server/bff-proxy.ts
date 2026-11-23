@@ -104,11 +104,11 @@ export function extractForwardedClientHeaders(
 export async function readMultipartStream(
   request: Request,
   maxBytes: number,
-  oversizeMessage = "Dữ liệu tải lên vượt quá giới hạn.",
+  oversizeMessage = "Uploaded payload exceeds the size limit.",
 ): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.startsWith("multipart/form-data")) {
-    return problemJson(400, "Cần gửi dữ liệu dạng multipart.");
+    return problemJson(400, "Multipart form data is required.");
   }
 
   const declared = Number(request.headers.get("content-length") ?? "0");
@@ -235,7 +235,7 @@ function resolveAuthHeaders(
     if (!accessValid) {
       return {
         ok: false,
-        response: problemJson(401, "Phiên đăng nhập đã hết hạn."),
+        response: problemJson(401, "Your session has expired."),
       };
     }
     return { ok: true, authorization: `Bearer ${session.accessToken}` };
@@ -244,14 +244,17 @@ function resolveAuthHeaders(
   if (!refreshValid || !accessValid) {
     return {
       ok: false,
-      response: problemJson(401, "Bạn cần đăng nhập để tiếp tục."),
+      response: problemJson(401, "Please sign in to continue."),
     };
   }
 
   if (policy === "admin" && session.role !== "ADMIN") {
     return {
       ok: false,
-      response: problemJson(403, "Bạn không có quyền truy cập."),
+      response: problemJson(
+        403,
+        "You do not have permission to access this resource.",
+      ),
     };
   }
 
@@ -289,7 +292,7 @@ async function resolveRequestBody(
     if (bodyMode === "json" && !hasJsonHeader) {
       return {
         ok: false,
-        response: problemJson(400, "Dữ liệu gửi lên phải ở định dạng JSON."),
+        response: problemJson(400, "Request body must be in JSON format."),
       };
     }
 
@@ -300,7 +303,7 @@ async function resolveRequestBody(
       }
       return {
         ok: false,
-        response: problemJson(400, "Dữ liệu JSON không hợp lệ."),
+        response: problemJson(400, "Invalid JSON payload."),
       };
     }
 
@@ -309,7 +312,7 @@ async function resolveRequestBody(
     } catch {
       return {
         ok: false,
-        response: problemJson(400, "Dữ liệu JSON không hợp lệ."),
+        response: problemJson(400, "Invalid JSON payload."),
       };
     }
     return { ok: true, body: text, contentType: "application/json" };
@@ -322,7 +325,7 @@ async function resolveRequestBody(
       ok: false,
       response: problemJson(
         413,
-        oversizeMessage ?? "Dữ liệu tải lên vượt quá giới hạn.",
+        oversizeMessage ?? "Uploaded payload exceeds the size limit.",
       ),
     };
   }
@@ -344,7 +347,7 @@ export async function forwardBffRequest(
     config.sameOrigin ?? (method !== "GET" && method !== "HEAD");
 
   if (enforceSameOrigin && !isSameOrigin(request)) {
-    return problemJson(403, "Yêu cầu không hợp lệ.");
+    return problemJson(403, "Invalid request.");
   }
 
   const authResult = resolveAuthHeaders(request, config.auth);
@@ -364,7 +367,7 @@ export async function forwardBffRequest(
   if (!baseUrl) {
     return problemJson(
       503,
-      config.missingBaseUrlMessage ?? "Dịch vụ tạm thời chưa sẵn sàng.",
+      config.missingBaseUrlMessage ?? "The service is temporarily unavailable.",
     );
   }
 
@@ -378,7 +381,7 @@ export async function forwardBffRequest(
   } catch {
     return problemJson(
       503,
-      config.missingBaseUrlMessage ?? "Dịch vụ tạm thời chưa sẵn sàng.",
+      config.missingBaseUrlMessage ?? "The service is temporarily unavailable.",
     );
   }
 
@@ -409,12 +412,12 @@ export async function forwardBffRequest(
     if (error instanceof DOMException && error.name === "TimeoutError") {
       return problemJson(
         504,
-        config.timeoutMessage ?? "Hệ thống phản hồi quá lâu.",
+        config.timeoutMessage ?? "The service took too long to respond.",
       );
     }
     return problemJson(
       502,
-      config.unreachableMessage ?? "Không thể kết nối dịch vụ.",
+      config.unreachableMessage ?? "Unable to connect to the service.",
     );
   }
 }

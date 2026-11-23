@@ -15,17 +15,20 @@ import { toast } from "./toast";
 describe("toast", () => {
   it("delegates success, error, loading, promise, and dismiss operations", () => {
     const task = Promise.resolve("done");
-    const messages = { loading: "Đang lưu...", success: "Đã lưu." };
+    const messages = { loading: "Saving...", success: "Saved." };
 
-    toast.success("Thành công");
-    toast.error("Có lỗi xảy ra");
-    toast.loading("Đang xử lý...");
+    toast.success("Success");
+    toast.error("Something went wrong");
+    toast.loading("Processing...");
     toast.promise(task, messages);
     toast.dismiss("toast-id");
 
-    expect(hotToast.success).toHaveBeenCalledWith("Thành công", undefined);
-    expect(hotToast.error).toHaveBeenCalledWith("Có lỗi xảy ra", undefined);
-    expect(hotToast.loading).toHaveBeenCalledWith("Đang xử lý...", undefined);
+    expect(hotToast.success).toHaveBeenCalledWith("Success", undefined);
+    expect(hotToast.error).toHaveBeenCalledWith(
+      "Something went wrong",
+      undefined,
+    );
+    expect(hotToast.loading).toHaveBeenCalledWith("Processing...", undefined);
     expect(hotToast.promise).toHaveBeenCalledWith(task, messages, undefined);
     expect(hotToast.dismiss).toHaveBeenCalledWith("toast-id");
   });

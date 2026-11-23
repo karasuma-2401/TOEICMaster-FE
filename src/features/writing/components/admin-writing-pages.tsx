@@ -31,9 +31,9 @@ import { AdminWritingPrompt } from "./admin-writing-prompt";
 const parts: WritingPart[] = [1, 2, 3];
 const difficulties: Array<WritingDifficulty | "ALL"> = [
   "ALL",
-  "Dễ",
-  "Trung bình",
-  "Khó",
+  "Easy",
+  "Medium",
+  "Hard",
 ];
 const statuses: Array<WritingQuestionStatus | "ALL"> = [
   "ALL",
@@ -42,9 +42,9 @@ const statuses: Array<WritingQuestionStatus | "ALL"> = [
   "ARCHIVED",
 ];
 const statusLabel: Record<WritingQuestionStatus, string> = {
-  PUBLISHED: "Hiển thị",
-  DRAFT: "Bản nháp",
-  ARCHIVED: "Lưu trữ",
+  PUBLISHED: "Published",
+  DRAFT: "Draft",
+  ARCHIVED: "Archived",
 };
 
 function ExerciseThumbnail({ id, alt }: { id?: string | null; alt: string }) {
@@ -52,13 +52,13 @@ function ExerciseThumbnail({ id, alt }: { id?: string | null; alt: string }) {
   if (!id || failed)
     return (
       <span className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-stone-100 text-xs text-stone-500">
-        Không có ảnh
+        No image
       </span>
     );
   return (
     // eslint-disable-next-line @next/next/no-img-element -- Admin media uses the authenticated proxy.
     <img
-      alt={alt || "Ảnh đề bài"}
+      alt={alt || "Prompt image"}
       className="h-14 w-20 shrink-0 rounded-lg bg-stone-100 object-contain"
       loading="lazy"
       onError={() => setFailed(true)}
@@ -101,8 +101,8 @@ function toDraft(
     version: question?.version ?? null,
     part: question?.part ?? part,
     code: question?.code ?? `WP${part}-NEW`,
-    topic: question?.topic ?? "Công việc",
-    difficulty: question?.difficulty ?? "Dễ",
+    topic: question?.topic ?? "Work",
+    difficulty: question?.difficulty ?? "Easy",
     status: question?.status ?? "DRAFT",
     rubricNotes: question?.rubricNotes ?? "",
     modelAnswer: question?.modelAnswer ?? "",
@@ -154,7 +154,7 @@ async function saveDraft(draft: Draft, imageFile: File | null) {
     topic: draft.topic.trim(),
     difficulty: draft.difficulty,
     status: draft.status,
-    updatedAtLabel: "Vừa cập nhật",
+    updatedAtLabel: "Just updated",
     rubricNotes: draft.rubricNotes.trim(),
     modelAnswer: draft.modelAnswer.trim(),
   };
@@ -185,12 +185,13 @@ async function saveDraft(draft: Draft, imageFile: File | null) {
             minimumWordCount: draft.minimumWordCount,
             outline: draft.outline,
           };
-  if (!question.code || !question.topic) return "Mã bài và chủ đề là bắt buộc.";
+  if (!question.code || !question.topic)
+    return "Exercise code and topic are required.";
   if (
     question.part === 1 &&
     (!question.imageName || !question.keywordOne || !question.keywordTwo)
   )
-    return "Part 1 cần ảnh và hai từ gợi ý.";
+    return "Part 1 requires an image and two keywords.";
   if (
     question.part === 2 &&
     (!question.sender ||
@@ -199,12 +200,12 @@ async function saveDraft(draft: Draft, imageFile: File | null) {
       !question.emailBody ||
       !question.directions)
   )
-    return "Part 2 cần đủ email đề bài và yêu cầu phản hồi.";
+    return "Part 2 requires the complete prompt email and response directions.";
   if (
     question.part === 3 &&
     (!question.prompt || question.minimumWordCount < 1)
   )
-    return "Part 3 cần đề bài và số từ tối thiểu.";
+    return "Part 3 requires a prompt and minimum word count.";
   const uploaded = imageFile ? await uploadWritingImage(imageFile) : null;
   const input: WritingExerciseInput = {
     part: draft.part,
@@ -282,7 +283,7 @@ function Drawer({
   return (
     <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
       <dialog
-        aria-label="Form bài tập Writing"
+        aria-label="Writing exercise form"
         aria-modal="true"
         className="relative m-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl"
         open
@@ -292,12 +293,10 @@ function Drawer({
             <p className="text-xs font-bold text-[var(--admin-brand-red)]">
               WRITING PART {draft.part}
             </p>
-            <h2 className="mt-1 text-xl font-bold">
-              Chỉnh sửa hoặc thêm bài tập
-            </h2>
+            <h2 className="mt-1 text-xl font-bold">Edit or add exercise</h2>
           </div>
           <button
-            aria-label="Đóng form bài tập"
+            aria-label="Close exercise form"
             className="rounded-lg p-2 hover:bg-slate-100"
             onClick={onClose}
             type="button"
@@ -307,12 +306,12 @@ function Drawer({
         </header>
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("Mã bài *", "code")}
-            {input("Chủ đề *", "topic")}
+            {input("Exercise code *", "code")}
+            {input("Topic *", "topic")}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold">
-              Độ khó
+              Difficulty
               <select
                 className="mt-1.5 h-11 w-full rounded-xl border border-[var(--admin-border)] px-3 font-normal"
                 onChange={(e) =>
@@ -326,7 +325,7 @@ function Drawer({
               </select>
             </label>
             <label className="text-sm font-semibold">
-              Trạng thái
+              Status
               <select
                 className="mt-1.5 h-11 w-full rounded-xl border border-[var(--admin-border)] px-3 font-normal"
                 onChange={(e) =>
@@ -347,9 +346,9 @@ function Drawer({
           {draft.part === 1 && (
             <>
               <label className="block cursor-pointer rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-sm font-bold text-[var(--admin-brand-red)]">
-                Hình ảnh đề bài *
+                Prompt image *
                 <span className="mt-1 block font-normal text-[var(--admin-muted)]">
-                  {draft.imageName || "Chọn ảnh JPG/PNG, tối đa 5MB"}
+                  {draft.imageName || "Choose a JPG/PNG image, max 5MB"}
                 </span>
                 <input
                   accept="image/jpeg,image/png,image/webp"
@@ -363,10 +362,10 @@ function Drawer({
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
-                {input("Từ gợi ý 1 *", "keywordOne")}
-                {input("Từ gợi ý 2 *", "keywordTwo")}
+                {input("Keyword 1 *", "keywordOne")}
+                {input("Keyword 2 *", "keywordTwo")}
               </div>
-              {input("Alt text ảnh", "imageAlt")}
+              {input("Image alt text", "imageAlt")}
             </>
           )}
           {draft.part === 2 && (
@@ -376,19 +375,19 @@ function Drawer({
                 {input("To *", "recipient")}
               </div>
               {input("Subject *", "subject")}
-              {input("Nội dung email *", "emailBody", true)}
-              {input("Yêu cầu phản hồi *", "directions", true)}
+              {input("Email body *", "emailBody", true)}
+              {input("Response directions *", "directions", true)}
             </>
           )}
           {draft.part === 3 && (
             <>
-              {input("Chủ đề bài luận *", "prompt", true)}
-              {input("Số từ tối thiểu *", "minimumWordCount", false, true)}
-              {input("Dàn ý gợi ý", "outline", true)}
+              {input("Essay prompt *", "prompt", true)}
+              {input("Minimum word count *", "minimumWordCount", false, true)}
+              {input("Suggested outline", "outline", true)}
             </>
           )}
           {input("Rubric", "rubricNotes", true)}
-          {input("Bài tham khảo nội bộ (không bắt buộc)", "modelAnswer", true)}
+          {input("Internal reference answer (optional)", "modelAnswer", true)}
           {error && (
             <p
               className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
@@ -404,7 +403,7 @@ function Drawer({
             onClick={onClose}
             type="button"
           >
-            Hủy
+            Cancel
           </button>
           <button
             className="rounded-lg px-4 py-2 text-sm font-bold text-white"
@@ -420,7 +419,7 @@ function Drawer({
                   setError(
                     cause instanceof Error
                       ? cause.message
-                      : "Không thể lưu bài tập.",
+                      : "Could not save exercise.",
                   ),
                 )
                 .finally(() => setSaving(false));
@@ -428,7 +427,7 @@ function Drawer({
             style={{ background: "var(--admin-brand-gradient)" }}
             type="button"
           >
-            {saving ? "Đang lưu…" : "Lưu bài tập"}
+            {saving ? "Saving…" : "Save exercise"}
           </button>
         </footer>
       </dialog>
@@ -446,7 +445,7 @@ function Preview({
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
       <dialog
-        aria-label="Preview bài tập"
+        aria-label="Preview exercise"
         aria-modal="true"
         className="relative m-0 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
         open
@@ -454,11 +453,11 @@ function Preview({
         <div className="flex justify-between">
           <div>
             <p className="text-xs font-bold text-[var(--admin-brand-red)]">
-              GÓC NHÌN USER · PART {question.part}
+              USER VIEW · PART {question.part}
             </p>
             <h2 className="mt-1 text-xl font-bold">{question.code}</h2>
           </div>
-          <button aria-label="Đóng preview" onClick={onClose} type="button">
+          <button aria-label="Close preview" onClick={onClose} type="button">
             ×
           </button>
         </div>
@@ -471,7 +470,7 @@ function Preview({
           style={{ background: "var(--admin-brand-gradient)" }}
           type="button"
         >
-          Đóng
+          Close
         </button>
       </dialog>
     </div>
@@ -499,12 +498,12 @@ function ImportDialog({
     try {
       const result = await importWritingExerciseFile(part, selected, true);
       if (typeof result === "number")
-        throw new Error("Phản hồi kiểm tra không hợp lệ.");
+        throw new Error("Invalid validation response.");
       setPreview(result);
       setError("");
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể kiểm tra file.",
+        cause instanceof Error ? cause.message : "Could not validate file.",
       );
     } finally {
       setBusy(false);
@@ -518,7 +517,7 @@ function ImportDialog({
       onImported();
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể import bài tập.",
+        cause instanceof Error ? cause.message : "Could not import exercises.",
       );
     } finally {
       setBusy(false);
@@ -527,7 +526,7 @@ function ImportDialog({
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
       <dialog
-        aria-label="Import Excel Writing"
+        aria-label="Import Writing Excel"
         aria-modal="true"
         className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
         open
@@ -536,31 +535,31 @@ function ImportDialog({
           <div>
             <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Mỗi Part dùng cấu trúc Excel riêng.
+              Each Part uses its own Excel structure.
             </p>
           </div>
-          <button aria-label="Đóng import" onClick={onClose} type="button">
+          <button aria-label="Close import" onClick={onClose} type="button">
             ×
           </button>
         </header>
         <div className="p-6">
           <p className="mb-3 text-xs text-[var(--admin-muted)]">
-            Chuẩn bị file theo các cột bên dưới
-            {part === 1 ? ", tải ảnh và điền ImageAssetId" : ""}, sau đó chọn
-            file để kiểm tra trước khi import.
+            Prepare the file with the columns below
+            {part === 1 ? ", upload images and fill in ImageAssetId" : ""}, then
+            select a file to validate before importing.
           </p>
           <p className="mb-3 text-xs text-[var(--admin-muted)]">
-            Cột bắt buộc: Code, Topic, Difficulty, Status,{" "}
+            Required columns: Code, Topic, Difficulty, Status,{" "}
             {part === 1
               ? "ImageAssetId, ImageAlt, KeywordOne, KeywordTwo"
               : part === 2
                 ? "Sender, Recipient, Subject, EmailBody, Directions"
                 : "Prompt, MinimumWordCount"}
-            . RubricNotes và ModelAnswer là tùy chọn.
+            . RubricNotes and ModelAnswer are optional.
           </p>
           {part === 1 && (
             <label className="mb-4 block text-sm font-semibold">
-              Tải ảnh để lấy ImageAssetId
+              Upload image to get ImageAssetId
               <input
                 className="mt-1 block w-full text-sm"
                 type="file"
@@ -579,7 +578,7 @@ function ImportDialog({
                       setError(
                         cause instanceof Error
                           ? cause.message
-                          : "Không thể tải ảnh.",
+                          : "Could not upload image.",
                       ),
                     )
                     .finally(() => setBusy(false));
@@ -595,10 +594,10 @@ function ImportDialog({
           {!preview ? (
             <label className="block cursor-pointer rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-10 text-center">
               <b className="text-[var(--admin-brand-red)]">
-                Chọn file .xlsx để preview
+                Choose an .xlsx file to preview
               </b>
               <span className="mt-2 block text-sm text-[var(--admin-muted)]">
-                Tối đa 10MB
+                Max 10MB
               </span>
               <input
                 accept=".xlsx"
@@ -616,9 +615,9 @@ function ImportDialog({
                 <table className="w-full min-w-[420px] overflow-hidden rounded-xl border border-[var(--admin-border)] text-left text-sm">
                   <thead className="bg-[var(--admin-surface-muted)]">
                     <tr>
-                      <th className="p-3">Dòng</th>
-                      <th className="p-3">Mã bài</th>
-                      <th className="p-3">Kết quả</th>
+                      <th className="p-3">Row</th>
+                      <th className="p-3">Code</th>
+                      <th className="p-3">Result</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -628,7 +627,7 @@ function ImportDialog({
                           {row.rowNumber}
                         </td>
                         <td className="border-t border-[var(--admin-border)]">
-                          {row.code ?? "—"}
+                          {row.code ?? "-"}
                         </td>
                         <td
                           className={
@@ -637,7 +636,7 @@ function ImportDialog({
                               : "border-t border-[var(--admin-border)] text-red-700"
                           }
                         >
-                          {row.isValid ? "Hợp lệ" : row.errors.join(" ")}
+                          {row.isValid ? "Valid" : row.errors.join(" ")}
                         </td>
                       </tr>
                     ))}
@@ -653,11 +652,11 @@ function ImportDialog({
                   setError("");
                 }}
               >
-                Chọn file khác
+                Choose another file
               </button>
             </div>
           )}
-          {busy && <p className="mt-3 text-sm">Đang xử lý file…</p>}
+          {busy && <p className="mt-3 text-sm">Processing file…</p>}
           {error && (
             <p className="mt-3 text-sm text-red-700" role="alert">
               {error}
@@ -670,7 +669,7 @@ function ImportDialog({
             onClick={onClose}
             type="button"
           >
-            Hủy
+            Cancel
           </button>
           <button
             className="rounded-lg px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
@@ -684,7 +683,7 @@ function ImportDialog({
             style={{ background: "var(--admin-brand-gradient)" }}
             type="button"
           >
-            Import bài tập
+            Import exercises
           </button>
         </footer>
       </dialog>
@@ -738,7 +737,9 @@ export function AdminWritingContentPage({
       } catch (cause) {
         if (!signal?.aborted)
           setLoadError(
-            cause instanceof Error ? cause.message : "Không thể tải bài tập.",
+            cause instanceof Error
+              ? cause.message
+              : "Could not load exercises.",
           );
       } finally {
         if (!signal?.aborted) setLoading(false);
@@ -776,16 +777,16 @@ export function AdminWritingContentPage({
               style={{ background: "var(--admin-brand-gradient)" }}
               type="button"
             >
-              + Thêm bài tập
+              + Add exercise
             </button>
           </>
         }
         description={
           part
-            ? `Tạo, tìm kiếm, preview và quản lý bài tập Writing Part ${part}.`
-            : "Tạo, tìm kiếm, preview và quản lý bài tập theo từng Part."
+            ? `Create, search, preview, and manage Writing Part ${part} exercises.`
+            : "Create, search, preview, and manage exercises by Part."
         }
-        title={part ? `Writing Part ${part}` : "Ngân hàng bài tập Writing"}
+        title={part ? `Writing Part ${part}` : "Writing Exercise Bank"}
       />
       <ContentTabs section="content" skill="writing" />
       {part && <AdminPartRouteTabs activePart={part} skill="writing" />}
@@ -812,14 +813,14 @@ export function AdminWritingContentPage({
       <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <div className="grid gap-3 border-b border-[var(--admin-border)] p-4 lg:grid-cols-[1fr_11rem_11rem]">
           <input
-            aria-label="Tìm bài tập Writing"
+            aria-label="Search Writing exercises"
             className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
             onChange={(e) => resetPage({ query: e.target.value })}
-            placeholder="Tìm mã bài hoặc chủ đề..."
+            placeholder="Search by code or topic..."
             value={filter.query}
           />
           <select
-            aria-label="Lọc độ khó"
+            aria-label="Filter by difficulty"
             className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
             onChange={(e) =>
               resetPage({
@@ -830,12 +831,12 @@ export function AdminWritingContentPage({
           >
             {difficulties.map((item) => (
               <option key={item} value={item}>
-                {item === "ALL" ? "Độ khó: Tất cả" : item}
+                {item === "ALL" ? "Difficulty: All" : item}
               </option>
             ))}
           </select>
           <select
-            aria-label="Lọc trạng thái"
+            aria-label="Filter by status"
             className="h-11 rounded-xl border border-[var(--admin-border)] px-3 text-sm"
             onChange={(e) =>
               resetPage({ status: e.target.value as QuestionFilter["status"] })
@@ -844,24 +845,24 @@ export function AdminWritingContentPage({
           >
             {statuses.map((item) => (
               <option key={item} value={item}>
-                {item === "ALL" ? "Trạng thái: Tất cả" : statusLabel[item]}
+                {item === "ALL" ? "Status: All" : statusLabel[item]}
               </option>
             ))}
           </select>
         </div>
         {loading ? (
-          <p className="p-8 text-center text-sm">Đang tải bài tập…</p>
+          <p className="p-8 text-center text-sm">Loading exercises…</p>
         ) : items.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
                 <tr>
-                  <th className="p-4">MÃ BÀI</th>
-                  <th className="p-4">NỘI DUNG</th>
-                  <th className="p-4">CHỦ ĐỀ</th>
-                  <th className="p-4">ĐỘ KHÓ</th>
-                  <th className="p-4">TRẠNG THÁI</th>
-                  <th className="whitespace-nowrap p-4 text-right">THAO TÁC</th>
+                  <th className="p-4">CODE</th>
+                  <th className="p-4">CONTENT</th>
+                  <th className="p-4">TOPIC</th>
+                  <th className="p-4">DIFFICULTY</th>
+                  <th className="p-4">STATUS</th>
+                  <th className="whitespace-nowrap p-4 text-right">ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -915,21 +916,21 @@ export function AdminWritingContentPage({
                         onClick={() => setPreview(question)}
                         type="button"
                       >
-                        Xem
+                        View
                       </button>
                       <button
                         className="min-h-9 rounded-md px-2 text-[var(--admin-brand-red)] hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-orange-600"
                         onClick={() => setDrawer(toDraft(question))}
                         type="button"
                       >
-                        Sửa
+                        Edit
                       </button>
                       <button
                         className="min-h-9 rounded-md px-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-700"
                         onClick={() => {
                           if (
                             question.version &&
-                            window.confirm(`Lưu trữ ${question.code}?`)
+                            window.confirm(`Archive ${question.code}?`)
                           )
                             void archiveWritingExercise(
                               question.id,
@@ -937,19 +938,19 @@ export function AdminWritingContentPage({
                             )
                               .then(() => {
                                 setRevision((v) => v + 1);
-                                setNotice("Đã lưu trữ bài tập.");
+                                setNotice("Exercise archived.");
                               })
                               .catch((cause: unknown) =>
                                 setLoadError(
                                   cause instanceof Error
                                     ? cause.message
-                                    : "Không thể lưu trữ bài tập.",
+                                    : "Could not archive exercise.",
                                 ),
                               );
                         }}
                         type="button"
                       >
-                        Lưu trữ
+                        Archive
                       </button>
                     </td>
                   </tr>
@@ -959,7 +960,7 @@ export function AdminWritingContentPage({
           </div>
         ) : (
           <div className="p-14 text-center">
-            <b>Không tìm thấy bài tập phù hợp</b>
+            <b>No matching exercises found</b>
             <button
               className="ml-3 text-sm font-bold text-[var(--admin-brand-red)] underline"
               onClick={() =>
@@ -973,15 +974,17 @@ export function AdminWritingContentPage({
               }
               type="button"
             >
-              Xóa lọc
+              Clear filters
             </button>
           </div>
         )}
         <footer className="flex items-center justify-between border-t border-[var(--admin-border)] p-4 text-xs text-[var(--admin-muted)]">
-          <span>{total} bài tập</span>
+          <span>
+            {total} {total === 1 ? "exercise" : "exercises"}
+          </span>
           <div className="flex gap-2">
             <button
-              aria-label="Trang trước"
+              aria-label="Previous page"
               className="size-8 rounded border border-[var(--admin-border)] disabled:opacity-40"
               disabled={page <= 1}
               onClick={() =>
@@ -995,7 +998,7 @@ export function AdminWritingContentPage({
               {page}
             </span>
             <button
-              aria-label="Trang sau"
+              aria-label="Next page"
               className="size-8 rounded border border-[var(--admin-border)] disabled:opacity-40"
               disabled={page >= pages}
               onClick={() =>
@@ -1015,7 +1018,7 @@ export function AdminWritingContentPage({
           onSaved={() => {
             setDrawer(null);
             setRevision((v) => v + 1);
-            setNotice("Đã lưu bài tập.");
+            setNotice("Exercise saved.");
           }}
         />
       )}
@@ -1028,7 +1031,7 @@ export function AdminWritingContentPage({
           onImported={() => {
             setImportOpen(false);
             setRevision((value) => value + 1);
-            setNotice("Đã import dữ liệu bài tập thành công.");
+            setNotice("Exercises imported successfully.");
           }}
           part={filter.part}
         />

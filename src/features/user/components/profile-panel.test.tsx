@@ -37,7 +37,7 @@ beforeEach(() => vi.clearAllMocks());
 describe("ProfilePanel", () => {
   const sampleProfile = {
     id: "user-1",
-    displayName: "Nguyễn Văn A",
+    displayName: "Noah Adams",
     email: "learner@example.com",
     phone: "0912345678",
     dateOfBirth: null,
@@ -46,22 +46,22 @@ describe("ProfilePanel", () => {
     hasPassword: true,
   };
 
-  it("hiển thị thông tin, đổi mật khẩu và mục tiêu trên cùng một trang", () => {
+  it("displays profile details, password change, and score goal on one page", () => {
     render(<ProfilePanel initialProfile={sampleProfile} />);
 
     expect(
-      screen.getByRole("heading", { name: "Hồ sơ & mục tiêu học tập" }),
+      screen.getByRole("heading", { name: "Profile & Learning Goal" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Nguyễn Văn A");
-    expect(screen.getByLabelText("Mật khẩu hiện tại")).toBeInTheDocument();
-    expect(screen.getByLabelText("Điểm kỳ vọng")).toHaveValue("750");
-    expect(screen.getByRole("link", { name: "Trang chủ" })).toHaveAttribute(
+    expect(screen.getByLabelText("Display name")).toHaveValue("Noah Adams");
+    expect(screen.getByLabelText("Current password")).toBeInTheDocument();
+    expect(screen.getByLabelText("Target score")).toHaveValue("750");
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute(
       "href",
       "/",
     );
   });
 
-  it("không hiện form đổi mật khẩu cho tài khoản chỉ đăng nhập Google", () => {
+  it("hides the change password form for Google-only accounts", () => {
     render(
       <ProfilePanel
         initialProfile={{ ...sampleProfile, hasPassword: false }}
@@ -69,14 +69,14 @@ describe("ProfilePanel", () => {
     );
 
     expect(
-      screen.getByText("Tài khoản đăng nhập bằng Google, không có mật khẩu."),
+      screen.getByText(
+        "This account signs in with Google and does not have a password.",
+      ),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText("Mật khẩu hiện tại"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Current password")).not.toBeInTheDocument();
   });
 
-  it("lưu mục tiêu mà không gửi tên đang sửa dở và giữ nguyên ô tên", async () => {
+  it("saves the goal without submitting an edited display name and preserves the name input", async () => {
     const user = userEvent.setup();
     mocks.updateProfile.mockResolvedValueOnce({
       ...sampleProfile,
@@ -84,23 +84,23 @@ describe("ProfilePanel", () => {
     });
     render(<ProfilePanel initialProfile={sampleProfile} />);
 
-    await user.type(screen.getByLabelText("Tên hiển thị"), " B");
-    await user.selectOptions(screen.getByLabelText("Điểm kỳ vọng"), "850");
-    await user.click(screen.getByRole("button", { name: "Lưu mục tiêu" }));
+    await user.type(screen.getByLabelText("Display name"), " B");
+    await user.selectOptions(screen.getByLabelText("Target score"), "850");
+    await user.click(screen.getByRole("button", { name: "Save goal" }));
 
     await waitFor(() =>
       expect(mocks.updateProfile).toHaveBeenCalledWith({
-        displayName: "Nguyễn Văn A",
+        displayName: "Noah Adams",
         phone: "0912345678",
         dateOfBirth: null,
         targetScore: 850,
       }),
     );
     expect(await screen.findByText("850 / 990")).toBeInTheDocument();
-    expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Nguyễn Văn A B");
+    expect(screen.getByLabelText("Display name")).toHaveValue("Noah Adams B");
   });
 
-  it("lưu thông tin với mục tiêu mới nhất sau khi vừa đổi mục tiêu", async () => {
+  it("saves profile details with the latest target score after updating the goal", async () => {
     const user = userEvent.setup();
     mocks.updateProfile.mockResolvedValueOnce({
       ...sampleProfile,
@@ -108,8 +108,8 @@ describe("ProfilePanel", () => {
     });
     render(<ProfilePanel initialProfile={sampleProfile} />);
 
-    await user.selectOptions(screen.getByLabelText("Điểm kỳ vọng"), "850");
-    await user.click(screen.getByRole("button", { name: "Lưu mục tiêu" }));
+    await user.selectOptions(screen.getByLabelText("Target score"), "850");
+    await user.click(screen.getByRole("button", { name: "Save goal" }));
     await screen.findByText("850 / 990");
 
     mocks.updateProfile.mockResolvedValueOnce({
@@ -117,10 +117,10 @@ describe("ProfilePanel", () => {
       displayName: "Linh",
       targetScore: 850,
     });
-    const name = screen.getByLabelText("Tên hiển thị");
+    const name = screen.getByLabelText("Display name");
     await user.clear(name);
     await user.type(name, "Linh");
-    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(mocks.updateProfile).toHaveBeenLastCalledWith({
@@ -132,14 +132,14 @@ describe("ProfilePanel", () => {
     );
   });
 
-  it("giữ lại điểm mục tiêu không nằm trong danh sách có sẵn", () => {
+  it("keeps a target score that is not in the preset list", () => {
     render(
       <ProfilePanel initialProfile={{ ...sampleProfile, targetScore: 725 }} />,
     );
-    expect(screen.getByLabelText("Điểm kỳ vọng")).toHaveValue("725");
+    expect(screen.getByLabelText("Target score")).toHaveValue("725");
   });
 
-  it("hiển thị loading rồi hiển thị form khi hồ sơ tải xong", async () => {
+  it("shows loading state then renders the form once profile loads", async () => {
     let resolve!: (profile: typeof sampleProfile) => void;
     mocks.getProfile.mockReturnValueOnce(
       new Promise((done) => {
@@ -147,25 +147,27 @@ describe("ProfilePanel", () => {
       }),
     );
     render(<ProfilePanel />);
-    expect(screen.getByLabelText("Đang tải hồ sơ")).toBeInTheDocument();
+    expect(screen.getByLabelText("Loading profile")).toBeInTheDocument();
     resolve(sampleProfile);
-    expect(await screen.findByLabelText("Tên hiển thị")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Display name")).toBeInTheDocument();
   });
 
-  it("hiển thị lỗi và thử tải lại được", async () => {
+  it("shows an error and allows retrying", async () => {
     const user = userEvent.setup();
     mocks.getProfile.mockRejectedValueOnce(new Error("offline"));
     mocks.getProfile.mockResolvedValueOnce(sampleProfile);
     render(<ProfilePanel />);
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Không thể tải hồ sơ.",
+      "Unable to load profile.",
     );
-    await user.click(screen.getByRole("button", { name: "Thử lại" }));
-    expect(await screen.findByLabelText("Tên hiển thị")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByLabelText("Display name")).toBeInTheDocument();
   });
 
-  it("chuyển tới đăng nhập khi phiên hết hạn", async () => {
-    mocks.getProfile.mockRejectedValueOnce(new ApiError(401, "Phiên hết hạn"));
+  it("redirects to login when the session expires", async () => {
+    mocks.getProfile.mockRejectedValueOnce(
+      new ApiError(401, "Session expired"),
+    );
     render(<ProfilePanel />);
     await screen.findByRole("alert");
     expect(mocks.replace).toHaveBeenCalledWith("/login?next=%2Fprofile");

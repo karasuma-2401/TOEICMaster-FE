@@ -166,7 +166,7 @@ export function useSequentialListeningPlayer({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Trình duyệt chặn tự động phát audio. Vui lòng nhấn phát lại.",
+            : "Browser blocked audio autoplay. Please press play again.",
         );
       });
     }
@@ -207,7 +207,7 @@ export function useSequentialListeningPlayer({
     })
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(`Không thể tải audio (${response.status}).`);
+          throw new Error(`Unable to load audio (${response.status}).`);
         }
         const blob = await response.blob();
         if (controller.signal.aborted) return;
@@ -229,7 +229,7 @@ export function useSequentialListeningPlayer({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải đoạn audio Listening.",
+              : "Unable to load Listening audio track.",
           );
         }
       })
@@ -325,7 +325,7 @@ export function useSequentialListeningPlayer({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Không thể phát audio. Vui lòng thử lại.",
+          : "Unable to play audio. Please try again.",
       );
     }
   }, [enabled, pumpQueue]);

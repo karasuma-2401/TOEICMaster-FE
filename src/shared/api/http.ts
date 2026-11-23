@@ -2,7 +2,7 @@ import { refreshSession } from "@/features/auth/api";
 import { isNonEmptyString, isRecord, isStringArray } from "@/shared/lib/guards";
 
 const REFRESH_LOCK_NAME = "toeicmaster-refresh";
-const DEFAULT_ERROR_MESSAGE = "Không thể kết nối dịch vụ.";
+const DEFAULT_ERROR_MESSAGE = "Unable to connect to the service.";
 
 let inFlightRefresh: Promise<void> | null = null;
 
@@ -189,7 +189,7 @@ export async function fetchWithAuthRefresh(
         await refreshSessionLocked(options?.refreshFn);
       } catch (refreshError) {
         if (isAbortError(refreshError, options?.signal)) throw refreshError;
-        throw new HttpError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new HttpError(401, "Your session has expired.");
       }
       if (options?.signal?.aborted) {
         throw (
@@ -238,7 +238,7 @@ export async function requestJson<T>(
   } catch {
     throw new HttpError(
       502,
-      options.invalidPayloadMessage ?? "Dữ liệu phản hồi không hợp lệ.",
+      options.invalidPayloadMessage ?? "Invalid response payload.",
     );
   }
 
@@ -248,7 +248,7 @@ export async function requestJson<T>(
     if (cause instanceof HttpError) throw cause;
     throw new HttpError(
       502,
-      options.invalidPayloadMessage ?? "Dữ liệu phản hồi không hợp lệ.",
+      options.invalidPayloadMessage ?? "Invalid response payload.",
       { raw },
     );
   }

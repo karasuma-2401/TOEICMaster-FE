@@ -19,7 +19,8 @@ export function AssessmentResult({
   if (assessment.recognitionStatus === "NoSpeech") {
     return (
       <p className="rounded-xl bg-(--sp-subtle) px-3 py-2.5 text-sm text-(--sp-ink-2)">
-        Không nhận ra giọng nói. Hãy nói to, rõ hơn và đặt micro gần miệng.
+        No speech detected. Speak louder and more clearly, and move the
+        microphone closer to your mouth.
       </p>
     );
   }
@@ -36,7 +37,7 @@ export function AssessmentResult({
   return (
     <div className={`${card} px-[18px] py-4`}>
       <p className="text-xs uppercase text-(--sp-ink-2)">
-        {target ? `Phát âm chuẩn /${sound.symbol}/` : "Phát âm chuẩn cả từ"}
+        {target ? `Sound /${sound.symbol}/ accuracy` : "Whole-word accuracy"}
       </p>
       <p className="mt-1 flex items-baseline gap-3">
         <span className="text-[36px] font-bold leading-[44px] text-[#f4511e]">
@@ -47,20 +48,23 @@ export function AssessmentResult({
         </span>
       </p>
       <p className="mt-1 text-[13px] text-(--sp-ink-2)">
-        Độ chính xác cả từ {Math.round(assessment.accuracyScore)}% · Điểm phát
-        âm {Math.round(assessment.pronunciationScore)}%
-        {!target && " · Không tách được điểm riêng cho âm này"}
+        Word accuracy {Math.round(assessment.accuracyScore)}% · Pronunciation
+        score {Math.round(assessment.pronunciationScore)}%
+        {!target && " · Separate score unavailable for this sound"}
       </p>
 
       {phonemes.length > 0 && (
-        <ul aria-label="Điểm từng âm" className="mt-3 flex flex-wrap gap-1.5">
+        <ul
+          aria-label="Score by phoneme"
+          className="mt-3 flex flex-wrap gap-1.5"
+        >
           {phonemes.map((item, index) => {
             const isTarget = target?.indexes.includes(index) ?? false;
             const score = Math.round(item.accuracyScore);
-            const label = `${item.phoneme}: ${score} điểm`;
+            const label = `${item.phoneme}: ${score} points`;
             return (
               <li
-                aria-label={isTarget ? `${label}, âm đang luyện` : label}
+                aria-label={isTarget ? `${label}, target sound` : label}
                 className={`rounded-md border px-2 py-1 text-[13px] ${
                   isTarget
                     ? "border-(--sp-hero-line) bg-(--sp-orange-soft)"
@@ -81,12 +85,11 @@ export function AssessmentResult({
         <div className="mt-3 text-[13px] leading-5 text-(--sp-ink-2)">
           {target?.heardInstead && (
             <p>
-              Hệ thống nghe giống /{target.heardInstead}/ hơn /{sound.symbol}/.
+              The system heard /{target.heardInstead}/ rather than /
+              {sound.symbol}/.
             </p>
           )}
-          {heardOther && (
-            <p>Hệ thống nghe thành “{assessment.recognizedText}”.</p>
-          )}
+          {heardOther && <p>The system heard “{assessment.recognizedText}”.</p>}
           {tip && <p>{tip}</p>}
         </div>
       )}

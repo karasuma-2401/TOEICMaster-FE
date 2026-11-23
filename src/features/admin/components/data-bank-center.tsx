@@ -36,50 +36,50 @@ const parts = [
   {
     part: 1,
     name: "Photographs",
-    vietnamese: "Mô tả tranh",
-    type: "Hình ảnh + Audio",
+    vietnamese: "Photo description",
+    type: "Image + Audio",
     grouped: false,
   },
   {
     part: 2,
     name: "Question – Response",
-    vietnamese: "Hỏi – đáp",
+    vietnamese: "Question & response",
     type: "Audio",
     grouped: false,
   },
   {
     part: 3,
     name: "Short Conversations",
-    vietnamese: "Hội thoại ngắn",
-    type: "Cụm câu hỏi + Audio",
+    vietnamese: "Short conversations",
+    type: "Question Group + Audio",
     grouped: true,
   },
   {
     part: 4,
     name: "Short Talks",
-    vietnamese: "Bài nói ngắn",
-    type: "Cụm câu hỏi + Audio",
+    vietnamese: "Short talks",
+    type: "Question Group + Audio",
     grouped: true,
   },
   {
     part: 5,
     name: "Incomplete Sentences",
-    vietnamese: "Điền câu",
-    type: "Text đơn",
+    vietnamese: "Sentence completion",
+    type: "Single Text",
     grouped: false,
   },
   {
     part: 6,
     name: "Text Completion",
-    vietnamese: "Điền đoạn văn",
-    type: "Cụm câu hỏi + Text",
+    vietnamese: "Text completion",
+    type: "Question Group + Text",
     grouped: true,
   },
   {
     part: 7,
     name: "Reading Comprehension",
-    vietnamese: "Đọc hiểu",
-    type: "Cụm câu hỏi + Đoạn văn",
+    vietnamese: "Reading comprehension",
+    type: "Question Group + Passage",
     grouped: true,
   },
 ] as const;
@@ -118,8 +118,8 @@ function selectedPart(params: URLSearchParams): number | null {
 
 function statusLabel(status: string) {
   return status === "PUBLISHED" || status === "Published"
-    ? "Hiển thị"
-    : "Bản nháp";
+    ? "Published"
+    : "Draft";
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -187,7 +187,7 @@ export function DataBankCenter() {
           setSummaryError(
             reason instanceof Error
               ? reason.message
-              : "Không thể tải ngân hàng bài tập.",
+              : "Unable to load exercise bank.",
           );
       });
     return () => controller.abort();
@@ -199,13 +199,13 @@ export function DataBankCenter() {
         <>
           <header className="mb-7">
             <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-              QUẢN TRỊ / KHO DỮ LIỆU
+              ADMIN / DATA BANK
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--admin-ink)]">
-              Kho dữ liệu
+              Data Bank
             </h1>
             <p className="mt-2 text-sm leading-6 text-[var(--admin-muted)]">
-              Quản lý ngân hàng bài tập và đề thi TOEIC theo từng kỹ năng.
+              Manage TOEIC exercise banks and tests by skill.
             </p>
           </header>
           <ContentTabs
@@ -285,28 +285,26 @@ function ExerciseBank({
         <ErrorPanel
           message={error}
           onRetry={onRetry}
-          title="Không thể tải ngân hàng bài tập"
+          title="Unable to load exercise bank"
         />
       ) : (
         <>
           <section className="mb-6 flex flex-wrap items-center gap-7 rounded-2xl border border-[#ffbca5] bg-[linear-gradient(100deg,#fff1ea,#fffdfb)] px-5 py-4 shadow-[0_10px_28px_rgb(255_108_13/8%)]">
             <div>
               <p className="text-xs text-[var(--admin-muted)]">
-                Tổng số câu hỏi
+                Total questions
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--admin-brand-orange)]">
-                {(summary?.totalQuestionCount ?? 0).toLocaleString("vi-VN")}
+                {(summary?.totalQuestionCount ?? 0).toLocaleString("en-US")}
               </p>
             </div>
             <div className="h-9 w-px bg-[var(--admin-border)]" />
             <div>
-              <p className="text-xs text-[var(--admin-muted)]">
-                Cập nhật gần nhất
-              </p>
+              <p className="text-xs text-[var(--admin-muted)]">Last updated</p>
               <p className="mt-1 text-sm font-bold text-[var(--admin-brand-red)]">
                 {summary?.updatedAtUtc
                   ? formatAdminDate(summary.updatedAtUtc)
-                  : "Chưa có dữ liệu"}
+                  : "No data yet"}
               </p>
             </div>
           </section>
@@ -316,7 +314,8 @@ function ExerciseBank({
                 Listening &amp; Reading
               </h2>
               <p className="mt-1 text-xs text-[var(--admin-muted)]">
-                Chọn Part để xem, thêm thủ công hoặc import ngân hàng bài tập.
+                Select a Part to view, manually add, or import the exercise
+                bank.
               </p>
             </div>
             <span className="text-xs font-bold text-[var(--admin-muted)]">
@@ -345,15 +344,15 @@ function ExerciseBank({
                       </p>
                     </div>
                     <span className="text-xs font-bold text-[var(--admin-brand-orange)]">
-                      {(metrics?.questionCount ?? 0).toLocaleString("vi-VN")}{" "}
-                      câu
+                      {(metrics?.questionCount ?? 0).toLocaleString("en-US")}{" "}
+                      questions
                     </span>
                   </div>
                   <span className="mt-5 inline-flex rounded-md bg-[#fff0e8] px-2 py-1 text-[11px] font-bold text-[var(--admin-brand-orange)]">
                     {definition.type}
                   </span>
                   <span className="mt-4 flex items-center justify-between border-t border-[#ffd8cb] pt-3 text-xs font-bold text-[var(--admin-brand-orange)]">
-                    Xem bài tập <span aria-hidden="true">→</span>
+                    View exercises <span aria-hidden="true">→</span>
                   </span>
                 </button>
               );
@@ -410,7 +409,7 @@ function PartWorkspace({
           setError(
             reason instanceof Error
               ? reason.message
-              : "Không thể tải danh sách bài tập.",
+              : "Unable to load exercise list.",
           );
       });
     return () => controller.abort();
@@ -430,15 +429,15 @@ function PartWorkspace({
             onClick={onBack}
             type="button"
           >
-            <ExamIcon className="size-4" name="arrow-left" /> Quay lại ngân hàng
+            <ExamIcon className="size-4" name="arrow-left" /> Back to bank
           </button>
           <h2 className="text-2xl font-semibold tracking-tight text-[var(--admin-ink)]">
             Part {definition.part}: {definition.name}{" "}
             <span className="text-lg">({definition.vietnamese})</span>
           </h2>
           <p className="mt-2 text-sm text-[var(--admin-muted)]">
-            Quản lý {count.toLocaleString("vi-VN")} câu hỏi trong ngân hàng độc
-            lập của Part này.
+            Manage {count.toLocaleString("en-US")} questions in this Part&apos;s
+            independent bank.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -446,14 +445,14 @@ function PartWorkspace({
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)] transition hover:border-[var(--admin-brand-orange)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
             href={`/api/admin/lr-exercise-bank/templates/${definition.part}`}
           >
-            <ExamIcon className="size-4" name="file" /> Tải file mẫu
+            <ExamIcon className="size-4" name="file" /> Download template
           </a>
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)] transition hover:border-[var(--admin-brand-orange)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
             onClick={() => setImportOpen(true)}
             type="button"
           >
-            <ExamIcon className="size-4" name="import" /> Import từ Excel
+            <ExamIcon className="size-4" name="import" /> Import from Excel
           </button>
           <button
             className="admin-primary-action inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
@@ -461,7 +460,7 @@ function PartWorkspace({
             type="button"
           >
             <ExamIcon className="size-4" name="plus" />
-            {definition.grouped ? "Thêm cụm bài tập" : "Thêm câu hỏi"}
+            {definition.grouped ? "Add exercise group" : "Add question"}
           </button>
         </div>
       </div>
@@ -471,21 +470,21 @@ function PartWorkspace({
           <label className="flex h-10 min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-white px-3 text-[var(--admin-muted)] focus-within:border-[var(--admin-brand-orange)] focus-within:ring-2 focus-within:ring-orange-100">
             <ExamIcon className="size-4" name="search" />
             <input
-              aria-label="Tìm kiếm bài tập"
+              aria-label="Search exercises"
               className="min-w-0 flex-1 bg-transparent text-sm text-[var(--admin-ink)] outline-none placeholder:text-[var(--admin-muted)]"
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm theo mã hoặc nội dung câu hỏi..."
+              placeholder="Search by code or question content..."
               value={query}
             />
           </label>
           <FilterSelect
-            label="Độ khó"
+            label="Difficulty"
             onChange={setDifficulty}
             value={difficulty}
             values={["EASY", "MEDIUM", "HARD"]}
           />
           <FilterSelect
-            label="Trạng thái"
+            label="Status"
             onChange={setStatus}
             value={status}
             values={["DRAFT", "PUBLISHED", "ARCHIVED"]}
@@ -508,7 +507,7 @@ function PartWorkspace({
               setItems(null);
               setRetry((value) => value + 1);
             }}
-            title="Không thể tải danh sách bài tập"
+            title="Unable to load exercise list"
           />
         ) : (items?.items.length ?? 0) === 0 ? (
           <EmptyPart definition={definition} />
@@ -566,7 +565,7 @@ function FilterSelect({
       onChange={(event) => onChange(event.target.value)}
       value={value}
     >
-      <option value="">{label}: Tất cả</option>
+      <option value="">{label}: All</option>
       {values.map((option) => (
         <option key={option} value={option}>
           {option}
@@ -583,11 +582,11 @@ function EmptyPart({ definition }: { definition: (typeof parts)[number] }) {
         <ExamIcon className="size-6" name="book" />
       </span>
       <h3 className="mt-4 text-base font-bold text-[var(--admin-ink)]">
-        Chưa có bài tập Part {definition.part}
+        No Part {definition.part} exercises yet
       </h3>
       <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-[var(--admin-muted)]">
-        Tải file mẫu để nhập Excel, hoặc thêm{" "}
-        {definition.grouped ? "một cụm bài tập" : "một câu hỏi"} thủ công.
+        Download the template to import via Excel, or manually add{" "}
+        {definition.grouped ? "an exercise group" : "a question"}.
       </p>
     </div>
   );
@@ -607,13 +606,13 @@ function ItemTable({
       <table className="min-w-[920px] w-full text-left">
         <thead className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[10px] font-bold tracking-[0.11em] text-[var(--admin-muted)]">
           <tr>
-            <th className="px-5 py-3">MÃ</th>
-            <th className="px-5 py-3">NỘI DUNG</th>
-            <th className="px-5 py-3">DỮ LIỆU CHUNG</th>
-            <th className="px-5 py-3">SỐ CÂU</th>
-            <th className="px-5 py-3">CHỦ ĐỀ</th>
-            <th className="px-5 py-3">ĐỘ KHÓ</th>
-            <th className="px-5 py-3">TRẠNG THÁI</th>
+            <th className="px-5 py-3">CODE</th>
+            <th className="px-5 py-3">CONTENT</th>
+            <th className="px-5 py-3">SHARED DATA</th>
+            <th className="px-5 py-3">QUESTIONS</th>
+            <th className="px-5 py-3">TOPIC</th>
+            <th className="px-5 py-3">DIFFICULTY</th>
+            <th className="px-5 py-3">STATUS</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--admin-border)]">
@@ -632,17 +631,18 @@ function ItemTable({
                     {definition.grouped
                       ? first?.prompt
                       : item.audioUrl
-                        ? "Có audio đính kèm"
-                        : "Câu hỏi độc lập"}
+                        ? "Audio attached"
+                        : "Standalone question"}
                   </p>
                 </td>
                 <td className="px-5 py-4 text-xs text-[var(--admin-ink-soft)]">
                   {item.audioUrl ? "Audio" : "Text"}
-                  {item.imageUrl ? " · Hình ảnh" : ""}
+                  {item.imageUrl ? " · Image" : ""}
                 </td>
                 <td className="px-5 py-4">
                   <span className="rounded-full bg-[var(--admin-nav-active)] px-2.5 py-1 text-xs font-bold text-[var(--admin-brand-red)]">
-                    {item.questions.length} câu
+                    {item.questions.length}{" "}
+                    {item.questions.length === 1 ? "question" : "questions"}
                   </span>
                 </td>
                 <td className="px-5 py-4">
@@ -662,8 +662,8 @@ function ItemTable({
         </tbody>
       </table>
       <footer className="border-t border-[var(--admin-border)] px-5 py-3 text-xs text-[var(--admin-muted)]">
-        Hiển thị {items.length} / {total.toLocaleString("vi-VN")}{" "}
-        {definition.grouped ? "cụm bài tập" : "câu hỏi"}
+        Showing {items.length} / {total.toLocaleString("en-US")}{" "}
+        {definition.grouped ? "exercise groups" : "questions"}
       </footer>
     </div>
   );
@@ -684,7 +684,7 @@ function ImportPartModal({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!file) {
-      setError("Hãy chọn file Excel .xlsx trước khi import.");
+      setError("Please select an Excel .xlsx file before importing.");
       return;
     }
     setBusy(true);
@@ -695,7 +695,7 @@ function ImportPartModal({
       setError(
         reason instanceof Error
           ? reason.message
-          : "Không thể import file Excel.",
+          : "Unable to import Excel file.",
       );
     } finally {
       setBusy(false);
@@ -704,15 +704,16 @@ function ImportPartModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Workbook sẽ được kiểm tra theo cấu trúc của Part này trước khi lưu toàn bộ dữ liệu."
-      title={`Import Part ${definition.part} từ Excel`}
+      subtitle="The workbook will be validated against this Part's structure before saving all data."
+      title={`Import Part ${definition.part} from Excel`}
     >
       <form onSubmit={submit}>
         <a
           className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--admin-brand-red)]/25 bg-[var(--admin-danger-soft)] px-3 py-3 text-sm font-bold text-[var(--admin-brand-red)] hover:underline"
           href={`/api/admin/lr-exercise-bank/templates/${definition.part}`}
         >
-          <ExamIcon className="size-4" name="file" /> Tải file mẫu Excel (.xlsx)
+          <ExamIcon className="size-4" name="file" /> Download Excel template
+          (.xlsx)
         </a>
         <label className="grid min-h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--admin-brand-orange)] bg-[var(--admin-surface-muted)] px-4 text-center">
           <span>
@@ -721,10 +722,10 @@ function ImportPartModal({
               name="upload"
             />
             <span className="mt-3 block text-sm font-bold text-[var(--admin-ink)]">
-              {file ? file.name : "Chọn file Excel (.xlsx)"}
+              {file ? file.name : "Choose Excel file (.xlsx)"}
             </span>
             <span className="mt-1 block text-xs text-[var(--admin-muted)]">
-              Dung lượng tối đa 10MB
+              Max file size 10MB
             </span>
           </span>
           <input
@@ -744,7 +745,7 @@ function ImportPartModal({
             {error}
           </p>
         )}
-        <ModalFooter busy={busy} label="Tải lên và import" onClose={onClose} />
+        <ModalFooter busy={busy} label="Upload and import" onClose={onClose} />
       </form>
     </Modal>
   );
@@ -794,7 +795,7 @@ function CreatePartDrawer({
       onComplete();
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể lưu bài tập.",
+        reason instanceof Error ? reason.message : "Unable to save exercise.",
       );
     } finally {
       setBusy(false);
@@ -803,18 +804,18 @@ function CreatePartDrawer({
   return (
     <div className="fixed inset-0 z-[80] flex justify-end">
       <button
-        aria-label="Đóng form thêm bài tập"
+        aria-label="Close add exercise form"
         className="absolute inset-0 bg-stone-950/35 backdrop-blur-[2px]"
         onClick={onClose}
         type="button"
       />
       <aside
-        aria-label={`Thêm Part ${definition.part}`}
+        aria-label={`Add Part ${definition.part}`}
         className="relative flex h-full w-full max-w-3xl flex-col overflow-y-auto bg-[var(--admin-surface)] shadow-2xl"
       >
         <header className="sticky top-0 z-10 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-5">
           <button
-            aria-label="Đóng"
+            aria-label="Close"
             className="absolute right-5 top-5 grid size-9 place-items-center rounded-lg text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
             onClick={onClose}
             type="button"
@@ -825,14 +826,14 @@ function CreatePartDrawer({
             PART {definition.part}: {definition.name}
           </p>
           <h2 className="mt-2 text-xl font-bold text-[var(--admin-ink)]">
-            Thêm {definition.grouped ? "cụm bài tập" : "câu hỏi"} mới
+            Add new {definition.grouped ? "exercise group" : "question"}
           </h2>
         </header>
         <form className="flex flex-1 flex-col" onSubmit={submit}>
           <div className="space-y-6 px-6 py-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
-                label="Mã"
+                label="Code"
                 onChange={(value) =>
                   setInput((current) => ({ ...current, code: value }))
                 }
@@ -840,7 +841,7 @@ function CreatePartDrawer({
                 value={input.code}
               />
               <TextField
-                label="Chủ đề"
+                label="Topic"
                 onChange={(value) =>
                   setInput((current) => ({ ...current, topic: value }))
                 }
@@ -848,7 +849,7 @@ function CreatePartDrawer({
                 value={input.topic}
               />
               <SelectField
-                label="Độ khó"
+                label="Difficulty"
                 onChange={(value) =>
                   setInput((current) => ({
                     ...current,
@@ -860,7 +861,7 @@ function CreatePartDrawer({
                 values={["EASY", "MEDIUM", "HARD"]}
               />
               <SelectField
-                label="Trạng thái"
+                label="Status"
                 onChange={(value) =>
                   setInput((current) => ({
                     ...current,
@@ -873,7 +874,7 @@ function CreatePartDrawer({
             </div>
             {definition.grouped && (
               <TextArea
-                label="Nội dung chung / transcript"
+                label="Shared context / transcript"
                 onChange={(value) =>
                   setInput((current) => ({ ...current, context: value }))
                 }
@@ -883,7 +884,7 @@ function CreatePartDrawer({
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
-                label="Audio URL (không bắt buộc)"
+                label="Audio URL (optional)"
                 onChange={(value) =>
                   setInput((current) => ({
                     ...current,
@@ -893,7 +894,7 @@ function CreatePartDrawer({
                 value={input.audioUrl ?? ""}
               />
               <TextField
-                label="Image URL (không bắt buộc)"
+                label="Image URL (optional)"
                 onChange={(value) =>
                   setInput((current) => ({
                     ...current,
@@ -906,14 +907,14 @@ function CreatePartDrawer({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-[var(--admin-ink)]">
-                  Câu hỏi con
+                  Sub-questions
                 </h3>
                 <p className="mt-1 text-xs text-[var(--admin-muted)]">
                   {definition.grouped
                     ? definition.part === 7
-                      ? "Part 7 chứa từ 2 đến 5 câu hỏi con."
-                      : `Part ${definition.part} chứa đúng ${minimumQuestionCount(definition.part)} câu hỏi con.`
-                    : "Part này chỉ chứa đúng một câu hỏi."}
+                      ? "Part 7 contains 2 to 5 sub-questions."
+                      : `Part ${definition.part} contains exactly ${minimumQuestionCount(definition.part)} sub-questions.`
+                    : "This Part contains exactly one question."}
                 </p>
               </div>
               {definition.grouped &&
@@ -935,7 +936,7 @@ function CreatePartDrawer({
                     }
                     type="button"
                   >
-                    + Thêm câu
+                    + Add question
                   </button>
                 )}
             </div>
@@ -963,14 +964,14 @@ function CreatePartDrawer({
               onClick={onClose}
               type="button"
             >
-              Hủy
+              Cancel
             </button>
             <button
               className="admin-primary-action h-10 rounded-lg px-4 text-sm font-bold"
               disabled={busy}
               type="submit"
             >
-              {busy ? "Đang lưu..." : "Lưu bài tập"}
+              {busy ? "Saving..." : "Save exercise"}
             </button>
           </footer>
         </form>
@@ -997,17 +998,17 @@ function QuestionEditor({
   return (
     <fieldset className="rounded-xl border border-[var(--admin-border)] p-4">
       <legend className="px-1 text-sm font-bold text-[var(--admin-ink)]">
-        Câu {index + 1}
+        Question {index + 1}
       </legend>
       <div className="grid gap-4">
         <TextField
-          label="Mã câu hỏi"
+          label="Question code"
           onChange={(value) => onChange(index, "code", value)}
           required
           value={question.code}
         />
         <TextArea
-          label="Nội dung câu hỏi"
+          label="Question prompt"
           onChange={(value) => onChange(index, "prompt", value)}
           required
           value={question.prompt}
@@ -1018,7 +1019,7 @@ function QuestionEditor({
             .map((option) => (
               <TextField
                 key={option}
-                label={`Đáp án ${option}`}
+                label={`Option ${option}`}
                 onChange={(value) =>
                   onChange(
                     index,
@@ -1032,13 +1033,13 @@ function QuestionEditor({
             ))}
         </div>
         <SelectField
-          label="Đáp án đúng"
+          label="Correct answer"
           onChange={(value) => onChange(index, "correctKey", value)}
           value={question.correctKey}
           values={part === 2 ? ["A", "B", "C"] : ["A", "B", "C", "D"]}
         />
         <TextArea
-          label="Giải thích (không bắt buộc)"
+          label="Explanation (optional)"
           onChange={(value) => onChange(index, "explanation", value || null)}
           value={question.explanation ?? ""}
         />
@@ -1140,8 +1141,8 @@ function CompleteTests() {
   const metrics = summarizeExamDashboard(result?.items ?? [], profiles ?? []);
   const visibleItems = (result?.items ?? []).filter((item) => {
     const matchesQuery = `${item.code} ${item.title}`
-      .toLocaleLowerCase("vi-VN")
-      .includes(query.trim().toLocaleLowerCase("vi-VN"));
+      .toLocaleLowerCase("en-US")
+      .includes(query.trim().toLocaleLowerCase("en-US"));
     const matchesStatus =
       statusFilter === "ALL" || item.status === statusFilter;
     return matchesQuery && matchesStatus;
@@ -1160,7 +1161,7 @@ function CompleteTests() {
           setError(
             reason instanceof Error
               ? reason.message
-              : "Không thể tải danh sách đề thi.",
+              : "Unable to load test list.",
           );
       });
     return () => controller.abort();
@@ -1183,33 +1184,35 @@ function CompleteTests() {
       setProfiles(await getScoreProfiles());
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể tải barem điểm.",
+        reason instanceof Error
+          ? reason.message
+          : "Unable to load score profiles.",
       );
     }
   }
   return (
     <>
       <section
-        aria-label="Tổng quan đề thi"
+        aria-label="Test overview"
         className="mb-5 grid gap-3 lg:grid-cols-3"
       >
         <MetricCard
           accent="green"
-          detail="Bất biến · sẵn sàng cho thí sinh"
-          label="ĐỀ ĐANG CÔNG BỐ"
-          value={`${metrics.publishedCount} ${metrics.publishedCount === 1 ? "đề" : "đề"}`}
+          detail="Immutable · ready for test takers"
+          label="PUBLISHED TESTS"
+          value={`${metrics.publishedCount} ${metrics.publishedCount === 1 ? "test" : "tests"}`}
         />
         <MetricCard
           accent="amber"
-          detail="Được phép chỉnh sửa nội dung và media"
-          label="BẢN NHÁP ĐANG DỰNG"
-          value={`${metrics.draftCount} ${metrics.draftCount === 1 ? "bản nháp" : "bản nháp"}`}
+          detail="Content and media can be edited"
+          label="DRAFTS IN PROGRESS"
+          value={`${metrics.draftCount} ${metrics.draftCount === 1 ? "draft" : "drafts"}`}
         />
         <MetricCard
           accent="blue"
-          detail="Đủ 202/202 mốc Listening và Reading"
-          label="BAREM ĐIỂM SẴN SÀNG"
-          value={`${metrics.readyScoreProfileCount} ${metrics.readyScoreProfileCount === 1 ? "barem chuẩn" : "barem chuẩn"}`}
+          detail="Complete 202/202 Listening and Reading benchmarks"
+          label="READY SCORE PROFILES"
+          value={`${metrics.readyScoreProfileCount} ${metrics.readyScoreProfileCount === 1 ? "standard profile" : "standard profiles"}`}
         />
       </section>
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -1218,13 +1221,13 @@ function CompleteTests() {
           <input
             className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#94a3b8]"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm mã đề, tên đề L&R..."
+            placeholder="Search L&R test code or title..."
             type="search"
             value={query}
           />
         </label>
         <label className="sr-only" htmlFor="exam-status-filter">
-          Trạng thái đề thi
+          Test status
         </label>
         <select
           className="h-9 rounded-md border border-[#e2e8f0] bg-white px-3 text-[11px] text-[var(--admin-ink-soft)] outline-none focus:border-[var(--admin-brand-orange)]"
@@ -1234,19 +1237,20 @@ function CompleteTests() {
           }
           value={statusFilter}
         >
-          <option value="ALL">Trạng thái: Tất cả</option>
-          <option value="Published">Đã công bố</option>
-          <option value="Draft">Bản nháp</option>
+          <option value="ALL">Status: All</option>
+          <option value="Published">Published</option>
+          <option value="Draft">Draft</option>
         </select>
       </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold tracking-tight text-[var(--admin-ink)]">
-            Đề thi Listening &amp; Reading
+            Listening &amp; Reading Tests
           </h2>
           <p className="mt-1 text-xs text-[var(--admin-muted)]">
-            Tạo bản nháp rồi nhập trực tiếp 200 câu, context và media trong
-            workspace. Ngân hàng bài tập theo Part nằm riêng ở tab Bài tập.
+            Create a draft to directly enter 200 questions, context, and media
+            in the workspace. Part-based exercise banks are located separately
+            in the Exercises tab.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1256,21 +1260,21 @@ function CompleteTests() {
             href="/api/admin/exams/import-template"
             prefetch={false}
           >
-            Tải mẫu Excel
+            Download Excel template
           </Link>
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)]"
             onClick={() => setImportOpen(true)}
             type="button"
           >
-            <ExamIcon className="size-4" name="import" /> Import đề
+            <ExamIcon className="size-4" name="import" /> Import test
           </button>
           <button
             className="admin-primary-action inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
             onClick={openCreate}
             type="button"
           >
-            <ExamIcon className="size-4" name="plus" /> Tạo đề mới
+            <ExamIcon className="size-4" name="plus" /> Create new test
           </button>
         </div>
       </div>
@@ -1292,7 +1296,7 @@ function CompleteTests() {
               setResult(null);
               setRetry((value) => value + 1);
             }}
-            title="Không thể tải danh sách đề thi"
+            title="Unable to load test list"
           />
         ) : (result?.items.length ?? 0) === 0 ? (
           <div className="px-6 py-20 text-center">
@@ -1300,11 +1304,11 @@ function CompleteTests() {
               <ExamIcon className="size-6" name="book" />
             </span>
             <h3 className="mt-4 text-base font-bold text-[var(--admin-ink)]">
-              Chưa có đề thi hoàn chỉnh
+              No complete tests yet
             </h3>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Tạo bản nháp để nhập trực tiếp 200 câu, context và media theo từng
-              Part; hoặc import workbook hoàn chỉnh.
+              Create a draft to directly enter 200 questions, context, and media
+              by Part; or import a complete workbook.
             </p>
           </div>
         ) : (
@@ -1312,12 +1316,12 @@ function CompleteTests() {
             <table className="min-w-[800px] w-full text-left">
               <thead className="border-b border-[var(--admin-border)] bg-[#faf7f5] text-[9px] font-semibold tracking-[0.08em] text-[var(--admin-muted)]">
                 <tr>
-                  <th className="px-5 py-3">MÃ ĐỀ</th>
-                  <th className="px-5 py-3">TÊN ĐỀ</th>
-                  <th className="px-5 py-3">CẤU TRÚC</th>
-                  <th className="px-5 py-3">CẬP NHẬT</th>
-                  <th className="px-5 py-3">TRẠNG THÁI</th>
-                  <th className="px-5 py-3">THAO TÁC</th>
+                  <th className="px-5 py-3">CODE</th>
+                  <th className="px-5 py-3">TITLE</th>
+                  <th className="px-5 py-3">STRUCTURE</th>
+                  <th className="px-5 py-3">UPDATED</th>
+                  <th className="px-5 py-3">STATUS</th>
+                  <th className="px-5 py-3">ACTIONS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--admin-border)]">
@@ -1334,12 +1338,12 @@ function CompleteTests() {
                         {item.title}
                       </p>
                       <p className="mt-1 text-[10px] text-[var(--admin-muted)]">
-                        Revision {item.versionNumber} · 200 câu
+                        Revision {item.versionNumber} · 200 questions
                       </p>
                     </td>
                     <td className="px-5 py-4">
                       <span className="text-xs text-[var(--admin-ink-soft)]">
-                        200 câu · L&amp;R
+                        200 questions · L&amp;R
                       </span>
                     </td>
                     <td className="px-5 py-4 text-[11px] text-[var(--admin-muted)]">
@@ -1350,11 +1354,11 @@ function CompleteTests() {
                     </td>
                     <td className="px-5 py-4">
                       <Link
-                        aria-label={`Mở ${item.code}`}
+                        aria-label={`Open ${item.code}`}
                         className="inline-flex h-7 items-center justify-center rounded-md bg-[var(--admin-surface-muted)] px-2 text-[10px] font-semibold text-[var(--admin-ink-soft)] transition hover:bg-[var(--admin-nav-active)] hover:text-[var(--admin-brand-red)]"
                         href={`/admin/exams/reading/${item.examId}/${item.revisionId}`}
                       >
-                        {item.status === "Draft" ? "Tiếp tục soạn" : "Xem"}
+                        {item.status === "Draft" ? "Continue editing" : "View"}
                       </Link>
                     </td>
                   </tr>
@@ -1445,7 +1449,7 @@ function CreateExamModal({
       );
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể tạo đề thi.",
+        reason instanceof Error ? reason.message : "Unable to create test.",
       );
     } finally {
       setBusy(false);
@@ -1454,13 +1458,13 @@ function CreateExamModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Hệ thống tạo một bản nháp có đúng 200 slot. Sau đó bạn nhập lần lượt câu hỏi, context và media trong workspace."
-      title="Tạo đề thi mới"
+      subtitle="The system creates a draft with exactly 200 slots. You can then enter questions, context, and media in the workspace."
+      title="Create new test"
     >
       <form onSubmit={submit}>
         <div className="space-y-4">
           <section
-            aria-label="Loại đề thi"
+            aria-label="Test type"
             className="rounded-lg border border-[#3b82f6] bg-[#eff6ff] p-3"
           >
             <div className="flex items-start gap-2">
@@ -1472,13 +1476,13 @@ function CreateExamModal({
                   Listening &amp; Reading
                 </strong>
                 <small className="mt-0.5 block text-[10px] text-[#2563eb]">
-                  120 phút · 200 câu · Thang điểm ETS 10–990
+                  120 minutes · 200 questions · ETS 10–990 scale
                 </small>
               </span>
             </div>
           </section>
           <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
-            Mã đề<span className="text-[var(--admin-brand-red)]"> *</span>
+            Test code<span className="text-[var(--admin-brand-red)]"> *</span>
             <input
               className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 text-sm font-normal text-[var(--admin-ink)]"
               name="code"
@@ -1486,7 +1490,7 @@ function CreateExamModal({
             />
           </label>
           <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
-            Tên đề<span className="text-[var(--admin-brand-red)]"> *</span>
+            Test title<span className="text-[var(--admin-brand-red)]"> *</span>
             <input
               className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 text-sm font-normal text-[var(--admin-ink)]"
               name="title"
@@ -1494,7 +1498,7 @@ function CreateExamModal({
             />
           </label>
           <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
-            Barem điểm
+            Score profile
             <select
               className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 text-sm font-normal"
               disabled={!profiles}
@@ -1502,12 +1506,16 @@ function CreateExamModal({
               required
             >
               <option value="">
-                {profiles ? "Chọn barem" : "Đang tải barem..."}
+                {profiles
+                  ? "Select score profile"
+                  : "Loading score profiles..."}
               </option>
               {profiles?.map((profile) => (
                 <option key={profile.id} value={profile.id}>
                   {profile.name}
-                  {profile.isComplete ? "" : " (chưa đủ 101 mốc)"}
+                  {profile.isComplete
+                    ? ""
+                    : " (incomplete: fewer than 101 benchmarks)"}
                 </option>
               ))}
             </select>
@@ -1524,7 +1532,7 @@ function CreateExamModal({
         <ModalFooter
           busy={busy}
           disabled={!profiles?.length}
-          label="Tạo bản nháp"
+          label="Create draft"
           onClose={onClose}
         />
       </form>
@@ -1548,7 +1556,7 @@ function ImportExamModal({
     const data = new FormData(event.currentTarget);
     const workbook = data.get("workbook");
     if (!(workbook instanceof File)) {
-      setError("Chọn workbook XLSX trước khi import.");
+      setError("Choose an XLSX workbook before importing.");
       return;
     }
     setBusy(true);
@@ -1557,7 +1565,7 @@ function ImportExamModal({
       onCreated(await importReadingExam(workbook));
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể import đề thi.",
+        reason instanceof Error ? reason.message : "Unable to import test.",
       );
     } finally {
       setBusy(false);
@@ -1566,8 +1574,8 @@ function ImportExamModal({
   return (
     <Modal
       onClose={onClose}
-      subtitle="Workbook cần có Manifest, Blocks, ContextBlocks và Questions."
-      title="Import đề thi hoàn chỉnh"
+      subtitle="The workbook must include Manifest, Blocks, ContextBlocks, and Questions."
+      title="Import complete test"
     >
       <form onSubmit={submit}>
         <div className="space-y-4">
@@ -1577,13 +1585,13 @@ function ImportExamModal({
             href="/api/admin/exams/import-template"
             prefetch={false}
           >
-            <ExamIcon className="size-4" name="file" /> Tải file Excel mẫu 200
-            câu
+            <ExamIcon className="size-4" name="file" /> Download 200-question
+            Excel template
           </Link>
           <p className="-mt-2 text-xs leading-5 text-[var(--admin-muted)]">
-            Thay ScoreProfileId, các mã ImageAssetId ở Part 1 và nội dung mẫu
-            trước khi import. Audio Listening và ảnh bắt buộc sẽ được tải trong
-            workspace media sau khi import.
+            Replace ScoreProfileId, the Part 1 ImageAssetId codes, and sample
+            content before importing. Listening audio and required images will
+            be uploaded in the media workspace after import.
           </p>
           <FileField accept=".xlsx" label="Workbook XLSX" name="workbook" />
         </div>
@@ -1597,7 +1605,7 @@ function ImportExamModal({
         )}
         <ModalFooter
           busy={busy}
-          label="Import và mở bản nháp"
+          label="Import and open draft"
           onClose={onClose}
         />
       </form>
@@ -1649,7 +1657,7 @@ function ErrorPanel({
         onClick={onRetry}
         type="button"
       >
-        Thử lại
+        Try again
       </button>
     </div>
   );
@@ -1669,7 +1677,7 @@ function Modal({
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center p-4">
       <button
-        aria-label="Đóng hộp thoại"
+        aria-label="Close dialog"
         className="absolute inset-0 bg-stone-950/35 backdrop-blur-[2px]"
         onClick={onClose}
         type="button"
@@ -1680,7 +1688,7 @@ function Modal({
         open
       >
         <button
-          aria-label="Đóng"
+          aria-label="Close"
           className="absolute right-4 top-4 grid size-7 place-items-center rounded-md text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
           onClick={onClose}
           type="button"
@@ -1719,14 +1727,14 @@ function ModalFooter({
         onClick={onClose}
         type="button"
       >
-        Hủy
+        Cancel
       </button>
       <button
         className="admin-primary-action col-start-3 h-10 justify-self-end rounded-lg px-4 text-sm font-bold"
         disabled={busy || disabled}
         type="submit"
       >
-        {busy ? "Đang xử lý..." : label}
+        {busy ? "Processing..." : label}
       </button>
     </div>
   );

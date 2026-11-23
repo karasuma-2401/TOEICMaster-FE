@@ -52,7 +52,7 @@ describe("SpeakingEvaluationPanel", () => {
 
     expect(
       await screen.findByText(
-        "Chấm AI cho Speaking chưa được bật trên máy chủ",
+        "AI grading for Speaking is not enabled on the server",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -66,30 +66,30 @@ describe("SpeakingEvaluationPanel", () => {
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     const button = await screen.findByRole("button", {
-      name: "Đồng ý & Bắt đầu chấm AI →",
+      name: "Agree & Start AI Grading →",
     });
     expect(button).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(button);
 
-    expect(await screen.findByText("Đã xếp hàng chờ chấm")).toBeInTheDocument();
+    expect(await screen.findByText("Queued for grading")).toBeInTheDocument();
     expect(grantSpeakingEvaluationConsent).toHaveBeenCalledOnce();
   });
 
   it("shows the backend reason when the request is refused", async () => {
     vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
     vi.mocked(grantSpeakingEvaluationConsent).mockRejectedValue(
-      new SpeakingApiError(409, "Bản ghi cuối vẫn đang được tải lên."),
+      new SpeakingApiError(409, "The final recording is still uploading."),
     );
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     fireEvent.click(await screen.findByRole("checkbox"));
     fireEvent.click(
-      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
+      screen.getByRole("button", { name: "Agree & Start AI Grading →" }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Bản ghi cuối vẫn đang được tải lên.",
+      "The final recording is still uploading.",
     );
   });
 
@@ -98,19 +98,19 @@ describe("SpeakingEvaluationPanel", () => {
     vi.mocked(grantSpeakingEvaluationConsent).mockRejectedValue(
       new SpeakingApiError(
         409,
-        "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua. Hãy đăng nhập hoặc thử lại sau.",
+        "Anonymous session has already used the AI evaluation in the past 24 hours. Please log in or try again later.",
       ),
     );
     render(<SpeakingEvaluationPanel attempt={submitted()} uploading={false} />);
 
     fireEvent.click(await screen.findByRole("checkbox"));
     fireEvent.click(
-      screen.getByRole("button", { name: "Đồng ý & Bắt đầu chấm AI →" }),
+      screen.getByRole("button", { name: "Agree & Start AI Grading →" }),
     );
 
     expect(
       await screen.findByRole("link", {
-        name: "Đăng nhập để nhận thêm lượt →",
+        name: "Log in for more evaluations →",
       }),
     ).toHaveAttribute(
       "href",
@@ -122,21 +122,24 @@ describe("SpeakingEvaluationPanel", () => {
   it("renders the completed report with criteria averages", async () => {
     vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
     vi.mocked(getSpeakingAttempts).mockResolvedValue([]);
+    const evaluation = evaluationDto({
+      summary: "You answered with the correct schedule details.",
+    });
     render(
       <SpeakingEvaluationPanel
-        attempt={submitted({ evaluation: evaluationDto() })}
+        attempt={submitted({ evaluation })}
         uploading={false}
       />,
     );
 
     expect(screen.getByText("130 / 200")).toBeInTheDocument();
     expect(
-      screen.getByText("Bạn trả lời đúng thông tin trong lịch."),
+      screen.getByText("You answered with the correct schedule details."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Phát âm")).toBeInTheDocument();
+    expect(screen.getByText("Pronunciation")).toBeInTheDocument();
     expect(screen.getByText("79/100")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+      screen.getByRole("link", { name: "Go to attempt history" }),
     ).toHaveAttribute("href", "/history");
     expect(getSpeakingAttempt).not.toHaveBeenCalled();
   });
@@ -153,7 +156,7 @@ describe("SpeakingEvaluationPanel", () => {
             status: "FAILED",
             items: [],
             failureMessage:
-              "Dịch vụ nhận diện giọng nói chưa được cấu hình đúng.",
+              "The speech recognition service is not configured properly.",
           }),
         })}
         uploading={false}
@@ -161,9 +164,11 @@ describe("SpeakingEvaluationPanel", () => {
     );
 
     expect(
-      screen.getByText("Dịch vụ nhận diện giọng nói chưa được cấu hình đúng."),
+      screen.getByText(
+        "The speech recognition service is not configured properly.",
+      ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Thử chấm lại" }));
-    expect(await screen.findByText("Đã xếp hàng chờ chấm")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry grading" }));
+    expect(await screen.findByText("Queued for grading")).toBeInTheDocument();
   });
 });

@@ -40,15 +40,15 @@ export function KnowledgeEditorTopbar({
           className={`rounded-lg border border-(--admin-border) bg-white px-3 py-1.5 text-xs font-semibold text-(--admin-ink-soft) transition hover:bg-(--admin-surface-muted) ${adminFocus}`}
           href="/admin/knowledge"
         >
-          ← Danh sách
+          ← Back to list
         </Link>
         <div>
           <h1 className="text-base font-bold text-(--admin-ink)">
-            {article ? "Chỉnh sửa bài viết" : "Tạo bài viết kiến thức mới"}
+            {article ? "Edit article" : "Create new knowledge article"}
           </h1>
           <p className="text-xs text-(--admin-muted)">
-            Trạng thái: <strong>{currentStatus}</strong> - {liveReadMinutes}{" "}
-            phút đọc - {tocCount} mục lục
+            Status: <strong>{currentStatus}</strong> - {liveReadMinutes} min
+            read - {tocCount} headings
           </p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function KnowledgeEditorTopbar({
             onClick={() => onModeChange("edit")}
             type="button"
           >
-            Soạn thảo
+            Edit
           </button>
           <button
             className={`cursor-pointer rounded-md px-3 py-1.5 transition ${adminFocus} ${
@@ -75,7 +75,7 @@ export function KnowledgeEditorTopbar({
             onClick={() => onModeChange("preview")}
             type="button"
           >
-            Xem trước (Preview)
+            Preview
           </button>
         </div>
 
@@ -85,14 +85,14 @@ export function KnowledgeEditorTopbar({
           onClick={onSave}
           title={
             article && !hasChanges
-              ? "Chưa có thay đổi nào để lưu"
+              ? "No changes to save"
               : article
-                ? "Lưu thay đổi bài viết"
-                : "Lưu bài viết bản nháp"
+                ? "Save article changes"
+                : "Save draft article"
           }
           type="button"
         >
-          {saving ? "Đang lưu..." : article ? "Lưu thay đổi" : "Lưu bản nháp"}
+          {saving ? "Saving..." : article ? "Save changes" : "Save draft"}
         </button>
 
         {article ? (
@@ -104,7 +104,7 @@ export function KnowledgeEditorTopbar({
                 onClick={() => onStatusAction("publish")}
                 type="button"
               >
-                Xuất bản
+                Publish
               </button>
             ) : (
               <button
@@ -113,7 +113,7 @@ export function KnowledgeEditorTopbar({
                 onClick={() => onStatusAction("unpublish")}
                 type="button"
               >
-                Gỡ xuất bản
+                Unpublish
               </button>
             )}
             {article.status !== "Archived" ? (
@@ -123,7 +123,7 @@ export function KnowledgeEditorTopbar({
                 onClick={() => onStatusAction("archive")}
                 type="button"
               >
-                Lưu trữ
+                Archive
               </button>
             ) : null}
             <button
@@ -132,12 +132,12 @@ export function KnowledgeEditorTopbar({
               onClick={() => onStatusAction("delete")}
               title={
                 article.status === "Published"
-                  ? "Gỡ xuất bản trước khi xóa"
-                  : "Xóa bài viết"
+                  ? "Unpublish before deleting"
+                  : "Delete article"
               }
               type="button"
             >
-              Xóa
+              Delete
             </button>
           </>
         ) : null}

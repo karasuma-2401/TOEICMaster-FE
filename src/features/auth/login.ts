@@ -10,13 +10,12 @@ export function validateLogin(input: {
   const errors: LoginFieldErrors = {};
   const email = input.email.trim();
 
-  if (!email) errors.email = "Vui lòng nhập email.";
+  if (!email) errors.email = "Please enter your email.";
   else if (email.length > 254 || !emailPattern.test(email))
-    errors.email = "Email không hợp lệ.";
+    errors.email = "Invalid email address.";
 
-  if (!input.password) errors.password = "Vui lòng nhập mật khẩu.";
-  else if (input.password.length > 128)
-    errors.password = "Mật khẩu không hợp lệ.";
+  if (!input.password) errors.password = "Please enter your password.";
+  else if (input.password.length > 128) errors.password = "Invalid password.";
 
   return errors;
 }
@@ -24,8 +23,8 @@ export function validateLogin(input: {
 export function validateRecoveryEmail(emailInput: string): LoginFieldErrors {
   const email = emailInput.trim();
 
-  if (!email) return { email: "Vui lòng nhập email." };
+  if (!email) return { email: "Please enter your email." };
   if (email.length > 254 || !emailPattern.test(email))
-    return { email: "Email không hợp lệ." };
+    return { email: "Invalid email address." };
   return {};
 }

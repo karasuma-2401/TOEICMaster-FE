@@ -54,7 +54,7 @@ describe("Speaking learner API", () => {
       id: ids.exercise(31),
       code: "SP3-001",
       part: 3,
-      topic: "Thói quen đọc",
+      topic: "Reading habits",
       difficulty: "MEDIUM",
       questionCount: 3,
       durationSeconds: 69,
@@ -93,7 +93,7 @@ describe("Speaking learner API", () => {
       .mockResolvedValueOnce(Response.json(attemptDto()))
       .mockResolvedValueOnce(
         Response.json(
-          { title: "Đã hết thời gian tải bản ghi." },
+          { title: "Recording upload window has expired." },
           { status: 409 },
         ),
       );
@@ -110,7 +110,7 @@ describe("Speaking learner API", () => {
       uploadSpeakingRecording(ids.attempt, 2, blob, 14),
     ).rejects.toMatchObject({
       status: 409,
-      message: "Đã hết thời gian tải bản ghi.",
+      message: "Recording upload window has expired.",
     });
     await expect(
       uploadSpeakingRecording(ids.attempt, 2, new Blob([]), 0),

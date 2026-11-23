@@ -165,14 +165,14 @@ describe("ListeningReadingLibrary", () => {
       name: "ETS 2026 Test 01",
     });
     const card = heading.closest("article") as HTMLElement;
-    expect(within(card).getByText("Bạn đã thi 2 lần")).toBeInTheDocument();
-    expect(within(card).getByText("Tốt nhất: 855 / 990")).toBeInTheDocument();
+    expect(within(card).getByText("Attempted 2 times")).toBeInTheDocument();
+    expect(within(card).getByText("Best: 855 / 990")).toBeInTheDocument();
     expect(screen.getByTestId("attempt-history-section")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Bài tập Listening" }),
+      screen.getByRole("link", { name: "Listening Practice" }),
     ).toHaveAttribute("href", "/listening/practice/1");
     expect(
-      screen.getByRole("link", { name: "Bài tập Reading" }),
+      screen.getByRole("link", { name: "Reading Practice" }),
     ).toHaveAttribute("href", "/reading/practice/5");
   });
 
@@ -202,7 +202,7 @@ describe("ListeningReadingLibrary", () => {
     render(<ListeningReadingLibrary skill="listening-reading" />);
 
     expect(
-      screen.getByText("Đang tải đề thi Listening & Reading…"),
+      screen.getByText("Loading Listening & Reading tests..."),
     ).toBeInTheDocument();
     expect(getLrCatalog).toHaveBeenCalledTimes(1);
     expect(vi.mocked(getLrCatalog).mock.calls[0]?.[0]).toBeInstanceOf(
@@ -213,14 +213,14 @@ describe("ListeningReadingLibrary", () => {
 
     expect(await screen.findByText("ETS 2026 Test 01")).toBeInTheDocument();
     expect(
-      screen.queryByText("Đang tải đề thi Listening & Reading…"),
+      screen.queryByText("Loading Listening & Reading tests..."),
     ).not.toBeInTheDocument();
   });
 
   it("renders error state on failure and recovers with a fresh AbortSignal when retried", async () => {
     let resolveRetry!: (items: LrExamCatalogItemApi[]) => void;
     vi.mocked(getLrCatalog)
-      .mockRejectedValueOnce(new Error("Không thể kết nối máy chủ."))
+      .mockRejectedValueOnce(new Error("Unable to connect to the server."))
       .mockImplementationOnce(
         () =>
           new Promise<LrExamCatalogItemApi[]>((resolve) => {
@@ -231,12 +231,12 @@ describe("ListeningReadingLibrary", () => {
     render(<ListeningReadingLibrary skill="reading" />);
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Không thể kết nối máy chủ.");
+    expect(alert).toHaveTextContent("Unable to connect to the server.");
 
-    fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("Đang tải đề thi Reading…")).toBeInTheDocument();
+    expect(screen.getByText("Loading Reading tests...")).toBeInTheDocument();
     expect(getLrCatalog).toHaveBeenCalledTimes(2);
     expect(vi.mocked(getLrCatalog).mock.calls[1]?.[0]).toBeInstanceOf(
       AbortSignal,
@@ -275,7 +275,7 @@ describe("ListeningReadingPractice", () => {
   it("retries with a fresh AbortSignal and aborts in-flight retry on unmount", async () => {
     let resolveRetry!: (page: LrPracticeItemPageApi) => void;
     vi.mocked(getLrPracticeItems)
-      .mockRejectedValueOnce(new Error("Lỗi tải bài luyện."))
+      .mockRejectedValueOnce(new Error("Failed to load practice items."))
       .mockImplementationOnce(
         () =>
           new Promise<LrPracticeItemPageApi>((resolve) => {
@@ -288,11 +288,11 @@ describe("ListeningReadingPractice", () => {
     );
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Lỗi tải bài luyện.");
+    expect(alert).toHaveTextContent("Failed to load practice items.");
     const firstSignal = vi.mocked(getLrPracticeItems).mock.calls[0]?.[3];
     expect(firstSignal).toBeInstanceOf(AbortSignal);
 
-    fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     expect(getLrPracticeItems).toHaveBeenCalledTimes(2);
     const retrySignal = vi.mocked(getLrPracticeItems).mock.calls[1]?.[3];

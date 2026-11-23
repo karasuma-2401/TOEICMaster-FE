@@ -36,7 +36,7 @@ export function KnowledgeCategoryModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("Vui lòng nhập tên danh mục.");
+      toast.error("Please enter a category name.");
       return;
     }
 
@@ -54,10 +54,10 @@ export function KnowledgeCategoryModal({
           editingCategory.version,
           input,
         );
-        toast.success("Đã cập nhật danh mục.");
+        toast.success("Category updated.");
       } else {
         await createKnowledgeCategory(input);
-        toast.success("Đã tạo danh mục mới.");
+        toast.success("New category created.");
       }
       onSaved();
       onClose();
@@ -65,7 +65,7 @@ export function KnowledgeCategoryModal({
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể lưu danh mục.",
+          : "Could not save category.",
       );
     } finally {
       setSaving(false);
@@ -74,7 +74,7 @@ export function KnowledgeCategoryModal({
 
   return (
     <dialog
-      aria-label={editingCategory ? "Chỉnh sửa danh mục" : "Tạo danh mục mới"}
+      aria-label={editingCategory ? "Edit category" : "New category"}
       aria-modal="true"
       className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4"
       open
@@ -84,21 +84,21 @@ export function KnowledgeCategoryModal({
         onSubmit={handleSubmit}
       >
         <h2 className="text-lg font-bold text-(--admin-ink)">
-          {editingCategory ? "Chỉnh sửa danh mục" : "Tạo danh mục mới"}
+          {editingCategory ? "Edit category" : "New category"}
         </h2>
         <div>
           <label
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-name"
           >
-            Tên danh mục *
+            Category name *
           </label>
           <input
             className={adminInput}
             id="cat-name"
             maxLength={100}
             onChange={(e) => setName(e.target.value)}
-            placeholder="VD: Mẹo làm bài Reading"
+            placeholder="e.g. Reading Strategies"
             required
             value={name}
           />
@@ -108,14 +108,14 @@ export function KnowledgeCategoryModal({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-slug"
           >
-            Slug (để trống để tự sinh từ tên)
+            Slug (leave blank to auto-generate)
           </label>
           <input
             className={adminInput}
             id="cat-slug"
             maxLength={120}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder="meo-lam-bai-reading"
+            placeholder="reading-strategies"
             value={slug}
           />
         </div>
@@ -124,7 +124,7 @@ export function KnowledgeCategoryModal({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-desc"
           >
-            Mô tả ngắn
+            Short description
           </label>
           <textarea
             className={adminTextarea}
@@ -140,7 +140,7 @@ export function KnowledgeCategoryModal({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="cat-order"
           >
-            Thứ tự hiển thị
+            Display order
           </label>
           <input
             className={`${adminInput} max-w-28`}
@@ -153,14 +153,14 @@ export function KnowledgeCategoryModal({
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <button className={adminSecondary} onClick={onClose} type="button">
-            Hủy
+            Cancel
           </button>
           <button
             className={`admin-primary-action inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-bold ${adminFocus}`}
             disabled={saving}
             type="submit"
           >
-            {saving ? "Đang lưu..." : "Lưu danh mục"}
+            {saving ? "Saving..." : "Save category"}
           </button>
         </div>
       </form>

@@ -36,7 +36,7 @@ describe("getAdminUsers", () => {
   });
 
   it("preserves HTTP authorization errors", async () => {
-    vi.mocked(getJson).mockRejectedValue(new ApiError(403, "Không có quyền."));
+    vi.mocked(getJson).mockRejectedValue(new ApiError(403, "Forbidden."));
     await expect(
       getAdminUsers(DEFAULT_ADMIN_USERS_QUERY),
     ).rejects.toMatchObject({ status: 403 });

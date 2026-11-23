@@ -26,7 +26,7 @@ interface KnowledgeMediaPickerModalProps {
 
 export function KnowledgeMediaPickerModal({
   open,
-  title = "Chọn hình ảnh từ thư viện",
+  title = "Choose image from library",
   onClose,
   onSelect,
 }: KnowledgeMediaPickerModalProps) {
@@ -69,7 +69,7 @@ export function KnowledgeMediaPickerModal({
       } catch (err) {
         if (!active || controller.signal.aborted) return;
         toast.error(
-          err instanceof Error ? err.message : "Không thể tải thư viện ảnh.",
+          err instanceof Error ? err.message : "Could not load media library.",
         );
       } finally {
         if (active) setLoading(false);
@@ -91,12 +91,12 @@ export function KnowledgeMediaPickerModal({
     setUploading(true);
     try {
       const uploaded = await uploadKnowledgeImage(file);
-      toast.success("Đã tải lên hình ảnh thành công.");
+      toast.success("Image uploaded successfully.");
       onSelect(uploaded);
       onClose();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Không thể tải lên hình ảnh.",
+        err instanceof Error ? err.message : "Could not upload image.",
       );
     } finally {
       setUploading(false);
@@ -107,14 +107,14 @@ export function KnowledgeMediaPickerModal({
     setDeletingId(asset.id);
     try {
       await deleteKnowledgeMedia(asset.id);
-      toast.success("Đã xóa hình ảnh khỏi thư viện.");
+      toast.success("Image removed from library.");
       setLoading(true);
       setReloadTick((t) => t + 1);
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể xóa hình ảnh.",
+          : "Could not delete image.",
       );
     } finally {
       setDeletingId(null);
@@ -133,7 +133,7 @@ export function KnowledgeMediaPickerModal({
           <div>
             <h2 className="text-lg font-bold text-(--admin-ink)">{title}</h2>
             <p className="text-xs text-(--admin-muted)">
-              PNG, JPEG hoặc WebP tối đa 5 MiB ({totalCount} ảnh trong thư viện)
+              PNG, JPEG, or WebP up to 5 MiB ({totalCount} images in library)
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -150,15 +150,15 @@ export function KnowledgeMediaPickerModal({
               onClick={() => fileInputRef.current?.click()}
               type="button"
             >
-              {uploading ? "Đang tải lên..." : "+ Tải ảnh mới"}
+              {uploading ? "Uploading..." : "+ Upload image"}
             </button>
             <button
-              aria-label="Đóng thư viện ảnh"
+              aria-label="Close media library"
               className={`${adminSecondary} h-10 px-3`}
               onClick={onClose}
               type="button"
             >
-              Đóng
+              Close
             </button>
           </div>
         </div>
@@ -170,12 +170,12 @@ export function KnowledgeMediaPickerModal({
               setQuery(e.target.value);
               setPageNumber(1);
             }}
-            placeholder="Tìm theo tên file ảnh..."
+            placeholder="Search by image filename..."
             type="search"
             value={query}
           />
           <select
-            aria-label="Lọc trạng thái sử dụng ảnh"
+            aria-label="Filter by image usage status"
             className="rounded-xl border border-(--admin-border) bg-white px-3 py-1.5 text-sm text-(--admin-ink) outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100"
             onChange={(e) => {
               setUnusedOnly(e.target.value);
@@ -183,21 +183,21 @@ export function KnowledgeMediaPickerModal({
             }}
             value={unusedOnly}
           >
-            <option value="all">Tất cả ảnh</option>
-            <option value="used">Đang được dùng</option>
-            <option value="unused">Chưa được dùng</option>
+            <option value="all">All images</option>
+            <option value="used">In use</option>
+            <option value="unused">Unused</option>
           </select>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <p className="py-12 text-center text-sm text-(--admin-muted)">
-              Đang tải thư viện ảnh...
+              Loading media library...
             </p>
           ) : items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-(--admin-border) py-12 text-center">
               <p className="text-sm text-(--admin-muted)">
-                Chưa có hình ảnh nào phù hợp. Hãy tải ảnh mới lên.
+                No matching images found. Upload a new image.
               </p>
             </div>
           ) : (
@@ -236,8 +236,8 @@ export function KnowledgeMediaPickerModal({
                         <p className="text-[11px] text-(--admin-muted)">
                           {formatBytes(asset.byteLength)} -{" "}
                           {used
-                            ? `Dùng trong ${asset.usageCount} bài`
-                            : "Chưa dùng"}
+                            ? `Used in ${asset.usageCount} article${asset.usageCount === 1 ? "" : "s"}`
+                            : "Unused"}
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-1.5">
@@ -249,7 +249,7 @@ export function KnowledgeMediaPickerModal({
                           }}
                           type="button"
                         >
-                          Chọn
+                          Select
                         </button>
                         <button
                           className="rounded-md border border-(--admin-border) px-2 py-1 text-xs text-(--admin-danger) hover:bg-(--admin-danger-soft) disabled:cursor-not-allowed disabled:opacity-40"
@@ -257,12 +257,12 @@ export function KnowledgeMediaPickerModal({
                           onClick={() => void handleDelete(asset)}
                           title={
                             used
-                              ? "Ảnh đang được sử dụng trong bài viết"
-                              : "Xóa ảnh chưa dùng"
+                              ? "Image is currently used in an article"
+                              : "Delete unused image"
                           }
                           type="button"
                         >
-                          {deletingId === asset.id ? "..." : "Xóa"}
+                          {deletingId === asset.id ? "..." : "Delete"}
                         </button>
                       </div>
                     </div>
@@ -277,7 +277,7 @@ export function KnowledgeMediaPickerModal({
           className="border-t border-(--admin-border) px-6 py-3"
           hasNextPage={pageNumber < totalPages}
           hasPreviousPage={pageNumber > 1}
-          itemLabel="ảnh"
+          itemLabel="images"
           onPageChange={setPageNumber}
           pageNumber={pageNumber}
           totalCount={totalCount}

@@ -18,14 +18,22 @@ const speakingTabs: readonly PartRouteTab[] = [1, 2, 3, 4, 5].map((part) => {
   return {
     part,
     label: speakingPartSpecs[typedPart].subtitle,
-    detail: `${partQuestionCount(typedPart)} câu/đề`,
+    detail: `${partQuestionCount(typedPart)} questions/test`,
   };
 });
 
 const writingTabs: readonly PartRouteTab[] = [
-  { part: 1, label: "Viết câu theo tranh", detail: "5 câu/đề" },
-  { part: 2, label: "Phản hồi yêu cầu viết", detail: "2 câu/đề" },
-  { part: 3, label: "Viết bài nêu quan điểm", detail: "1 câu/đề" },
+  {
+    part: 1,
+    label: "Write a sentence based on a picture",
+    detail: "5 questions/test",
+  },
+  {
+    part: 2,
+    label: "Respond to a written request",
+    detail: "2 questions/test",
+  },
+  { part: 3, label: "Write an opinion essay", detail: "1 question/test" },
 ];
 
 export function AdminPartRouteTabs({
@@ -39,7 +47,7 @@ export function AdminPartRouteTabs({
 
   return (
     <nav
-      aria-label={`Các Part ${skill === "speaking" ? "Speaking" : "Writing"}`}
+      aria-label={`${skill === "speaking" ? "Speaking" : "Writing"} Parts`}
       className="mt-5 flex overflow-x-auto border-b border-[var(--admin-border)]"
     >
       {tabs.map((tab) => {

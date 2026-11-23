@@ -9,7 +9,7 @@ export function Breadcrumbs({
   items: { label: string; href?: string }[];
 }) {
   return (
-    <nav aria-label="Đường dẫn" className="text-[13px] text-[#6b655f]">
+    <nav aria-label="Breadcrumb" className="text-[13px] text-[#6b655f]">
       <ol className="flex flex-wrap gap-1">
         {items.map((item, index) => (
           <Fragment key={item.label}>

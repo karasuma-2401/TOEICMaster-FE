@@ -39,52 +39,52 @@ export function UsersToolbar({
 
   return (
     <section
-      aria-label="Công cụ lọc người dùng"
+      aria-label="User filters"
       className="mt-5 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-3"
     >
       {selectedCount > 0 ? (
         <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-[var(--admin-ink)] px-3 text-sm text-white">
-          <span aria-live="polite">Đã chọn {selectedCount} người dùng</span>
+          <span aria-live="polite">{selectedCount} users selected</span>
           <button
             className="rounded-md px-2 py-1 font-semibold hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
             onClick={onClearSelection}
             type="button"
           >
-            Bỏ chọn
+            Clear selection
           </button>
         </div>
       ) : (
         <AdminFilterBar>
           <AdminSearchField
-            label="Tìm theo tên hoặc email"
+            label="Search by name or email"
             onChange={setSearchValue}
-            placeholder="Tìm theo tên hoặc email"
+            placeholder="Search by name or email"
             value={searchValue}
           />
           <AdminFilterSelect
             allValue="ALL"
-            ariaLabel="Lọc theo vai trò"
-            label="Vai trò"
+            ariaLabel="Filter by role"
+            label="Role"
             onChange={onRoleChange}
             options={ADMIN_USER_ROLES.map((role) => ({
               value: role,
-              label: role === "ADMIN" ? "Admin" : "Học viên",
+              label: role === "ADMIN" ? "Admin" : "Learner",
             }))}
             value={query.role}
           />
           <AdminFilterSelect
             allValue="ALL"
-            ariaLabel="Lọc theo trạng thái"
-            label="Trạng thái"
+            ariaLabel="Filter by status"
+            label="Status"
             onChange={onStatusChange}
             options={ADMIN_USER_STATUSES.map((status) => ({
               value: status,
               label:
                 status === "ACTIVE"
-                  ? "Hoạt động"
+                  ? "Active"
                   : status === "PENDING"
-                    ? "Chờ xác minh"
-                    : "Bị khóa",
+                    ? "Pending verification"
+                    : "Locked",
             }))}
             value={query.status}
           />
@@ -93,7 +93,7 @@ export function UsersToolbar({
             onClick={onExport}
             type="button"
           >
-            Xuất trang này
+            Export this page
           </button>
         </AdminFilterBar>
       )}

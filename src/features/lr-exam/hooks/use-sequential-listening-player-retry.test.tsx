@@ -178,7 +178,7 @@ describe("useSequentialListeningPlayer preloaded-track failure recovery", () => 
       expect(screen.getByTestId("is-buffering")).toHaveTextContent("false");
       expect(screen.getByTestId("is-playing")).toHaveTextContent("false");
       expect(screen.getByTestId("error")).toHaveTextContent(
-        "Không thể tải audio (500).",
+        "Unable to load audio (500).",
       );
     });
 

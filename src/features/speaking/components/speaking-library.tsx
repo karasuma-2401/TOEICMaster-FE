@@ -20,8 +20,8 @@ const skill: ExamLibrarySkill = {
   id: "speaking",
   name: "Speaking",
   tagline:
-    "Luyện phản xạ nói trong phòng thi hai pha và nhận đánh giá theo 5 tiêu chí.",
-  format: "11 câu · ~20 phút · 0–200 điểm · 5 Parts",
+    "Practice speaking fluency in a two-phase exam room and get evaluated across 5 criteria.",
+  format: "11 questions · ~20 min · 0-200 pts · 5 Parts",
   maxScore: 200,
   examHref: "/speaking",
   exerciseHref: "/speaking/parts/1",
@@ -47,7 +47,9 @@ export function SpeakingLibrary() {
     } catch (cause) {
       if (signal?.aborted) return;
       setError(
-        cause instanceof Error ? cause.message : "Không thể tải đề Speaking.",
+        cause instanceof Error
+          ? cause.message
+          : "Could not load Speaking tests.",
       );
     } finally {
       if (!signal?.aborted) setLoading(false);
@@ -86,7 +88,7 @@ export function SpeakingLibrary() {
         code: test.code,
         title: test.title,
         badge: `${test.parts.length} Parts`,
-        meta: `${questions} câu · ~${formatMinutes(seconds)} · 0–200 điểm`,
+        meta: `${questions} questions · ~${formatMinutes(seconds)} · 0-200 pts`,
         action: {
           href: `/speaking/tests/${encodeURIComponent(test.id)}/practice?mode=full`,
         },
@@ -100,16 +102,16 @@ export function SpeakingLibrary() {
 
   return (
     <ExamLibrary
-      emptyDescription="Admin cần tạo và công bố một đề đủ 11 câu cho 5 Part."
-      emptyTitle="Chưa có đề Speaking được công bố"
+      emptyDescription="An admin needs to create and publish a test with 11 questions across 5 Parts."
+      emptyTitle="No published Speaking tests yet"
       error={error}
       header={<SpeakingHeader wide />}
       historySection={
         <AttemptHistorySection
-          description="Các lần làm Speaking của bạn được lưu tại đây."
+          description="Your Speaking attempts are saved here."
           limit={3}
           skills={["speaking"]}
-          title="Lịch sử làm bài Speaking"
+          title="Speaking Attempt History"
         />
       }
       items={items}

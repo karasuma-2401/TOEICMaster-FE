@@ -31,13 +31,13 @@ const skillMeta: Record<
 };
 
 const statusMeta = {
-  IN_PROGRESS: { label: "Đang làm", tone: "bg-[#FEF3C7] text-[#B45309]" },
-  COMPLETED: { label: "Đã nộp", tone: "bg-[#ECFDF5] text-[#047857]" },
-  ABANDONED: { label: "Bỏ dở", tone: "bg-[#F1F5F9] text-[#475569]" },
+  IN_PROGRESS: { label: "In Progress", tone: "bg-[#FEF3C7] text-[#B45309]" },
+  COMPLETED: { label: "Submitted", tone: "bg-[#ECFDF5] text-[#047857]" },
+  ABANDONED: { label: "Abandoned", tone: "bg-[#F1F5F9] text-[#475569]" },
 } as const;
 
 const filters: { value: "ALL" | ExamSkillType; label: string }[] = [
-  { value: "ALL", label: "Tất cả" },
+  { value: "ALL", label: "All" },
   { value: "lr", label: "L&R" },
   { value: "speaking", label: "Speaking" },
   { value: "writing", label: "Writing" },
@@ -45,8 +45,8 @@ const filters: { value: "ALL" | ExamSkillType; label: string }[] = [
 
 function formatMoment(value: string) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -57,9 +57,9 @@ function formatMoment(value: string) {
 
 function evaluationLabel(item: UnifiedAttemptItem) {
   if (!item.evaluationStatus) return null;
-  if (item.evaluationStatus === "COMPLETED") return "AI đã chấm";
-  if (item.evaluationStatus === "FAILED") return "AI chấm thất bại";
-  return "AI đang chấm";
+  if (item.evaluationStatus === "COMPLETED") return "AI Scored";
+  if (item.evaluationStatus === "FAILED") return "AI Scoring Failed";
+  return "AI Scoring";
 }
 
 function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
@@ -91,7 +91,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px]">
         <span className="font-semibold text-[#2F2B28]">
           {item.score === null
-            ? "Chưa có điểm"
+            ? "Not scored yet"
             : `${item.score} / ${item.maxScore}`}
         </span>
         <span className="text-[#6B655F]">
@@ -109,7 +109,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
             className={`inline-flex min-h-9 items-center rounded-lg bg-gradient-to-r from-red-600 to-orange-500 px-3.5 text-[13px] font-semibold text-white ${focusRing}`}
             href={item.resumeHref}
           >
-            Tiếp tục làm bài
+            Resume Attempt
           </Link>
         ) : null}
         {item.resultHref ? (
@@ -117,7 +117,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
             className={`inline-flex min-h-9 items-center rounded-lg border border-[#E2E8F0] px-3.5 text-[13px] font-semibold text-[#3D3935] hover:bg-[#FAF7F5] ${focusRing}`}
             href={item.resultHref}
           >
-            Xem kết quả
+            View Results
           </Link>
         ) : null}
         {item.reviewHref ? (
@@ -125,7 +125,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
             className={`inline-flex min-h-9 items-center rounded-lg px-3.5 text-[13px] font-semibold text-[#C2410C] underline underline-offset-4 ${focusRing}`}
             href={item.reviewHref}
           >
-            Xem lại
+            Review
           </Link>
         ) : null}
       </div>
@@ -190,7 +190,7 @@ export function AttemptHistorySection({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải lịch sử làm bài.",
+              : "Unable to load attempt history.",
           );
           setLoading(false);
         });
@@ -229,14 +229,14 @@ export function AttemptHistorySection({
     return {
       total: items.length,
       completed: completed.length,
-      bestLabel: best ? `${best.score} / ${best.maxScore}` : "—",
+      bestLabel: best ? `${best.score} / ${best.maxScore}` : "-",
       bestSkill: best ? skillMeta[best.skill].status : null,
     };
   }, [items]);
 
   return (
     <section
-      aria-label={title ? undefined : "Lịch sử làm bài"}
+      aria-label={title ? undefined : "Attempt history"}
       aria-labelledby={title ? headingId : undefined}
       className="mt-10 scroll-mt-24"
       data-testid="attempt-history-section"
@@ -258,7 +258,7 @@ export function AttemptHistorySection({
               className={`text-[15px] font-medium text-[#C2410C] hover:underline ${focusRing}`}
               href="/history"
             >
-              Xem tất cả lịch sử →
+              View all history →
             </Link>
           ) : null}
         </div>
@@ -267,10 +267,10 @@ export function AttemptHistorySection({
       {showSummary && !loading && items.length > 0 ? (
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
           {[
-            ["Tổng lượt làm", String(summary.total)],
-            ["Đã hoàn thành", String(summary.completed)],
+            ["Total Attempts", String(summary.total)],
+            ["Completed", String(summary.completed)],
             [
-              "Điểm cao nhất",
+              "Highest Score",
               summary.bestSkill
                 ? `${summary.bestLabel} · ${summary.bestSkill}`
                 : summary.bestLabel,
@@ -291,7 +291,7 @@ export function AttemptHistorySection({
 
       {showFilter ? (
         <fieldset
-          aria-label="Lọc lịch sử theo kỹ năng"
+          aria-label="Filter history by skill"
           className="mt-4 flex flex-wrap gap-2 border-0 p-0"
         >
           {filters
@@ -320,7 +320,7 @@ export function AttemptHistorySection({
 
       {loading ? (
         <p className="mt-5 rounded-2xl border border-[#EEE9E6] bg-white p-6 text-sm text-[#6B655F]">
-          Đang tải lịch sử làm bài…
+          Loading attempt history…
         </p>
       ) : error ? (
         <p
@@ -332,25 +332,25 @@ export function AttemptHistorySection({
       ) : isGuest ? (
         <div className="mt-5 rounded-2xl border border-dashed border-[#D8D2CC] bg-white p-6 text-center">
           <p className="text-[15px] font-semibold text-[#2F2B28]">
-            Đăng nhập để xem lịch sử làm bài
+            Sign in to view your attempt history
           </p>
           <p className="mt-1 text-sm text-[#6B655F]">
-            Kết quả các lần thi được lưu theo tài khoản của bạn.
+            Your test results are saved to your account.
           </p>
           <Link
             className={`mt-4 inline-flex min-h-10 items-center rounded-lg bg-gradient-to-r from-red-600 to-orange-500 px-4 text-sm font-semibold text-white ${focusRing}`}
             href="/login?next=%2Fhistory"
           >
-            Đăng nhập
+            Sign In
           </Link>
         </div>
       ) : visible.length === 0 ? (
         <div className="mt-5 rounded-2xl border border-dashed border-[#D8D2CC] bg-white p-6 text-center">
           <p className="text-[15px] font-semibold text-[#2F2B28]">
-            Chưa có lượt làm bài nào
+            No attempts yet
           </p>
           <p className="mt-1 text-sm text-[#6B655F]">
-            Bài làm đã nộp sẽ xuất hiện ở đây để bạn xem lại.
+            Submitted attempts will appear here for you to review.
           </p>
         </div>
       ) : (
@@ -370,7 +370,7 @@ export function AttemptHistorySection({
             }
             type="button"
           >
-            Xem thêm ({remaining})
+            Show more ({remaining})
           </button>
         </div>
       ) : null}

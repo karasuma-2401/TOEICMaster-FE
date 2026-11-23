@@ -20,9 +20,9 @@ import { ReviewAudioPlayer } from "./review-audio-player";
 type Filter = "all" | "wrongOnly" | "skipped" | "wrong" | "flagged" | "correct";
 
 const statusLabel = {
-  correct: "Đúng",
-  wrong: "Sai",
-  skipped: "Bỏ qua",
+  correct: "Correct",
+  wrong: "Incorrect",
+  skipped: "Skipped",
 } as const;
 
 const slotTone = {
@@ -101,12 +101,15 @@ export function LrReview({
   };
 
   const tabs: { id: Filter; label: string }[] = [
-    { id: "all", label: `Tất cả (${LR_TOTAL_QUESTIONS})` },
-    { id: "wrongOnly", label: `Làm sai (${counts.wrong})` },
-    { id: "skipped", label: `Bỏ qua (${counts.skipped})` },
-    { id: "wrong", label: `Sai / Bỏ qua (${counts.wrong + counts.skipped})` },
-    { id: "flagged", label: `Gắn cờ (${Object.keys(flags).length})` },
-    { id: "correct", label: `Đúng (${counts.correct})` },
+    { id: "all", label: `All (${LR_TOTAL_QUESTIONS})` },
+    { id: "wrongOnly", label: `Incorrect (${counts.wrong})` },
+    { id: "skipped", label: `Skipped (${counts.skipped})` },
+    {
+      id: "wrong",
+      label: `Incorrect / Skipped (${counts.wrong + counts.skipped})`,
+    },
+    { id: "flagged", label: `Flagged (${Object.keys(flags).length})` },
+    { id: "correct", label: `Correct (${counts.correct})` },
   ];
 
   return (
@@ -114,14 +117,14 @@ export function LrReview({
       <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-3 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
         <ExamBrand />
         <p className="text-[15px] font-semibold">
-          Xem lại bài làm · {exam.identity}
+          Review Answers · {exam.identity}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Link className={secondaryButton} href="/history">
-            Về lịch sử làm bài
+            Back to Attempt History
           </Link>
           <Link className={secondaryButton} href={resultHref}>
-            ← Về báo cáo kết quả
+            ← Back to Score Report
           </Link>
         </div>
       </header>
@@ -135,7 +138,7 @@ export function LrReview({
           <div
             className="flex flex-wrap items-center gap-2"
             role="tablist"
-            aria-label="Bộ lọc câu hỏi"
+            aria-label="Question filter"
           >
             {tabs.map((tab) => (
               <button
@@ -166,7 +169,7 @@ export function LrReview({
             />
           ) : (
             <output className="rounded-xl border border-dashed border-[#d9d2ce] bg-white p-6 text-[13px] text-[#77716e] block">
-              Chưa có giải thích chi tiết cho câu {current}.
+              No detailed explanation available for question {current}.
             </output>
           )}
 
@@ -177,7 +180,7 @@ export function LrReview({
               onClick={() => setCurrent(reviewable[index - 1])}
               type="button"
             >
-              ← Câu trước
+              ← Previous
             </button>
             <button
               className={primaryButton}
@@ -185,23 +188,23 @@ export function LrReview({
               onClick={() => setCurrent(reviewable[index + 1])}
               type="button"
             >
-              Câu tiếp →
+              Next →
             </button>
           </div>
         </main>
 
         <aside
-          aria-label="Ma trận kết quả"
+          aria-label="Result palette"
           className="flex w-full flex-col gap-3 rounded-2xl border border-[#eee9e6] bg-white p-4 xl:w-[380px] xl:shrink-0"
         >
           <h2 className="text-[15px] font-semibold">
-            Ma trận {LR_TOTAL_QUESTIONS} câu
+            {LR_TOTAL_QUESTIONS}-Question Palette
           </h2>
           <ul className="flex flex-wrap gap-3 text-[11px]">
-            <li className="text-[#047857]">■ Đúng ({counts.correct})</li>
-            <li className="text-[#dc2626]">■ Sai ({counts.wrong})</li>
-            <li className="text-[#d97706]">■ Bỏ qua ({counts.skipped})</li>
-            <li className="text-[#d97106]">⚑ Gắn cờ</li>
+            <li className="text-[#047857]">■ Correct ({counts.correct})</li>
+            <li className="text-[#dc2626]">■ Incorrect ({counts.wrong})</li>
+            <li className="text-[#d97706]">■ Skipped ({counts.skipped})</li>
+            <li className="text-[#d97106]">⚑ Flagged</li>
           </ul>
           <div className="flex flex-wrap gap-1">
             {range(1, LR_TOTAL_QUESTIONS).map((number) => {
@@ -210,7 +213,7 @@ export function LrReview({
               return (
                 <button
                   aria-current={number === current ? "true" : undefined}
-                  aria-label={`Câu ${number}, ${statusLabel[status]}${flags[number] ? ", đã gắn cờ" : ""}`}
+                  aria-label={`Question ${number}, ${statusLabel[status]}${flags[number] ? ", flagged" : ""}`}
                   className={`h-7 w-8 rounded-md border text-[11px] font-semibold ${slotTone[status]} ${number === current ? "ring-2 ring-[#ff5a1f]" : ""} ${hidden ? "opacity-30" : ""} ${focusRing}`}
                   key={number}
                   onClick={() => setCurrent(number)}
@@ -293,11 +296,11 @@ function ReviewDetail({
       </div>
 
       <section
-        aria-label={`Giải thích câu ${question.number}`}
+        aria-label={`Explanation for question ${question.number}`}
         className="flex flex-col gap-4 rounded-2xl border border-[#eee9e6] bg-white p-6"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <Pill>CÂU {question.number}</Pill>
+          <Pill>QUESTION {question.number}</Pill>
           <Pill
             tone={
               status === "correct"
@@ -309,12 +312,12 @@ function ReviewDetail({
           >
             {statusLabel[status]}
           </Pill>
-          {flagged ? <Pill tone="warning">⚑ Đã gắn cờ</Pill> : null}
+          {flagged ? <Pill tone="warning">⚑ Flagged</Pill> : null}
         </div>
         {question.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
           <img
-            alt={`Hình minh họa câu ${question.number}`}
+            alt={`Illustration for question ${question.number}`}
             className="max-h-80 w-auto max-w-full rounded-lg object-contain"
             src={question.imageUrl}
           />
@@ -333,11 +336,11 @@ function ReviewDetail({
                 <span>{choice.text}</span>
                 {isCorrect ? (
                   <span className="ml-auto text-[11px] font-semibold text-[#047857]">
-                    Đáp án đúng
+                    Correct answer
                   </span>
                 ) : isSelected ? (
                   <span className="ml-auto text-[11px] font-semibold text-[#dc2626]">
-                    Bạn chọn
+                    Your choice
                   </span>
                 ) : null}
               </li>
@@ -346,14 +349,14 @@ function ReviewDetail({
         </ul>
         <div className="flex flex-col gap-3 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] p-4 text-[13px]">
           <h3 className="text-xs font-bold tracking-wide uppercase text-[#166534]">
-            Lời giải chi tiết &amp; bản dịch
+            Detailed Explanation &amp; Translation
           </h3>
           <p className="leading-6 text-[#1E293B]">
             {question.analysis.summary}
           </p>
           {question.analysis.trap ? (
             <p className="rounded-lg bg-[#FEF2F2] px-3 py-2 text-[#DC2626]">
-              <span className="font-semibold">Bẫy thường gặp: </span>
+              <span className="font-semibold">Common trap: </span>
               {question.analysis.trap}
             </p>
           ) : null}
@@ -362,7 +365,9 @@ function ReviewDetail({
               className="rounded-lg border border-[#DCFCE7] bg-white px-3 py-2 leading-6 text-[#475569]"
               key={note}
             >
-              <span className="font-semibold text-[#166534]">Bản dịch: </span>
+              <span className="font-semibold text-[#166534]">
+                Translation:{" "}
+              </span>
               {note}
             </p>
           ))}

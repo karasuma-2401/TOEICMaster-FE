@@ -24,10 +24,12 @@ describe("ForgotPasswordPanel", () => {
     render(<ForgotPasswordPanel />);
 
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.click(screen.getByRole("button", { name: "Gửi mã xác minh" }));
+    await user.click(
+      screen.getByRole("button", { name: "Send verification code" }),
+    );
 
     expect(
-      await screen.findByRole("heading", { name: "Xác minh email" }),
+      await screen.findByRole("heading", { name: "Verify email" }),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/auth/forgot-password",

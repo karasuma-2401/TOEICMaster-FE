@@ -53,15 +53,15 @@ export async function forwardFlashcards(
   const path = segments.join("/");
 
   if (!isKnownPath(path)) {
-    return problem(404, "Không tìm thấy API Flashcards.");
+    return problem(404, "Flashcards API endpoint not found.");
   }
 
   if (!isAllowedMethodForPath(path, method)) {
-    return problem(405, "Phương thức không được hỗ trợ.");
+    return problem(405, "Method not allowed.");
   }
 
   if (method !== "GET" && !sameOrigin(request)) {
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
   }
 
   const isPublic =
@@ -72,7 +72,7 @@ export async function forwardFlashcards(
     Date.parse(session.refreshTokenExpiresAtUtc) > Date.now();
 
   if (!isPublic && !hasValidRefresh) {
-    return problem(401, "Vui lòng đăng nhập để đồng bộ Flashcards.");
+    return problem(401, "Please sign in to sync Flashcards.");
   }
 
   const headers = new Headers({ Accept: "application/json" });
@@ -93,20 +93,20 @@ export async function forwardFlashcards(
   if (method === "POST" || method === "PUT") {
     const raw = await request.text();
     if (!raw) {
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request payload.");
     }
     if (!request.headers.get("content-type")?.startsWith("application/json")) {
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request payload.");
     }
     try {
       const parsed: unknown = JSON.parse(raw);
       if (parsed === null || typeof parsed !== "object") {
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       }
       headers.set("Content-Type", "application/json");
       init.body = JSON.stringify(parsed);
     } catch {
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request payload.");
     }
   }
 
@@ -137,7 +137,7 @@ export async function forwardFlashcards(
   } catch {
     return problem(
       502,
-      "Dịch vụ Flashcards chưa sẵn sàng. Vui lòng thử lại sau.",
+      "Flashcards service is unavailable. Please try again later.",
     );
   }
 }

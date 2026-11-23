@@ -18,19 +18,19 @@ function DemoDialog({ variant = "modal" }: { variant?: "modal" | "drawer" }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button">Mở hộp thoại</button>
+        <button type="button">Open dialog</button>
       </DialogTrigger>
       <DialogContent variant={variant}>
         <DialogHeader>
-          <DialogTitle>Tiêu đề hộp thoại</DialogTitle>
-          <DialogDescription>Mô tả chi tiết hộp thoại</DialogDescription>
+          <DialogTitle>Dialog title</DialogTitle>
+          <DialogDescription>Dialog description details</DialogDescription>
         </DialogHeader>
-        <input aria-label="Tên bài thi" type="text" />
+        <input aria-label="Exam name" type="text" />
         <DialogFooter>
           <DialogClose asChild>
-            <button type="button">Hủy bỏ</button>
+            <button type="button">Cancel</button>
           </DialogClose>
-          <button type="button">Xác nhận</button>
+          <button type="button">Confirm</button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -42,21 +42,21 @@ describe("ui/dialog", () => {
     const user = userEvent.setup();
     render(<DemoDialog variant="modal" />);
 
-    const trigger = screen.getByRole("button", { name: "Mở hộp thoại" });
+    const trigger = screen.getByRole("button", { name: "Open dialog" });
     await user.click(trigger);
 
     const dialog = await screen.findByRole("dialog", {
-      name: "Tiêu đề hộp thoại",
+      name: "Dialog title",
     });
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveAttribute("data-testid", "ui-dialog-content");
     expect(dialog).toHaveAttribute("data-variant", "modal");
-    expect(dialog).toHaveAccessibleDescription("Mô tả chi tiết hộp thoại");
+    expect(dialog).toHaveAccessibleDescription("Dialog description details");
 
-    const input = screen.getByLabelText("Tên bài thi");
-    const cancel = screen.getByRole("button", { name: "Hủy bỏ" });
-    const confirm = screen.getByRole("button", { name: "Xác nhận" });
-    const closeBtn = screen.getByRole("button", { name: "Đóng" });
+    const input = screen.getByLabelText("Exam name");
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    const confirm = screen.getByRole("button", { name: "Confirm" });
+    const closeBtn = screen.getByRole("button", { name: "Close" });
 
     // Focus moves inside the dialog on open
     expect(dialog.contains(document.activeElement)).toBe(true);
@@ -86,12 +86,12 @@ describe("ui/dialog", () => {
     const user = userEvent.setup();
     render(<DemoDialog variant="drawer" />);
 
-    await user.click(screen.getByRole("button", { name: "Mở hộp thoại" }));
+    await user.click(screen.getByRole("button", { name: "Open dialog" }));
     const dialog = await screen.findByRole("dialog", {
-      name: "Tiêu đề hộp thoại",
+      name: "Dialog title",
     });
     expect(dialog).toHaveAttribute("data-variant", "drawer");
-    const closeBtn = screen.getByRole("button", { name: "Đóng" });
+    const closeBtn = screen.getByRole("button", { name: "Close" });
     expect(closeBtn.className).toContain("focus-visible:outline-2");
   });
 
@@ -105,17 +105,17 @@ describe("ui/dialog", () => {
       if (!open) return null;
       return (
         <ConfirmDialog
-          cancelLabel="Ở lại"
-          confirmLabel="Nộp bài"
+          cancelLabel="Stay"
+          confirmLabel="Submit"
           id="confirm-title"
           onCancel={() => {
             onCancel();
             setOpen(false);
           }}
           onConfirm={onConfirm}
-          title="Xác nhận nộp bài"
+          title="Confirm submission"
         >
-          Bạn chắc chắn muốn nộp bài?
+          Are you sure you want to submit?
         </ConfirmDialog>
       );
     }
@@ -144,19 +144,21 @@ describe("ui/dialog", () => {
 
     render(
       <ConfirmDialog
-        cancelLabel="Hủy"
-        confirmLabel="Xóa"
+        cancelLabel="Cancel"
+        confirmLabel="Delete"
         id="esc-title"
         onCancel={onCancel}
         onConfirm={vi.fn()}
-        title="Xác nhận xóa"
+        title="Confirm deletion"
       >
-        Không thể hoàn tác.
+        This action cannot be undone.
       </ConfirmDialog>,
     );
 
-    const dialog = await screen.findByRole("dialog", { name: "Xác nhận xóa" });
-    expect(dialog.querySelector('button[aria-label="Đóng"]')).toBeNull();
+    const dialog = await screen.findByRole("dialog", {
+      name: "Confirm deletion",
+    });
+    expect(dialog.querySelector('button[aria-label="Close"]')).toBeNull();
     await user.keyboard("{Escape}");
     expect(onCancel).toHaveBeenCalledTimes(1);
   });

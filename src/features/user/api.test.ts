@@ -38,11 +38,14 @@ describe("profile API", () => {
   it("normalizes PascalCase field errors to the first message", () => {
     expect(
       normalizeErrors({
-        errors: { DisplayName: ["Tên sai", "Khác"], CurrentPassword: ["Sai"] },
+        errors: {
+          DisplayName: ["Invalid name", "Other"],
+          CurrentPassword: ["Wrong"],
+        },
       }),
     ).toEqual({
-      displayName: "Tên sai",
-      currentPassword: "Sai",
+      displayName: "Invalid name",
+      currentPassword: "Wrong",
     });
   });
 
@@ -52,8 +55,8 @@ describe("profile API", () => {
       vi.fn().mockResolvedValue(
         Response.json(
           {
-            title: "Dữ liệu không hợp lệ",
-            errors: { DisplayName: ["Tên sai"] },
+            title: "Invalid data",
+            errors: { DisplayName: ["Invalid name"] },
           },
           { status: 400 },
         ),
@@ -61,7 +64,7 @@ describe("profile API", () => {
     );
     await expect(getProfile()).rejects.toMatchObject({
       status: 400,
-      fieldErrors: { displayName: "Tên sai" },
+      fieldErrors: { displayName: "Invalid name" },
     } satisfies Partial<ApiError>);
   });
 
@@ -69,7 +72,7 @@ describe("profile API", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ title: "Thử lại" }), {
+        new Response(JSON.stringify({ title: "Try again" }), {
           status: 429,
           headers: {
             "Content-Type": "application/problem+json",
@@ -88,7 +91,7 @@ describe("profile API", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        Response.json({ title: "Hết hạn" }, { status: 401 }),
+        Response.json({ title: "Expired" }, { status: 401 }),
       )
       .mockResolvedValueOnce(Response.json(backendProfile));
     vi.stubGlobal("fetch", fetchMock);

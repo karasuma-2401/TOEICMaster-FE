@@ -21,7 +21,7 @@ export function rateLimited(response: Response) {
   const retryAfter = response.headers.get("retry-after");
   return NextResponse.json(
     {
-      title: "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
+      title: "Too many requests. Please try again later.",
       status: 429,
     },
     {

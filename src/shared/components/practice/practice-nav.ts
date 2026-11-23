@@ -25,7 +25,7 @@ export interface PracticeNavGroup {
 export const practiceNavGroups: readonly PracticeNavGroup[] = [
   {
     key: "exam",
-    label: "Đề thi",
+    label: "Exams",
     links: [
       {
         key: "exam-lr",
@@ -42,7 +42,7 @@ export const practiceNavGroups: readonly PracticeNavGroup[] = [
   },
   {
     key: "exercise",
-    label: "Bài tập",
+    label: "Exercises",
     links: [
       {
         key: "exercise-lr",
@@ -64,14 +64,14 @@ export const practiceNavGroups: readonly PracticeNavGroup[] = [
 ];
 
 export const practiceNavLinks: readonly PracticeNavLink[] = [
-  { key: "knowledge", label: "Kiến thức", href: "/knowledge" },
+  { key: "knowledge", label: "Knowledge", href: "/knowledge" },
   { key: "flashcards", label: "Flashcards", href: "/flashcards" },
   {
     key: "pronunciation",
-    label: "Phát âm",
+    label: "Pronunciation",
     href: "/pronunciation",
   },
-  { key: "history", label: "Lịch sử", href: "/history" },
+  { key: "history", label: "History", href: "/history" },
 ];
 
 const rules: readonly [RegExp, PracticeNavKey][] = [

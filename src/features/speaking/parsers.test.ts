@@ -27,7 +27,9 @@ describe("Speaking parsers", () => {
     expect(() =>
       parseExercise({ ...exerciseDto(3), questions: ["one"] }),
     ).toThrow(expect.objectContaining({ status: 502 }));
-    expect(() => parseExercise(exerciseDto(1, { difficulty: "Dễ" }))).toThrow();
+    expect(() =>
+      parseExercise(exerciseDto(1, { difficulty: "Easy" })),
+    ).toThrow();
     expect(() =>
       parseExercise(exerciseDto(1, { passage: undefined })),
     ).toThrow();
@@ -53,7 +55,7 @@ describe("Speaking parsers", () => {
             part: 3,
             sequenceNumber: 1,
             content: {
-              rubricNotes: "Rõ ràng",
+              rubricNotes: "Clear",
               modelAnswer: "Reference answer",
               context: "A short interview.",
               questions: ["Question one?", "Question two?", "Question three?"],

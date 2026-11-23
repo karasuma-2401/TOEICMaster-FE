@@ -18,11 +18,11 @@ interface UsersTableProps {
 }
 
 const columns: { label: string; field?: AdminUserSortField }[] = [
-  { label: "Người dùng", field: "fullName" },
-  { label: "Vai trò" },
-  { label: "Trạng thái" },
-  { label: "Đăng nhập gần nhất", field: "lastLoginAt" },
-  { label: "Ngày tạo", field: "createdAt" },
+  { label: "User", field: "fullName" },
+  { label: "Role" },
+  { label: "Status" },
+  { label: "Last sign-in", field: "lastLoginAt" },
+  { label: "Created", field: "createdAt" },
 ];
 
 export function UsersTable({
@@ -46,16 +46,14 @@ export function UsersTable({
         <thead className="bg-[var(--admin-surface-muted)] text-[10px] font-bold tracking-[0.06em] text-[var(--admin-muted)]">
           <tr>
             <th
-              aria-label="Chọn người dùng"
+              aria-label="Select users"
               className="w-12 px-4 py-3"
               scope="col"
             >
               <label className="inline-flex cursor-pointer items-center">
-                <span className="sr-only">
-                  Chọn tất cả người dùng trên trang
-                </span>
+                <span className="sr-only">Select all users on page</span>
                 <input
-                  aria-label="Chọn tất cả người dùng trên trang"
+                  aria-label="Select all users on page"
                   checked={allSelected}
                   className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                   onChange={(event) => onSelectAll(event.target.checked)}
@@ -96,7 +94,7 @@ export function UsersTable({
               );
             })}
             <th className="px-4 py-3 text-right" scope="col">
-              Thao tác
+              Actions
             </th>
           </tr>
         </thead>
@@ -106,11 +104,11 @@ export function UsersTable({
               className="transition hover:bg-[var(--admin-row-hover)]"
               key={user.id}
             >
-              <td aria-label={`Chọn ${user.fullName}`} className="px-4 py-4">
+              <td aria-label={`Select ${user.fullName}`} className="px-4 py-4">
                 <label className="inline-flex cursor-pointer items-center">
-                  <span className="sr-only">Chọn {user.fullName}</span>
+                  <span className="sr-only">Select {user.fullName}</span>
                   <input
-                    aria-label={`Chọn ${user.fullName}`}
+                    aria-label={`Select ${user.fullName}`}
                     checked={selectedIds.has(user.id)}
                     className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                     onChange={(event) =>
@@ -121,7 +119,7 @@ export function UsersTable({
                 </label>
               </td>
               <td
-                aria-label={`Thông tin ${user.fullName}, ${user.email}`}
+                aria-label={`Details for ${user.fullName}, ${user.email}`}
                 className="px-4 py-3"
               >
                 <div className="flex min-w-[220px] items-center gap-3">
@@ -152,10 +150,10 @@ export function UsersTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <button
-                  aria-label={`Thao tác với ${user.fullName}`}
+                  aria-label={`Actions for ${user.fullName}`}
                   className="size-9 rounded-lg text-lg text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)] hover:text-[var(--admin-ink)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
                   disabled
-                  title="Thao tác chi tiết sẽ có ở bước tiếp theo"
+                  title="Detailed actions will be available in the next step"
                   type="button"
                 >
                   •••

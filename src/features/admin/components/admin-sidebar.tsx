@@ -28,14 +28,14 @@ export function AdminSidebar({
     <>
       {isMobileOpen && (
         <button
-          aria-label="Đóng menu quản trị"
+          aria-label="Close admin menu"
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={onCloseMobile}
           type="button"
         />
       )}
       <aside
-        aria-label="Thanh điều hướng quản trị"
+        aria-label="Admin navigation"
         className={`fixed inset-y-0 left-0 z-50 flex w-[255px] flex-col border-r border-[var(--admin-border)] bg-white transition-[transform,width] duration-200 lg:translate-x-0 ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "lg:w-[72px]" : "lg:w-[255px]"}`}
@@ -52,12 +52,12 @@ export function AdminSidebar({
                 TOEICMaster
               </p>
               <p className="mt-0.5 w-fit rounded-sm bg-[var(--admin-brand-red)] px-1.5 py-px text-[10px] font-bold tracking-[0.08em] text-white">
-                QUẢN TRỊ
+                ADMIN
               </p>
             </div>
           )}
           <button
-            aria-label="Đóng menu quản trị trên thiết bị di động"
+            aria-label="Close mobile admin menu"
             className="ml-auto rounded-lg p-2 text-[var(--admin-ink-soft)] hover:bg-[var(--admin-surface-muted)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)] lg:hidden"
             onClick={onCloseMobile}
             type="button"
@@ -66,10 +66,10 @@ export function AdminSidebar({
           </button>
         </div>
 
-        <nav aria-label="Quản trị" className="flex-1 px-3 py-2">
+        <nav aria-label="Admin" className="flex-1 px-3 py-2">
           {!isCollapsed && (
             <p className="mb-2 px-2 text-xs font-medium tracking-[0.1em] text-[var(--admin-muted)]">
-              QUẢN TRỊ
+              ADMIN
             </p>
           )}
           <div className="space-y-1">
@@ -101,7 +101,7 @@ export function AdminSidebar({
                   className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-normal text-[var(--admin-muted)] opacity-70"
                   disabled
                   key={item.label}
-                  title="Tính năng sắp có"
+                  title="Coming soon"
                   type="button"
                 >
                   <span
@@ -116,7 +116,7 @@ export function AdminSidebar({
                         {item.label}
                       </span>
                       <span className="rounded-full bg-[var(--admin-surface-muted)] whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold">
-                        Sắp có
+                        Soon
                       </span>
                     </>
                   )}
@@ -129,7 +129,7 @@ export function AdminSidebar({
         <div className="p-4">
           <div className="mb-3 flex items-center gap-2 px-1 text-[13px] text-[var(--admin-muted)]">
             <span aria-hidden="true">⇱</span>
-            {!isCollapsed && <span>Thu nhỏ</span>}
+            {!isCollapsed && <span>Collapse</span>}
           </div>
           <div className="flex items-center gap-2 px-1">
             <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--admin-brand-orange)] text-xs font-bold text-white">
@@ -138,7 +138,7 @@ export function AdminSidebar({
             {!isCollapsed && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-[var(--admin-ink)]">
-                  Quản trị viên
+                  Administrator
                 </p>
                 <p className="truncate text-xs text-[var(--admin-muted)]">
                   Admin
@@ -147,16 +147,12 @@ export function AdminSidebar({
             )}
           </div>
           <button
-            aria-label={
-              isCollapsed
-                ? "Mở rộng thanh điều hướng"
-                : "Thu gọn thanh điều hướng"
-            }
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className="sr-only"
             onClick={onToggleCollapsed}
             type="button"
           >
-            {isCollapsed ? "›" : "‹  Thu gọn thanh điều hướng"}
+            {isCollapsed ? "›" : "‹  Collapse sidebar"}
           </button>
         </div>
       </aside>

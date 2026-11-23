@@ -90,7 +90,7 @@ export function DeckCreateDialog({
     event.preventDefault();
     const cleanTitle = title.trim();
     if (!cleanTitle) {
-      setError("Vui lòng nhập tên bộ thẻ.");
+      setError("Please enter a deck title.");
       return;
     }
 
@@ -105,12 +105,14 @@ export function DeckCreateDialog({
         exampleEn: item.exampleEn.trim(),
         exampleVi: item.exampleVi.trim(),
         collocations: [],
-        toeicPart: "Từ vựng cá nhân",
+        toeicPart: "Personal Vocab",
         level: "B2",
       }));
 
     if (validCards.length === 0) {
-      setError("Cần ít nhất 1 thẻ có đầy đủ từ tiếng Anh và nghĩa tiếng Việt.");
+      setError(
+        "At least 1 card with both an English term and a meaning is required.",
+      );
       return;
     }
 
@@ -119,10 +121,9 @@ export function DeckCreateDialog({
       id: deckId,
       slug: `${slugifyDeckTitle(cleanTitle)}-${Date.now().toString(36).slice(-4)}`,
       title: cleanTitle,
-      description:
-        description.trim() || "Bộ từ vựng TOEIC do bạn tự biên soạn.",
+      description: description.trim() || "Your custom TOEIC vocabulary deck.",
       category: "custom",
-      targetScore: "Cá nhân",
+      targetScore: "Custom",
       estimatedMinutes: Math.max(2, Math.ceil(validCards.length * 0.8)),
       isCustom: true,
       cards: validCards,
@@ -143,19 +144,19 @@ export function DeckCreateDialog({
           <div className="flex items-start justify-between gap-4 border-b border-[#ece9e5] px-6 py-5">
             <div>
               <Dialog.Title className="text-xl font-bold text-[#2b2724]">
-                Tạo bộ Flashcard mới
+                Create New Flashcard Deck
               </Dialog.Title>
               <Dialog.Description
                 className="mt-1 text-sm text-[#5f5953]"
                 id="create-deck-description"
               >
-                Lưu bộ từ vựng riêng của bạn ngay trên trình duyệt để ôn tập
-                cùng các bộ đề chuẩn TOEIC.
+                Save your personal vocabulary deck in the browser to study
+                alongside standard TOEIC decks.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
               <button
-                aria-label="Đóng hộp thoại"
+                aria-label="Close dialog"
                 className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg text-[#5f5953] transition hover:bg-[#f4f1ee] hover:text-[#2b2724] ${focusRing}`}
                 type="button"
               >
@@ -172,7 +173,7 @@ export function DeckCreateDialog({
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Tên bộ thẻ <span className="text-[#bd2a2a]">*</span>
+                    Deck title <span className="text-[#bd2a2a]">*</span>
                   </span>
                   <input
                     className="sp-input"
@@ -181,7 +182,7 @@ export function DeckCreateDialog({
                       setTitle(e.target.value);
                       if (error) setError(null);
                     }}
-                    placeholder="Ví dụ: Từ vựng Part 7 hay sai tuần này"
+                    placeholder="e.g. Tricky Part 7 vocabulary this week"
                     type="text"
                     value={title}
                   />
@@ -189,13 +190,13 @@ export function DeckCreateDialog({
 
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Mô tả ngắn
+                    Short description
                   </span>
                   <input
                     className="sp-input"
                     maxLength={160}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Ghi chú chủ đề hoặc mục tiêu ôn tập"
+                    placeholder="Topic notes or study goal"
                     type="text"
                     value={description}
                   />
@@ -205,7 +206,7 @@ export function DeckCreateDialog({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-[#2b2724]">
-                    Danh sách thẻ ({draftCards.length})
+                    Cards ({draftCards.length})
                   </span>
                   <button
                     className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#df5a28] transition hover:bg-[#fbf0e6] ${focusRing}`}
@@ -213,7 +214,7 @@ export function DeckCreateDialog({
                     type="button"
                   >
                     <Plus aria-hidden="true" className="size-3.5" />
-                    Thêm thẻ
+                    Add card
                   </button>
                 </div>
 
@@ -225,77 +226,75 @@ export function DeckCreateDialog({
                     >
                       <div className="mb-3 flex items-center justify-between">
                         <span className="sp-mono text-xs font-semibold text-[#5f5953]">
-                          Thẻ #{index + 1}
+                          Card #{index + 1}
                         </span>
                         {draftCards.length > 1 && (
                           <button
-                            aria-label={`Xóa thẻ ${index + 1}`}
+                            aria-label={`Remove card ${index + 1}`}
                             className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-[#5f5953] transition hover:bg-[#f6e1e1] hover:text-[#bd2a2a] ${focusRing}`}
                             onClick={() => removeCardRow(card.key)}
                             type="button"
                           >
                             <Trash2 aria-hidden="true" className="size-3.5" />
-                            Xóa
+                            Remove
                           </button>
                         )}
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input
-                          aria-label={`Từ tiếng Anh thẻ ${index + 1}`}
+                          aria-label={`Card ${index + 1} term`}
                           className="sp-input min-h-10 bg-white"
                           onChange={(e) => {
                             updateCard(card.key, "term", e.target.value);
                             if (error) setError(null);
                           }}
-                          placeholder="Từ tiếng Anh (vd: reimburse) *"
+                          placeholder="English term (e.g. reimburse) *"
                           type="text"
                           value={card.term}
                         />
                         <input
-                          aria-label={`Nghĩa tiếng Việt thẻ ${index + 1}`}
+                          aria-label={`Card ${index + 1} meaning`}
                           className="sp-input min-h-10 bg-white"
                           onChange={(e) => {
                             updateCard(card.key, "meaningVi", e.target.value);
                             if (error) setError(null);
                           }}
-                          placeholder="Nghĩa tiếng Việt *"
+                          placeholder="Meaning *"
                           type="text"
                           value={card.meaningVi}
                         />
                         <input
-                          aria-label={`Phiên âm thẻ ${index + 1}`}
+                          aria-label={`Card ${index + 1} pronunciation`}
                           className="sp-input min-h-10 bg-white"
                           onChange={(e) =>
                             updateCard(card.key, "phonetic", e.target.value)
                           }
-                          placeholder="Phiên âm IPA (không bắt buộc)"
+                          placeholder="IPA pronunciation (optional)"
                           type="text"
                           value={card.phonetic}
                         />
                         <select
-                          aria-label={`Từ loại thẻ ${index + 1}`}
+                          aria-label={`Card ${index + 1} part of speech`}
                           className="sp-input min-h-10 bg-white"
                           onChange={(e) =>
                             updateCard(card.key, "partOfSpeech", e.target.value)
                           }
                           value={card.partOfSpeech}
                         >
-                          <option value="noun">noun (danh từ)</option>
-                          <option value="verb">verb (động từ)</option>
-                          <option value="adjective">adjective (tính từ)</option>
-                          <option value="adverb">adverb (trạng từ)</option>
-                          <option value="phrasal verb">
-                            phrasal verb (cụm động từ)
-                          </option>
+                          <option value="noun">noun</option>
+                          <option value="verb">verb</option>
+                          <option value="adjective">adjective</option>
+                          <option value="adverb">adverb</option>
+                          <option value="phrasal verb">phrasal verb</option>
                         </select>
                         <input
-                          aria-label={`Câu ví dụ tiếng Anh thẻ ${index + 1}`}
+                          aria-label={`Card ${index + 1} example sentence`}
                           className="sp-input min-h-10 bg-white sm:col-span-2"
                           onChange={(e) =>
                             updateCard(card.key, "exampleEn", e.target.value)
                           }
-                          placeholder="Câu ví dụ tiếng Anh (không bắt buộc)"
+                          placeholder="Example sentence (optional)"
                           type="text"
                           value={card.exampleEn}
                         />
@@ -318,11 +317,11 @@ export function DeckCreateDialog({
             <div className="flex items-center justify-end gap-3 border-t border-[#ece9e5] px-6 py-4">
               <Dialog.Close asChild>
                 <button className={secondaryAction} type="button">
-                  Hủy
+                  Cancel
                 </button>
               </Dialog.Close>
               <button className={primaryAction} type="submit">
-                Lưu bộ thẻ
+                Save deck
               </button>
             </div>
           </form>

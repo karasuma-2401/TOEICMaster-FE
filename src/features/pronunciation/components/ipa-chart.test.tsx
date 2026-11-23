@@ -8,13 +8,15 @@ describe("IpaChart", () => {
   it("renders the three groups and 44 sound buttons that open a dialog", () => {
     render(<IpaChart filter="all" onSelect={() => {}} practiced={new Set()} />);
     expect(
-      screen.getByRole("heading", { level: 2, name: "Nguyên âm đơn" }),
+      screen.getByRole("heading", { level: 2, name: "Monophthongs" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Nguyên âm đôi" }),
+      screen.getByRole("heading", { name: "Diphthongs" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Phụ âm" })).toBeInTheDocument();
-    const tiles = screen.getAllByRole("button", { name: /^Âm \// });
+    expect(
+      screen.getByRole("heading", { name: "Consonants" }),
+    ).toBeInTheDocument();
+    const tiles = screen.getAllByRole("button", { name: /^Sound \// });
     expect(tiles).toHaveLength(44);
     for (const tile of tiles)
       expect(tile).toHaveAttribute("aria-haspopup", "dialog");
@@ -29,18 +31,18 @@ describe("IpaChart", () => {
       />,
     );
     expect(
-      screen.getByRole("button", { name: "Âm /p/, ví dụ pea, đã luyện" }),
+      screen.getByRole("button", { name: "Sound /p/, example pea, practiced" }),
     ).toBeInTheDocument();
-    const consonants = screen.getByRole("region", { name: "Phụ âm" });
+    const consonants = screen.getByRole("region", { name: "Consonants" });
     expect(
-      within(consonants).getByText("24 âm · Đã luyện 2"),
+      within(consonants).getByText("24 sounds · Practiced 2"),
     ).toBeInTheDocument();
   });
 
   it("calls onSelect with the slug of the clicked sound", async () => {
     const onSelect = vi.fn();
     render(<IpaChart filter="all" onSelect={onSelect} practiced={new Set()} />);
-    await userEvent.click(screen.getByRole("button", { name: /Âm \/ð\// }));
+    await userEvent.click(screen.getByRole("button", { name: /Sound \/ð\// }));
     expect(onSelect).toHaveBeenCalledWith("th-voiced");
   });
 
@@ -48,8 +50,8 @@ describe("IpaChart", () => {
     render(
       <IpaChart filter="diphthong" onSelect={() => {}} practiced={new Set()} />,
     );
-    const section = screen.getByRole("region", { name: "Nguyên âm đôi" });
+    const section = screen.getByRole("region", { name: "Diphthongs" });
     expect(within(section).getAllByRole("button")).toHaveLength(8);
-    expect(screen.queryByRole("heading", { name: "Phụ âm" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Consonants" })).toBeNull();
   });
 });

@@ -60,7 +60,7 @@ describe("Speaking admin API", () => {
       .fn()
       .mockResolvedValue(Response.json(testDetailDto(), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);
-    const file = new File(["xlsx"], "de.xlsx");
+    const file = new File(["xlsx"], "test.xlsx");
 
     const { test } = await importSpeakingTest(file);
 
@@ -69,7 +69,7 @@ describe("Speaking admin API", () => {
     expect(init.method).toBe("POST");
     expect(init.headers).not.toHaveProperty("Content-Type");
     expect((init.body as FormData).get("file")).toMatchObject({
-      name: "de.xlsx",
+      name: "test.xlsx",
     });
     expect(test.id).toBe(testDetailDto().id);
   });
@@ -113,9 +113,14 @@ describe("Speaking admin API", () => {
       vi.fn().mockResolvedValue(
         Response.json(
           {
-            title: "Nội dung trùng",
+            title: "Duplicate content",
             code: "VERSION_CONFLICT",
-            errors: { Content: ["Câu 1 và Câu 2", "Câu 5 và Câu 8"] },
+            errors: {
+              Content: [
+                "Question 1 and Question 2",
+                "Question 5 and Question 8",
+              ],
+            },
           },
           { status: 422 },
         ),
@@ -128,9 +133,11 @@ describe("Speaking admin API", () => {
     }).catch((cause: unknown) => cause);
     expect(result).toBeInstanceOf(SpeakingApiError);
     expect(result).toMatchObject({
-      message: "Nội dung trùng",
+      message: "Duplicate content",
       code: "VERSION_CONFLICT",
-      fieldErrors: { content: ["Câu 1 và Câu 2", "Câu 5 và Câu 8"] },
+      fieldErrors: {
+        content: ["Question 1 and Question 2", "Question 5 and Question 8"],
+      },
     });
   });
 
@@ -156,7 +163,7 @@ describe("Speaking admin API", () => {
           part: 1,
           sequenceNumber: 1,
           content: {
-            rubricNotes: "Rõ ràng",
+            rubricNotes: "Clear",
             modelAnswer: "Reference answer",
             passage: "Read this notice aloud.",
           },

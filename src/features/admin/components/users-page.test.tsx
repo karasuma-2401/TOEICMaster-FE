@@ -46,51 +46,47 @@ describe("UsersPage", () => {
   it("shows loading followed by the empty state", async () => {
     vi.mocked(getAdminUsers).mockResolvedValue(data);
     render(<UsersPage />);
-    expect(
-      screen.getByLabelText("Đang tải danh sách người dùng"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Loading user list")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText("Chưa có người dùng nào")).toBeInTheDocument(),
+      expect(screen.getByText("No users yet")).toBeInTheDocument(),
     );
   });
 
   it("shows a retry action for service failures", async () => {
     vi.mocked(getAdminUsers).mockRejectedValue(
-      new AdminUsersApiError(502, "Dịch vụ lỗi."),
+      new AdminUsersApiError(502, "Service error."),
     );
     render(<UsersPage />);
     await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Thử lại" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument(),
     );
   });
 
   it("redirects a forbidden session and shows the shared warning toast", async () => {
     vi.mocked(getAdminUsers).mockRejectedValue(
-      new AdminUsersApiError(403, "Bạn không có quyền."),
+      new AdminUsersApiError(403, "You do not have permission."),
     );
     render(<UsersPage />);
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/"));
     expect(toast.error).toHaveBeenCalledWith(
-      "Tài khoản của bạn không có quyền truy cập khu vực quản trị.",
+      "Your account does not have permission to access the admin area.",
     );
   });
 
   it("provides a login path when refreshing an expired session fails", async () => {
     vi.mocked(getAdminUsers).mockRejectedValue(
-      new AdminUsersApiError(401, "Phiên đăng nhập đã hết hạn."),
+      new AdminUsersApiError(401, "Your session has expired."),
     );
     render(<UsersPage />);
     await waitFor(() =>
       expect(
-        screen.getByRole("link", { name: "Đăng nhập lại" }),
+        screen.getByRole("link", { name: "Sign in again" }),
       ).toHaveAttribute("href", "/login?next=%2Fadmin%2Fusers"),
     );
   });
 
   it("distinguishes a filtered empty result from an empty account list", async () => {
-    url = "q=khongton tai";
+    url = "q=nonexistent";
     vi.mocked(getAdminUsers).mockResolvedValue({
       ...data,
       stats: {
@@ -102,12 +98,10 @@ describe("UsersPage", () => {
     });
     render(<UsersPage />);
     await waitFor(() =>
-      expect(
-        screen.getByText("Không tìm thấy kết quả phù hợp"),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("No matching results found")).toBeInTheDocument(),
     );
     expect(
-      screen.getByRole("button", { name: "Xóa bộ lọc" }),
+      screen.getByRole("button", { name: "Clear filters" }),
     ).toBeInTheDocument();
   });
 });

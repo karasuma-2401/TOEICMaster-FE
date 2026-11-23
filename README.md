@@ -1,18 +1,21 @@
 # TOEICMaster Frontend
 
-Frontend của phần mềm hỗ trợ học và luyện thi TOEIC.
+Frontend for the TOEIC learning and exam preparation application.
 
-**Công nghệ:** React 19, Next.js 16 (App Router), TypeScript, TailwindCSS 4, shadcn/ui (Radix UI) và Recharts. Dùng npm, Oxlint, Prettier và Vitest.
+**Tech stack:** React 19, Next.js 16 (App Router), TypeScript, TailwindCSS 4, shadcn/ui (Radix UI), and Recharts.
+Uses npm, Oxlint, Prettier, and Vitest.
 
-Ứng dụng chạy bằng Next.js. Vite xuất hiện trong dependencies vì Vitest dùng nó để chạy test, không phải công cụ chạy frontend của project.
+The application runs on Next.js.
+Vite appears in dependencies because Vitest uses it to run tests, not as the project's frontend runner.
 
-## Chuẩn bị
+## Prerequisites
 
 - Git.
-- Node.js 24 LTS, tối thiểu 24.21.0, và npm 11. Phiên bản chuẩn của nhóm nằm trong `.nvmrc`; CI đọc cùng file này.
-- Backend TOEICMaster chạy tại `http://localhost:5287`.
+- Node.js 24 LTS, minimum 24.21.0, and npm 11.
+  The team's standard version is in `.nvmrc`; CI reads the same file.
+- TOEICMaster backend running at `http://localhost:5287`.
 
-Kiểm tra phiên bản:
+Check installed versions:
 
 ```sh
 node --version
@@ -20,22 +23,25 @@ npm --version
 git --version
 ```
 
-Nếu máy đang dùng Node.js 24.14.1 từ lần setup trước, cập nhật lên 24.21.0 hoặc bản vá mới hơn trong dòng 24 trước khi chạy. Với nvm trên macOS/Linux, dùng `nvm install` và `nvm use`; với nvm-windows, dùng `nvm install 24.21.0` rồi `nvm use 24.21.0`. Có thể cài từ [Node.js](https://nodejs.org/en/download) nếu không dùng nvm.
+If your machine is still using Node.js 24.14.1 from a previous setup, update to 24.21.0 or a newer patch release in the 24.x line before running.
+With nvm on macOS/Linux, run `nvm install` and `nvm use`; with nvm-windows, run `nvm install 24.21.0` then `nvm use 24.21.0`.
+You can install from [Node.js](https://nodejs.org/en/download) if you do not use nvm.
 
-## Setup trên máy cá nhân (khuyến nghị khi lập trình)
+## Local machine setup (recommended for development)
 
-Chạy frontend bằng `npm run dev` để giao diện tự cập nhật khi sửa code. Không cần Docker cho frontend; backend và Redis, MinIO, Mailpit vẫn có thể chạy bằng Docker theo README của repo backend.
+Run the frontend with `npm run dev` so the UI automatically updates as you edit code.
+Docker is not required for the frontend; the backend along with Redis, MinIO, and Mailpit can still be run with Docker according to the backend repository's README.
 
-1. Clone repo frontend và mở terminal tại thư mục repo:
+1. Clone the frontend repository and open a terminal in the repository directory:
 
    ```sh
    git clone <FRONTEND_REPO_URL> toeicmaster-fe
    cd toeicmaster-fe
    ```
 
-   Thay `<FRONTEND_REPO_URL>` bằng URL GitHub của nhóm.
+   Replace `<FRONTEND_REPO_URL>` with the team's GitHub URL.
 
-2. Tạo file cấu hình:
+2. Create the configuration file:
 
    Windows PowerShell:
 
@@ -49,7 +55,7 @@ Chạy frontend bằng `npm run dev` để giao diện tự cập nhật khi s�
    cp .env.example .env.local
    ```
 
-   Giá trị mặc định:
+   Default values:
 
    ```dotenv
    API_BASE_URL=http://localhost:5287
@@ -57,114 +63,129 @@ Chạy frontend bằng `npm run dev` để giao diện tự cập nhật khi s�
    AUTH_SESSION_SECRET=<32 random bytes encoded as base64url>
    ```
 
-   Nếu backend dùng địa chỉ khác, sửa giá trị này rồi khởi động lại frontend. Biến này chỉ dùng trên server Next.js.
-   Tạo `AUTH_SESSION_SECRET` bằng `node -e 'console.log(require("node:crypto").randomBytes(32).toString("base64url"))'`.
-   Giữ bí mật giá trị này và dùng cùng một giá trị trên các instance frontend. `GOOGLE_CLIENT_ID` là public ID,
-   phải khớp backend và cần cấu hình authorized JavaScript origin của Google cho địa chỉ frontend.
+   If the backend uses a different address, update this value and restart the frontend.
+   This variable is only used on the Next.js server.
+   Generate `AUTH_SESSION_SECRET` with `node -e 'console.log(require("node:crypto").randomBytes(32).toString("base64url"))'`.
+   Keep this value secret and use the same value across frontend instances.
+   `GOOGLE_CLIENT_ID` is a public ID, must match the backend, and requires Google's authorized JavaScript origin to be configured for the frontend address.
 
-3. Cài dependency và chạy:
+3. Install dependencies and run:
 
    ```sh
    npm ci
    npm run dev
    ```
 
-4. Mở `http://localhost:3000`. Khi backend chạy, trang sẽ hiển thị trạng thái kết nối thành công.
+4. Open `http://localhost:3000`.
+   When the backend is running, the page will display a successful connection status.
 
-Mỗi thành viên tự tạo `.env.local` trên máy mình; file này được Git bỏ qua. Không đưa credential database hoặc SMTP vào frontend.
+Each team member creates `.env.local` locally on their machine; this file is ignored by Git.
+Do not put database or SMTP credentials into the frontend.
 
-## Chạy hằng ngày
+## Running daily
 
-Sau lần setup đầu tiên, mở terminal tại repo frontend và chạy:
+After the initial setup, open a terminal in the frontend repository and run:
 
 ```sh
 npm run dev
 ```
 
-Nếu trước đó đã chạy frontend bằng Docker, dừng container để giải phóng cổng `3000` trước:
+If you previously ran the frontend with Docker, stop the container to free port `3000` first:
 
 ```sh
 docker compose stop frontend
 npm run dev
 ```
 
-Lệnh `stop frontend` chỉ dừng frontend trong repo này; các dịch vụ của repo backend vẫn chạy.
+The `stop frontend` command only stops the frontend in this repository; services from the backend repository keep running.
 
-## Chạy bằng Docker (tùy chọn)
+## Running with Docker (optional)
 
-Docker đóng gói ứng dụng cùng Node.js và thư viện để môi trường chạy thống nhất. Cấu hình này dùng để kiểm tra bản build, phục vụ CI và chuẩn bị triển khai sau này. Docker không bắt buộc khi lập trình frontend.
+Docker packages the application together with Node.js and its libraries for a consistent runtime environment.
+This configuration is used to verify builds, support CI, and prepare for future deployment.
+Docker is not required for frontend development.
 
-Container hiện tại chạy bản build production, không tự cập nhật khi sửa code. Sau khi sửa code, chạy lại `docker compose up -d --build` để build và cập nhật container; nếu dùng shared network, chạy lại lệnh có cả hai file Compose bên dưới.
+The current container runs a production build and does not auto-reload when code changes.
+After editing code, re-run `docker compose up -d --build` to rebuild and update the container; if using the shared network, re-run the command with both Compose files below.
 
-Cần Docker Desktop đang chạy Linux containers hoặc Docker Engine có Compose v2.
+Requires Docker Desktop running Linux containers or Docker Engine with Compose v2.
 
-Nếu backend chạy trên máy host:
+If the backend is running on the host machine:
 
 ```sh
 docker compose --env-file .env.local up -d --build
 ```
 
-Mở `http://localhost:3000`. Container frontend gọi backend qua `host.docker.internal:5287`.
+Open `http://localhost:3000`.
+The frontend container calls the backend via `host.docker.internal:5287`.
 
-Nếu cả hai repo chạy trong Docker, dùng shared network để hoạt động giống nhau trên Windows/macOS/Linux:
+If both repositories run in Docker, use the shared network so behavior is identical on Windows/macOS/Linux:
 
 ```sh
 docker network create toeicmaster-local
 docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.shared.yml up -d --build
 ```
 
-Chạy backend với override `docker-compose.shared.yml` của repo backend. Network chỉ cần tạo một lần; nếu đã tồn tại, bỏ qua lệnh tạo.
+Run the backend with the backend repository's `docker-compose.shared.yml` override.
+The network only needs to be created once; if it already exists, skip the create command.
 
-Xem log và dừng frontend:
+View logs and stop the frontend:
 
 ```sh
 docker compose logs -f frontend
 docker compose down
 ```
 
-## Lệnh thường dùng
+## Common commands
 
-| Lệnh             | Mục đích                                          |
-| ---------------- | ------------------------------------------------- |
-| `npm run dev`    | Chạy development server, tự cập nhật khi sửa code |
-| `npm run check`  | Kiểm tra format, lint, TypeScript, test và build  |
-| `npm run format` | Format code                                       |
-| `npm test`       | Chạy tests                                        |
-| `npm run audit`  | Kiểm tra dependency                               |
-| `npm run build`  | Build standalone                                  |
-| `npm start`      | Chạy bản build; đọc `.env.local` nếu có           |
+| Command          | Purpose                                                   |
+| ---------------- | --------------------------------------------------------- |
+| `npm run dev`    | Run the development server with auto-reload on code edits |
+| `npm run check`  | Check formatting, lint, TypeScript, tests, and build      |
+| `npm run format` | Format code                                               |
+| `npm test`       | Run tests                                                 |
+| `npm run audit`  | Audit dependencies                                        |
+| `npm run build`  | Build standalone output                                   |
+| `npm start`      | Run the built app; reads `.env.local` if present          |
 
-## Cấu trúc
+## Structure
 
-For new features, see the [feature development guide](docs/feature-development.md) for file placement, an existing code path, and verification steps. The [authentication contract](docs/authentication.md) describes session and registration behavior. The **User story** template in `.github/ISSUE_TEMPLATE/` captures acceptance criteria and implementation context for AI.
+For new features, see the [feature development guide](docs/feature-development.md) for file placement, an existing code path, and verification steps.
+The [authentication contract](docs/authentication.md) describes session and registration behavior.
+The **User story** template in `.github/ISSUE_TEMPLATE/` captures acceptance criteria and implementation context for AI.
 
 ```text
 src/
-  app/                Route, layout và Next.js route handlers
-  features/           Code theo từng tính năng
-  shared/             HTTP client và code dùng chung
-scripts/              Chuẩn bị output standalone
-.github/              CI, publish image và template Issue
+  app/                Routes, layouts, and Next.js route handlers
+  features/           Feature-based code
+  shared/             HTTP client and shared code
+scripts/              Prepare standalone output
+.github/              CI, image publishing, and Issue templates
 ```
 
-Trạng thái kết nối gọi `/api/system/ping` trên Next.js, rồi gọi `/api/v1/system/ping` của backend.
+Connection status calls `/api/system/ping` on Next.js, which then calls `/api/v1/system/ping` on the backend.
 
-## Xử lý lỗi thường gặp
+## Troubleshooting
 
-- **Không kết nối được dịch vụ:** kiểm tra backend đang chạy, `API_BASE_URL` và cổng 5287.
-- **Cổng 3000 bị chiếm:** nếu container frontend đang chạy, dùng `docker compose stop frontend` trước khi chạy `npm run dev`; nếu ứng dụng khác đang dùng cổng, dừng ứng dụng đó hoặc chạy `npm run dev -- --port 3001`.
-- **npm ci báo dependency không khớp:** kiểm tra đúng Node/npm và lấy `package-lock.json` mới nhất; không xóa lock file để bỏ qua lỗi.
+- **Cannot connect to the service:** verify that the backend is running, `API_BASE_URL` is set correctly, and port 5287 is reachable.
+- **Port 3000 is in use:** if the frontend container is running, run `docker compose stop frontend` before running `npm run dev`; if another application is using the port, stop that application or run `npm run dev -- --port 3001`.
+- **npm ci reports dependency mismatch:** verify the correct Node/npm versions and pull the latest `package-lock.json`; do not delete the lock file to bypass the error.
 
-## CI và làm việc nhóm
+## CI and team collaboration
 
-Workflow được điều chỉnh từ [UGTM](https://github.com/karasuma-2401/UGTM/tree/772b2157457bd9d4aabc316c770dfbd90ee79549), chạy CI khi PR/push vào `dev` hoặc `main`. Publish image lên GHCR chỉ chạy sau CI thành công của push từ chính repo.
+Workflows are adapted from [UGTM](https://github.com/karasuma-2401/UGTM/tree/772b2157457bd9d4aabc316c770dfbd90ee79549) and run CI on PRs/pushes to `dev` or `main`.
+Publishing the image to GHCR only runs after CI succeeds on pushes from this repository itself.
 
-Feature/fix branch mở PR vào `dev`; release qua PR từ `dev` vào `main`. Khi tạo repo GitHub, push workflow vào default branch `main` và cho phép Actions publish package bằng `GITHUB_TOKEN`. Deploy Azure sẽ cấu hình khi VPS sẵn sàng.
+Feature/fix branches open PRs into `dev`; releases go through PRs from `dev` into `main`.
+When creating the GitHub repository, push workflows to the default branch `main` and allow Actions to publish packages using `GITHUB_TOKEN`.
+Azure deployment will be configured when the VPS is ready.
 
-GitHub Actions được ghim commit SHA và dùng Node 24 cho các JavaScript actions. Khi cập nhật dependency, commit cả `package.json` và `package-lock.json`, chạy `npm run check` và `npm run audit`. Các flow học tập và browser E2E tests sẽ bổ sung theo backlog.
+GitHub Actions are pinned by commit SHA and use Node 24 for JavaScript actions.
+When updating dependencies, commit both `package.json` and `package-lock.json`, and run `npm run check` and `npm run audit`.
+Learning flows and browser E2E tests will be added according to the backlog.
 
 <details>
-<summary>Giấy phép cấu hình tham khảo UGTM (MIT)</summary>
+<summary>Reference UGTM configuration license (MIT)</summary>
 
 ```text
 MIT License

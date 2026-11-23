@@ -24,14 +24,14 @@ export function SavedLessons() {
 
   return (
     <section id="saved-lessons" className="scroll-mt-24">
-      <h2 className="text-2xl font-bold">Bài học yêu thích</h2>
+      <h2 className="text-2xl font-bold">Saved Lessons</h2>
       {!items ? (
-        <output>Đang tải bài học đã lưu…</output>
+        <output>Loading saved lessons...</output>
       ) : items.length === 0 ? (
         <p className="mt-3 text-[#6b655f]">
-          Chưa có bài học nào được lưu.{" "}
+          No saved lessons yet.{" "}
           <Link className="text-[#c74422] underline" href="/knowledge">
-            Khám phá thư viện →
+            Explore library →
           </Link>
         </p>
       ) : (
@@ -52,7 +52,7 @@ export function SavedLessons() {
                 className="text-sm text-[#a83d21]"
                 onClick={() => void remove(item.articleId)}
               >
-                Bỏ lưu
+                Remove
               </button>
             </li>
           ))}

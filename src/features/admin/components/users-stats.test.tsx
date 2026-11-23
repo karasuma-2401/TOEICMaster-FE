@@ -19,7 +19,7 @@ describe("UsersStats", () => {
       />,
     );
     expect(screen.getByText("20")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Bị khóa/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Locked/ }));
     expect(onSelectStatus).toHaveBeenCalledWith("LOCKED");
   });
 });

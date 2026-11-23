@@ -62,12 +62,12 @@ it("keeps unsaved typing when a timer refresh returns an older server answer", a
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
-  const answer = screen.getByLabelText("Bài làm của bạn");
+  const answer = screen.getByLabelText("Your response");
   await act(async () => {
     await vi.advanceTimersByTimeAsync(700);
   });
   fireEvent.change(answer, { target: { value: "New answer" } });
-  expect(screen.getByText("Chưa lưu trên server")).toBeInTheDocument();
+  expect(screen.getByText("Not saved on server yet")).toBeInTheDocument();
 
   await act(async () => {
     await vi.advanceTimersByTimeAsync(300);
@@ -113,7 +113,7 @@ it("keeps focus and saves edits in order when the learner continues typing durin
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
-  const answer = screen.getByLabelText("Bài làm của bạn");
+  const answer = screen.getByLabelText("Your response");
   answer.focus();
   fireEvent.change(answer, { target: { value: "Hello" } });
   await act(async () => {
@@ -140,7 +140,7 @@ it("keeps focus and saves edits in order when the learner continues typing durin
   expect(mocks.save).toHaveBeenNthCalledWith(2, "attempt-1", 1, "Hello again");
   expect(answer).toHaveValue("Hello again");
   expect(answer).toHaveFocus();
-  expect(screen.getByText("Đã autosave trên server")).toBeInTheDocument();
+  expect(screen.getByText("Autosaved on server")).toBeInTheDocument();
 });
 
 it("ignores an older timer refresh that arrives after a successful autosave", async () => {
@@ -179,7 +179,7 @@ it("ignores an older timer refresh that arrives after a successful autosave", as
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
-  const answer = screen.getByLabelText("Bài làm của bạn");
+  const answer = screen.getByLabelText("Your response");
   await act(async () => {
     await vi.advanceTimersByTimeAsync(700);
   });
@@ -187,7 +187,7 @@ it("ignores an older timer refresh that arrives after a successful autosave", as
   await act(async () => {
     await vi.advanceTimersByTimeAsync(800);
   });
-  expect(screen.getByText("Đã autosave trên server")).toBeInTheDocument();
+  expect(screen.getByText("Autosaved on server")).toBeInTheDocument();
 
   await act(async () => {
     finishRefresh(attempt);

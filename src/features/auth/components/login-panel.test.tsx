@@ -25,14 +25,16 @@ describe("LoginPanel", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<LoginPanel />);
 
-    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText("Vui lòng nhập email.")).toBeInTheDocument();
-    expect(screen.getByText("Vui lòng nhập mật khẩu.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Please enter your email."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Please enter your password.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password");
-    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    await user.type(screen.getByLabelText("Password"), "password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(navigation.replace).toHaveBeenCalledWith("/");
     expect(fetchMock).toHaveBeenCalledWith(
@@ -51,13 +53,13 @@ describe("LoginPanel", () => {
     const user = userEvent.setup();
     render(<LoginPanel />);
 
-    const password = screen.getByLabelText("Mật khẩu");
+    const password = screen.getByLabelText("Password");
     expect(password).toHaveAttribute("type", "password");
 
-    await user.click(screen.getByRole("button", { name: "Hiện mật khẩu" }));
+    await user.click(screen.getByRole("button", { name: "Show password" }));
     expect(password).toHaveAttribute("type", "text");
 
-    const rememberMe = screen.getByLabelText("Ghi nhớ đăng nhập");
+    const rememberMe = screen.getByLabelText("Remember me");
     await user.click(rememberMe);
     expect(rememberMe).toBeChecked();
   });
@@ -79,8 +81,8 @@ describe("LoginPanel", () => {
     render(<LoginPanel returnTo="/dashboard?tab=progress" />);
 
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password");
-    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    await user.type(screen.getByLabelText("Password"), "password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(navigation.replace).toHaveBeenCalledWith("/dashboard?tab=progress");
   });
@@ -88,14 +90,14 @@ describe("LoginPanel", () => {
   it("links to the dedicated password recovery page", () => {
     render(<LoginPanel />);
     expect(
-      screen.getByRole("link", { name: "Quên mật khẩu?" }),
+      screen.getByRole("link", { name: "Forgot password?" }),
     ).toHaveAttribute("href", "/forgot-password");
   });
 
   it("explains when Google is not configured", () => {
     render(<LoginPanel />);
     expect(
-      screen.getByText("Đăng nhập bằng Google chưa được cấu hình."),
+      screen.getByText("Google sign-in is not configured."),
     ).toBeInTheDocument();
   });
 
@@ -117,8 +119,8 @@ describe("LoginPanel", () => {
     render(<LoginPanel />);
 
     await user.type(screen.getByLabelText("Email"), "admin@example.com");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password");
-    await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    await user.type(screen.getByLabelText("Password"), "password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(navigation.replace).toHaveBeenCalledWith("/admin");
   });
@@ -143,8 +145,8 @@ describe("LoginPanel", () => {
       render(<LoginPanel returnTo="/admin/knowledge?tab=articles" />);
 
       await user.type(screen.getByLabelText("Email"), "linh@example.com");
-      await user.type(screen.getByLabelText("Mật khẩu"), "password");
-      await user.click(screen.getByRole("button", { name: "Đăng nhập" }));
+      await user.type(screen.getByLabelText("Password"), "password");
+      await user.click(screen.getByRole("button", { name: "Sign in" }));
 
       expect(navigation.replace).toHaveBeenCalledWith(
         "/admin/knowledge?tab=articles",

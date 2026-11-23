@@ -8,7 +8,7 @@ export function DescribePicturePrompt({
 }) {
   return (
     <figure>
-      <Chip tone="orange">MIÊU TẢ BỨC TRANH</Chip>
+      <Chip tone="orange">DESCRIBE A PICTURE</Chip>
       {content.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- content media is served by the application.
         <img
@@ -22,8 +22,8 @@ export function DescribePicturePrompt({
         </div>
       )}
       <figcaption className="mt-4 text-center text-sm text-(--sp-ink-2)">
-        Miêu tả bức tranh trên. Hãy nói rõ chủ đề, các đối tượng chính và chi
-        tiết nổi bật.
+        Describe the picture above. Clearly state the main topic, key subjects,
+        and notable details.
       </figcaption>
     </figure>
   );

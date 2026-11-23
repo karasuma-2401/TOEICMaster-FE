@@ -11,11 +11,11 @@ describe("getAdminNavigationItem", () => {
       "/admin/tests/writing",
       "/admin/tests/speaking",
     ])
-      expect(getAdminNavigationItem(path)?.label).toBe("Kho dữ liệu");
-    expect(getAdminNavigationItem("/admin/users")?.label).toBe("Người dùng");
-    expect(getAdminNavigationItem("/admin/knowledge")?.label).toBe("Kiến thức");
+      expect(getAdminNavigationItem(path)?.label).toBe("Data Bank");
+    expect(getAdminNavigationItem("/admin/users")?.label).toBe("Users");
+    expect(getAdminNavigationItem("/admin/knowledge")?.label).toBe("Knowledge");
     expect(getAdminNavigationItem("/admin/knowledge/new")?.label).toBe(
-      "Kiến thức",
+      "Knowledge",
     );
   });
 });

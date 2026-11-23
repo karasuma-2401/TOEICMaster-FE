@@ -15,20 +15,20 @@ const writingParts: readonly PartCard[] = [
   {
     part: 1,
     title: "Write a sentence",
-    subtitle: "Viết câu theo tranh",
-    type: "Hình ảnh + Từ gợi ý",
+    subtitle: "Write a sentence based on a picture",
+    type: "Image + Prompt words",
   },
   {
     part: 2,
     title: "Respond to a written request",
-    subtitle: "Phản hồi yêu cầu viết",
+    subtitle: "Respond to a written request",
     type: "Email",
   },
   {
     part: 3,
     title: "Write an opinion",
-    subtitle: "Viết bài nêu quan điểm",
-    type: "Đoạn văn",
+    subtitle: "Write an opinion essay",
+    type: "Paragraph",
   },
 ];
 
@@ -40,25 +40,27 @@ const speakingParts: readonly PartCard[] = [1, 2, 3, 4, 5].map((part) => {
     subtitle: spec.subtitle,
     type:
       part === 1
-        ? "Văn bản + Audio"
+        ? "Text + Audio"
         : part === 2
-          ? "Hình ảnh + Audio"
+          ? "Image + Audio"
           : part === 5
-            ? "Câu hỏi + Audio"
-            : "Cụm câu hỏi + Audio",
+            ? "Question + Audio"
+            : "Question Group + Audio",
   };
 });
 
 const pageCopy = {
   speaking: {
-    title: "Ngân hàng bài tập Speaking",
-    description: "Chọn một Part để quản lý bài tập trong workspace riêng.",
+    title: "Speaking Exercise Bank",
+    description:
+      "Select a Part to manage exercises in its dedicated workspace.",
     label: "Speaking",
     parts: speakingParts,
   },
   writing: {
-    title: "Ngân hàng bài tập Writing",
-    description: "Chọn một Part để quản lý bài tập trong workspace riêng.",
+    title: "Writing Exercise Bank",
+    description:
+      "Select a Part to manage exercises in its dedicated workspace.",
     label: "Writing",
     parts: writingParts,
   },
@@ -81,7 +83,7 @@ export function AdminPartLanding({ skill }: { skill: "speaking" | "writing" }) {
               {config.label}
             </h2>
             <p className="mt-1 text-xs text-[var(--admin-muted)]">
-              Chọn Part để xem, thêm thủ công hoặc import ngân hàng bài tập.
+              Select a Part to view, manually add, or import the exercise bank.
             </p>
           </div>
           <span className="text-xs font-bold text-[var(--admin-muted)]">
@@ -106,14 +108,14 @@ export function AdminPartLanding({ skill }: { skill: "speaking" | "writing" }) {
                   </p>
                 </div>
                 <span className="text-xs font-bold text-[var(--admin-brand-orange)]">
-                  — câu
+                  - questions
                 </span>
               </div>
               <span className="mt-5 inline-flex rounded-md bg-[#fff0e8] px-2 py-1 text-[11px] font-bold text-[var(--admin-brand-orange)]">
                 {part.type}
               </span>
               <span className="mt-4 flex items-center justify-between border-t border-[#ffd8cb] pt-3 text-xs font-bold text-[var(--admin-brand-orange)]">
-                Xem bài tập <span aria-hidden="true">→</span>
+                View exercises <span aria-hidden="true">→</span>
               </span>
             </Link>
           ))}

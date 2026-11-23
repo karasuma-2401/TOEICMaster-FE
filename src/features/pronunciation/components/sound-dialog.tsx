@@ -93,13 +93,13 @@ export function SoundDialog({
             ref={heading}
             tabIndex={-1}
           >
-            <span className="sr-only">Âm </span>/{sound.symbol}/
+            <span className="sr-only">Sound </span>/{sound.symbol}/
           </h2>
           <p className="mt-1 text-[13px] text-(--sp-ink-2)">
             {groupLabels[sound.group]} · {subgroupLabels[sound.subgroup]}
             {partner && (
               <>
-                {" · Cặp với "}
+                {" · Paired with "}
                 <button
                   className={`cursor-pointer underline underline-offset-4 hover:text-(--sp-ink) ${focusRing}`}
                   onClick={() => onSelectSound(partner.slug)}
@@ -117,7 +117,7 @@ export function SoundDialog({
           symbol={sound.symbol}
         />
         <button
-          aria-label="Đóng"
+          aria-label="Close"
           className={`grid size-10 shrink-0 cursor-pointer place-items-center rounded-md text-(--sp-ink-2) transition hover:bg-(--sp-subtle) hover:text-(--sp-ink) ${focusRing}`}
           onClick={onClose}
           type="button"
@@ -144,7 +144,7 @@ export function SoundDialog({
       >
         <section aria-labelledby="ipa-how-heading">
           <h3 className="text-[15px] font-semibold" id="ipa-how-heading">
-            Cách phát âm
+            How to pronounce
           </h3>
           <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-[15px] text-(--sp-ink-2)">
             {sound.articulation.map((step) => (
@@ -152,13 +152,13 @@ export function SoundDialog({
             ))}
           </ol>
           <p className="mt-2 text-[13px] text-(--sp-ink-2)">
-            Lỗi thường gặp: {sound.commonMistake}
+            Common mistake: {sound.commonMistake}
           </p>
         </section>
 
         <section aria-labelledby="ipa-words-heading">
           <h3 className="text-[15px] font-semibold" id="ipa-words-heading">
-            Từ phát âm mẫu
+            Example words
           </h3>
           <div className="mt-2">
             <ExampleWordList
@@ -193,7 +193,7 @@ export function SoundDialog({
           rel="noreferrer"
           target="_blank"
         >
-          Nguồn audio
+          Audio credits
         </a>
         <NavButton direction="next" onSelect={onSelectSound} target={next} />
       </footer>
@@ -211,7 +211,7 @@ function NavButton({
   onSelect: (slug: string) => void;
 }) {
   if (!target) return <span className="min-w-20" />;
-  const label = direction === "previous" ? "Âm trước" : "Âm sau";
+  const label = direction === "previous" ? "Previous" : "Next";
   return (
     <button
       aria-label={`${label}: /${target.symbol}/`}

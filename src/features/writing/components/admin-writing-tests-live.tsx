@@ -38,9 +38,9 @@ import { AdminWritingPrompt } from "./admin-writing-prompt";
 
 type Part = 1 | 2 | 3;
 const testStatusLabel: Record<WritingTestDto["status"], string> = {
-  DRAFT: "Bản nháp",
-  PUBLISHED: "Đã công bố",
-  ARCHIVED: "Đã lưu trữ",
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  ARCHIVED: "Archived",
 };
 type QuestionDraft = {
   part: Part;
@@ -131,21 +131,21 @@ const fields: Record<
   Array<{ key: keyof QuestionDraft; label: string; area?: boolean }>
 > = {
   1: [
-    { key: "imageAlt", label: "Mô tả ảnh *" },
-    { key: "keywordOne", label: "Từ khóa 1 *" },
-    { key: "keywordTwo", label: "Từ khóa 2 *" },
+    { key: "imageAlt", label: "Image alt text *" },
+    { key: "keywordOne", label: "Keyword 1 *" },
+    { key: "keywordTwo", label: "Keyword 2 *" },
   ],
   2: [
-    { key: "sender", label: "Người gửi *" },
-    { key: "recipient", label: "Người nhận *" },
-    { key: "subject", label: "Chủ đề email *" },
-    { key: "emailBody", label: "Nội dung email *", area: true },
-    { key: "directions", label: "Yêu cầu phản hồi *", area: true },
+    { key: "sender", label: "Sender *" },
+    { key: "recipient", label: "Recipient *" },
+    { key: "subject", label: "Email subject *" },
+    { key: "emailBody", label: "Email body *", area: true },
+    { key: "directions", label: "Response directions *", area: true },
   ],
   3: [
-    { key: "prompt", label: "Đề bài *", area: true },
-    { key: "minimumWordCount", label: "Số từ tối thiểu *" },
-    { key: "outline", label: "Dàn ý", area: true },
+    { key: "prompt", label: "Prompt *", area: true },
+    { key: "minimumWordCount", label: "Minimum word count *" },
+    { key: "outline", label: "Outline", area: true },
   ],
 };
 const inputClass =
@@ -173,12 +173,12 @@ function ImportTest({
     try {
       const result = await importWritingTestFile(selected, true);
       if (typeof result.isValid !== "boolean" || !Array.isArray(result.errors))
-        throw new Error("Phản hồi kiểm tra không hợp lệ.");
+        throw new Error("Invalid validation response.");
       setPreview({ isValid: result.isValid, errors: result.errors });
       setError("");
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể kiểm tra file.",
+        cause instanceof Error ? cause.message : "Could not validate file.",
       );
     } finally {
       setBusy(false);
@@ -191,23 +191,25 @@ function ImportTest({
       await importWritingTestFile(file, false);
       onImported();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể import đề.");
+      setError(
+        cause instanceof Error ? cause.message : "Could not import test.",
+      );
     } finally {
       setBusy(false);
     }
   };
   return (
     <ExcelImportDialog
-      ariaLabel="Import đề Writing"
+      ariaLabel="Import Writing test"
       busy={busy}
       canSubmit={Boolean(preview?.isValid)}
       error={error}
       onClose={onClose}
       onSubmit={() => void commit()}
-      submitLabel="Import bản nháp"
-      summary="Kiểm tra file trước khi tạo đề nháp."
+      submitLabel="Import draft"
+      summary="Validate the file before creating a draft test."
       templateHref="/api/admin/writing/tests/import-template"
-      title="Import Excel đề Writing"
+      title="Import Writing Test Excel"
     >
       <ExcelFileSlot
         busy={busy}
@@ -224,7 +226,7 @@ function ImportTest({
         <output className="block text-[13px]">
           {preview.isValid ? (
             <span className="text-[var(--admin-success)]">
-              File hợp lệ, sẵn sàng tạo bản nháp.
+              Valid file, ready to create draft.
             </span>
           ) : (
             <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-[var(--admin-danger)]">
@@ -238,13 +240,13 @@ function ImportTest({
       <ImportSpec
         rows={[
           ["Sheet", "Manifest, Part1, Part2, Part3"],
-          ["Thứ tự câu", "Part 1: 1–5 · Part 2: 6–7 · Part 3: 8"],
+          ["Question order", "Part 1: 1-5 · Part 2: 6-7 · Part 3: 8"],
         ]}
       />
       <ImportImageId
         disabled={busy}
         id={imageId}
-        label="Ảnh Part 1 cần ImageAssetId"
+        label="Part 1 images require ImageAssetId"
         onSelect={(selected) => {
           setBusy(true);
           void uploadWritingImage(selected)
@@ -254,7 +256,9 @@ function ImportTest({
             })
             .catch((cause: unknown) =>
               setError(
-                cause instanceof Error ? cause.message : "Không thể tải ảnh.",
+                cause instanceof Error
+                  ? cause.message
+                  : "Could not upload image.",
               ),
             )
             .finally(() => setBusy(false));
@@ -303,7 +307,9 @@ function TestBuilder({
       change(index, "imageAssetId", (await uploadWritingImage(file)).id);
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể tải ảnh.");
+      setError(
+        cause instanceof Error ? cause.message : "Could not upload image.",
+      );
     } finally {
       setBusy(false);
     }
@@ -312,7 +318,7 @@ function TestBuilder({
     setBusy(true);
     try {
       if (!code.trim() || !title.trim())
-        throw new Error("Mã đề và tên đề là bắt buộc.");
+        throw new Error("Test code and title are required.");
       const selected = questions.filter(
         (question) =>
           !!question.imageAssetId ||
@@ -351,10 +357,10 @@ function TestBuilder({
       setCurrent(saved);
       if (publish) await publishWritingTest(saved.id, saved.version);
       onSaved(
-        publish ? "Đã công bố đề Writing." : "Đã lưu bản nháp đề Writing.",
+        publish ? "Writing test published." : "Writing test draft saved.",
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể lưu đề.");
+      setError(cause instanceof Error ? cause.message : "Could not save test.");
     } finally {
       setBusy(false);
     }
@@ -363,19 +369,19 @@ function TestBuilder({
     <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
       <dialog
         open
-        aria-label="Soạn đề Writing"
+        aria-label="Writing test builder"
         aria-modal="true"
         className="relative m-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
       >
         <header className="flex justify-between border-b border-[var(--admin-border)] p-5">
-          <h2 className="text-xl font-bold">Soạn đề Writing · 5/2/1</h2>
-          <button onClick={onClose} type="button" aria-label="Đóng">
+          <h2 className="text-xl font-bold">Writing Test Builder · 5/2/1</h2>
+          <button onClick={onClose} type="button" aria-label="Close">
             ×
           </button>
         </header>
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
           <label className="block text-sm font-semibold">
-            Mã đề *
+            Test code *
             <input
               className={inputClass}
               value={code}
@@ -383,7 +389,7 @@ function TestBuilder({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Tên đề *
+            Test title *
             <input
               className={inputClass}
               value={title}
@@ -391,7 +397,7 @@ function TestBuilder({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Mô tả
+            Description
             <textarea
               className={inputClass}
               value={description}
@@ -399,14 +405,14 @@ function TestBuilder({
             />
           </label>
           <p className="text-sm text-slate-600">
-            Có thể lưu bản nháp chưa đủ câu; mỗi câu đã nhập cần đầy đủ trường
-            bắt buộc.
+            You can save an incomplete draft; each entered question must include
+            all required fields.
           </p>
           <nav
-            aria-label="Đi tới câu hỏi"
+            aria-label="Jump to question"
             className="rounded-xl border border-[var(--admin-border)] bg-stone-50 p-4"
           >
-            <p className="text-sm font-bold">Cấu trúc đề · 8 câu</p>
+            <p className="text-sm font-bold">Test structure · 8 questions</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {questions.map((question, index) => (
                 <button
@@ -427,7 +433,7 @@ function TestBuilder({
                     }
                   }}
                 >
-                  Part {question.part} · Câu {question.sequenceNumber}
+                  Part {question.part} · Question {question.sequenceNumber}
                 </button>
               ))}
             </div>
@@ -440,12 +446,12 @@ function TestBuilder({
               key={`${question.part}-${question.sequenceNumber}`}
             >
               <summary className="cursor-pointer font-bold">
-                Part {question.part} · Câu {question.sequenceNumber}
+                Part {question.part} · Question {question.sequenceNumber}
               </summary>
               <div className="mt-4 space-y-3">
                 {question.part === 1 && (
                   <label className="block text-sm font-semibold">
-                    Ảnh đề bài *
+                    Prompt image *
                     <input
                       className={inputClass}
                       accept="image/jpeg,image/png,image/webp"
@@ -458,7 +464,7 @@ function TestBuilder({
                     />
                     {question.imageAssetId && (
                       <span className="text-xs text-green-700">
-                        Ảnh đã tải lên
+                        Image uploaded
                       </span>
                     )}
                   </label>
@@ -498,7 +504,7 @@ function TestBuilder({
                   </label>
                 ))}
                 <label className="block text-sm font-semibold">
-                  Tiêu chí chấm
+                  Rubric notes
                   <textarea
                     className={inputClass}
                     value={question.rubricNotes}
@@ -508,7 +514,7 @@ function TestBuilder({
                   />
                 </label>
                 <label className="block text-sm font-semibold">
-                  Bài tham khảo nội bộ (không bắt buộc)
+                  Internal reference answer (optional)
                   <textarea
                     className={inputClass}
                     value={question.modelAnswer}
@@ -519,7 +525,7 @@ function TestBuilder({
                 </label>
                 <details className="rounded-xl bg-stone-50 p-4">
                   <summary className="cursor-pointer text-sm font-semibold">
-                    Xem trước đề bài
+                    Preview prompt
                   </summary>
                   <div className="mt-4">
                     <AdminWritingPrompt question={question} />
@@ -543,7 +549,7 @@ function TestBuilder({
             onClick={onClose}
             type="button"
           >
-            Đóng
+            Close
           </button>
           <button
             className="rounded-lg border border-[var(--admin-border)] px-4 py-2"
@@ -551,7 +557,7 @@ function TestBuilder({
             onClick={() => void save(false)}
             type="button"
           >
-            Lưu nháp
+            Save draft
           </button>
           <button
             className="rounded-lg bg-orange-600 px-4 py-2 font-bold text-white"
@@ -559,7 +565,7 @@ function TestBuilder({
             onClick={() => void save(true)}
             type="button"
           >
-            Lưu và công bố
+            Save and publish
           </button>
         </footer>
       </dialog>
@@ -581,7 +587,7 @@ function TestPreview({
     <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
       <dialog
         open
-        aria-label="Chi tiết đề Writing"
+        aria-label="Writing test details"
         aria-modal="true"
         className="relative m-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
       >
@@ -598,7 +604,7 @@ function TestPreview({
             )}
           </div>
           <button
-            aria-label="Đóng chi tiết đề"
+            aria-label="Close test details"
             className="rounded-lg p-2 hover:bg-slate-100"
             onClick={onClose}
             type="button"
@@ -609,7 +615,7 @@ function TestPreview({
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
           {questions.length === 0 && (
             <p className="text-sm text-[var(--admin-muted)]">
-              Đề chưa có câu hỏi.
+              This test has no questions yet.
             </p>
           )}
           {questions.map((item) => {
@@ -620,13 +626,13 @@ function TestPreview({
                 key={item.id}
               >
                 <h3 className="mb-4 font-bold">
-                  Part {item.part} · Câu {item.sequenceNumber}
+                  Part {item.part} · Question {item.sequenceNumber}
                 </h3>
                 {question ? (
                   <AdminWritingPrompt question={question} />
                 ) : (
                   <p className="text-sm text-red-700">
-                    Không thể hiển thị nội dung câu hỏi này.
+                    Could not display this question&apos;s content.
                   </p>
                 )}
               </section>
@@ -639,7 +645,7 @@ function TestPreview({
             onClick={onClose}
             type="button"
           >
-            Đóng
+            Close
           </button>
         </footer>
       </dialog>
@@ -674,7 +680,7 @@ export function AdminWritingTestsLive() {
       } catch (cause) {
         if (!signal?.aborted)
           setError(
-            cause instanceof Error ? cause.message : "Không thể tải đề.",
+            cause instanceof Error ? cause.message : "Could not load tests.",
           );
       } finally {
         if (!signal?.aborted) setLoading(false);
@@ -715,7 +721,7 @@ export function AdminWritingTestsLive() {
       if (mode === "edit") setBuilder({ ...detail, questions });
       else setPreview({ ...detail, questions });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể tải đề.");
+      setError(cause instanceof Error ? cause.message : "Could not load test.");
     }
   };
   const changeStatus = async (test: WritingTestDto) => {
@@ -727,10 +733,10 @@ export function AdminWritingTestsLive() {
           : "restore";
     const confirmation =
       action === "delete"
-        ? `Xóa vĩnh viễn đề nháp ${test.code}? Thao tác này không thể hoàn tác.`
+        ? `Permanently delete draft test ${test.code}? This action cannot be undone.`
         : action === "archive"
-          ? `Lưu trữ đề ${test.code}? Học viên sẽ không thể bắt đầu lượt làm mới; lịch sử và các lượt đang làm vẫn được giữ.`
-          : `Khôi phục đề ${test.code}? Đề sẽ hiển thị lại cho học viên.`;
+          ? `Archive test ${test.code}? Learners will not be able to start new attempts; history and in-progress attempts are preserved.`
+          : `Restore test ${test.code}? The test will become visible to learners again.`;
     if (!window.confirm(confirmation)) return;
     setPendingId(test.id);
     setError("");
@@ -743,17 +749,17 @@ export function AdminWritingTestsLive() {
       else await restoreWritingTest(test.id, test.version);
       setNotice(
         action === "delete"
-          ? "Đã xóa đề nháp."
+          ? "Draft test deleted."
           : action === "archive"
-            ? "Đã lưu trữ đề Writing."
-            : "Đã khôi phục đề Writing.",
+            ? "Writing test archived."
+            : "Writing test restored.",
       );
       if (page > 1 && tests.length === 1 && (action === "delete" || !!status))
         setPage(page - 1);
       else await load();
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể cập nhật đề.",
+        cause instanceof Error ? cause.message : "Could not update test.",
       );
     } finally {
       setPendingId(null);
@@ -762,8 +768,8 @@ export function AdminWritingTestsLive() {
   return (
     <div>
       <AdminPageHeader
-        title="Đề Writing"
-        description="Tạo đề độc lập gồm 5 câu Part 1, 2 câu Part 2 và 1 câu Part 3."
+        title="Writing Tests"
+        description="Create standalone tests with 5 Part 1 questions, 2 Part 2 questions, and 1 Part 3 question."
         actions={
           <>
             <button
@@ -778,7 +784,7 @@ export function AdminWritingTestsLive() {
               onClick={() => setBuilder("new")}
               type="button"
             >
-              + Tạo đề Writing
+              + Create Writing test
             </button>
           </>
         }
@@ -792,12 +798,12 @@ export function AdminWritingTestsLive() {
       )}
       <AdminFilterBar className="mt-5">
         <AdminSearchField
-          label="Tìm đề Writing"
+          label="Search Writing tests"
           onChange={(next) => {
             setQuery(next);
             setPage(1);
           }}
-          placeholder="Tìm theo mã hoặc tên đề"
+          placeholder="Search by code or title"
           suggestions={tests.map((test) => ({
             value: test.code,
             label: test.title,
@@ -807,16 +813,16 @@ export function AdminWritingTestsLive() {
         />
         <AdminFilterSelect
           allValue=""
-          ariaLabel="Lọc trạng thái đề"
-          label="Trạng thái"
+          ariaLabel="Filter by test status"
+          label="Status"
           onChange={(next) => {
             setStatus(next);
             setPage(1);
           }}
           options={[
-            { value: "DRAFT", label: "Bản nháp" },
-            { value: "PUBLISHED", label: "Đã công bố" },
-            { value: "ARCHIVED", label: "Đã lưu trữ" },
+            { value: "DRAFT", label: "Draft" },
+            { value: "PUBLISHED", label: "Published" },
+            { value: "ARCHIVED", label: "Archived" },
           ]}
           value={status}
         />
@@ -825,11 +831,11 @@ export function AdminWritingTestsLive() {
         <table className="w-full min-w-[600px] text-left text-sm">
           <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
             <tr>
-              <th className="p-4">Mã đề</th>
-              <th>Tên đề</th>
-              <th>Câu hỏi</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
+              <th className="p-4">Test code</th>
+              <th>Title</th>
+              <th>Questions</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -860,7 +866,7 @@ export function AdminWritingTestsLive() {
                     onClick={() => void openTest(test, "preview")}
                     type="button"
                   >
-                    Xem
+                    View
                   </button>
                   {test.status === "DRAFT" && (
                     <button
@@ -868,7 +874,7 @@ export function AdminWritingTestsLive() {
                       onClick={() => void openTest(test, "edit")}
                       type="button"
                     >
-                      Chỉnh sửa
+                      Edit
                     </button>
                   )}
                   <button
@@ -878,19 +884,19 @@ export function AdminWritingTestsLive() {
                     type="button"
                   >
                     {test.status === "DRAFT"
-                      ? "Xóa"
+                      ? "Delete"
                       : test.status === "PUBLISHED"
-                        ? "Lưu trữ"
-                        : "Khôi phục"}
+                        ? "Archive"
+                        : "Restore"}
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {loading && <p className="p-6 text-sm">Đang tải đề Writing…</p>}
+        {loading && <p className="p-6 text-sm">Loading Writing tests…</p>}
         {!loading && tests.length === 0 && !error && (
-          <p className="p-6 text-sm">Chưa có đề Writing.</p>
+          <p className="p-6 text-sm">No Writing tests yet.</p>
         )}
         <div className="flex items-center gap-3 border-t border-[var(--admin-border)] p-4 text-sm">
           <button
@@ -899,16 +905,16 @@ export function AdminWritingTestsLive() {
             onClick={() => setPage(page - 1)}
             type="button"
           >
-            Trang trước
+            Previous
           </button>
-          <span>Trang {page}</span>
+          <span>Page {page}</span>
           <button
             className="rounded border border-[var(--admin-border)] px-3 py-1 disabled:opacity-40"
             disabled={page >= totalPages || loading}
             onClick={() => setPage(page + 1)}
             type="button"
           >
-            Trang sau
+            Next
           </button>
         </div>
       </div>
@@ -931,7 +937,7 @@ export function AdminWritingTestsLive() {
           onClose={() => setImportOpen(false)}
           onImported={() => {
             setImportOpen(false);
-            setNotice("Đã import đề Writing ở trạng thái nháp.");
+            setNotice("Writing test imported as a draft.");
             void load();
           }}
         />

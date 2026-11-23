@@ -31,7 +31,7 @@ export interface PronunciationAssessment {
 export class InvalidAssessmentError extends Error {
   readonly code = "INVALID_RESPONSE";
   constructor() {
-    super("Dữ liệu chấm phát âm không hợp lệ.");
+    super("Invalid pronunciation assessment data.");
     this.name = "InvalidAssessmentError";
   }
 }
@@ -167,9 +167,9 @@ export function scoreBand(value: number): ScoreBand {
 }
 
 export const scoreBandLabels: Record<ScoreBand, string> = {
-  good: "Tốt",
-  fair: "Khá, gần đúng",
-  weak: "Cần luyện thêm",
+  good: "Good",
+  fair: "Fair, almost there",
+  weak: "Needs more practice",
 };
 
 /** True when the assessor recognised a different word from the one practised. */

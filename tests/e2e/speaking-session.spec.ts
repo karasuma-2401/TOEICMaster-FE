@@ -121,7 +121,7 @@ test("Speaking keeps one capture stream across device check and eleven answers",
   });
   await page.goto(`/speaking/tests/${ids.test}/practice`);
   await expect(
-    page.getByRole("button", { name: "Bắt đầu làm bài →" }),
+    page.getByRole("button", { name: "Start test →" }),
   ).toBeDisabled();
   expect(posted).toBe(0);
   expect(
@@ -129,16 +129,18 @@ test("Speaking keeps one capture stream across device check and eleven answers",
       () => (window as Window & { __micCalls: number }).__micCalls,
     ),
   ).toBe(0);
-  await page.getByRole("button", { name: "Cho phép micro" }).click();
-  await page.getByRole("button", { name: "Thu thử 5 giây" }).click();
-  const audio = page.getByLabel("Bản thu kiểm tra");
+  await page.getByRole("button", { name: "Allow microphone" }).click();
+  await page.getByRole("button", { name: "Record 5-second test" }).click();
+  const audio = page.getByLabel("Test recording");
   await expect(audio).toBeVisible({ timeout: 10000 });
   await audio.evaluate((element: HTMLAudioElement) => element.play());
   await expect(
-    page.getByRole("button", { name: "Tôi nghe rõ bản thu" }),
+    page.getByRole("button", { name: "I can hear my recording clearly" }),
   ).toBeEnabled({ timeout: 10000 });
-  await page.getByRole("button", { name: "Tôi nghe rõ bản thu" }).click();
-  await page.getByRole("button", { name: "Bắt đầu làm bài →" }).click();
+  await page
+    .getByRole("button", { name: "I can hear my recording clearly" })
+    .click();
+  await page.getByRole("button", { name: "Start test →" }).click();
   await expect(page).toHaveURL(
     new RegExp(`/speaking/attempts/${ids.attempt}$`),
   );
@@ -187,7 +189,7 @@ test("opening a submitted Speaking attempt never requests a microphone", async (
     return route.fulfill({ json: { items: [] } });
   });
   await page.goto(`/speaking/attempts/${ids.attempt}`);
-  await expect(page.getByText("Đã hoàn thành bài ghi âm")).toBeVisible();
+  await expect(page.getByText("Recordings completed")).toBeVisible();
   expect(
     await page.evaluate(
       () => (window as Window & { __micCalls: number }).__micCalls,

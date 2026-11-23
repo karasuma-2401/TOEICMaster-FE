@@ -9,7 +9,7 @@ export function ReadAloudPrompt({
 }) {
   return (
     <article>
-      <p className="sp-overline text-(--sp-brand)">ĐỌC THÀNH TIẾNG</p>
+      <p className="sp-overline text-(--sp-brand)">READ ALOUD</p>
       <p className="mt-3 text-sm text-(--sp-ink-2)" lang="en">
         Read the text below aloud.
         {recording && " Your response is being recorded."}
@@ -21,8 +21,8 @@ export function ReadAloudPrompt({
         {content.passage}
       </p>
       <p className="text-[13px] text-(--sp-ink-2)">
-        Đọc rõ ràng với tốc độ tự nhiên. Tiếp tục đọc cho đến khi hoàn thành
-        đoạn văn.
+        Read clearly at a natural pace. Keep reading until you finish the
+        passage.
       </p>
     </article>
   );

@@ -30,18 +30,18 @@ import type {
 } from "../types";
 
 const FILTER_OPTIONS: readonly { key: CardFilter; label: string }[] = [
-  { key: "all", label: "Tất cả" },
-  { key: "unmastered", label: "Chưa thuộc" },
-  { key: "review", label: "Cần ôn" },
-  { key: "mastered", label: "Đã thuộc" },
-  { key: "starred", label: "Đánh dấu" },
+  { key: "all", label: "All" },
+  { key: "unmastered", label: "Unmastered" },
+  { key: "review", label: "Needs review" },
+  { key: "mastered", label: "Mastered" },
+  { key: "starred", label: "Starred" },
 ];
 
 const STATUS_META: Record<CardMastery, { label: string; chipClass: string }> = {
-  new: { label: "Chưa học", chipClass: "sp-chip sp-chip-neutral" },
-  learning: { label: "Chưa nhớ", chipClass: "sp-chip sp-chip-danger" },
-  review: { label: "Cần ôn thêm", chipClass: "sp-chip sp-chip-warning" },
-  mastered: { label: "Đã thuộc", chipClass: "sp-chip sp-chip-success" },
+  new: { label: "Not studied", chipClass: "sp-chip sp-chip-neutral" },
+  learning: { label: "Still learning", chipClass: "sp-chip sp-chip-danger" },
+  review: { label: "Needs review", chipClass: "sp-chip sp-chip-warning" },
+  mastered: { label: "Mastered", chipClass: "sp-chip sp-chip-success" },
 };
 
 export function FlashcardStudyStage({
@@ -213,7 +213,7 @@ export function FlashcardStudyStage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <fieldset className="flex flex-wrap gap-1.5 border-0 p-0">
-          <legend className="sr-only">Lọc thẻ theo trạng thái</legend>
+          <legend className="sr-only">Filter cards by status</legend>
           {FILTER_OPTIONS.map((option) => {
             const active = filter === option.key;
             return (
@@ -246,7 +246,7 @@ export function FlashcardStudyStage({
             type="button"
           >
             <Shuffle aria-hidden="true" className="size-3.5" />
-            {isShuffled ? "Đang xáo trộn" : "Xáo trộn"}
+            {isShuffled ? "Shuffled" : "Shuffle"}
           </button>
           <span className="sp-mono rounded-lg bg-[#f4f1ee] px-3 py-2 text-xs font-semibold text-[#5f5953]">
             {studyCards.length === 0
@@ -259,17 +259,18 @@ export function FlashcardStudyStage({
       {studyCards.length === 0 ? (
         <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
           <p className="text-base font-semibold text-[#2b2724]">
-            Không có thẻ nào khớp bộ lọc này
+            No cards match this filter
           </p>
           <p className="mt-1.5 text-sm text-[#5f5953]">
-            Chuyển về “Tất cả” để tiếp tục ôn tập toàn bộ từ vựng trong bộ thẻ.
+            Switch back to &ldquo;All&rdquo; to continue reviewing every word in
+            this deck.
           </p>
           <button
             className={`${secondaryAction} mt-5`}
             onClick={() => handleFilterChange("all")}
             type="button"
           >
-            Xem tất cả thẻ
+            Show all cards
           </button>
         </div>
       ) : sessionDone ? (
@@ -278,10 +279,10 @@ export function FlashcardStudyStage({
             <CheckCircle2 aria-hidden="true" className="size-6" />
           </div>
           <h3 className="mt-4 text-xl font-bold text-[#2b2724]">
-            Hoàn thành lượt ôn tập!
+            Review session complete!
           </h3>
           <p className="mt-1.5 text-sm text-[#5f5953]">
-            Bạn vừa đi qua {studyCards.length} thẻ trong phiên học này.
+            You just reviewed {studyCards.length} cards in this session.
           </p>
           <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-3">
             <div className="rounded-xl border border-[#9fcbac] bg-[#ebf8ed] p-3">
@@ -289,7 +290,7 @@ export function FlashcardStudyStage({
                 {sessionStats.mastered}
               </p>
               <p className="mt-0.5 text-xs font-medium text-[#3f7a52]">
-                Đã thuộc
+                Mastered
               </p>
             </div>
             <div className="rounded-xl border border-[#d9a43a]/50 bg-[#fbf3c8] p-3">
@@ -297,7 +298,7 @@ export function FlashcardStudyStage({
                 {sessionStats.review}
               </p>
               <p className="mt-0.5 text-xs font-medium text-[#a16207]">
-                Cần ôn
+                Needs review
               </p>
             </div>
             <div className="rounded-xl border border-[#d9544f]/40 bg-[#f6e1e1] p-3">
@@ -305,7 +306,7 @@ export function FlashcardStudyStage({
                 {sessionStats.learning}
               </p>
               <p className="mt-0.5 text-xs font-medium text-[#bd2a2a]">
-                Chưa nhớ
+                Still learning
               </p>
             </div>
           </div>
@@ -315,7 +316,7 @@ export function FlashcardStudyStage({
               onClick={() => restartSession("unmastered")}
               type="button"
             >
-              Ôn lại các thẻ chưa thuộc
+              Review unmastered cards
             </button>
             <button
               className={secondaryAction}
@@ -323,7 +324,7 @@ export function FlashcardStudyStage({
               type="button"
             >
               <RotateCcw aria-hidden="true" className="size-4" />
-              Học lại từ đầu
+              Study again from start
             </button>
           </div>
         </div>
@@ -369,8 +370,8 @@ export function FlashcardStudyStage({
                   <button
                     aria-label={
                       isCardStarred(progress, activeCard.id)
-                        ? "Bỏ đánh dấu thẻ"
-                        : "Đánh dấu thẻ quan trọng"
+                        ? "Remove star"
+                        : "Star important card"
                     }
                     aria-pressed={isCardStarred(progress, activeCard.id)}
                     className={`grid size-9 cursor-pointer place-items-center rounded-lg border transition ${focusRing} ${
@@ -395,7 +396,7 @@ export function FlashcardStudyStage({
 
                 <div className="my-auto flex flex-col items-center py-6 text-center">
                   <button
-                    aria-label={`Lật thẻ để xem nghĩa của ${activeCard.term}`}
+                    aria-label={`Flip card to see meaning of ${activeCard.term}`}
                     className={`flex w-full cursor-pointer flex-col items-center rounded-xl py-3 text-center transition hover:bg-[#faf7f5]/80 ${focusRing}`}
                     onClick={() => setFlipped(true)}
                     type="button"
@@ -415,25 +416,25 @@ export function FlashcardStudyStage({
 
                   {speechSupported && (
                     <button
-                      aria-label={`Nghe phát âm ${activeCard.term}`}
+                      aria-label={`Listen to pronunciation of ${activeCard.term}`}
                       className={`mt-4 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-[#dacfc5] bg-[#faf7f5] px-4 text-sm font-semibold text-[#2b2724] transition hover:border-[#df5a28] hover:bg-[#fff1ea] hover:text-[#df5a28] ${focusRing}`}
                       onClick={() => speak(activeCard.term)}
                       type="button"
                     >
                       <Volume2 aria-hidden="true" className="size-4" />
-                      Nghe phát âm (S)
+                      Pronounce (S)
                     </button>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between border-t border-[#ece9e5] pt-4 text-xs text-[#948d86]">
-                  <span>Nhấn vào thẻ hoặc phím Space để xem nghĩa</span>
+                  <span>Click the card or press Space to see the meaning</span>
                   <button
                     className={`cursor-pointer font-semibold text-[#df5a28] hover:underline ${focusRing}`}
                     onClick={() => setFlipped(true)}
                     type="button"
                   >
-                    Lật thẻ →
+                    Flip card →
                   </button>
                 </div>
               </div>
@@ -454,14 +455,14 @@ export function FlashcardStudyStage({
                     onClick={() => setFlipped(false)}
                     type="button"
                   >
-                    ← Mặt trước
+                    ← Front
                   </button>
                 </div>
 
                 <div className="my-auto space-y-5 py-5">
                   <div>
                     <p className="text-xs font-semibold text-[#948d86]">
-                      Nghĩa ngữ cảnh TOEIC
+                      TOEIC context meaning
                     </p>
                     <p className="mt-1 text-2xl font-bold leading-snug text-[#2b2724]">
                       {activeCard.meaningVi}
@@ -476,7 +477,7 @@ export function FlashcardStudyStage({
                         </p>
                         {speechSupported && (
                           <button
-                            aria-label="Nghe câu ví dụ"
+                            aria-label="Listen to example sentence"
                             className={`grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#ece9e5] text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
                             onClick={() => speak(activeCard.exampleEn)}
                             type="button"
@@ -496,7 +497,7 @@ export function FlashcardStudyStage({
                   {activeCard.collocations.length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-[#948d86]">
-                        Cụm từ hay gặp trong đề
+                        Common exam collocations
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {activeCard.collocations.map((collocation) => (
@@ -513,7 +514,7 @@ export function FlashcardStudyStage({
                 </div>
 
                 <div className="border-t border-[#e9c6a4]/70 pt-3 text-xs text-[#5f5953]">
-                  Đánh giá mức độ ghi nhớ bên dưới (phím 1, 2, 3) để chuyển thẻ
+                  Rate your recall below (keys 1, 2, 3) to advance
                 </div>
               </div>
             </div>
@@ -522,13 +523,13 @@ export function FlashcardStudyStage({
           {/* Mastery rating + prev/next controls */}
           <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
             <button
-              aria-label="Thẻ trước"
+              aria-label="Previous card"
               className={`${secondaryAction} px-3.5`}
               onClick={goPrev}
               type="button"
             >
               <ChevronLeft aria-hidden="true" className="size-4" />
-              <span className="sm:hidden">Trước</span>
+              <span className="sm:hidden">Prev</span>
             </button>
 
             <div className="grid grid-cols-3 gap-2">
@@ -538,10 +539,10 @@ export function FlashcardStudyStage({
                 type="button"
               >
                 <span className="text-sm font-bold text-[#bd2a2a]">
-                  Chưa nhớ
+                  Still learning
                 </span>
                 <span className="sp-mono text-[11px] text-[#bd2a2a]/80">
-                  Phím 1
+                  Key 1
                 </span>
               </button>
 
@@ -550,9 +551,11 @@ export function FlashcardStudyStage({
                 onClick={() => handleRate("review")}
                 type="button"
               >
-                <span className="text-sm font-bold text-[#a16207]">Cần ôn</span>
+                <span className="text-sm font-bold text-[#a16207]">
+                  Needs review
+                </span>
                 <span className="sp-mono text-[11px] text-[#a16207]/80">
-                  Phím 2
+                  Key 2
                 </span>
               </button>
 
@@ -562,21 +565,21 @@ export function FlashcardStudyStage({
                 type="button"
               >
                 <span className="text-sm font-bold text-[#3f7a52]">
-                  Đã thuộc
+                  Mastered
                 </span>
                 <span className="sp-mono text-[11px] text-[#3f7a52]/80">
-                  Phím 3
+                  Key 3
                 </span>
               </button>
             </div>
 
             <button
-              aria-label="Thẻ tiếp theo"
+              aria-label="Next card"
               className={`${secondaryAction} px-3.5`}
               onClick={goNext}
               type="button"
             >
-              <span className="sm:hidden">Tiếp</span>
+              <span className="sm:hidden">Next</span>
               <ChevronRight aria-hidden="true" className="size-4" />
             </button>
           </div>

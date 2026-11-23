@@ -1,9 +1,9 @@
 export type ExamDifficulty = "EASY" | "MEDIUM" | "HARD";
 
 export const difficultyLabels: Record<ExamDifficulty, string> = {
-  EASY: "Dễ",
-  MEDIUM: "Trung bình",
-  HARD: "Nâng cao",
+  EASY: "Easy",
+  MEDIUM: "Medium",
+  HARD: "Hard",
 };
 
 /** A card either links to its page or starts an attempt in place. */
@@ -16,9 +16,9 @@ export interface ExamLibraryItem {
   id: string;
   code: string;
   title: string;
-  /** Short label on the card's chip, e.g. `5 Parts` or `Part 1 · Dễ`. */
+  /** Short label on the card's chip, e.g. `5 Parts` or `Part 1 · Easy`. */
   badge: string;
-  /** Size line, e.g. `11 câu · ~20 phút · 0–200 điểm`. */
+  /** Size line, e.g. `11 questions · ~20 min · 0-200 pts`. */
   meta: string;
   action: ExamAction;
   /** Value the list is ordered by. */
@@ -80,10 +80,10 @@ export function selectExams(
     sort: ExamSort;
   },
 ) {
-  const needle = query.trim().toLocaleLowerCase("vi-VN");
+  const needle = query.trim().toLocaleLowerCase("en-US");
   return items
     .filter((item) =>
-      `${item.title} ${item.code}`.toLocaleLowerCase("vi-VN").includes(needle),
+      `${item.title} ${item.code}`.toLocaleLowerCase("en-US").includes(needle),
     )
     .filter(
       (item) =>
@@ -91,7 +91,7 @@ export function selectExams(
     )
     .filter((item) => difficulty === "ALL" || item.difficulty === difficulty)
     .toSorted((a, b) => {
-      const order = a.sortKey.localeCompare(b.sortKey, "vi-VN", {
+      const order = a.sortKey.localeCompare(b.sortKey, "en-US", {
         numeric: true,
       });
       return sort === "DESC" ? -order : order;

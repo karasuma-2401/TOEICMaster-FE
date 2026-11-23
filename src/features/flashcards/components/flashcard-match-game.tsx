@@ -182,7 +182,7 @@ export function FlashcardMatchGame({
       return;
     }
 
-    // Same kind (two English terms or two Vietnamese meanings) -> switch selection cleanly.
+    // Same kind (two terms or two meanings) -> switch selection cleanly.
     if (firstTile.kind === tile.kind) {
       setSelectedUid(tile.uid);
       return;
@@ -246,10 +246,10 @@ export function FlashcardMatchGame({
     return (
       <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
         <p className="text-base font-semibold text-[#2b2724]">
-          Cần ít nhất 2 thẻ để chơi Ghép cặp tốc độ
+          At least 2 cards are needed to play Speed Match
         </p>
         <p className="mt-1.5 text-sm text-[#5f5953]">
-          Hãy thêm từ mới vào bộ thẻ cá nhân này để bắt đầu thử thách ghép cặp.
+          Add new words to this custom deck to start the matching challenge.
         </p>
       </div>
     );
@@ -268,7 +268,7 @@ export function FlashcardMatchGame({
           </div>
           <div className="h-4 w-px bg-[#dacfc5]" />
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5f5953]">
-            <span>Đã ghép:</span>
+            <span>Matched:</span>
             <span className="sp-mono text-sm font-bold text-[#3f7a52]">
               {matchedCardIds.size}/{roundCards.length}
             </span>
@@ -281,13 +281,13 @@ export function FlashcardMatchGame({
           )}
           {mistakes > 0 && (
             <span className="sp-chip sp-chip-danger">
-              Sai {mistakes} (+{mistakes * 2}s)
+              Misses: {mistakes} (+{mistakes * 2}s)
             </span>
           )}
           {bestMs !== null && (
             <span className="sp-chip sp-chip-neutral">
               <Trophy aria-hidden="true" className="size-3.5 text-[#a16207]" />
-              Kỷ lục: <span className="sp-mono">{formatElapsed(bestMs)}</span>
+              Best: <span className="sp-mono">{formatElapsed(bestMs)}</span>
             </span>
           )}
         </div>
@@ -295,15 +295,15 @@ export function FlashcardMatchGame({
         <div className="flex items-center gap-2">
           {totalRounds > 1 && (
             <span className="sp-mono rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-[#5f5953]">
-              Vòng {(roundIndex % totalRounds) + 1}/{totalRounds}
+              Round {(roundIndex % totalRounds) + 1}/{totalRounds}
             </span>
           )}
           {speechSupported && (
             <button
               aria-label={
                 audioOnMatch
-                  ? "Tắt đọc phát âm khi ghép đúng"
-                  : "Bật đọc phát âm khi ghép đúng"
+                  ? "Mute pronunciation on match"
+                  : "Enable pronunciation on match"
               }
               aria-pressed={audioOnMatch}
               className={`grid size-9 cursor-pointer place-items-center rounded-lg border border-[#dacfc5] bg-white text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
@@ -323,7 +323,7 @@ export function FlashcardMatchGame({
             type="button"
           >
             <RotateCcw aria-hidden="true" className="size-3.5" />
-            Chơi lại
+            Play again
           </button>
         </div>
       </div>
@@ -335,12 +335,12 @@ export function FlashcardMatchGame({
           </div>
           <h3 className="mt-4 text-2xl font-bold text-[#2b2724]">
             {isNewRecord
-              ? "Kỷ lục mới! Ghép sạch bảng"
-              : "Hoàn thành vòng ghép cặp!"}
+              ? "New record! Board cleared"
+              : "Matching round complete!"}
           </h3>
           <p className="mt-1 text-sm text-[#5f5953]">
-            Mỗi cặp ghép đúng ngay lần đầu đã được cập nhật sang trạng thái “Đã
-            thuộc”.
+            Every pair matched on the first try has been marked as
+            &ldquo;Mastered&rdquo;.
           </p>
 
           <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-3">
@@ -348,16 +348,14 @@ export function FlashcardMatchGame({
               <p className="sp-mono text-2xl font-bold text-[#df5a28]">
                 {formatElapsed(elapsedMs)}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#5f5953]">
-                Thời gian
-              </p>
+              <p className="mt-0.5 text-xs font-medium text-[#5f5953]">Time</p>
             </div>
             <div className="rounded-xl border border-[#e9c6a4] bg-white p-3">
               <p className="sp-mono text-2xl font-bold text-[#3f7a52]">
                 ×{maxCombo}
               </p>
               <p className="mt-0.5 text-xs font-medium text-[#5f5953]">
-                Combo cao nhất
+                Best combo
               </p>
             </div>
             <div className="rounded-xl border border-[#e9c6a4] bg-white p-3">
@@ -365,7 +363,7 @@ export function FlashcardMatchGame({
                 {mistakes}
               </p>
               <p className="mt-0.5 text-xs font-medium text-[#5f5953]">
-                Lần ghép nhầm
+                Mistakes
               </p>
             </div>
           </div>
@@ -377,7 +375,7 @@ export function FlashcardMatchGame({
                 onClick={() => resetBoard((roundIndex + 1) % totalRounds)}
                 type="button"
               >
-                Chơi vòng tiếp theo ({((roundIndex + 1) % totalRounds) + 1}/
+                Play next round ({((roundIndex + 1) % totalRounds) + 1}/
                 {totalRounds}) →
               </button>
             )}
@@ -387,7 +385,7 @@ export function FlashcardMatchGame({
               type="button"
             >
               <RotateCcw aria-hidden="true" className="size-4" />
-              Chơi lại để phá kỷ lục
+              Play again to beat your record
             </button>
           </div>
         </div>
@@ -422,7 +420,7 @@ export function FlashcardMatchGame({
                 type="button"
               >
                 <span className="mb-1.5 text-[10px] font-bold uppercase tracking-wider opacity-65">
-                  {tile.kind === "term" ? "Tiếng Anh" : "Nghĩa Việt"}
+                  {tile.kind === "term" ? "Term" : "Meaning"}
                 </span>
                 <span
                   className={

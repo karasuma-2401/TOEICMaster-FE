@@ -49,7 +49,10 @@ async function request<T>(
       cache: "no-store",
     });
     if (!response.ok)
-      throw new SharedApiError(response.status, "Không thể kết nối dịch vụ.");
+      throw new SharedApiError(
+        response.status,
+        "Unable to connect to the service.",
+      );
     if (response.status === 204) return undefined;
     if (!response.headers.get("content-type")?.includes("application/json"))
       return undefined;
@@ -66,7 +69,7 @@ async function request<T>(
       try {
         await refreshAdminSession();
       } catch {
-        throw new AdminUsersApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new AdminUsersApiError(401, "Your session has expired.");
       }
       return (await send()) as T | undefined;
     }
@@ -76,7 +79,7 @@ async function request<T>(
       throw new AdminUsersApiError(error.status, error.message);
     if (error instanceof SharedApiError)
       throw new AdminUsersApiError(error.status, error.message);
-    throw new AdminUsersApiError(502, "Không thể kết nối dịch vụ.");
+    throw new AdminUsersApiError(502, "Unable to connect to the service.");
   }
 }
 
@@ -98,10 +101,7 @@ export async function getAdminUsers(
   try {
     return parseAdminUsersResponse(value);
   } catch {
-    throw new AdminUsersApiError(
-      502,
-      "Dữ liệu người dùng trả về không hợp lệ.",
-    );
+    throw new AdminUsersApiError(502, "Invalid user data returned.");
   }
 }
 
@@ -113,10 +113,7 @@ export async function getAdminUser(
   try {
     return parseAdminUserResponse(value);
   } catch {
-    throw new AdminUsersApiError(
-      502,
-      "Dữ liệu người dùng trả về không hợp lệ.",
-    );
+    throw new AdminUsersApiError(502, "Invalid user data returned.");
   }
 }
 

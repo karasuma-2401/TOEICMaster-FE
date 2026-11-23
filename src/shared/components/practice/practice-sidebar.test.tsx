@@ -29,15 +29,15 @@ describe("PracticeSidebar", () => {
     links.forEach((link) => {
       expect(link.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
     });
-    expect(screen.getByText("Đề thi")).toBeVisible();
-    expect(screen.getByText("Bài tập")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Kiến thức" })).toHaveAttribute(
+    expect(screen.getByText("Exams")).toBeVisible();
+    expect(screen.getByText("Exercises")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Knowledge" })).toHaveAttribute(
       "href",
       "/knowledge",
     );
     expect(screen.getByText("Flashcards")).toBeVisible();
-    expect(screen.getByText("Phát âm")).toBeVisible();
-    expect(screen.getByText("Lịch sử")).toBeVisible();
+    expect(screen.getByText("Pronunciation")).toBeVisible();
+    expect(screen.getByText("History")).toBeVisible();
   });
 
   it("renders icon-only links with accessible names and tooltips when collapsed", () => {
@@ -51,17 +51,17 @@ describe("PracticeSidebar", () => {
     });
     expect(screen.queryByText("Listening & Reading")).not.toBeInTheDocument();
     expect(screen.queryByText("Flashcards")).not.toBeInTheDocument();
-    expect(screen.queryByText("Phát âm")).not.toBeInTheDocument();
-    expect(screen.queryByText("Lịch sử")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
+    expect(screen.queryByText("Pronunciation")).not.toBeInTheDocument();
+    expect(screen.queryByText("History")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pronunciation" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Pronunciation" })).toHaveAttribute(
       "title",
-      "Phát âm",
+      "Pronunciation",
     );
-    expect(screen.getByRole("link", { name: "Lịch sử" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "History" })).not.toHaveAttribute(
       "aria-current",
     );
     const listeningReadingLinks = screen.getAllByRole("link", {
@@ -70,11 +70,11 @@ describe("PracticeSidebar", () => {
     expect(listeningReadingLinks).toHaveLength(2);
     expect(listeningReadingLinks[0]).toHaveAttribute(
       "title",
-      "Đề thi · Listening & Reading",
+      "Exams · Listening & Reading",
     );
     expect(listeningReadingLinks[1]).toHaveAttribute(
       "title",
-      "Bài tập · Listening & Reading",
+      "Exercises · Listening & Reading",
     );
   });
 
@@ -86,12 +86,12 @@ describe("PracticeSidebar", () => {
     const toggle = screen.getByTestId("practice-sidebar-toggle");
     expect(sidebar).toHaveAttribute("data-collapsed", "false");
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(toggle).toHaveAttribute("aria-label", "Thu gọn thanh bên");
+    expect(toggle).toHaveAttribute("aria-label", "Collapse sidebar");
 
     await user.click(toggle);
     expect(sidebar).toHaveAttribute("data-collapsed", "true");
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(toggle).toHaveAttribute("aria-label", "Mở rộng thanh bên");
+    expect(toggle).toHaveAttribute("aria-label", "Expand sidebar");
     expect(window.localStorage.getItem("toeicmaster.sidebar.collapsed")).toBe(
       "1",
     );
@@ -99,7 +99,7 @@ describe("PracticeSidebar", () => {
     await user.click(toggle);
     expect(sidebar).toHaveAttribute("data-collapsed", "false");
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(toggle).toHaveAttribute("aria-label", "Thu gọn thanh bên");
+    expect(toggle).toHaveAttribute("aria-label", "Collapse sidebar");
     expect(
       window.localStorage.getItem("toeicmaster.sidebar.collapsed"),
     ).not.toBe("1");
@@ -134,7 +134,7 @@ describe("PracticeSidebar", () => {
     const user = userEvent.setup();
     render(<PracticeSidebar />);
 
-    await user.click(screen.getByRole("button", { name: "Thu gọn thanh bên" }));
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
 
     expect(screen.getByTestId("practice-sidebar")).toHaveAttribute(
       "data-collapsed",

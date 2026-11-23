@@ -54,7 +54,7 @@ describe("flashcards server proxy", () => {
           origin: "http://localhost:3000",
           "content-type": "application/json",
         },
-        body: JSON.stringify({ term: "invoice", meaningVi: "hóa đơn" }),
+        body: JSON.stringify({ term: "invoice", meaningVi: "invoice" }),
       },
     );
     const addCardResponse = await forwardFlashcards(

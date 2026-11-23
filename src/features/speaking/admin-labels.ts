@@ -11,9 +11,9 @@ export const difficultyOptions: SpeakingDifficulty[] = [
 ];
 
 export const difficultyLabel: Record<SpeakingDifficulty, string> = {
-  EASY: "Dễ",
-  MEDIUM: "Trung bình",
-  HARD: "Khó",
+  EASY: "Easy",
+  MEDIUM: "Medium",
+  HARD: "Hard",
 };
 
 export const exerciseStatusOptions: SpeakingExerciseStatus[] = [
@@ -23,9 +23,9 @@ export const exerciseStatusOptions: SpeakingExerciseStatus[] = [
 ];
 
 export const exerciseStatusLabel: Record<SpeakingExerciseStatus, string> = {
-  PUBLISHED: "Hiển thị",
-  DRAFT: "Bản nháp",
-  ARCHIVED: "Lưu trữ",
+  PUBLISHED: "Published",
+  DRAFT: "Draft",
+  ARCHIVED: "Archived",
 };
 
 /** Short content preview for tables and pickers. */
@@ -45,7 +45,7 @@ export function exerciseHeadline(content: SpeakingContent) {
 }
 
 export function formatUpdatedAt(value: string) {
-  return new Date(value).toLocaleString("vi-VN", {
+  return new Date(value).toLocaleString("en-US", {
     dateStyle: "short",
     timeStyle: "short",
   });

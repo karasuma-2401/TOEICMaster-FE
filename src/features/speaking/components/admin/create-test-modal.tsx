@@ -8,10 +8,10 @@ import { FileTextIcon, XIcon } from "../ui/icons";
 const others = [
   [
     "Listening & Reading",
-    "120 phút · 200 câu · Thang điểm ETS 10–990",
+    "120 min · 200 questions · ETS scale 10-990",
     "--sp-lr",
   ],
-  ["Writing", "60 phút · 8 câu · Thang điểm ETS 0–200", "--sp-write"],
+  ["Writing", "60 min · 8 questions · ETS scale 0-200", "--sp-write"],
 ] as const;
 
 /** Creates a Speaking draft, then hands its id to the builder. */
@@ -30,7 +30,7 @@ export function CreateTestModal({
 
   const submit = async () => {
     if (!code.trim() || !title.trim()) {
-      setError("Mã đề và tên đề là bắt buộc.");
+      setError("Test code and title are required.");
       return;
     }
     setBusy(true);
@@ -46,10 +46,10 @@ export function CreateTestModal({
     } catch (cause) {
       setError(
         cause instanceof SpeakingApiError && cause.status === 409
-          ? "Mã đề đã tồn tại."
+          ? "Test code already exists."
           : cause instanceof Error
             ? cause.message
-            : "Không thể tạo đề Speaking.",
+            : "Unable to create Speaking test.",
       );
       setBusy(false);
     }
@@ -58,7 +58,7 @@ export function CreateTestModal({
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-[rgb(40_36_33/45%)] p-4 backdrop-blur-[6px]">
       <dialog
-        aria-label="Khởi tạo đề thi mới"
+        aria-label="Create new test"
         aria-modal="true"
         className="static m-0 w-full max-w-[1000px] rounded-[20px] bg-(--sp-surface) p-0 text-(--sp-ink) shadow-(--sp-shadow-modal)"
         open
@@ -69,14 +69,14 @@ export function CreateTestModal({
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-[26px] font-medium leading-8">
-              Khởi tạo đề thi mới
+              Create new test
             </h2>
             <p className="text-[13px] text-(--sp-ink-2)">
-              Thiết lập thông tin cơ bản trước khi lắp ráp câu hỏi.
+              Set up basic information before assembling questions.
             </p>
           </div>
           <button
-            aria-label="Đóng"
+            aria-label="Close"
             className="sp-focus grid size-9 cursor-pointer place-items-center rounded-lg bg-(--sp-subtle)"
             onClick={onClose}
             type="button"
@@ -86,7 +86,7 @@ export function CreateTestModal({
         </header>
         <div className="space-y-4 p-5">
           <fieldset>
-            <legend className="mb-2 text-sm font-semibold">Loại đề thi</legend>
+            <legend className="mb-2 text-sm font-semibold">Test type</legend>
             <div className="space-y-2">
               <div className="flex min-h-[84px] items-center gap-3 rounded-[10px] border-[1.5px] border-(--sp-speak-line) bg-(--sp-speak-bg) px-4 font-semibold text-(--sp-speak)">
                 <input
@@ -98,7 +98,7 @@ export function CreateTestModal({
                 <span>
                   Speaking
                   <span className="block text-[13px]">
-                    20 phút · 11 câu · Thang điểm ETS 0–200
+                    20 min · 11 questions · ETS scale 0-200
                   </span>
                 </span>
               </div>
@@ -112,7 +112,7 @@ export function CreateTestModal({
                   <span>
                     {name}
                     <span className="block text-[13px]">
-                      {detail} · Tạo ở mục kỹ năng tương ứng
+                      {detail} · Create in the corresponding skill section
                     </span>
                   </span>
                 </div>
@@ -120,7 +120,7 @@ export function CreateTestModal({
             </div>
           </fieldset>
           <label className="block text-sm font-semibold">
-            Mã đề <span className="text-(--sp-danger)">*</span>
+            Test code <span className="text-(--sp-danger)">*</span>
             <input
               className="sp-input mt-1 font-normal"
               onChange={(event) => setCode(event.target.value)}
@@ -129,7 +129,7 @@ export function CreateTestModal({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Tên đề thi <span className="text-(--sp-danger)">*</span>
+            Test title <span className="text-(--sp-danger)">*</span>
             <input
               className="sp-input mt-1 font-normal"
               onChange={(event) => setTitle(event.target.value)}
@@ -138,11 +138,11 @@ export function CreateTestModal({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Mô tả ngắn
+            Short description
             <textarea
               className="sp-input mt-1 font-normal"
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Mô tả ngắn cho đề thi…"
+              placeholder="Short description for the test..."
               rows={2}
               value={description}
             />
@@ -162,7 +162,7 @@ export function CreateTestModal({
             onClick={onClose}
             type="button"
           >
-            Hủy
+            Cancel
           </button>
           <button
             className="sp-btn sp-btn-cta"
@@ -170,7 +170,7 @@ export function CreateTestModal({
             onClick={() => void submit()}
             type="button"
           >
-            {busy ? "Đang tạo…" : "Khởi tạo bản nháp & Mở Workspace →"}
+            {busy ? "Creating..." : "Create draft & Open Workspace →"}
           </button>
         </footer>
       </dialog>

@@ -74,12 +74,12 @@ export function formatCountdown(totalSeconds: number) {
     : `${pad(minutes)}:${pad(seconds)}`;
 }
 
-/** Vietnamese wording for the time left, e.g. `14 phút 25 giây`. */
+/** English wording for the time left, e.g. `14 minutes 25 seconds`. */
 export function formatRemainingText(totalSeconds: number) {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safe / 60);
   const seconds = safe % 60;
-  return `${minutes} phút ${seconds} giây`;
+  return `${minutes} minutes ${seconds} seconds`;
 }
 
 export function percent(correct: number, total: number) {

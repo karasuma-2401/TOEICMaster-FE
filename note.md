@@ -1,30 +1,33 @@
-# Ghi chú màu sắc đặc trưng của TOEICMaster
+# Notes on TOEICMaster Signature Colors
 
-Ghi nhận từ code giao diện hiện tại, chủ yếu tại `src/app/globals.css`, `src/features/auth/components/auth-layout.tsx`, các component xác thực/hồ sơ, `src/features/user/components/brand-mark.tsx` và `src/app/page.tsx`.
+Recorded from the current UI code, primarily in `src/app/globals.css`, `src/features/auth/components/auth-layout.tsx`, auth/profile components, `src/features/user/components/brand-mark.tsx`, and `src/app/page.tsx`.
 
-## Bảng màu thương hiệu
+## Brand Color Palette
 
-Giao diện xác thực và hồ sơ sử dụng tông **cam – đỏ ấm** làm màu nhận diện chính, kết hợp điểm nhấn vàng và nền trung tính sáng.
+The authentication and profile interfaces use a **warm orange-red** tone as the primary brand color, paired with yellow accents and a light neutral background.
 
-| Vai trò         | Màu tiêu biểu                   | Cách dùng                                               |
-| --------------- | ------------------------------- | ------------------------------------------------------- |
-| Đỏ thương hiệu  | `#ED361C`, `#EC251B`, `#C70E1A` | Liên kết, trạng thái focus, tiêu đề phụ và dải màu nhấn |
-| Cam thương hiệu | `#FF6C0D`, `#FF681A`, `#F17939` | Nút hành động, chuyển sắc hero và avatar                |
-| Vàng điểm nhấn  | `#FFD361`, `#FFBD44`, `#FF9F25` | Logo, chữ nhấn, avatar và chi tiết minh họa             |
-| Nền sáng        | `#FFFDFC`, `#FAF8F7`, `#F5F1EF` | Form, thẻ, nền trang và vùng điều khiển                 |
-| Chữ tối ấm      | `#342D2A`, `#3D3532`, `#4E4542` | Tiêu đề, nội dung và nhãn biểu mẫu                      |
-| Chữ phụ         | `#A89F9B`, `#938B87`, `#736A66` | Mô tả, placeholder phụ và nội dung ít nhấn              |
+| Role             | Representative Colors           | Usage                                                          |
+| ---------------- | ------------------------------- | -------------------------------------------------------------- |
+| Brand Red        | `#ED361C`, `#EC251B`, `#C70E1A` | Links, focus states, subheadings, and accent strips            |
+| Brand Orange     | `#FF6C0D`, `#FF681A`, `#F17939` | Action buttons, hero gradients, and avatars                    |
+| Accent Yellow    | `#FFD361`, `#FFBD44`, `#FF9F25` | Logo, highlighted text, avatars, and decorative details        |
+| Light Background | `#FFFDFC`, `#FAF8F7`, `#F5F1EF` | Forms, cards, page backgrounds, and control areas              |
+| Warm Dark Text   | `#342D2A`, `#3D3532`, `#4E4542` | Headings, body text, and form labels                           |
+| Secondary Text   | `#A89F9B`, `#938B87`, `#736A66` | Descriptions, secondary placeholders, and low-emphasis content |
 
-## Đặc điểm thể hiện trong giao diện
+## Visual Characteristics in the UI
 
-- Nút chính thường là chuyển sắc ngang từ đỏ `#EC251B` sang cam `#FF6C0D`, chữ trắng, bóng màu cam đỏ nhẹ.
-- Hero của đăng nhập/đăng ký dùng chuyển sắc từ cam `#FF681A` qua đỏ `#ED261A` đến đỏ sẫm `#C70E1A`; vàng được dùng để tạo điểm nhấn.
-- Logo gồm hai mảng vàng cam (`#FF9F25`, `#FFBD44`) và một mảng đỏ sẫm (`#B31322`), phù hợp với tông ấm chung.
-- Nền form và hồ sơ là trắng ngà; viền và vùng phụ dùng be/xám ấm như `#E7DEDA`, `#EEE8E5`, `#F5F1EF`. Chữ chính là nâu than thay vì đen tuyệt đối.
-- Lỗi biểu mẫu dùng đỏ; thông báo chờ/xác nhận thường dùng nền amber nhạt; toast thành công dùng xanh lá `#18A558`.
+- Primary buttons typically use a horizontal gradient from red `#EC251B` to orange `#FF6C0D`, white text, and a subtle warm red-orange shadow.
+- The login/register hero uses a gradient from orange `#FF681A` through red `#ED261A` to deep red `#C70E1A`; yellow is used for highlights.
+- The logo consists of two yellow-orange shapes (`#FF9F25`, `#FFBD44`) and one deep red shape (`#B31322`), matching the overall warm tone.
+- Form and profile backgrounds are warm ivory white; borders and secondary surfaces use warm beige/gray such as `#E7DEDA`, `#EEE8E5`, `#F5F1EF`.
+  Primary text is charcoal brown rather than pure black.
+- Form errors use red; pending/confirmation notices usually use a light amber background; success toasts use green `#18A558`.
 
-## Lưu ý về tính nhất quán
+## Consistency Notes
 
-Trang chủ hiện tại (`src/app/page.tsx`) vẫn dùng xanh Tailwind (`blue-700`, `blue-50`) và slate (`slate-200` đến `slate-600`), trong khi các màn hình xác thực và hồ sơ dùng bảng màu cam–đỏ. Vì vậy, **cam–đỏ là bảng màu thương hiệu thể hiện rõ nhất trong các luồng giao diện đã hoàn thiện**, nhưng toàn ứng dụng hiện chưa đồng nhất màu sắc. Các biến CSS nền chung trong `src/app/globals.css` (`#F8FAFC`, `#0F172A`) và màu xanh của trang chủ cũng chưa phản ánh bảng màu ấm này.
+The current home page (`src/app/page.tsx`) still uses Tailwind blue (`blue-700`, `blue-50`) and slate (`slate-200` to `slate-600`), while the auth and profile screens use the orange-red palette.
+Therefore, **orange-red is the brand palette most clearly expressed in the completed UI flows**, though the application as a whole is not yet color-consistent.
+The global background CSS variables in `src/app/globals.css` (`#F8FAFC`, `#0F172A`) and the home page's blue tones also do not yet reflect this warm palette.
 
-Nếu tiếp tục hoàn thiện nhận diện, nên thống nhất trang chủ và biến màu nền/chữ dùng chung với tông cam–đỏ và trung tính ấm; giữ xanh lá cho trạng thái thành công và các màu đỏ/amber theo ngữ nghĩa cảnh báo.
+If brand identity work continues, the home page and shared background/text color variables should be unified with the orange-red and warm neutral tones; keep green for success states and red/amber for semantic warning/error states.

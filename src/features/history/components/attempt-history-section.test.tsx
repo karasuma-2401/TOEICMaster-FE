@@ -80,7 +80,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("AttemptHistorySection", () => {
-  it("renders cross-skill attempt cards, supports filtering and Xem thêm expansion", async () => {
+  it("renders cross-skill attempt cards, supports filtering and Show more expansion", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchUnifiedHistory).mockResolvedValueOnce({
       items: sampleItems,
@@ -94,7 +94,7 @@ describe("AttemptHistorySection", () => {
         showSummary
         showViewAll
         skills={["lr", "speaking", "writing"]}
-        title="Lịch sử làm bài"
+        title="Attempt History"
       />,
     );
 
@@ -105,22 +105,22 @@ describe("AttemptHistorySection", () => {
     expect(screen.getByText("Speaking Test 01")).toBeInTheDocument();
     expect(screen.queryByText("Writing Test 01")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Xem thêm (1)" }));
+    await user.click(screen.getByRole("button", { name: "Show more (1)" }));
     expect(screen.getByText("Writing Test 01")).toBeInTheDocument();
 
     const filterGroup = screen.getByRole("group", {
-      name: "Lọc lịch sử theo kỹ năng",
+      name: "Filter history by skill",
     });
     await user.click(within(filterGroup).getByRole("button", { name: "L&R" }));
 
     expect(screen.getByText("ETS 2026 Test 01")).toBeInTheDocument();
     expect(screen.queryByText("Speaking Test 01")).not.toBeInTheDocument();
     expect(screen.queryByText("Writing Test 01")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Xem kết quả" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View Results" })).toHaveAttribute(
       "href",
       "/exams/lr/attempts/lr-1/result",
     );
-    expect(screen.getByRole("link", { name: "Xem lại" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Review" })).toHaveAttribute(
       "href",
       "/exams/lr/attempts/lr-1/review",
     );
@@ -132,12 +132,12 @@ describe("AttemptHistorySection", () => {
       unauthenticatedSkills: ["lr"],
     });
 
-    render(<AttemptHistorySection skills={["lr"]} title="Lịch sử L&R" />);
+    render(<AttemptHistorySection skills={["lr"]} title="L&R History" />);
 
     expect(
-      await screen.findByText("Đăng nhập để xem lịch sử làm bài"),
+      await screen.findByText("Sign in to view your attempt history"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sign In" })).toHaveAttribute(
       "href",
       "/login?next=%2Fhistory",
     );

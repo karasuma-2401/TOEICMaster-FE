@@ -72,7 +72,7 @@ describe("ListeningReadingPracticeDetail", () => {
       ],
     });
     mockedSubmit.mockRejectedValue(
-      new LrApiError(401, "Phiên đăng nhập đã hết hạn."),
+      new LrApiError(401, "Your session has expired. Please sign in again."),
     );
 
     render(
@@ -85,10 +85,10 @@ describe("ListeningReadingPracticeDetail", () => {
 
     expect(await screen.findByText("Sample question")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Nộp bài" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
     const loginLink = await screen.findByRole("link", {
-      name: /Đăng nhập ngay/i,
+      name: /Sign in now/i,
     });
     await waitFor(() => {
       expect(loginLink).toHaveAttribute(

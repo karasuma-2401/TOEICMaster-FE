@@ -1,185 +1,148 @@
-# Plan: Media MinIO cho quản trị Listening & Reading
+# Plan: MinIO Media for Listening & Reading Administration
 
-## Mục tiêu
+## Goal
 
-Cho phép admin import nội dung Listening/Reading trước và bổ sung media sau:
+Allow admins to import Listening/Reading content first and add media afterward:
 
-- MP3 Listening gắn theo audio group.
-- Ảnh Reading gắn tại câu hỏi hoặc context block đã cấu hình bắt buộc ảnh.
-- Upload đi thẳng từ browser đến MinIO bằng presigned URL do backend cấp.
-- Nháp có thể thiếu media; revision không thể xuất bản khi còn thiếu media bắt
-  buộc.
+- Listening MP3s attached per audio group.
+- Reading images attached to questions or context blocks configured as requiring an image.
+- Uploads go directly from the browser to MinIO using a backend-issued presigned URL.
+- Drafts may lack media; revisions cannot be published while required media is still missing.
 
-Quyết định và lý do được ghi tại
-[ADR-001](../decisions/001-admin-lr-media-in-minio.md).
+The decision and rationale are recorded in [ADR-001](../decisions/001-admin-lr-media-in-minio.md).
 
-## Phạm vi và ranh giới
+## Scope and boundaries
 
-| Trong phạm vi                                                       | Ngoài phạm vi                                                        |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Admin L&R, import Excel, quản lý MP3/ảnh, checklist và chặn publish | Migration tệp cũ, learner player/UI, Speaking/Writing, bucket public |
-| Backend/MinIO contract cần cho presigned upload                     | Đưa MinIO credential hoặc `API_BASE_URL` vào client                  |
+| In scope                                                                     | Out of scope                                                                |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Admin L&R, Excel import, MP3/image management, checklist, and publish gating | Migrating legacy files, learner player/UI, Speaking/Writing, public buckets |
+| Backend/MinIO contract needed for presigned uploads                          | Exposing MinIO credentials or `API_BASE_URL` to the client                  |
 
-## Thiết kế đích
+## Target design
 
 ```text
-Admin UI -> Next.js same-origin BFF -> Backend: tạo upload intent
-Admin UI ---------------------------> MinIO: PUT bằng presigned URL
-Admin UI -> Next.js same-origin BFF -> Backend: complete intent + gắn asset
-Backend -> MinIO: xác minh object / cấp URL đọc khi cần
+Admin UI -> Next.js same-origin BFF -> Backend: create upload intent
+Admin UI ---------------------------> MinIO: PUT with presigned URL
+Admin UI -> Next.js same-origin BFF -> Backend: complete intent + attach asset
+Backend -> MinIO: verify object / issue read URL when needed
 ```
 
-`MediaAsset` lưu metadata và object key; không lưu presigned URL. Một
-`AudioGroup` có tối đa một MP3 hoạt động. Part 1/2 có một group/câu; Part 3/4
-có một group/cụm câu. Reading image được gắn vào question hoặc context block
-và chỉ bắt buộc khi vị trí được cấu hình `imageRequired`.
+`MediaAsset` stores metadata and object key; it does not store presigned URLs.
+An `AudioGroup` has at most one active MP3.
+Part 1/2 has one group per question; Part 3/4 has one group per question cluster.
+Reading images are attached to a question or context block and are only required when the position is configured with `imageRequired`.
 
-## Kế hoạch triển khai
+## Implementation plan
 
-### 1. Chốt backend contract và cấu hình MinIO
-
-Owner: backend + frontend
-
-1. Cập nhật API contract backend trước khi viết client. Contract cần định nghĩa
-   request/response, error code và authorization cho: tạo upload intent, hoàn
-   tất intent, lấy revision với media status, import, và publish validation.
-2. Định nghĩa `MediaAsset`, `UploadIntent`, `AudioGroup` và reference từ
-   Listening question/group, Reading question/context block. Chốt cách biểu diễn
-   `imageRequired`.
-3. Quy định allow-list, MIME type, kích thước tối đa và thời hạn URL riêng cho
-   `audio/mpeg` và các ảnh được hỗ trợ. Backend tạo object key; key không chứa
-   filename do admin cung cấp.
-4. Cấu hình bucket private, CORS chỉ cho origin frontend quản trị và policy cho
-   presigned PUT. Không đưa credential vào frontend.
-5. `complete` phải xác minh object tồn tại/kích thước/content type theo metadata
-   đã chấp nhận rồi mới attach asset. Quy định trạng thái intent hết hạn/thất
-   bại và cơ chế xóa orphan object.
-
-**Điều kiện hoàn thành:** API contract được hai repo cùng review; MinIO chấp
-nhận upload trực tiếp từ origin admin mà browser không nhận secret.
-
-### 2. Đổi luồng import Listening và chuẩn bị dữ liệu nhóm audio
+### 1. Finalize backend contract and MinIO configuration
 
 Owner: backend + frontend
 
-1. Đổi import Excel Listening để chỉ nhận workbook (câu hỏi, đáp án, giải
-   thích); không yêu cầu MP3 trong import.
-2. Backend tạo audio group dựa trên part và cấu trúc group đã import. Part 1/2
-   tạo group theo câu; Part 3/4 tạo group theo cụm.
-3. Revision/detail response trả về mỗi group với label/range câu hỏi, asset hiện
-   tại, media status và lý do thiếu. Đồng thời trả về Reading image positions và
-   cờ required.
-4. Giữ tương thích dữ liệu hiện có theo một trong hai cách được chốt trước khi
-   phát hành: biểu diễn `master-audio` cũ như media legacy chỉ-đọc, hoặc chặn
-   chỉnh sửa revision cũ khỏi luồng mới. Không thực hiện migration trong scope
-   này.
+1. Update the backend API contract before writing client code.
+   The contract must define request/response schemas, error codes, and authorization for: creating an upload intent, completing an intent, fetching a revision with media status, importing, and publish validation.
+2. Define `MediaAsset`, `UploadIntent`, `AudioGroup`, and references from Listening questions/groups and Reading questions/context blocks.
+   Finalize how `imageRequired` is represented.
+3. Specify the allow-list, MIME types, maximum sizes, and URL expiration separately for `audio/mpeg` and supported image formats.
+   The backend generates the object key; the key must not contain the admin-provided filename.
+4. Configure a private bucket, CORS allowing only the admin frontend origin, and a policy for presigned PUTs.
+   Do not put credentials in the frontend.
+5. `complete` must verify that the object exists and matches the accepted size/content-type metadata before attaching the asset.
+   Define expired/failed intent statuses and an orphan object cleanup mechanism.
 
-**Điều kiện hoàn thành:** import đề mới thành công khi không kèm MP3; revision
-mới đọc được danh sách group và yêu cầu ảnh.
+**Completion criteria:** the API contract has been reviewed by both repositories; MinIO accepts direct uploads from the admin origin without the browser receiving secrets.
 
-### 3. Xây client upload dùng presigned URL
+### 2. Update Listening import flow and prepare audio group data
+
+Owner: backend + frontend
+
+1. Update Listening Excel import to accept only the workbook (questions, answer choices, explanations); do not require MP3s during import.
+2. The backend creates audio groups based on the part and imported group structure.
+   Part 1/2 creates groups per question; Part 3/4 creates groups per cluster.
+3. The revision/detail response returns each group with its label/question range, current asset, media status, and missing reason.
+   It also returns Reading image positions and required flags.
+4. Maintain compatibility with existing data using one of two approaches finalized before release: represent legacy `master-audio` as read-only legacy media, or block editing legacy revisions from the new flow.
+   Do not perform migration within this scope.
+
+**Completion criteria:** importing a new exam succeeds without an MP3; new revisions can read the list of groups and image requirements.
+
+### 3. Build the presigned-URL upload client
 
 Owner: frontend
 
-1. Thêm typed API client trong `src/features/admin/` cho create intent,
-   direct upload và complete; validate response ở boundary.
-2. Thêm Next.js route handlers dưới `src/app/api/admin/...` chỉ để proxy các
-   request nghiệp vụ có session tới backend. Browser PUT trực tiếp MinIO bằng
-   URL trả về; không proxy byte tệp qua Next.js.
-3. Thay các hàm multipart hiện tại trong `src/features/admin/exam-api.ts`
-   (`uploadReadingImage`, `uploadReadingMasterAudio`) sau khi contract mới sẵn
-   sàng. Không xóa endpoint cũ trước khi backend xác nhận strategy tương thích.
-4. UI upload hiển thị chọn tệp, đang tải, tiến độ nếu có thể, thành công, lỗi
-   có thể thử lại và trạng thái complete. Reset input sau mỗi lần để có thể chọn
-   lại cùng tệp.
-5. Kiểm tra client sớm theo file type/size để phản hồi nhanh, nhưng luôn xử lý
-   lỗi validation từ backend/MinIO là nguồn quyết định.
+1. Add a typed API client in `src/features/admin/` for creating intents, direct uploads, and completion; validate responses at the boundary.
+2. Add Next.js route handlers under `src/app/api/admin/...` only to proxy authenticated business requests with session to the backend.
+   The browser PUTs directly to MinIO using the returned URL; do not proxy file bytes through Next.js.
+3. Replace the current multipart functions in `src/features/admin/exam-api.ts` (`uploadReadingImage`, `uploadReadingMasterAudio`) once the new contract is ready.
+   Do not remove old endpoints before the backend confirms the compatibility strategy.
+4. The upload UI displays file selection, uploading state, progress if available, success, retryable errors, and completion status.
+   Reset the input after each upload so the same file can be selected again.
+5. Perform early client-side checks on file type/size for fast feedback, but always treat backend/MinIO validation errors as the source of truth.
 
-**Điều kiện hoàn thành:** một upload thành công chỉ xuất hiện attached sau khi
-`complete`; URL hết hạn/lỗi MinIO/lỗi complete không làm UI hiển thị asset giả.
+**Completion criteria:** a successful upload only appears as attached after `complete`; expired URLs/MinIO errors/complete failures never cause the UI to display a fake asset.
 
-### 4. Bổ sung workspace quản trị và cảnh báo thiếu media
+### 4. Add admin workspace and missing-media warnings
 
 Owner: frontend
 
-1. Trong trang L&R admin, thêm section Listening Media: tổng số group, số đã
-   có MP3, số thiếu, bảng nhóm với Part và dải câu, nút upload/thay thế.
-2. Thêm phần Reading Media Requirements cho câu hỏi/context block có
-   `imageRequired`; dùng image asset ID và metadata từ contract, không cho admin
-   nhập URL tùy ý.
-3. Mỗi trạng thái thiếu có link/focus đến đúng group hoặc Reading position. Mọi
-   upload có label, thông báo lỗi và focus state phù hợp accessibility.
-4. Giữ chức năng lưu nháp không phụ thuộc checklist. Khi nhấn publish, hiển thị
-   checklist local; nếu backend trả lỗi validation, hiển thị lại các thiếu sót
-   từ response.
+1. In the L&R admin page, add a Listening Media section: total groups, count with MP3, missing count, a group table with Part and question range, and upload/replace buttons.
+2. Add a Reading Media Requirements section for questions/context blocks with `imageRequired`; use image asset IDs and metadata from the contract, and do not allow admins to enter arbitrary URLs.
+3. Each missing status has a link/focus action to the exact group or Reading position.
+   Every upload control has an accessible label, error message, and focus state.
+4. Keep draft saving independent of the checklist.
+   When clicking publish, show the local checklist; if the backend returns a validation error, render the missing items from the response.
 
-**Điều kiện hoàn thành:** admin có thể xác định và đi thẳng tới mọi tài nguyên
-còn thiếu, nhưng vẫn lưu được bản nháp.
+**Completion criteria:** admins can identify and jump directly to every missing resource, while still being able to save drafts.
 
-### 5. Cổng publish và vận hành an toàn
+### 5. Publish gate and safe operations
 
 Owner: backend + frontend
 
-1. Backend recompute validation khi publish: tất cả audio group bắt buộc có
-   asset audio completed; mọi Reading position `imageRequired` có asset image
-   completed; asset phải thuộc đúng revision/content owner.
-2. Publish trả lỗi có cấu trúc gồm type, owner ID, label/range và nguyên nhân để
-   UI đưa admin tới đúng chỗ. Frontend không coi checklist cục bộ là quyền cho
-   publish.
-3. Ghi audit event cho tạo intent, complete/replace asset và publish fail do
-   thiếu media; không ghi presigned URL/credential vào log.
-4. Triển khai job/command được vận hành định kỳ để dọn intent hết hạn và object
-   không được complete/attach, với thời gian grace được cấu hình.
+1. The backend recomputes validation on publish: all required audio groups have a completed audio asset; every `imageRequired` Reading position has a completed image asset; assets must belong to the matching revision/content owner.
+2. Publish returns structured errors containing type, owner ID, label/range, and reason so the UI can navigate admins to the exact spot.
+   The frontend does not treat the local checklist as permission to publish.
+3. Record audit events for intent creation, asset completion/replacement, and publish failures caused by missing media; do not log presigned URLs or credentials.
+4. Implement a periodically scheduled job/command to clean up expired intents and uncompleted/unattached objects with a configurable grace period.
 
-**Điều kiện hoàn thành:** request publish bị chặn cả khi gọi trực tiếp API và
-response cho admin biết chính xác mục cần sửa.
+**Completion criteria:** publish requests are blocked even when calling the API directly, and the response tells the admin the exact item to fix.
 
-## Kiểm thử và nghiệm thu
+## Testing and acceptance
 
 ### Backend/API
 
-- Admin tạo intent hợp lệ/không hợp lệ; non-admin và request không same-origin
-  bị từ chối theo chính sách hiện có.
-- Intent giới hạn đúng MIME, kích thước, owner và expiry; complete thất bại khi
-  object không tồn tại hoặc không hợp lệ.
-- Part 1/2 tạo một group/câu, Part 3/4 tạo một group/cụm; không nhân bản MP3.
-- Publish pass khi đủ media và fail với danh sách chính xác khi thiếu MP3/ảnh.
-- Asset từ revision khác không thể attach trái phép.
+- Admin creates valid/invalid intents; non-admin and non-same-origin requests are rejected per existing policy.
+- Intents properly enforce MIME type, size, owner, and expiry; `complete` fails when the object does not exist or is invalid.
+- Part 1/2 creates one group per question, Part 3/4 creates one group per cluster; MP3s are not duplicated.
+- Publish passes when all required media is present and fails with an accurate list when MP3s/images are missing.
+- Assets from another revision cannot be attached without authorization.
 
 ### Frontend
 
-- Parse và type-check response upload intent, completion và media checklist;
-  test error/401 refresh/cancellation theo các API helper hiện có.
-- Test direct PUT thành công, URL hết hạn/lỗi upload, complete lỗi và retry.
-- Test import Listening không yêu cầu MP3; test nút publish disabled/checklist
-  và lỗi backend được render rõ ràng.
-- Test link/focus từ cảnh báo đến đúng audio group hoặc image field.
+- Parse and type-check upload intent, completion, and media checklist responses; test error handling/401 refresh/cancellation following existing API helpers.
+- Test successful direct PUT, expired URL/upload error, failed complete, and retry.
+- Test Listening import without requiring an MP3; test disabled publish button/checklist and clear rendering of backend errors.
+- Test link/focus from warnings to the exact audio group or image field.
 
-### Kiểm tra thủ công
+### Manual checks
 
-1. Import workbook Listening không có media.
-2. Xác nhận revision ở Draft và checklist liệt kê toàn bộ group thiếu.
-3. Upload MP3 cho một group Part 3/4, kiểm tra nó phục vụ chung đúng dải câu.
-4. Cấu hình ảnh Reading bắt buộc, upload ảnh và xác nhận trạng thái đổi sang
-   hoàn thành chỉ sau complete.
-5. Thử publish khi thiếu một mục (phải bị chặn), rồi upload đủ và publish (phải
-   thành công).
+1. Import a Listening workbook without media.
+2. Confirm the revision is in Draft and the checklist lists all missing groups.
+3. Upload an MP3 for a Part 3/4 group and verify it serves the exact shared question range.
+4. Configure a required Reading image, upload an image, and confirm its status changes to completed only after `complete`.
+5. Attempt to publish while one item is missing (must be blocked), then upload all missing items and publish (must succeed).
 
-## Tệp frontend dự kiến chạm tới khi bắt đầu code
+## Expected frontend files to touch when coding begins
 
-- `src/features/admin/exam-api.ts` và test cạnh nó.
-- `src/features/admin/lr-exercise-bank-api.ts` và các component data bank L&R.
-- `src/features/admin/components/reading-exam-workspace.tsx` hoặc workspace L&R
-  kế nhiệm khi contract tách Listening/Reading rõ ràng.
-- `src/app/api/admin/exams/**` và route handlers media mới.
-- Parser/types tại `src/features/admin/exam-management.ts`.
+- `src/features/admin/exam-api.ts` and its co-located tests.
+- `src/features/admin/lr-exercise-bank-api.ts` and L&R data bank components.
+- `src/features/admin/components/reading-exam-workspace.tsx` or the successor L&R workspace once the contract cleanly separates Listening and Reading.
+- `src/app/api/admin/exams/**` and new media route handlers.
+- Parsers/types in `src/features/admin/exam-management.ts`.
 
-Danh sách cuối cùng phụ thuộc contract backend; repository backend hiện không
-có trong workspace này để đối chiếu API contract.
+The final list depends on the backend contract; the backend repository is not present in this workspace to cross-reference the API contract.
 
-## Không làm trong đợt này
+## Not in this phase
 
-- Migrate media đang tồn tại.
-- Sửa UI hoặc player phía learner.
-- Hỗ trợ upload hàng loạt/ZIP, transcoding, waveform, CDN hoặc deduplication.
-- Mở public MinIO bucket hay lưu credential/presigned URL dài hạn trên client.
+- Migrating existing media.
+- Modifying learner-facing UI or player.
+- Supporting batch/ZIP uploads, transcoding, waveforms, CDN, or deduplication.
+- Opening a public MinIO bucket or storing long-lived credentials/presigned URLs on the client.

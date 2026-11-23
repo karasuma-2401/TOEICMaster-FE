@@ -72,7 +72,7 @@ export function PracticeSidebarNav({
 
   return (
     <nav
-      aria-label="Luyện tập"
+      aria-label="Practice"
       className={`flex flex-col ${collapsed ? "gap-3" : "gap-5"}`}
     >
       {practiceNavGroups.map((group, index) => (
@@ -145,7 +145,7 @@ export function PracticeSidebar() {
 
   return (
     <aside
-      aria-label="Điều hướng luyện tập"
+      aria-label="Practice navigation"
       className={`practice-sidebar fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-[#ece9e5] bg-white transition-[width] duration-200 md:flex ${collapsed ? "w-16" : "w-60"}`}
       data-collapsed={collapsed ? "true" : "false"}
       data-testid="practice-sidebar"
@@ -154,7 +154,7 @@ export function PracticeSidebar() {
         className={`flex min-h-[73px] items-center border-b border-[#ece9e5] ${collapsed ? "justify-center px-2" : "px-5"}`}
       >
         <Link
-          aria-label={collapsed ? "TOEICMaster, trang chủ" : undefined}
+          aria-label={collapsed ? "TOEICMaster, home" : undefined}
           className={`flex w-fit items-center gap-2 text-xl font-bold tracking-tight text-[#2f2b28] ${focusRing}`}
           href="/"
         >
@@ -171,11 +171,11 @@ export function PracticeSidebar() {
       <button
         aria-controls={navId}
         aria-expanded={!collapsed}
-        aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         className={`absolute right-0 top-1/2 grid size-7 -translate-y-1/2 translate-x-1/2 cursor-pointer place-items-center rounded-full border border-[#ece9e5] bg-white text-[#6b655f] shadow-sm transition hover:border-[#e9c6a4] hover:text-[#df5a28] ${focusRing}`}
         data-testid="practice-sidebar-toggle"
         onClick={toggle}
-        title={collapsed ? "Mở rộng" : "Thu gọn"}
+        title={collapsed ? "Expand" : "Collapse"}
         type="button"
       >
         <ChevronLeft

@@ -97,8 +97,7 @@ export function isAdminUser(value: unknown): value is AdminUser {
 }
 
 export function parseAdminUserResponse(value: unknown): AdminUser {
-  if (!isAdminUser(value))
-    throw new Error("Thông tin người dùng trả về không hợp lệ.");
+  if (!isAdminUser(value)) throw new Error("Invalid user response data.");
   return value;
 }
 
@@ -108,7 +107,7 @@ function isCount(value: unknown): value is number {
 
 export function parseAdminUsersResponse(value: unknown): AdminUsersResponse {
   if (!isRecord(value) || !Array.isArray(value.items) || !isRecord(value.stats))
-    throw new Error("Phản hồi danh sách người dùng không hợp lệ.");
+    throw new Error("Invalid user list response.");
   const stats = value.stats;
   if (
     !value.items.every(isAdminUser) ||
@@ -123,7 +122,7 @@ export function parseAdminUsersResponse(value: unknown): AdminUsersResponse {
     !isCount(stats.pendingUsers) ||
     !isCount(stats.lockedUsers)
   )
-    throw new Error("Phản hồi danh sách người dùng không hợp lệ.");
+    throw new Error("Invalid user list response.");
   return value as unknown as AdminUsersResponse;
 }
 
@@ -177,8 +176,8 @@ export function getAdminUserInitials(fullName: string): string {
 }
 
 export function formatAdminUserDate(value: string | null | undefined): string {
-  if (!value || !Number.isFinite(Date.parse(value))) return "Chưa đăng nhập";
-  return new Intl.DateTimeFormat("vi-VN", {
+  if (!value || !Number.isFinite(Date.parse(value))) return "Never signed in";
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

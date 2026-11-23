@@ -89,7 +89,7 @@ export function PracticeRecorder({
               ? error
               : new PronunciationApiError(
                   "UNAVAILABLE",
-                  "Chưa chấm được lúc này.",
+                  "Unable to score right now.",
                 ),
         });
       } finally {
@@ -133,10 +133,10 @@ export function PracticeRecorder({
   return (
     <section aria-labelledby="ipa-practice-heading">
       <h3 className="text-[15px] font-semibold" id="ipa-practice-heading">
-        Luyện tập
+        Practice
       </h3>
       <p className="mt-1 text-[15px] text-(--sp-ink-2)">
-        Đọc to từ <span className="text-(--sp-ink)">{word}</span>{" "}
+        Say the word <span className="text-(--sp-ink)">{word}</span>{" "}
         <Transcription example={example} />
       </p>
 
@@ -149,14 +149,14 @@ export function PracticeRecorder({
               type="button"
             >
               <StopIcon />
-              Dừng
+              Stop
             </button>
             <span className="inline-flex items-center gap-2 text-[13px] text-(--sp-ink-2)">
               <span
                 aria-hidden="true"
                 className="size-2.5 animate-pulse rounded-full bg-(--sp-rec)"
               />
-              Đang ghi âm {seconds}s / {recorder.maxMs / 1000}s
+              Recording {seconds}s / {recorder.maxMs / 1000}s
             </span>
             <span
               aria-hidden="true"
@@ -175,10 +175,10 @@ export function PracticeRecorder({
                 aria-hidden="true"
                 className="size-4 animate-spin rounded-full border-2 border-(--sp-line) border-t-(--sp-brand)"
               />
-              Đang chấm phát âm…
+              Scoring pronunciation…
             </span>
             <button className={secondaryAction} onClick={cancel} type="button">
-              Hủy
+              Cancel
             </button>
           </>
         ) : (
@@ -190,12 +190,12 @@ export function PracticeRecorder({
               type="button"
             >
               <MicIcon />
-              {take ? "Thu lại" : "Ghi âm"}
+              {take ? "Record again" : "Record"}
             </button>
             <span aria-live="polite" className="text-[13px] text-(--sp-ink-2)">
               {status === "requesting"
-                ? "Đang xin quyền micro…"
-                : "Tối đa 5 giây"}
+                ? "Requesting microphone access…"
+                : "Up to 5 seconds"}
             </span>
           </>
         )}
@@ -204,24 +204,25 @@ export function PracticeRecorder({
       <div className="mt-3 flex flex-col gap-3 empty:hidden">
         {status === "denied" && (
           <InlineError>
-            Trình duyệt chưa cho phép dùng micro. Bấm biểu tượng ổ khóa cạnh
-            thanh địa chỉ, bật quyền Micro rồi thử lại.
+            Microphone access is not allowed in your browser. Click the lock
+            icon next to the address bar, enable Microphone permission, and try
+            again.
           </InlineError>
         )}
         {status === "unsupported" && (
           <InlineError>
-            Trình duyệt chưa hỗ trợ ghi âm. Bạn vẫn có thể nghe âm mẫu và từ ví
-            dụ.
+            Your browser does not support audio recording. You can still listen
+            to the sample sound and example words.
           </InlineError>
         )}
         {status === "mic-lost" && (
           <InlineError>
-            Mất kết nối micro. Kiểm tra thiết bị rồi bấm Ghi âm.
+            Microphone disconnected. Check your device and click Record.
           </InlineError>
         )}
         {assessment.kind === "silent" && (
           <InlineError>
-            Không nghe thấy giọng, hãy thử lại gần micro hơn.
+            No voice detected. Please try again closer to the microphone.
           </InlineError>
         )}
         {take && !recording && (
@@ -245,7 +246,7 @@ export function PracticeRecorder({
         )}
         {attempts.length > 1 && (
           <p className="text-[13px] text-(--sp-ink-2)">
-            Lần thử gần đây: {attempts.map((value) => `${value}%`).join(" → ")}
+            Recent attempts: {attempts.map((value) => `${value}%`).join(" → ")}
           </p>
         )}
       </div>
@@ -270,9 +271,9 @@ function ErrorBlock({
           className={textLink}
           href={`/login?next=${encodeURIComponent(`/pronunciation?sound=${slug}`)}`}
         >
-          Đăng nhập
+          Sign in
         </Link>
-        . Bạn vẫn nghe lại được bản thu.
+        . You can still play back your recording.
       </p>
     );
   }
@@ -281,6 +282,7 @@ function ErrorBlock({
       <ErrorPanel
         message={error.message}
         onRetry={error.code === "RATE_LIMITED" ? undefined : onRetry}
+        retryLabel="Try again"
       />
     </div>
   );

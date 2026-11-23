@@ -77,9 +77,9 @@ function messageFromResponse(response: Response): Promise<string> {
         typeof body.title === "string"
       )
         return body.title;
-      return "Không thể kết nối dịch vụ.";
+      return "Unable to connect to the service.";
     })
-    .catch(() => "Không thể kết nối dịch vụ.");
+    .catch(() => "Unable to connect to the service.");
 }
 
 async function refreshAdminSession() {
@@ -126,7 +126,7 @@ async function request<T>(
       try {
         await refreshAdminSession();
       } catch {
-        throw new AdminExamApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new AdminExamApiError(401, "Your session has expired.");
       }
       return await send();
     }
@@ -136,7 +136,7 @@ async function request<T>(
       throw new AdminExamApiError(error.status, error.message);
     if (error instanceof ApiError)
       throw new AdminExamApiError(error.status, error.message);
-    throw new AdminExamApiError(502, "Không thể kết nối dịch vụ.");
+    throw new AdminExamApiError(502, "Unable to connect to the service.");
   }
 }
 
@@ -158,10 +158,7 @@ export async function getReadingExams(
       await getJson<unknown>(`/api/admin/exams?${params}`, signal),
     );
   } catch (error) {
-    throw normalizeReadError(
-      error,
-      "Dữ liệu danh sách đề Reading không hợp lệ.",
-    );
+    throw normalizeReadError(error, "Invalid Reading exam list data.");
   }
 }
 
@@ -183,7 +180,7 @@ export async function getScoreProfiles(
       await getJson<unknown>("/api/admin/score-profiles", signal),
     );
   } catch (error) {
-    throw normalizeReadError(error, "Dữ liệu barem điểm không hợp lệ.");
+    throw normalizeReadError(error, "Invalid score profile data.");
   }
 }
 
@@ -200,7 +197,7 @@ export async function getReadingRevision(
       ),
     );
   } catch (error) {
-    throw normalizeReadError(error, "Dữ liệu đề Reading không hợp lệ.");
+    throw normalizeReadError(error, "Invalid Reading exam data.");
   }
 }
 
@@ -209,10 +206,7 @@ export async function createReadingExam(
 ): Promise<ReadingDraft> {
   const value = await request<unknown>("/api/admin/exams", "POST", input);
   if (!isReadingDraft(value))
-    throw new AdminExamApiError(
-      502,
-      "Dữ liệu đề Reading vừa tạo không hợp lệ.",
-    );
+    throw new AdminExamApiError(502, "Invalid created Reading exam data.");
   return value;
 }
 
@@ -225,10 +219,7 @@ export async function importReadingExam(workbook: File): Promise<ReadingDraft> {
     formData,
   );
   if (!isReadingDraft(value))
-    throw new AdminExamApiError(
-      502,
-      "Dữ liệu đề Reading vừa import không hợp lệ.",
-    );
+    throw new AdminExamApiError(502, "Invalid imported Reading exam data.");
   return value;
 }
 
@@ -274,7 +265,7 @@ export async function createMediaUploadIntent(
     input,
   );
   if (!isMediaUploadIntent(value))
-    throw new AdminExamApiError(502, "Phản hồi upload media không hợp lệ.");
+    throw new AdminExamApiError(502, "Invalid media upload response.");
   return value;
 }
 
@@ -291,7 +282,7 @@ export async function uploadFileToMediaIntent(
   if (!response.ok)
     throw new AdminExamApiError(
       response.status,
-      "Không thể tải file lên MinIO.",
+      "Unable to upload file to MinIO.",
     );
 }
 
@@ -318,7 +309,7 @@ export async function completeMediaUploadIntent(
     typeof value !== "object" ||
     !isGuid((value as { id?: unknown }).id)
   )
-    throw new AdminExamApiError(502, "Phản hồi hoàn tất upload không hợp lệ.");
+    throw new AdminExamApiError(502, "Invalid upload completion response.");
   const record = value as {
     id: string;
     contentType?: unknown;
@@ -381,7 +372,7 @@ export async function uploadReadingImage(file: File): Promise<{ id: string }> {
     typeof value !== "object" ||
     !isGuid((value as { id?: unknown }).id)
   )
-    throw new AdminExamApiError(502, "Ảnh vừa tải lên không hợp lệ.");
+    throw new AdminExamApiError(502, "Invalid uploaded image response.");
   return { id: (value as { id: string }).id };
 }
 
@@ -395,10 +386,7 @@ export async function publishReadingRevision(
     {},
   );
   if (!isReadingDraft(value))
-    throw new AdminExamApiError(
-      502,
-      "Phản hồi xuất bản đề Reading không hợp lệ.",
-    );
+    throw new AdminExamApiError(502, "Invalid Reading exam publish response.");
   return value;
 }
 

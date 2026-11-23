@@ -19,13 +19,13 @@ describe("Admin Writing API Client", () => {
   });
 
   it("maps difficulties back and forth", () => {
-    expect(toApiDifficulty("Dễ")).toBe("EASY");
-    expect(toApiDifficulty("Trung bình")).toBe("MEDIUM");
-    expect(toApiDifficulty("Khó")).toBe("HARD");
+    expect(toApiDifficulty("Easy")).toBe("EASY");
+    expect(toApiDifficulty("Medium")).toBe("MEDIUM");
+    expect(toApiDifficulty("Hard")).toBe("HARD");
 
-    expect(fromApiDifficulty("EASY")).toBe("Dễ");
-    expect(fromApiDifficulty("MEDIUM")).toBe("Trung bình");
-    expect(fromApiDifficulty("HARD")).toBe("Khó");
+    expect(fromApiDifficulty("EASY")).toBe("Easy");
+    expect(fromApiDifficulty("MEDIUM")).toBe("Medium");
+    expect(fromApiDifficulty("HARD")).toBe("Hard");
   });
 
   it("converts WritingExerciseDto to AdminWritingQuestion correctly", () => {
@@ -33,7 +33,7 @@ describe("Admin Writing API Client", () => {
       id: "ex-1",
       part: 1,
       code: "WP1-001",
-      topic: "Công việc",
+      topic: "Work",
       difficulty: "EASY",
       status: "PUBLISHED",
       rubricNotes: "rubric",

@@ -28,9 +28,7 @@ function LoadingOrError({
       tabIndex={-1}
     >
       <p className="text-lg font-semibold">
-        {loading
-          ? "Đang tải dữ liệu bài thi…"
-          : "Không thể tải dữ liệu bài thi"}
+        {loading ? "Loading exam data…" : "Unable to load exam data"}
       </p>
       {error ? (
         <p className="text-sm text-red-700" role="alert">
@@ -43,7 +41,7 @@ function LoadingOrError({
           onClick={() => window.location.reload()}
           type="button"
         >
-          Tải lại trang
+          Reload page
         </button>
       ) : null}
     </main>
@@ -106,7 +104,7 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error ? cause.message : "Không thể tải bài thi.",
+            cause instanceof Error ? cause.message : "Unable to load exam.",
           );
         }
       });
@@ -141,7 +139,7 @@ export function LrResultPage({ attemptId }: { attemptId: string }) {
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error ? cause.message : "Không thể tải kết quả.",
+            cause instanceof Error ? cause.message : "Unable to load results.",
           );
         }
       });
@@ -205,9 +203,7 @@ export function LrReviewPage({ attemptId }: { attemptId: string }) {
       .catch((cause) => {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error
-              ? cause.message
-              : "Không thể tải phần xem lại.",
+            cause instanceof Error ? cause.message : "Unable to load review.",
           );
         }
       });

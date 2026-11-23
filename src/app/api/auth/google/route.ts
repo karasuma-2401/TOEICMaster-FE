@@ -12,25 +12,25 @@ import {
 import { setSessionCookie } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return problem(403, "Yêu cầu không hợp lệ.");
+  if (!sameOrigin(request)) return problem(403, "Invalid request.");
   const body = await readBody(request);
-  if (!body) return problem(400, "Dữ liệu Google không hợp lệ.");
+  if (!body) return problem(400, "Invalid Google data.");
   const credential = typeof body.credential === "string" ? body.credential : "";
   const rememberMe = body.rememberMe === true;
   if (!credential || credential.length > 8192)
-    return problem(400, "Dữ liệu Google không hợp lệ.", {
-      Credential: ["Google credential không hợp lệ."],
+    return problem(400, "Invalid Google data.", {
+      Credential: ["Invalid Google credential."],
     });
   try {
     const upstream = await postAuth("google", { credential, rememberMe });
     if (upstream.status === 400)
-      return upstreamProblem(upstream, 400, "Dữ liệu Google không hợp lệ.");
+      return upstreamProblem(upstream, 400, "Invalid Google data.");
     if (upstream.status === 401)
-      return problem(401, "Google credential không hợp lệ hoặc đã hết hạn.");
+      return problem(401, "Google credential is invalid or has expired.");
     if (upstream.status === 409)
       return problem(
         409,
-        "Email này đã thuộc một tài khoản khác. Hãy đăng nhập bằng mật khẩu để liên kết Google.",
+        "This email already belongs to another account. Please sign in with your password to link Google.",
       );
     if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected auth status");
@@ -39,6 +39,6 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, session);
     return response;
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

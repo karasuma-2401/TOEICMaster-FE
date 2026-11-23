@@ -176,7 +176,7 @@ describe("LrReview lazy audio player", () => {
     );
 
     const playerRegion = screen.getByTestId("lr-review-audio-player");
-    expect(screen.getByRole("region", { name: "Audio xem lại câu hỏi" })).toBe(
+    expect(screen.getByRole("region", { name: "Question review audio" })).toBe(
       playerRegion,
     );
     expect(screen.getByText(/00:00\s*\/\s*00:45/)).toBeInTheDocument();
@@ -210,12 +210,12 @@ describe("LrReview lazy audio player", () => {
     expect(audioEl.currentTime).toBe(15);
 
     // Switch to Q33 (same audioAssetId: asset-p3-1) -> reuses cache without calling getLrMediaUrl again.
-    fireEvent.click(screen.getByRole("button", { name: /^Câu 33\b/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Question 33\b/ }));
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     expect(getLrMediaUrl).toHaveBeenCalledTimes(1);
 
     // Switch to Q35 (different audioAssetId: asset-p3-2) -> fetches asset-p3-2.
-    fireEvent.click(screen.getByRole("button", { name: /^Câu 35\b/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Question 35\b/ }));
     expect(screen.getByText(/00:00\s*\/\s*00:30/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("lr-review-audio-toggle"));
     await waitFor(() =>
@@ -228,7 +228,7 @@ describe("LrReview lazy audio player", () => {
     expect(getLrMediaUrl).toHaveBeenCalledTimes(2);
 
     // Switch to Q101 (Part 5) -> ReviewAudioPlayer must NOT render.
-    fireEvent.click(screen.getByRole("button", { name: /^Câu 101\b/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Question 101\b/ }));
     expect(
       screen.queryByTestId("lr-review-audio-player"),
     ).not.toBeInTheDocument();
@@ -249,7 +249,7 @@ describe("LrReview lazy audio player", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   });
 
-  it("renders Screen 19 filter tabs (Tất cả, Làm sai, Bỏ qua, Sai / Bỏ qua, Gắn cờ, Đúng) and /history link", () => {
+  it("renders Screen 19 filter tabs (All, Incorrect, Skipped, Incorrect / Skipped, Flagged, Correct) and /history link", () => {
     render(
       <LrReview
         state={buildReviewState()}
@@ -259,15 +259,15 @@ describe("LrReview lazy audio player", () => {
     );
 
     expect(
-      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+      screen.getByRole("link", { name: "Back to Attempt History" }),
     ).toHaveAttribute("href", "/history");
     for (const label of [
-      /Tất cả/,
-      /Làm sai \(1\)/,
-      /Bỏ qua \(0\)/,
-      /Sai \/ Bỏ qua \(1\)/,
-      /Gắn cờ \(0\)/,
-      /Đúng \(3\)/,
+      /^All/,
+      /^Incorrect \(1\)/,
+      /^Skipped \(0\)/,
+      /^Incorrect \/ Skipped \(1\)/,
+      /^Flagged \(0\)/,
+      /^Correct \(3\)/,
     ]) {
       expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
     }

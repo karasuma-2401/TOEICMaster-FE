@@ -75,7 +75,7 @@ export function SentenceDiffView({
 
   return (
     <div
-      aria-label="So sánh câu văn và gợi ý chỉnh sửa"
+      aria-label="Sentence comparison and suggested revision"
       className="rounded-xl border border-[#EEE9E6] bg-[#FAF7F5] p-4"
       data-testid="writing-sentence-diff"
       // Phase 1 test sentence-diff-view.test.tsx:60 requires explicit role="region" on the diff container.
@@ -83,7 +83,7 @@ export function SentenceDiffView({
       role="region"
     >
       <h4 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-        So sánh câu văn và gợi ý chỉnh sửa
+        Sentence comparison and suggested revision
       </h4>
       <p className="mt-2 text-sm leading-7 text-slate-800">
         {tokens.map((token, index) =>
@@ -108,10 +108,10 @@ export function SentenceDiffView({
       </p>
       <p className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
         <span>
-          <span className="line-through decoration-red-400">Đã xóa</span>
+          <span className="line-through decoration-red-400">Removed</span>
         </span>
         <span>
-          <span className="text-emerald-800">Gợi ý chỉnh sửa</span>
+          <span className="text-emerald-800">Suggested revision</span>
         </span>
       </p>
     </div>

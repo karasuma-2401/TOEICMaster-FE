@@ -53,16 +53,16 @@ export async function forwardAdminKnowledge(
   const path = segments.join("/");
   const route = routes.find((item) => item.pattern.test(path));
   if (!route || !route.methods.includes(method))
-    return problem(404, "Không tìm thấy API quản trị Kiến thức.");
+    return problem(404, "Knowledge admin API endpoint not found.");
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   const session = sessionCookie(request);
   if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
-    return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+    return problem(401, "Invalid or expired session.");
   const role = (session as typeof session & { role?: unknown }).role;
   if (role !== "ADMIN")
-    return problem(403, "Bạn không có quyền truy cập chức năng này.");
+    return problem(403, "You do not have permission to access this feature.");
 
   const body: ForwardBody =
     method === "GET" || method === "DELETE"
@@ -84,6 +84,6 @@ export async function forwardAdminKnowledge(
     );
     return relay(upstream);
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

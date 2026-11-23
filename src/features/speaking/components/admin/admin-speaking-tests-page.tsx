@@ -70,7 +70,7 @@ export function AdminSpeakingTestsPage() {
         setSummary(nextSummary);
       } catch (cause) {
         if (!signal.aborted)
-          setError(errorMessage(cause, "Không thể tải đề Speaking."));
+          setError(errorMessage(cause, "Unable to load Speaking tests."));
       } finally {
         if (!signal.aborted) setLoading(false);
       }
@@ -99,39 +99,39 @@ export function AdminSpeakingTestsPage() {
             style={adminGradient}
             type="button"
           >
-            + Tạo đề Speaking
+            + Create Speaking test
           </button>
         }
-        description="Soạn trực tiếp 11 câu theo 5 Part và kiểm tra điều kiện xuất bản."
-        title="Đề Speaking"
+        description="Author all 11 questions across 5 Parts directly and verify publish requirements."
+        title="Speaking Tests"
       />
       <ContentTabs section="tests" skill="speaking" />
       {notice && <AdminNotice>{notice}</AdminNotice>}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStat label="Tổng số đề" value={summary?.tests.total ?? "—"} />
+        <AdminStat label="Total tests" value={summary?.tests.total ?? "-"} />
         <AdminStat
-          hint="User đang nhìn thấy"
-          label="Đã công bố"
-          value={summary?.tests.published ?? "—"}
+          hint="Visible to learners"
+          label="Published"
+          value={summary?.tests.published ?? "-"}
         />
-        <AdminStat label="Bản nháp" value={summary?.tests.draft ?? "—"} />
+        <AdminStat label="Drafts" value={summary?.tests.draft ?? "-"} />
         <AdminStat
-          hint="Chỉ dành cho các đề cũ dùng ngân hàng bài tập"
-          label="Bài tập đã công bố"
-          value={summary?.exercises.published ?? "—"}
+          hint="Only for legacy tests using the exercise bank"
+          label="Published exercises"
+          value={summary?.exercises.published ?? "-"}
         />
       </div>
       <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
         <div className="grid gap-3 border-b border-[var(--admin-border)] p-4 md:grid-cols-[1fr_12rem_auto] md:items-center">
           <input
-            aria-label="Tìm đề Speaking"
+            aria-label="Search Speaking tests"
             className={control}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm mã đề hoặc tên đề..."
+            placeholder="Search by test code or title..."
             value={query}
           />
           <select
-            aria-label="Lọc trạng thái đề"
+            aria-label="Filter test status"
             className={control}
             onChange={(event) => {
               setStatus(event.target.value as SpeakingTestStatus | "ALL");
@@ -139,12 +139,12 @@ export function AdminSpeakingTestsPage() {
             }}
             value={status}
           >
-            <option value="ALL">Trạng thái: Tất cả</option>
-            <option value="PUBLISHED">Công bố</option>
-            <option value="DRAFT">Bản nháp</option>
+            <option value="ALL">Status: All</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="DRAFT">Draft</option>
           </select>
           <p className="text-right text-xs font-semibold text-[var(--admin-muted)]">
-            {page ? `${page.totalCount} đề` : ""}
+            {page ? `${page.totalCount} tests` : ""}
           </p>
         </div>
         <AdminLoadState
@@ -159,16 +159,14 @@ export function AdminSpeakingTestsPage() {
           />
         )}
         {!error && page && items.length === 0 && (
-          <p className="p-14 text-center font-bold">
-            Không tìm thấy đề phù hợp
-          </p>
+          <p className="p-14 text-center font-bold">No matching tests found</p>
         )}
         <TablePagination
           onPage={setPageNumber}
           page={page?.pageNumber ?? 1}
           pages={Math.max(1, page?.totalPages ?? 1)}
           total={page?.totalCount ?? 0}
-          unit="đề"
+          unit="tests"
         />
       </section>
       {editing !== undefined && (

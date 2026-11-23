@@ -49,7 +49,9 @@ it("shows part totals only when every question in that part has feedback", () =>
     <WritingEvaluationReport evaluation={evaluation} questions={questions} />,
   );
 
-  expect(screen.getByText("2 câu · Writing Part 1")).toBeInTheDocument();
+  expect(screen.getByText("2 questions · Writing Part 1")).toBeInTheDocument();
   expect(screen.getByText("/ 6")).toBeInTheDocument();
-  expect(screen.queryByText("1 câu · Writing Part 2")).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("1 question · Writing Part 2"),
+  ).not.toBeInTheDocument();
 });

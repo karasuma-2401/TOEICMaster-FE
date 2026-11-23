@@ -4,7 +4,7 @@ import { AlertCircleIcon, CheckCircleIcon } from "../ui/icons";
 export function PublishChecklistPanel({
   items,
   errors,
-  errorTitle = "Chưa thể công bố",
+  errorTitle = "Cannot publish yet",
 }: {
   items: ChecklistItem[];
   errors: string[];
@@ -12,7 +12,7 @@ export function PublishChecklistPanel({
 }) {
   return (
     <section className="sp-card p-4">
-      <h3 className="font-semibold">Điều kiện công bố</h3>
+      <h3 className="font-semibold">Publish checklist</h3>
       <ul className="mt-3 space-y-2 text-[13px]">
         {items.map((item) => (
           <li
@@ -26,7 +26,7 @@ export function PublishChecklistPanel({
             )}
             <span>
               <span className="sr-only">
-                {item.done ? "Đạt: " : "Chưa đạt: "}
+                {item.done ? "Passed: " : "Incomplete: "}
               </span>
               {item.label}
             </span>

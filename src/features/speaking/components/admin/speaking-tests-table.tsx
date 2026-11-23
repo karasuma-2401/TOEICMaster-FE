@@ -16,12 +16,12 @@ export function SpeakingTestsTable({
       <table className="w-full min-w-[900px] text-left text-sm">
         <thead className="bg-[var(--admin-surface-muted)] text-xs text-[var(--admin-muted)]">
           <tr>
-            <th className="p-4">MÃ ĐỀ</th>
-            <th className="p-4">TÊN ĐỀ</th>
-            <th className="p-4">CẤU TRÚC (NHÓM / PART)</th>
-            <th className="p-4">SỐ CÂU</th>
-            <th className="p-4">TRẠNG THÁI</th>
-            <th className="p-4 text-right">THAO TÁC</th>
+            <th className="p-4">CODE</th>
+            <th className="p-4">TITLE</th>
+            <th className="p-4">STRUCTURE (GROUPS / PART)</th>
+            <th className="p-4">QUESTIONS</th>
+            <th className="p-4">STATUS</th>
+            <th className="p-4 text-right">ACTIONS</th>
           </tr>
         </thead>
         <tbody>
@@ -69,7 +69,7 @@ export function SpeakingTestsTable({
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-bold ${test.status === "PUBLISHED" ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
                   >
-                    {test.status === "PUBLISHED" ? "Công bố" : "Bản nháp"}
+                    {test.status === "PUBLISHED" ? "Published" : "Draft"}
                   </span>
                 </td>
                 <td className="p-4 text-right">
@@ -78,7 +78,7 @@ export function SpeakingTestsTable({
                     onClick={() => onOpen(test)}
                     type="button"
                   >
-                    Mở builder
+                    Open builder
                   </button>
                 </td>
               </tr>

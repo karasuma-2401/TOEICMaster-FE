@@ -131,7 +131,7 @@ export async function getSpeakingAdminSummary(
   const value = await speakingRequest(`${base}/summary`, {
     signal,
     refresh: true,
-    fallback: "Không thể tải thống kê Speaking.",
+    fallback: "Unable to load Speaking summary.",
   });
   const counts = (record: unknown, keys: string[]) =>
     isRecord(record) && keys.every((key) => isCount(record[key]));
@@ -140,7 +140,7 @@ export async function getSpeakingAdminSummary(
     !counts(value.exercises, ["total", "published", "draft", "archived"]) ||
     !counts(value.tests, ["total", "published", "draft"])
   )
-    invalid("thống kê Speaking");
+    invalid("Speaking summary");
   return value as unknown as SpeakingAdminSummary;
 }
 
@@ -152,10 +152,10 @@ export async function listSpeakingExercises(
     await speakingRequest(`${base}/exercises?${queryString(query)}`, {
       signal,
       refresh: true,
-      fallback: "Không thể tải ngân hàng bài tập Speaking.",
+      fallback: "Unable to load Speaking exercise bank.",
     }),
     parseExercise,
-    "danh sách bài tập Speaking",
+    "Speaking exercise list",
   );
 }
 
@@ -165,7 +165,7 @@ export async function createSpeakingExercise(input: SpeakingExerciseInput) {
       method: "POST",
       json: input,
       refresh: true,
-      fallback: "Không thể tạo bài tập Speaking.",
+      fallback: "Unable to create Speaking exercise.",
     }),
   );
 }
@@ -180,7 +180,7 @@ export async function updateSpeakingExercise(
       method: "PUT",
       json: { version, exercise: input },
       refresh: true,
-      fallback: "Không thể lưu bài tập Speaking.",
+      fallback: "Unable to save Speaking exercise.",
     }),
   );
 }
@@ -193,7 +193,7 @@ export async function archiveSpeakingExercise(
     {
       method: "DELETE",
       refresh: true,
-      fallback: "Không thể lưu trữ bài tập Speaking.",
+      fallback: "Unable to archive Speaking exercise.",
     },
   );
 }
@@ -205,9 +205,9 @@ export async function uploadSpeakingImage(file: File) {
     method: "POST",
     form,
     refresh: true,
-    fallback: "Không thể tải ảnh lên.",
+    fallback: "Unable to upload image.",
   });
-  if (!isRecord(value) || !isString(value.id)) invalid("tải ảnh");
+  if (!isRecord(value) || !isString(value.id)) invalid("image upload");
   return { id: value.id };
 }
 
@@ -219,10 +219,10 @@ export async function listSpeakingTests(
     await speakingRequest(`${base}/tests?${queryString(query)}`, {
       signal,
       refresh: true,
-      fallback: "Không thể tải danh sách đề Speaking.",
+      fallback: "Unable to load Speaking tests.",
     }),
     parseTestListItem,
-    "danh sách đề Speaking",
+    "Speaking test list",
   );
 }
 
@@ -231,7 +231,7 @@ export async function getSpeakingTestDetail(id: string, signal?: AbortSignal) {
     await speakingRequest(`${base}/tests/${encodeURIComponent(id)}`, {
       signal,
       refresh: true,
-      fallback: "Không thể tải đề Speaking.",
+      fallback: "Unable to load Speaking test.",
     }),
   );
 }
@@ -242,7 +242,7 @@ export async function createSpeakingTest(input: SpeakingTestInput) {
       method: "POST",
       json: testBody(input),
       refresh: true,
-      fallback: "Không thể tạo đề Speaking.",
+      fallback: "Unable to create Speaking test.",
     }),
   );
 }
@@ -256,7 +256,7 @@ export async function importSpeakingTest(file: File) {
       method: "POST",
       form,
       refresh: true,
-      fallback: "Không thể import đề Speaking.",
+      fallback: "Unable to import Speaking test.",
     }),
   );
 }
@@ -271,7 +271,7 @@ export async function updateSpeakingTest(
       method: "PUT",
       json: { version, test: testBody(input) },
       refresh: true,
-      fallback: "Không thể lưu đề Speaking.",
+      fallback: "Unable to save Speaking test.",
     }),
   );
 }
@@ -282,7 +282,7 @@ export async function publishSpeakingTest(id: string, version: number) {
       method: "POST",
       json: { version },
       refresh: true,
-      fallback: "Không thể công bố đề Speaking.",
+      fallback: "Unable to publish Speaking test.",
     }),
   );
 }
@@ -298,7 +298,7 @@ export async function cloneSpeakingTest(
       method: "POST",
       json: { version, code, title },
       refresh: true,
-      fallback: "Không thể nhân bản đề Speaking.",
+      fallback: "Unable to clone Speaking test.",
     }),
   );
 }
@@ -309,7 +309,7 @@ export async function deleteSpeakingTest(id: string, version: number) {
     {
       method: "DELETE",
       refresh: true,
-      fallback: "Không thể xóa đề nháp Speaking.",
+      fallback: "Unable to delete draft Speaking test.",
     },
   );
 }

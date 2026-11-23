@@ -4,8 +4,9 @@ import { LoginPanel } from "@/features/auth/components/login-panel";
 import { safeReturnTo } from "@/features/auth/protected-routes";
 
 export const metadata: Metadata = {
-  title: "Đăng nhập | TOEICMaster",
-  description: "Đăng nhập TOEICMaster để tiếp tục hành trình học TOEIC.",
+  title: "Sign In | TOEICMaster",
+  description:
+    "Sign in to TOEICMaster to continue your TOEIC learning journey.",
 };
 
 export const dynamic = "force-dynamic";

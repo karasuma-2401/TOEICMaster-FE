@@ -69,14 +69,14 @@ describe("AdminSpeakingContentPage", () => {
 
   it("shows a retryable error when the backend is unavailable", async () => {
     vi.mocked(listSpeakingExercises).mockRejectedValueOnce(
-      new Error("Không thể kết nối dịch vụ."),
+      new Error("Unable to connect to the service."),
     );
     render(<AdminSpeakingContentPage />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Không thể kết nối dịch vụ.",
+      "Unable to connect to the service.",
     );
-    fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(await screen.findByText("SP1-001")).toBeInTheDocument();
   });
 
@@ -85,12 +85,12 @@ describe("AdminSpeakingContentPage", () => {
     await screen.findByText("SP1-001");
 
     fireEvent.click(screen.getByRole("button", { name: /Part 5/ }));
-    fireEvent.click(screen.getByRole("button", { name: "+ Thêm bài tập" }));
-    fireEvent.click(screen.getByRole("button", { name: "Lưu bài tập" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add exercise" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save exercise" }));
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Mã bài và chủ đề là bắt buộc.",
+        "Exercise code and topic are required.",
       ),
     );
     expect(createSpeakingExercise).not.toHaveBeenCalled();

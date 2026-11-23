@@ -13,7 +13,7 @@ export async function forward(
 ): Promise<NextResponse> {
   const method = init.method ?? "GET";
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   try {
     const session = sessionCookie(request);
@@ -21,7 +21,7 @@ export async function forward(
       !session ||
       Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now()
     ) {
-      return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+      return problem(401, "Session is invalid or has expired.");
     }
     const upstream = await backendFetch(path, session.accessToken, init);
     if (upstream.status === 204) {
@@ -53,6 +53,6 @@ export async function forward(
       headers,
     });
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service is unavailable. Please try again later.");
   }
 }

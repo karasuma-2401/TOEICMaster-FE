@@ -98,7 +98,7 @@ export function AdminSpeakingContentPage({
         setSummary(nextSummary);
       } catch (cause) {
         if (!signal.aborted)
-          setError(errorMessage(cause, "Không thể tải bài tập Speaking."));
+          setError(errorMessage(cause, "Unable to load Speaking exercises."));
       } finally {
         if (!signal.aborted) setLoading(false);
       }
@@ -122,17 +122,17 @@ export function AdminSpeakingContentPage({
   const archive = async (exercise: SpeakingExercise) => {
     if (
       !window.confirm(
-        `Lưu trữ ${exercise.code}? Đề đã công bố không bị ảnh hưởng.`,
+        `Archive ${exercise.code}? Published tests are not affected.`,
       )
     )
       return;
     try {
       await archiveSpeakingExercise(exercise);
-      setNotice(`Đã lưu trữ ${exercise.code}.`);
+      setNotice(`Archived ${exercise.code}.`);
       reload();
     } catch (cause) {
       setNotice("");
-      setError(errorMessage(cause, "Không thể lưu trữ bài tập."));
+      setError(errorMessage(cause, "Unable to archive exercise."));
     }
   };
   const items = page?.items ?? [];
@@ -147,15 +147,15 @@ export function AdminSpeakingContentPage({
             style={adminGradient}
             type="button"
           >
-            + Thêm bài tập
+            + Add exercise
           </button>
         }
         description={
           part
-            ? `Tạo, tìm kiếm, preview và quản lý bài tập Speaking Part ${part}.`
-            : "Tạo, tìm kiếm, preview và quản lý bài tập Speaking theo 5 Part."
+            ? `Create, search, preview, and manage Speaking Part ${part} exercises.`
+            : "Create, search, preview, and manage Speaking exercises across all 5 Parts."
         }
-        title={part ? `Speaking Part ${part}` : "Ngân hàng bài tập Speaking"}
+        title={part ? `Speaking Part ${part}` : "Speaking Exercise Bank"}
       />
       <ContentTabs section="content" skill="speaking" />
       {part && <AdminPartRouteTabs activePart={part} skill="speaking" />}
@@ -164,22 +164,19 @@ export function AdminSpeakingContentPage({
         <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <AdminStat
-              hint="Trên 5 Part"
-              label="Tổng bài tập"
-              value={summary?.exercises.total ?? "—"}
+              hint="Across 5 Parts"
+              label="Total exercises"
+              value={summary?.exercises.total ?? "-"}
             />
             <AdminStat
-              hint="Có thể chọn khi lắp đề"
-              label="Hiển thị"
-              value={summary?.exercises.published ?? "—"}
+              hint="Available when assembling tests"
+              label="Published"
+              value={summary?.exercises.published ?? "-"}
             />
+            <AdminStat label="Drafts" value={summary?.exercises.draft ?? "-"} />
             <AdminStat
-              label="Bản nháp"
-              value={summary?.exercises.draft ?? "—"}
-            />
-            <AdminStat
-              label="Lưu trữ"
-              value={summary?.exercises.archived ?? "—"}
+              label="Archived"
+              value={summary?.exercises.archived ?? "-"}
             />
           </div>
           <SpeakingPartTabs
@@ -207,7 +204,7 @@ export function AdminSpeakingContentPage({
         )}
         {!error && page && items.length === 0 && (
           <div className="p-14 text-center">
-            <b>Không tìm thấy bài tập phù hợp</b>
+            <b>No matching exercises found</b>
             <button
               className="ml-3 text-sm font-bold text-[var(--admin-brand-red)] underline"
               onClick={() =>
@@ -215,7 +212,7 @@ export function AdminSpeakingContentPage({
               }
               type="button"
             >
-              Xóa lọc
+              Clear filters
             </button>
           </div>
         )}
@@ -226,7 +223,7 @@ export function AdminSpeakingContentPage({
           page={page?.pageNumber ?? 1}
           pages={Math.max(1, page?.totalPages ?? 1)}
           total={page?.totalCount ?? 0}
-          unit="bài tập"
+          unit="exercises"
         />
       </section>
       {editor && (
@@ -235,7 +232,7 @@ export function AdminSpeakingContentPage({
           onClose={() => setEditor(null)}
           onSaved={() => {
             setEditor(null);
-            setNotice("Đã lưu bài tập Speaking.");
+            setNotice("Speaking exercise saved.");
             reload();
           }}
         />

@@ -190,7 +190,7 @@ describe("admin exam API client", () => {
   });
 
   it("preserves authorization errors from a list endpoint", async () => {
-    vi.mocked(getJson).mockRejectedValue(new ApiError(403, "Không có quyền."));
+    vi.mocked(getJson).mockRejectedValue(new ApiError(403, "Forbidden."));
     await expect(
       getReadingExams({ status: "ALL", page: 1, pageSize: 20 }),
     ).rejects.toMatchObject({ status: 403 });

@@ -81,11 +81,11 @@ function sanitizeDeck(raw: unknown): FlashcardDeck | null {
   return {
     id: raw.id,
     slug: raw.slug,
-    title: raw.title.trim() || "Bộ thẻ cá nhân",
+    title: raw.title.trim() || "Custom Deck",
     description: typeof raw.description === "string" ? raw.description : "",
     category: "custom",
     targetScore:
-      typeof raw.targetScore === "string" ? raw.targetScore : "Cá nhân",
+      typeof raw.targetScore === "string" ? raw.targetScore : "Custom",
     estimatedMinutes:
       typeof raw.estimatedMinutes === "number" && raw.estimatedMinutes > 0
         ? raw.estimatedMinutes
@@ -270,10 +270,10 @@ export function slugifyDeckTitle(title: string): string {
   const normalized = title
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "d")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "d")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return normalized || "bo-the-ca-nhan";
+  return normalized || "custom-deck";
 }

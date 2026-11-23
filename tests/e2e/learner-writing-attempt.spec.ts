@@ -4,7 +4,7 @@ import {
   loginAsUser,
 } from "./learner-writing-helpers";
 
-test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id])", () => {
+test.describe("Learner Writing - 2-Phase Virtual Exam Room (/writing/attempts/[id])", () => {
   let backend: MockWritingLearnerBackend;
 
   test.beforeEach(async ({ page, context }) => {
@@ -13,37 +13,39 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
     await loginAsUser(context);
   });
 
-  test("TC-ATTEMPT-01: Cơ chế 2 giai đoạn - Pha Chuẩn bị (PREPARING) khóa ô nhập bài làm", async ({
+  test("TC-ATTEMPT-01: Two-phase mechanism - Preparation phase (PREPARING) locks the answer input", async ({
     page,
   }) => {
     await page.goto("/writing/attempts/att-in-progress-01");
 
-    // Kiểm tra header hiển thị thông tin bài làm
-    await expect(page.getByText("WT-PUB-FULL-01 · CÂU 1/3")).toBeVisible();
+    // Verify header displays attempt info
+    await expect(page.getByText("WT-PUB-FULL-01 · QUESTION 1/3")).toBeVisible();
 
-    // Đồng hồ hiển thị giai đoạn "Chuẩn bị"
-    await expect(page.getByText("Chuẩn bị", { exact: true })).toBeVisible();
+    // Timer displays "Prepare" phase
+    await expect(page.getByText("Prepare", { exact: true })).toBeVisible();
 
-    // Ô nhập bài làm bị disabled trong pha chuẩn bị
+    // Answer input is disabled during preparation phase
     const textarea = page.locator("#writing-answer");
     await expect(textarea).toBeDisabled();
     await expect(
-      page.getByText("Editor đang khóa trong pha chuẩn bị."),
+      page.getByText("Editor is locked during preparation."),
     ).toBeVisible();
 
-    // Không có nút Next khi đang ở pha chuẩn bị
+    // Next button is not visible during preparation phase
     await expect(
-      page.getByRole("button", { name: "Next · khóa câu này" }),
+      page.getByRole("button", { name: "Next · lock this question" }),
     ).not.toBeVisible();
     await expect(
-      page.getByText("Đọc đề và chuẩn bị ý. Editor sẽ mở khi timer về 00:00."),
+      page.getByText(
+        "Read the prompt and prepare your ideas. The editor will open when the timer reaches 00:00.",
+      ),
     ).toBeVisible();
   });
 
-  test("TC-ATTEMPT-02: Cơ chế 2 giai đoạn - Pha Làm bài (ANSWERING) mở ô nhập cho thí sinh gõ bài", async ({
+  test("TC-ATTEMPT-02: Two-phase mechanism - Response phase (ANSWERING) unlocks the input for the learner to type", async ({
     page,
   }) => {
-    // Chuyển attempt sang pha ANSWERING
+    // Switch attempt to ANSWERING phase
     const attempt = backend.attempts.find(
       (a) => a.id === "att-in-progress-01",
     )!;
@@ -52,27 +54,27 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
 
     await page.goto("/writing/attempts/att-in-progress-01");
 
-    // Đồng hồ hiển thị giai đoạn "Làm bài"
-    await expect(page.getByText("Làm bài")).toBeVisible();
+    // Timer displays "Respond" phase
+    await expect(page.getByText("Respond")).toBeVisible();
 
-    // Ô nhập bài làm được kích hoạt (enabled)
+    // Answer input is enabled
     const textarea = page.locator("#writing-answer");
     await expect(textarea).toBeEnabled();
     await expect(textarea).toHaveAttribute(
       "placeholder",
-      "Viết một câu tiếng Anh…",
+      "Write an English sentence…",
     );
 
-    // Nút Next xuất hiện
+    // Next button is visible
     await expect(
-      page.getByRole("button", { name: "Next · khóa câu này" }),
+      page.getByRole("button", { name: "Next · lock this question" }),
     ).toBeVisible();
   });
 
-  test("TC-ATTEMPT-03: Đồng hồ đếm ngược - Giữ nhịp đếm theo máy chủ (Reload trang không làm tăng giờ)", async ({
+  test("TC-ATTEMPT-03: Countdown timer - Keeps server-synced rhythm (Reloading the page does not reset remaining time)", async ({
     page,
   }) => {
-    // Thiết lập thời gian kết thúc cố định còn 30 giây
+    // Set fixed end time with 30 seconds remaining
     const attempt = backend.attempts.find(
       (a) => a.id === "att-in-progress-01",
     )!;
@@ -80,14 +82,14 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
     attempt.phaseEndsAtUtc = new Date(Date.now() + 30000).toISOString();
 
     await page.goto("/writing/attempts/att-in-progress-01");
-    await expect(page.getByText("Làm bài")).toBeVisible();
+    await expect(page.getByText("Respond")).toBeVisible();
 
-    // Chờ 2 giây rồi reload trang
+    // Wait 2 seconds then reload the page
     await page.waitForTimeout(2000);
     await page.reload();
 
-    // Sau khi reload, đồng hồ vẫn tiếp tục đếm đúng nhịp (khoảng 27-28s còn lại) chứ không bị reset về 30s
-    await expect(page.getByText("Làm bài")).toBeVisible();
+    // After reload, timer continues counting down accurately (around 27-28s left) rather than resetting to 30s
+    await expect(page.getByText("Respond")).toBeVisible();
     const timerText = await page
       .locator("header, div")
       .filter({ hasText: /00:2[0-9]/ })
@@ -96,9 +98,7 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
     expect(timerText).toBe(true);
   });
 
-  test("TC-ATTEMPT-04: Tự động lưu bài khi gõ (Realtime Autosave)", async ({
-    page,
-  }) => {
+  test("TC-ATTEMPT-04: Realtime Autosave while typing", async ({ page }) => {
     const attempt = backend.attempts.find(
       (a) => a.id === "att-in-progress-01",
     )!;
@@ -110,19 +110,17 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
     const textarea = page.locator("#writing-answer");
     await textarea.fill("The man is sitting at his desk typing an email.");
 
-    // Trạng thái hiển thị autosave thành công
-    await expect(page.getByText("Đã autosave trên server")).toBeVisible();
+    // Status displays autosave success
+    await expect(page.getByText("Autosaved on server")).toBeVisible();
 
-    // Kiểm tra dữ liệu đã được lưu trên backend
+    // Verify data was saved on the backend
     expect(attempt.questions[0].answer).toContain(
       "The man is sitting at his desk",
     );
   });
 
-  test("TC-ATTEMPT-05: Đếm số từ theo thời gian thực (Realtime Word Count) ở Part 3", async ({
-    page,
-  }) => {
-    // Chuyển attempt đến câu Part 3 (yêu cầu tối thiểu 300 từ)
+  test("TC-ATTEMPT-05: Realtime Word Count in Part 3", async ({ page }) => {
+    // Move attempt to Part 3 question (requires minimum 300 words)
     const attempt = backend.attempts.find(
       (a) => a.id === "att-in-progress-01",
     )!;
@@ -135,14 +133,14 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
     await expect(page.getByText("Writing Part 3")).toBeVisible();
 
     const textarea = page.locator("#writing-answer");
-    // Gõ 6 từ
+    // Type 6 words
     await textarea.fill("Higher education provides many great opportunities");
 
-    // Kiểm tra bộ đếm từ hiển thị 6/300 từ
-    await expect(page.getByText("6/300 từ")).toBeVisible();
+    // Verify word counter displays 6/300 words
+    await expect(page.getByText("6/300 words")).toBeVisible();
   });
 
-  test("TC-ATTEMPT-06: Khóa câu trả lời sau khi chuyển câu (Không thể quay lại câu cũ)", async ({
+  test("TC-ATTEMPT-06: Locks answer after advancing to next question (Cannot go back to previous question)", async ({
     page,
   }) => {
     const attempt = backend.attempts.find(
@@ -153,25 +151,29 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
 
     await page.goto("/writing/attempts/att-in-progress-01");
 
-    // Gõ câu trả lời cho câu 1
+    // Type answer for question 1
     const textarea = page.locator("#writing-answer");
     await textarea.fill("Answer for question 1.");
 
-    // Bấm Next để khóa câu 1 và sang câu 2
-    await page.getByRole("button", { name: "Next · khóa câu này" }).click();
+    // Click Next to lock question 1 and move to question 2
+    await page
+      .getByRole("button", { name: "Next · lock this question" })
+      .click();
 
-    // Đã chuyển sang câu 2/3
-    await expect(page.getByText("CÂU 2/3")).toBeVisible();
+    // Moved to question 2/3
+    await expect(page.getByText("QUESTION 2/3")).toBeVisible();
 
-    // Kiểm tra thanh tiến trình bên cạnh: Câu 1 đã có trạng thái khóa/xong (done), hint ghi rõ không thể mở lại
-    await expect(page.getByText("Câu đã khóa không thể mở lại.")).toBeVisible();
+    // Check progress rail: Question 1 is locked/done, hint states it cannot be reopened
+    await expect(
+      page.getByText("Locked questions cannot be reopened."),
+    ).toBeVisible();
     expect(attempt.questions[0].lockedAtUtc).not.toBeNull();
   });
 
-  test("TC-ATTEMPT-07: Nộp bài thi ở câu cuối cùng và chuyển hướng sang trang kết quả", async ({
+  test("TC-ATTEMPT-07: Submits attempt on the last question and redirects to the result page", async ({
     page,
   }) => {
-    // Chuyển attempt đến câu cuối cùng (câu 3)
+    // Move attempt to the last question (question 3)
     const attempt = backend.attempts.find(
       (a) => a.id === "att-in-progress-01",
     )!;
@@ -181,30 +183,30 @@ test.describe("Learner Writing - Phòng thi ảo 2-Phase (/writing/attempts/[id]
 
     await page.goto("/writing/attempts/att-in-progress-01");
 
-    // Nút ở câu cuối cùng là "Nộp bài" thay vì "Next"
-    const submitBtn = page.getByRole("button", { name: "Nộp bài" });
+    // Button on the last question is "Submit" instead of "Next"
+    const submitBtn = page.getByRole("button", { name: "Submit" });
     await expect(submitBtn).toBeVisible();
     await submitBtn.click();
 
-    // Xuất hiện modal xác nhận nộp bài
+    // Submit confirmation modal appears
     await expect(
-      page.getByRole("heading", { name: "Nộp bài Writing?" }),
+      page.getByRole("heading", { name: "Submit Writing attempt?" }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Câu cuối sẽ bị khóa và bài được chuyển sang trạng thái chờ chấm AI.",
+        "The final question will be locked and your attempt will be queued for AI evaluation.",
       ),
     ).toBeVisible();
 
-    // Xác nhận nộp bài
-    await page.getByRole("button", { name: "Xác nhận nộp" }).click();
+    // Confirm submit
+    await page.getByRole("button", { name: "Confirm submit" }).click();
 
-    // Chuyển hướng sang trang kết quả /result
+    // Redirects to /result page
     await expect(page).toHaveURL(
       /\/writing\/attempts\/att-in-progress-01\/result/,
     );
     await expect(
-      page.getByRole("heading", { name: "Đã nộp bài Writing" }),
+      page.getByRole("heading", { name: "Writing Attempt Submitted" }),
     ).toBeVisible();
   });
 });

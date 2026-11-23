@@ -27,16 +27,13 @@ export function AdminBadge({
 }
 
 const levels: Record<string, { level: number; label: string }> = {
-  EASY: { level: 1, label: "Dễ" },
-  DỄ: { level: 1, label: "Dễ" },
-  MEDIUM: { level: 2, label: "Trung bình" },
-  "TRUNG BÌNH": { level: 2, label: "Trung bình" },
-  HARD: { level: 3, label: "Khó" },
-  KHÓ: { level: 3, label: "Khó" },
+  EASY: { level: 1, label: "Easy" },
+  MEDIUM: { level: 2, label: "Medium" },
+  HARD: { level: 3, label: "Hard" },
 };
 const barHeights = ["h-1.5", "h-2.5", "h-3.5"];
 
-/** Difficulty as a quiet signal meter, accepting API codes or Vietnamese labels. */
+/** Difficulty as a quiet signal meter, accepting API codes or difficulty labels. */
 export function AdminDifficulty({ value }: { value: string }) {
   const known = levels[value.toUpperCase()];
   if (!known)

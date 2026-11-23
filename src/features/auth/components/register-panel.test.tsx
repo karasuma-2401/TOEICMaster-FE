@@ -18,9 +18,9 @@ describe("RegisterPanel", () => {
     render(<RegisterPanel />);
 
     expect(
-      screen.getByRole("heading", { name: "Bắt đầu hành trình mới" }),
+      screen.getByRole("heading", { name: "Start a new journey" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Tên hiển thị")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display name")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
   });
 
@@ -32,25 +32,23 @@ describe("RegisterPanel", () => {
     const user = userEvent.setup();
     render(<RegisterPanel />);
 
-    await user.type(screen.getByLabelText("Tên hiển thị"), "Linh");
+    await user.type(screen.getByLabelText("Display name"), "Linh");
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password123");
-    await user.type(screen.getByLabelText("Xác nhận mật khẩu"), "password123");
-    await user.click(
-      screen.getByLabelText("Tôi đồng ý với Điều khoản sử dụng"),
-    );
-    await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    await user.type(screen.getByLabelText("Password"), "password123");
+    await user.type(screen.getByLabelText("Confirm password"), "password123");
+    await user.click(screen.getByLabelText("I agree to the Terms of Use"));
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(
-      await screen.findByRole("heading", { name: "Xác minh email" }),
+      await screen.findByRole("heading", { name: "Verify email" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("XÁC MINH TÀI KHOẢN")).toBeInTheDocument();
+    expect(screen.getByText("VERIFY ACCOUNT")).toBeInTheDocument();
     expect(screen.getByText("linh@example.com")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Nhập lại email" }));
+    await user.click(screen.getByRole("button", { name: "Re-enter email" }));
 
     expect(
-      await screen.findByRole("heading", { name: "Bắt đầu hành trình mới" }),
+      await screen.findByRole("heading", { name: "Start a new journey" }),
     ).toBeInTheDocument();
   });
 });

@@ -28,7 +28,7 @@ export function ProfilePanel({
       if (reason instanceof ApiError && reason.status === 401) {
         router.replace("/login?next=%2Fprofile");
       }
-      setLoadError("Không thể tải hồ sơ. Vui lòng thử lại.");
+      setLoadError("Unable to load profile. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function ProfilePanel({
         if (reason instanceof ApiError && reason.status === 401) {
           router.replace("/login?next=%2Fprofile");
         }
-        setLoadError("Không thể tải hồ sơ. Vui lòng thử lại.");
+        setLoadError("Unable to load profile. Please try again.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -68,10 +68,10 @@ export function ProfilePanel({
     return (
       <section aria-labelledby="profile-heading" aria-live="polite">
         <h1 className="sr-only" id="profile-heading">
-          Hồ sơ cá nhân
+          Personal profile
         </h1>
         {loading ? (
-          <output aria-label="Đang tải hồ sơ">
+          <output aria-label="Loading profile">
             <div className="h-6 w-40 animate-pulse rounded bg-[#eee8e5]" />
             <div className="mt-4 h-12 animate-pulse rounded-xl bg-[#f5f1ef]" />
             <div className="mt-3 h-12 animate-pulse rounded-xl bg-[#f5f1ef]" />
@@ -88,7 +88,7 @@ export function ProfilePanel({
               onClick={() => void load()}
               type="button"
             >
-              Thử lại
+              Try again
             </button>
           </div>
         )}
@@ -99,16 +99,16 @@ export function ProfilePanel({
   return (
     <section aria-labelledby="profile-heading">
       <Breadcrumbs
-        items={[{ label: "Trang chủ", href: "/" }, { label: "Hồ sơ cá nhân" }]}
+        items={[{ label: "Home", href: "/" }, { label: "Personal profile" }]}
       />
       <h1
         className="mt-2 text-[32px] font-bold leading-tight text-[#2f2b28]"
         id="profile-heading"
       >
-        Hồ sơ &amp; mục tiêu học tập
+        Profile &amp; Learning Goal
       </h1>
       <p className="mt-2 text-[15px] text-[#6b655f]">
-        Cá nhân hóa hành trình chinh phục TOEIC của bạn.
+        Personalize your journey to master TOEIC.
       </p>
 
       <div className="mt-6">

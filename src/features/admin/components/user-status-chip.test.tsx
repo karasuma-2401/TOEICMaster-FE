@@ -6,6 +6,6 @@ import { UserStatusChip } from "./user-status-chip";
 describe("UserStatusChip", () => {
   it("uses a text label for the status", () => {
     render(<UserStatusChip status="PENDING" />);
-    expect(screen.getByText("Chờ xác minh")).toBeInTheDocument();
+    expect(screen.getByText("Pending verification")).toBeInTheDocument();
   });
 });

@@ -108,7 +108,7 @@ export function useProfileEditor({
       setValues(toFormState(profile));
       setErrors({});
       onSaved?.(profile);
-      toast.success("Đã lưu thông tin.");
+      toast.success("Changes saved.");
       window.dispatchEvent(
         new CustomEvent("profile:updated", { detail: profile }),
       );
@@ -117,12 +117,12 @@ export function useProfileEditor({
         setErrors(reason.fieldErrors as ProfileFieldErrors);
       } else if (reason instanceof ApiError && reason.status === 429) {
         setNotice(
-          `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,
+          `Too many attempts. Please try again in ${reason.retryAfter ?? 0} seconds.`,
         );
       } else if (reason instanceof ApiError && reason.status === 401) {
         router.replace("/login?next=%2Fprofile");
       } else {
-        toast.error("Không thể cập nhật hồ sơ. Vui lòng thử lại.");
+        toast.error("Unable to update profile. Please try again.");
       }
     } finally {
       submitLock.current = false;
@@ -157,7 +157,7 @@ export function useProfileEditor({
       setAvatarError(
         reason instanceof ApiError
           ? (reason.fieldErrors.avatar ?? reason.message)
-          : "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.",
+          : "Unable to update avatar. Please try again.",
       );
       if (reason instanceof ApiError && reason.status === 401)
         router.replace("/login?next=%2Fprofile");

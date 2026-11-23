@@ -12,7 +12,7 @@ const stateClass: Record<ProgressState, string> = {
 };
 
 export function ProgressRail({
-  title = "Tiến độ",
+  title = "Progress",
   hint,
   groups,
 }: {
@@ -49,18 +49,18 @@ export function ProgressRail({
       <ul className="mt-5 flex flex-wrap gap-x-3 gap-y-1 border-t border-slate-100 pt-4 text-[11px] text-slate-500">
         <li className="flex items-center gap-1.5">
           <span aria-hidden="true" className="size-2.5 rounded bg-orange-500" />
-          Đang làm
+          In progress
         </li>
         <li className="flex items-center gap-1.5">
           <span
             aria-hidden="true"
             className="size-2.5 rounded bg-emerald-200"
           />
-          Đã khóa
+          Locked
         </li>
         <li className="flex items-center gap-1.5">
           <span aria-hidden="true" className="size-2.5 rounded bg-slate-200" />
-          Chưa làm
+          Not started
         </li>
       </ul>
     </aside>

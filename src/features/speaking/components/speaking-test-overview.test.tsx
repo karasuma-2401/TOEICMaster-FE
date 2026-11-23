@@ -18,17 +18,15 @@ describe("SpeakingTestOverview", () => {
     );
     render(<SpeakingTestOverview mode="part-4" testId={ids.test} />);
 
-    expect(await screen.findByText("LUYỆN THEO PART")).toBeInTheDocument();
-    expect(screen.getByText("3 câu")).toBeInTheDocument();
+    expect(await screen.findByText("PART PRACTICE")).toBeInTheDocument();
+    expect(screen.getByText("3 questions")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Speaking Part 4 · Trả lời theo thông tin",
+        name: "Speaking Part 4 · Respond using information",
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Speaking Part 5/)).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Bắt đầu làm bài" }),
-    ).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Start Test" })).toHaveAttribute(
       "href",
       `/speaking/tests/${ids.test}/practice?mode=part-4`,
     );
@@ -36,12 +34,12 @@ describe("SpeakingTestOverview", () => {
 
   it("shows the backend error when the test cannot be loaded", async () => {
     vi.mocked(getSpeakingTest).mockRejectedValue(
-      new SpeakingApiError(404, "Không tìm thấy đề Speaking đã công bố."),
+      new SpeakingApiError(404, "Published Speaking test not found."),
     );
     render(<SpeakingTestOverview testId={ids.test} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Không tìm thấy đề Speaking đã công bố.",
+      "Published Speaking test not found.",
     );
   });
 });

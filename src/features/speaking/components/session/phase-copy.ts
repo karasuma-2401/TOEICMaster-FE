@@ -6,21 +6,21 @@ export const phaseCopy: Record<
   { label: string; tone: PhaseTone; hint: string; skipLabel: string }
 > = {
   READING: {
-    label: "Đọc thông tin",
+    label: "Reading",
     tone: "prepare",
-    hint: "Đọc kỹ bảng thông tin. Câu hỏi sẽ xuất hiện khi hết thời gian đọc.",
-    skipLabel: "Đã đọc xong →",
+    hint: "Read the information carefully. The question will appear when reading time ends.",
+    skipLabel: "Done reading →",
   },
   PREPARING: {
-    label: "Chuẩn bị",
+    label: "Preparing",
     tone: "prepare",
-    hint: "Chuẩn bị ý. Micro tự bật khi hết thời gian chuẩn bị.",
-    skipLabel: "Sẵn sàng, nói ngay →",
+    hint: "Prepare your ideas. Your microphone will start automatically when preparation time ends.",
+    skipLabel: "Ready, speak now →",
   },
   RESPONDING: {
-    label: "Đang ghi âm",
+    label: "Recording",
     tone: "recording",
-    hint: "Trả lời to, rõ ràng. Câu sẽ khóa khi hết giờ.",
-    skipLabel: "Xong, sang câu tiếp →",
+    hint: "Speak loudly and clearly. The question will lock when time runs out.",
+    skipLabel: "Done, next question →",
   },
 };

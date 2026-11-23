@@ -40,7 +40,7 @@ export function listKnowledgeCategories(
 ) {
   return knowledgeAdminRequest<PageResult<KnowledgeCategory>>(
     `${BASE}/categories${buildQuery(params)}`,
-    { signal, fallback: "Không thể tải danh sách danh mục kiến thức." },
+    { signal, fallback: "Could not load knowledge categories." },
   );
 }
 
@@ -48,7 +48,7 @@ export function createKnowledgeCategory(input: KnowledgeCategoryInput) {
   return knowledgeAdminRequest<KnowledgeCategory>(`${BASE}/categories`, {
     method: "POST",
     json: input,
-    fallback: "Không thể tạo danh mục kiến thức.",
+    fallback: "Could not create knowledge category.",
   });
 }
 
@@ -62,7 +62,7 @@ export function updateKnowledgeCategory(
     {
       method: "PUT",
       json: { version, category },
-      fallback: "Không thể cập nhật danh mục kiến thức.",
+      fallback: "Could not update knowledge category.",
     },
   );
 }
@@ -72,7 +72,7 @@ export function deleteKnowledgeCategory(categoryId: string, version: number) {
     `${BASE}/categories/${categoryId}${buildQuery({ version })}`,
     {
       method: "DELETE",
-      fallback: "Không thể xóa danh mục kiến thức.",
+      fallback: "Could not delete knowledge category.",
     },
   );
 }
@@ -88,7 +88,7 @@ export function listKnowledgeTags(
 ) {
   return knowledgeAdminRequest<PageResult<KnowledgeTag>>(
     `${BASE}/tags${buildQuery(params)}`,
-    { signal, fallback: "Không thể tải danh sách thẻ." },
+    { signal, fallback: "Could not load tags." },
   );
 }
 
@@ -104,7 +104,7 @@ export function listKnowledgeMedia(
 ) {
   return knowledgeAdminRequest<PageResult<KnowledgeMediaAsset>>(
     `${BASE}/media${buildQuery(params)}`,
-    { signal, fallback: "Không thể tải thư viện hình ảnh." },
+    { signal, fallback: "Could not load media library." },
   );
 }
 
@@ -114,14 +114,14 @@ export function uploadKnowledgeImage(file: File) {
   return knowledgeAdminRequest<KnowledgeMediaAsset>(`${BASE}/media/images`, {
     method: "POST",
     form,
-    fallback: "Không thể tải lên hình ảnh.",
+    fallback: "Could not upload image.",
   });
 }
 
 export function deleteKnowledgeMedia(assetId: string) {
   return knowledgeAdminRequest<void>(`${BASE}/media/${assetId}`, {
     method: "DELETE",
-    fallback: "Không thể xóa hình ảnh.",
+    fallback: "Could not delete image.",
   });
 }
 
@@ -140,14 +140,14 @@ export function listKnowledgeArticles(
 ) {
   return knowledgeAdminRequest<PageResult<KnowledgeArticleSummary>>(
     `${BASE}/articles${buildQuery(params)}`,
-    { signal, fallback: "Không thể tải danh sách bài viết kiến thức." },
+    { signal, fallback: "Could not load knowledge articles." },
   );
 }
 
 export function getKnowledgeArticle(articleId: string, signal?: AbortSignal) {
   return knowledgeAdminRequest<KnowledgeArticleDetail>(
     `${BASE}/articles/${articleId}`,
-    { signal, fallback: "Không thể tải chi tiết bài viết." },
+    { signal, fallback: "Could not load article details." },
   );
 }
 
@@ -155,7 +155,7 @@ export function createKnowledgeArticle(input: KnowledgeArticleInput) {
   return knowledgeAdminRequest<KnowledgeArticleDetail>(`${BASE}/articles`, {
     method: "POST",
     json: input,
-    fallback: "Không thể tạo bài viết kiến thức.",
+    fallback: "Could not create knowledge article.",
   });
 }
 
@@ -169,7 +169,7 @@ export function updateKnowledgeArticle(
     {
       method: "PUT",
       json: { version, article },
-      fallback: "Không thể cập nhật bài viết kiến thức.",
+      fallback: "Could not update knowledge article.",
     },
   );
 }
@@ -180,7 +180,7 @@ export function publishKnowledgeArticle(articleId: string, version: number) {
     {
       method: "POST",
       json: { version },
-      fallback: "Không thể xuất bản bài viết.",
+      fallback: "Could not publish article.",
     },
   );
 }
@@ -191,7 +191,7 @@ export function unpublishKnowledgeArticle(articleId: string, version: number) {
     {
       method: "POST",
       json: { version },
-      fallback: "Không thể gỡ bài viết về bản nháp.",
+      fallback: "Could not unpublish article to draft.",
     },
   );
 }
@@ -202,7 +202,7 @@ export function archiveKnowledgeArticle(articleId: string, version: number) {
     {
       method: "POST",
       json: { version },
-      fallback: "Không thể lưu trữ bài viết.",
+      fallback: "Could not archive article.",
     },
   );
 }
@@ -212,7 +212,7 @@ export function deleteKnowledgeArticle(articleId: string, version: number) {
     `${BASE}/articles/${articleId}${buildQuery({ version })}`,
     {
       method: "DELETE",
-      fallback: "Không thể xóa bài viết.",
+      fallback: "Could not delete article.",
     },
   );
 }

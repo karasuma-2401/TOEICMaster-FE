@@ -68,7 +68,7 @@ function DialogContent({
   variant = "modal",
   size = "md",
   showCloseButton = true,
-  closeLabel = "Đóng",
+  closeLabel = "Close",
   ...props
 }: DialogContentProps) {
   const layoutClassName =
@@ -184,7 +184,7 @@ function ConfirmDialog({
   title,
   description,
   children,
-  cancelLabel = "Quay lại",
+  cancelLabel = "Go back",
   confirmLabel,
   onCancel,
   onConfirm,

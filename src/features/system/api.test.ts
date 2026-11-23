@@ -20,7 +20,7 @@ describe("ping", () => {
       "fetch",
       vi.fn().mockResolvedValue(Response.json({ status: "wrong" })),
     );
-    await expect(ping()).rejects.toThrow("Phản hồi dịch vụ không hợp lệ.");
+    await expect(ping()).rejects.toThrow("Invalid service response.");
   });
   it("keeps the HTTP status when the service is unavailable", async () => {
     vi.stubGlobal(
@@ -28,7 +28,7 @@ describe("ping", () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 502 })),
     );
     await expect(ping()).rejects.toEqual(
-      new ApiError(502, "Không thể kết nối dịch vụ."),
+      new ApiError(502, "Unable to connect to the service."),
     );
   });
   it("passes cancellation to fetch", async () => {

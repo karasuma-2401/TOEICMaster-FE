@@ -22,7 +22,7 @@ function FeedbackList({
         {items.length > 0 ? (
           items.map((item) => <li key={item}>{item}</li>)
         ) : (
-          <li>Chưa có nhận xét.</li>
+          <li>No feedback yet.</li>
         )}
       </ul>
     </div>
@@ -76,15 +76,15 @@ export function WritingEvaluationReport({
       <div className="rounded-3xl border border-orange-100 bg-orange-50/70 p-6 sm:p-7">
         <p className="text-sm font-bold uppercase tracking-wide">
           {useRawScore
-            ? "Điểm bài tập theo tiêu chí AI"
-            : "Điểm TOEIC Writing ước tính bởi AI"}
+            ? "AI rubric exercise score"
+            : "AI-estimated TOEIC Writing score"}
         </p>
         <p className="mt-2 text-5xl font-black text-orange-700">
           {useRawScore ? rawScore : evaluation.estimatedScore}
           <span className="text-2xl">/{useRawScore ? maximumScore : 200}</span>
         </p>
         <p className="mt-3 text-sm text-slate-600">
-          Điểm AI phục vụ luyện tập, không phải kết quả ETS chính thức.
+          AI scores are for practice only and are not official ETS results.
         </p>
       </div>
       {!practicePart && parts.length > 0 && (
@@ -95,38 +95,39 @@ export function WritingEvaluationReport({
               key={part}
             >
               <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
-                {count} câu · Writing Part {part}
+                {count} {count === 1 ? "question" : "questions"} · Writing Part{" "}
+                {part}
               </p>
               <p className="mt-3 text-2xl font-bold text-orange-700">
                 {score}{" "}
                 <span className="text-base text-slate-500">/ {maximum}</span>
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Tổng điểm tiêu chí AI
+                Total AI rubric score
               </p>
             </div>
           ))}
         </div>
       )}
       <div className="rounded-2xl border border-slate-200 p-5">
-        <h2 className="font-bold">Nhận xét tổng quan</h2>
+        <h2 className="font-bold">Overall feedback</h2>
         <p className="mt-2 leading-7 text-slate-700">{evaluation.summary}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <FeedbackList
           items={evaluation.strengths}
-          title="Điểm làm tốt"
+          title="Strengths"
           tone="green"
         />
         <FeedbackList
           items={evaluation.improvements}
-          title="Cần cải thiện"
+          title="Areas for improvement"
           tone="amber"
         />
       </div>
       {evaluation.feedback.length > 0 && (
         <div className="rounded-2xl border border-slate-200 p-5">
-          <h2 className="font-bold">Gợi ý theo câu</h2>
+          <h2 className="font-bold">Question-by-question feedback</h2>
           <div className="mt-4 space-y-4">
             {evaluation.feedback.map((item) => (
               <article
@@ -134,16 +135,18 @@ export function WritingEvaluationReport({
                 key={item.questionPosition}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-bold">Câu {item.questionPosition}</h3>
+                  <h3 className="font-bold">
+                    Question {item.questionPosition}
+                  </h3>
                   <p className="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
-                    Điểm tiêu chí AI: {item.criterionScore}
+                    AI rubric score: {item.criterionScore}
                   </p>
                 </div>
                 <p className="mt-2 text-sm leading-6 text-slate-700">
                   {item.feedback}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-orange-800">
-                  <span className="font-bold">Gợi ý ngắn: </span>
+                  <span className="font-bold">Suggested revision: </span>
                   {item.suggestedRevision}
                 </p>
                 {questions
@@ -156,14 +159,14 @@ export function WritingEvaluationReport({
                       key={question.position}
                     >
                       <summary className="cursor-pointer font-semibold">
-                        Xem đề và bài đã nộp
+                        View prompt and submitted answer
                       </summary>
                       <div className="mt-4">
                         <WritingQuestionPrompt question={question} />
                       </div>
-                      <h4 className="mt-4 font-semibold">Bài đã nộp</h4>
+                      <h4 className="mt-4 font-semibold">Submitted answer</h4>
                       <p className="mt-2 whitespace-pre-wrap text-sm">
-                        {question.answer || "Không có câu trả lời."}
+                        {question.answer || "No answer provided."}
                       </p>
                     </details>
                   ))}

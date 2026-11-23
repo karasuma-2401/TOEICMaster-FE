@@ -7,7 +7,7 @@ describe("KnowledgeArticlePreview", () => {
   it("renders safe links as anchors and strips unsafe link hrefs to plain text", () => {
     render(
       <KnowledgeArticlePreview
-        categoryName="Ngữ pháp"
+        categoryName="Grammar"
         content={{
           type: "doc",
           content: [
@@ -76,9 +76,9 @@ describe("KnowledgeArticlePreview", () => {
         coverImageAssetId={null}
         skill="Reading"
         status="Draft"
-        summary="Tóm tắt"
+        summary="Summary"
         tags={[]}
-        title="Kiểm tra liên kết"
+        title="Link verification"
       />,
     );
 
@@ -110,7 +110,7 @@ describe("KnowledgeArticlePreview", () => {
     const validUuid = "11111111-2222-3333-4444-555555555555";
     const { container } = render(
       <KnowledgeArticlePreview
-        categoryName="Ngữ pháp"
+        categoryName="Grammar"
         content={{
           type: "doc",
           content: [
@@ -144,9 +144,9 @@ describe("KnowledgeArticlePreview", () => {
         coverImageAssetId="../secret"
         skill="Reading"
         status="Draft"
-        summary="Tóm tắt"
+        summary="Summary"
         tags={[]}
-        title="Kiểm tra assetId"
+        title="Asset ID verification"
       />,
     );
 
@@ -170,7 +170,7 @@ describe("KnowledgeArticlePreview", () => {
   it("skips rendering images with unsafe fallback src and keeps safe images", () => {
     const { container } = render(
       <KnowledgeArticlePreview
-        categoryName="Ngữ pháp"
+        categoryName="Grammar"
         content={{
           type: "doc",
           content: [
@@ -194,9 +194,9 @@ describe("KnowledgeArticlePreview", () => {
         coverImageAssetId={null}
         skill="Reading"
         status="Draft"
-        summary="Tóm tắt"
+        summary="Summary"
         tags={[]}
-        title="Kiểm tra hình ảnh"
+        title="Image verification"
       />,
     );
 

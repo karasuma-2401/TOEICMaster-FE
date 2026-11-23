@@ -18,7 +18,7 @@ export function isGuestEvaluationLimit(cause: unknown) {
   return (
     cause instanceof SpeakingApiError &&
     cause.status === 409 &&
-    /ẩn danh/i.test(cause.message)
+    /anonymous|guest/i.test(cause.message)
   );
 }
 
@@ -75,7 +75,7 @@ export interface SpeakingEvaluation {
   failureMessage: string | null;
 }
 
-const what = "kết quả chấm AI Speaking";
+const what = "Speaking AI evaluation result";
 const statuses: readonly SpeakingEvaluationStatus[] = [
   "QUEUED",
   "PROCESSING",

@@ -86,12 +86,12 @@ describe("DataBankCenter", () => {
     render(<DataBankCenter />);
 
     expect(
-      screen.getByRole("heading", { name: "Kho dữ liệu" }),
+      screen.getByRole("heading", { name: "Data Bank" }),
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByText("Part 1: Photographs")).toBeInTheDocument(),
     );
-    expect(screen.getByText("3 câu")).toBeInTheDocument();
+    expect(screen.getByText("3 questions")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: /Part 1: Photographs/i }),
@@ -106,7 +106,7 @@ describe("DataBankCenter", () => {
     render(<DataBankCenter />);
 
     expect(
-      screen.getByRole("heading", { name: "Kho dữ liệu" }),
+      screen.getByRole("heading", { name: "Data Bank" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Listening & Reading" }),
@@ -119,7 +119,7 @@ describe("DataBankCenter", () => {
       "href",
       "/admin/content/writing",
     );
-    expect(screen.getByRole("link", { name: "Đề thi" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Tests" })).toHaveAttribute(
       "href",
       "/admin/exams?tab=tests",
     );
@@ -131,7 +131,7 @@ describe("DataBankCenter", () => {
     render(<DataBankCenter />);
 
     expect(
-      await screen.findByRole("button", { name: "Tạo đề mới" }),
+      await screen.findByRole("button", { name: "Create new test" }),
     ).toHaveClass("admin-primary-action");
   });
 
@@ -168,7 +168,7 @@ describe("DataBankCenter", () => {
     vi.mocked(getScoreProfiles).mockResolvedValue([
       {
         id: "55555555-5555-4555-8555-555555555555",
-        name: "ETS chuẩn",
+        name: "ETS standard",
         isComplete: true,
         mappingCount: 202,
       },
@@ -176,10 +176,10 @@ describe("DataBankCenter", () => {
 
     render(<DataBankCenter />);
 
-    expect(await screen.findByText("ĐỀ ĐANG CÔNG BỐ")).toBeInTheDocument();
-    expect(screen.getByText("1 đề")).toBeInTheDocument();
-    expect(screen.getByText("1 bản nháp")).toBeInTheDocument();
-    expect(screen.getByText("1 barem chuẩn")).toBeInTheDocument();
+    expect(await screen.findByText("PUBLISHED TESTS")).toBeInTheDocument();
+    expect(screen.getByText("1 test")).toBeInTheDocument();
+    expect(screen.getByText("1 draft")).toBeInTheDocument();
+    expect(screen.getByText("1 standard profile")).toBeInTheDocument();
   });
 
   it("filters the visible exam rows by code or title without changing the API contract", async () => {
@@ -216,9 +216,12 @@ describe("DataBankCenter", () => {
     render(<DataBankCenter />);
 
     await screen.findByText("ETS Spring");
-    fireEvent.change(screen.getByPlaceholderText("Tìm mã đề, tên đề L&R..."), {
-      target: { value: "Autumn" },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("Search L&R test code or title..."),
+      {
+        target: { value: "Autumn" },
+      },
+    );
 
     expect(screen.queryByText("ETS Spring")).not.toBeInTheDocument();
     expect(screen.getByText("ETS Autumn")).toBeInTheDocument();
@@ -228,9 +231,11 @@ describe("DataBankCenter", () => {
     url = "tab=tests";
 
     render(<DataBankCenter />);
-    fireEvent.click(await screen.findByRole("button", { name: "Tạo đề mới" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Create new test" }),
+    );
 
-    expect(await screen.findByRole("button", { name: "Hủy" })).toHaveClass(
+    expect(await screen.findByRole("button", { name: "Cancel" })).toHaveClass(
       "justify-self-center",
     );
   });
@@ -239,13 +244,15 @@ describe("DataBankCenter", () => {
     url = "tab=tests";
 
     render(<DataBankCenter />);
-    fireEvent.click(await screen.findByRole("button", { name: "Import đề" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Import test" }));
 
     expect(
-      await screen.findByRole("link", { name: /Tải file Excel mẫu/i }),
+      await screen.findByRole("link", {
+        name: /Download 200-question Excel template/i,
+      }),
     ).toHaveAttribute("href", "/api/admin/exams/import-template");
     expect(
-      screen.queryByText(/master audio là bắt buộc/i),
+      screen.queryByText(/master audio is required/i),
     ).not.toBeInTheDocument();
   });
 
@@ -258,13 +265,13 @@ describe("DataBankCenter", () => {
       screen.getByRole("heading", { name: /Part 7: Reading Comprehension/i }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "Kho dữ liệu" }),
+      screen.queryByRole("heading", { name: "Data Bank" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "Bài tập" }),
+      screen.queryByRole("link", { name: "Exercises" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "Đề thi" }),
+      screen.queryByRole("link", { name: "Tests" }),
     ).not.toBeInTheDocument();
   });
 });

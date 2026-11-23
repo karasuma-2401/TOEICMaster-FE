@@ -41,7 +41,7 @@ async function loadInfo(
     return {
       code: exercise.code,
       title: exercise.topic,
-      label: `Luyện Part ${exercise.part}`,
+      label: `Part ${exercise.part} Practice`,
       backHref: `/speaking/parts/${exercise.part}`,
       parts: [
         {
@@ -90,7 +90,7 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải nội dung Speaking.",
+              : "Unable to load Speaking content.",
           );
       }
     },
@@ -135,7 +135,7 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
       setStartError(
         cause instanceof Error
           ? cause.message
-          : "Không thể bắt đầu lượt làm Speaking.",
+          : "Unable to start the Speaking attempt.",
       );
       setStarting(false);
     }
@@ -147,7 +147,7 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
         {error ? (
           <SpError message={error} onRetry={() => void load()} />
         ) : (
-          <SpLoading label="Đang chuẩn bị lượt luyện Speaking…" />
+          <SpLoading label="Preparing Speaking session…" />
         )}
       </SpPage>
     );
@@ -162,7 +162,7 @@ export function SpeakingSession({ source }: { source: SpeakingSessionSource }) {
           {info.title}
         </h1>
         <p className="mb-6 mt-1 text-(--sp-ink-2)">
-          Kiểm tra micro một lần rồi vào bài ngay.
+          Check your microphone once and start right away.
         </p>
       </div>
       {startError && (

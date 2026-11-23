@@ -11,7 +11,7 @@ import {
 } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return problem(403, "Yêu cầu không hợp lệ.");
+  if (!sameOrigin(request)) return problem(403, "Invalid request.");
   const current = sessionCookie(request);
   if (current) {
     try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       if (upstream.status === 429) return rateLimited(upstream);
       if (upstream.status !== 204) throw new Error("Unexpected logout status");
     } catch {
-      return problem(502, "Không thể đăng xuất. Vui lòng thử lại.");
+      return problem(502, "Unable to sign out. Please try again.");
     }
   }
   const response = new NextResponse(null, {

@@ -48,7 +48,7 @@ describe("dateOfBirth profile validation and mapping", () => {
     ]) {
       expect(
         validateProfile({
-          displayName: "Nguyễn Văn A",
+          displayName: "Noah Adams",
           email: "learner@example.com",
           phone: "0912345678",
           targetScore: 750,
@@ -60,7 +60,7 @@ describe("dateOfBirth profile validation and mapping", () => {
 
   it("rejects dates before 1900-01-01 with isolated dateOfBirth error", () => {
     const errors = validateProfile({
-      displayName: "Nguyễn Văn A",
+      displayName: "Noah Adams",
       email: "learner@example.com",
       phone: "0912345678",
       targetScore: 750,
@@ -77,7 +77,7 @@ describe("dateOfBirth profile validation and mapping", () => {
     vi.setSystemTime(new Date("2026-11-19T08:00:00Z"));
 
     const errors = validateProfile({
-      displayName: "Nguyễn Văn A",
+      displayName: "Noah Adams",
       email: "learner@example.com",
       phone: "0912345678",
       targetScore: 750,
@@ -92,7 +92,7 @@ describe("dateOfBirth profile validation and mapping", () => {
   it("rejects malformed or non-existent calendar dates with isolated dateOfBirth error", () => {
     for (const invalidDate of ["2001/06/15", "2001-02-30", "invalid-date"]) {
       const errors = validateProfile({
-        displayName: "Nguyễn Văn A",
+        displayName: "Noah Adams",
         email: "learner@example.com",
         phone: "0912345678",
         targetScore: 750,

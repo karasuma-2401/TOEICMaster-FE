@@ -25,7 +25,7 @@ export function publishChecklist(test: Draft, lookup: Lookup): ChecklistItem[] {
   return [
     {
       id: "info",
-      label: "Có mã đề và tên đề",
+      label: "Has test code and title",
       done: Boolean(test.code.trim() && test.title.trim()),
     },
     ...speakingParts.map((part) => {
@@ -33,7 +33,7 @@ export function publishChecklist(test: Draft, lookup: Lookup): ChecklistItem[] {
       const selected = test.exerciseIds[part].filter(Boolean);
       return {
         id: `part-${part}`,
-        label: `Part ${part} · ${subtitle}: ${selected.length}/${slots} bài (${partQuestionCount(part)} câu)`,
+        label: `Part ${part} · ${subtitle}: ${selected.length}/${slots} exercises (${partQuestionCount(part)} questions)`,
         done:
           selected.length === slots &&
           selected.every((id) => {
@@ -44,7 +44,7 @@ export function publishChecklist(test: Draft, lookup: Lookup): ChecklistItem[] {
     }),
     {
       id: "unique",
-      label: "Không trùng bài giữa các vị trí",
+      label: "No duplicate exercises across slots",
       done: new Set(ids).size === ids.length,
     },
   ];

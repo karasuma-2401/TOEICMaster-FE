@@ -12,10 +12,15 @@ const cards: {
   status: AdminUserStatus | "ALL";
   mark: string;
 }[] = [
-  { key: "totalUsers", label: "Tổng người dùng", status: "ALL", mark: "T" },
-  { key: "activeUsers", label: "Đang hoạt động", status: "ACTIVE", mark: "✓" },
-  { key: "pendingUsers", label: "Chờ xác minh", status: "PENDING", mark: "…" },
-  { key: "lockedUsers", label: "Bị khóa", status: "LOCKED", mark: "!" },
+  { key: "totalUsers", label: "Total users", status: "ALL", mark: "T" },
+  { key: "activeUsers", label: "Active", status: "ACTIVE", mark: "✓" },
+  {
+    key: "pendingUsers",
+    label: "Pending verification",
+    status: "PENDING",
+    mark: "…",
+  },
+  { key: "lockedUsers", label: "Locked", status: "LOCKED", mark: "!" },
 ];
 
 export function UsersStats({
@@ -25,7 +30,7 @@ export function UsersStats({
 }: UsersStatsProps) {
   return (
     <section
-      aria-label="Thống kê người dùng"
+      aria-label="User statistics"
       className="grid grid-cols-2 gap-3 xl:grid-cols-4"
     >
       {cards.map((card) => (
@@ -46,7 +51,7 @@ export function UsersStats({
             </span>
           </span>
           <span className="mt-3 block text-3xl font-bold tracking-tight text-[var(--admin-ink)]">
-            {stats[card.key].toLocaleString("vi-VN")}
+            {stats[card.key].toLocaleString("en-US")}
           </span>
         </button>
       ))}

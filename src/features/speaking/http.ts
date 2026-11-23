@@ -97,14 +97,14 @@ export async function speakingRequest(
       try {
         await refreshOnce();
       } catch {
-        throw new SpeakingApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new SpeakingApiError(401, "Your session has expired.");
       }
       response = await send();
     }
   } catch (cause) {
     if (cause instanceof SpeakingApiError) throw cause;
     if (options.signal?.aborted) throw cause;
-    throw new SpeakingApiError(502, "Không thể kết nối dịch vụ.");
+    throw new SpeakingApiError(502, "Could not connect to the service.");
   }
   if (!response.ok) throw await failure(response, options.fallback);
   if (response.status === 204) return null;

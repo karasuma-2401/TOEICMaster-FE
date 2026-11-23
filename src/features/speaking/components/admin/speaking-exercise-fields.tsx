@@ -65,12 +65,12 @@ function QuestionFields({
 }) {
   return (
     <fieldset className="space-y-3 rounded-xl border border-[var(--admin-border)] p-4">
-      <legend className="px-1 text-sm font-bold">3 câu hỏi *</legend>
+      <legend className="px-1 text-sm font-bold">3 questions *</legend>
       {draft.questions.map((question, index) => (
         <TextField
           hint={timing[index]}
           key={index}
-          label={`Câu hỏi ${index + 1}`}
+          label={`Question ${index + 1}`}
           onChange={(value) =>
             update(
               "questions",
@@ -101,8 +101,8 @@ export function SpeakingExerciseFields({
     case 1:
       return (
         <TextField
-          hint="Khoảng 60–90 từ, chuẩn bị 45s · đọc 45s."
-          label="Đoạn văn đọc to *"
+          hint="About 60-90 words, 45s prep · 45s read aloud."
+          label="Read-aloud passage *"
           multiline
           onChange={(value) => update("passage", value)}
           value={draft.passage}
@@ -121,8 +121,8 @@ export function SpeakingExerciseFields({
             disabled={disabled}
           />
           <TextField
-            hint="Dùng làm alt text cho người dùng trình đọc màn hình."
-            label="Mô tả ảnh *"
+            hint="Used as alt text for screen reader users."
+            label="Image description *"
             multiline
             onChange={(value) => update("imageAlt", value)}
             value={draft.imageAlt}
@@ -134,7 +134,7 @@ export function SpeakingExerciseFields({
       return (
         <>
           <TextField
-            label="Bối cảnh cuộc phỏng vấn *"
+            label="Interview context *"
             multiline
             onChange={(value) => update("context", value)}
             value={draft.context}
@@ -142,7 +142,7 @@ export function SpeakingExerciseFields({
           />
           <QuestionFields
             draft={draft}
-            timing={["Trả lời 15s", "Trả lời 15s", "Trả lời 30s"]}
+            timing={["15s response", "15s response", "30s response"]}
             update={update}
             disabled={disabled}
           />
@@ -152,21 +152,21 @@ export function SpeakingExerciseFields({
       return (
         <>
           <TextField
-            label="Tiêu đề tài liệu *"
+            label="Document title *"
             onChange={(value) => update("documentTitle", value)}
             value={draft.documentTitle}
             disabled={disabled}
           />
           <TextField
-            hint="Mỗi dòng một mục: nhãn | nội dung (ví dụ: 9:00 | Registration)."
-            label="Bảng thông tin *"
+            hint="One item per line: label | value (e.g., 9:00 | Registration)."
+            label="Information table *"
             multiline
             onChange={(value) => update("documentRows", value)}
             value={draft.documentRows}
             disabled={disabled}
           />
           <TextField
-            label="Lời mở đầu của người gọi"
+            label="Caller introduction"
             multiline
             onChange={(value) => update("callerIntro", value)}
             value={draft.callerIntro}
@@ -174,7 +174,7 @@ export function SpeakingExerciseFields({
           />
           <QuestionFields
             draft={draft}
-            timing={["Trả lời 15s", "Trả lời 15s", "Trả lời 30s"]}
+            timing={["15s response", "15s response", "30s response"]}
             update={update}
             disabled={disabled}
           />
@@ -183,8 +183,8 @@ export function SpeakingExerciseFields({
     case 5:
       return (
         <TextField
-          hint="Chuẩn bị 45s · trả lời 60s."
-          label="Đề bài nêu quan điểm *"
+          hint="45s prep · 60s response."
+          label="Opinion prompt *"
           multiline
           onChange={(value) => update("prompt", value)}
           value={draft.prompt}

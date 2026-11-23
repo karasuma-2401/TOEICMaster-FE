@@ -21,10 +21,10 @@ describe("VerificationPanel", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Xác minh mã" }));
+    await user.click(screen.getByRole("button", { name: "Verify code" }));
 
     expect(
-      await screen.findByText("Vui lòng nhập mã gồm 6 chữ số."),
+      await screen.findByText("Please enter a 6-digit code."),
     ).toBeInTheDocument();
   });
 
@@ -43,10 +43,10 @@ describe("VerificationPanel", () => {
     );
 
     expect(screen.getByText("linh@example.com")).toBeInTheDocument();
-    expect(screen.getByText("XÁC MINH TÀI KHOẢN")).toBeInTheDocument();
+    expect(screen.getByText("VERIFY ACCOUNT")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Mã xác minh"), "123456");
-    await user.click(screen.getByRole("button", { name: "Xác minh mã" }));
+    await user.type(screen.getByLabelText("Verification code"), "123456");
+    await user.click(screen.getByRole("button", { name: "Verify code" }));
 
     expect(navigation.replace).toHaveBeenCalledWith("/login");
     expect(navigation.refresh).toHaveBeenCalledOnce();
@@ -81,20 +81,20 @@ describe("VerificationPanel", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Mã xác minh"), "123456");
-    await user.click(screen.getByRole("button", { name: "Xác minh mã" }));
+    await user.type(screen.getByLabelText("Verification code"), "123456");
+    await user.click(screen.getByRole("button", { name: "Verify code" }));
     expect(onPasswordResetVerified).toHaveBeenCalledWith(
       expect.objectContaining({ resetToken: "reset-token" }),
     );
 
-    await user.click(screen.getByRole("button", { name: "Gửi lại mã" }));
+    await user.click(screen.getByRole("button", { name: "Resend code" }));
     expect(
       await screen.findByText(
-        "Nếu email có thể đặt lại mật khẩu, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
+        "If this email is eligible for a password reset, a new code will be sent once the cooldown ends.",
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Nhập lại email" }));
+    await user.click(screen.getByRole("button", { name: "Re-enter email" }));
     expect(onChangeEmail).toHaveBeenCalledOnce();
   });
 });

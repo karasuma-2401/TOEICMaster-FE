@@ -58,7 +58,9 @@ describe("SentenceDiffView", () => {
 
     const region = screen.getByTestId("writing-sentence-diff");
     expect(region).toHaveAttribute("role", "region");
-    expect(region).toHaveAccessibleName("So sánh câu văn và gợi ý chỉnh sửa");
+    expect(region).toHaveAccessibleName(
+      "Sentence comparison and suggested revision",
+    );
 
     const delElement = region.querySelector("del");
     const insElements = Array.from(region.querySelectorAll("ins"));

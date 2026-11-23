@@ -85,7 +85,7 @@ export function ProfileDetailsCard({
           type="file"
         />
         <button
-          aria-label="Đổi ảnh đại diện"
+          aria-label="Change avatar"
           className="relative grid h-[88px] w-[88px] shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full bg-[#fdf3ea] text-[#df5a28] transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#df5a28] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={avatarPending}
           onClick={() => fileInputRef.current?.click()}
@@ -93,7 +93,7 @@ export function ProfileDetailsCard({
         >
           {imageUrl ? (
             <Image
-              alt={`Ảnh đại diện của ${profile.displayName}`}
+              alt={`Avatar of ${profile.displayName}`}
               className="h-full w-full object-cover"
               fill
               sizes="88px"
@@ -117,12 +117,12 @@ export function ProfileDetailsCard({
           </h3>
           <p className="mt-1 text-sm text-[#6b655f]">
             {avatarPending
-              ? "Đang cập nhật ảnh..."
-              : "Đổi ảnh đại diện · JPG, PNG tối đa 2 MB"}
+              ? "Updating avatar..."
+              : "Change avatar · JPG, PNG up to 2 MB"}
           </p>
           <p className="mt-2 w-fit rounded-lg bg-[#e9f3ec] px-2.5 py-1 text-xs font-semibold text-[#3f7a52]">
-            {profile.hasPassword ? "Tài khoản Email" : "Tài khoản Google"} · Đã
-            xác minh
+            {profile.hasPassword ? "Email account" : "Google account"} ·
+            Verified
           </p>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function ProfileDetailsCard({
       <div className="mt-6 grid gap-x-6 gap-y-4 md:grid-cols-2">
         <div>
           <label className={profileLabel} htmlFor={`${id}-displayName`}>
-            Tên hiển thị
+            Display name
           </label>
           <input
             aria-describedby={
@@ -147,7 +147,7 @@ export function ProfileDetailsCard({
             id={`${id}-displayName`}
             name="displayName"
             onChange={updateValue}
-            placeholder="Tên của bạn"
+            placeholder="Your name"
             type="text"
             value={values.displayName}
           />
@@ -163,7 +163,7 @@ export function ProfileDetailsCard({
               Email
             </label>
             <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#3d3935]">
-              · <LockIcon /> Chỉ đọc
+              · <LockIcon /> Read-only
             </span>
           </div>
           <input
@@ -180,7 +180,7 @@ export function ProfileDetailsCard({
 
         <div>
           <label className={profileLabel} htmlFor={`${id}-phone`}>
-            Số điện thoại
+            Phone number
           </label>
           <input
             aria-describedby={errors.phone ? `${id}-phone-error` : undefined}
@@ -190,7 +190,7 @@ export function ProfileDetailsCard({
             id={`${id}-phone`}
             name="phone"
             onChange={updateValue}
-            placeholder="VD: 0912345678 hoặc +84912345678"
+            placeholder="e.g. 0912345678 or +84912345678"
             type="tel"
             value={values.phone}
           />
@@ -199,7 +199,7 @@ export function ProfileDetailsCard({
 
         <div>
           <label className={profileLabel} htmlFor={`${id}-dateOfBirth`}>
-            Ngày sinh
+            Date of birth
           </label>
           <input
             aria-describedby={
@@ -228,7 +228,7 @@ export function ProfileDetailsCard({
         disabled={!isChanged || pending}
         type="submit"
       >
-        {pending ? "Đang lưu..." : "Lưu thay đổi"}
+        {pending ? "Saving..." : "Save changes"}
       </button>
 
       {notice && (

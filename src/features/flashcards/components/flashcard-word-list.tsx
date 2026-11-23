@@ -25,10 +25,10 @@ export function FlashcardWordList({
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[#ece9e5] bg-[#faf7f5] text-xs font-semibold text-[#5f5953]">
-              <th className="px-5 py-3.5">Từ vựng &amp; Phiên âm</th>
-              <th className="px-5 py-3.5">Nghĩa &amp; Ví dụ</th>
-              <th className="px-5 py-3.5">Trạng thái</th>
-              <th className="px-4 py-3.5 text-right">Thao tác</th>
+              <th className="px-5 py-3.5">Term &amp; Pronunciation</th>
+              <th className="px-5 py-3.5">Meaning &amp; Example</th>
+              <th className="px-5 py-3.5">Status</th>
+              <th className="px-4 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#ece9e5]">
@@ -69,17 +69,17 @@ export function FlashcardWordList({
 
                   <td className="px-5 py-4 align-top">
                     <select
-                      aria-label={`Trạng thái ghi nhớ cho ${card.term}`}
+                      aria-label={`Mastery status for ${card.term}`}
                       className={`min-h-9 cursor-pointer rounded-lg border border-[#dacfc5] bg-white px-2.5 text-xs font-semibold text-[#2b2724] ${focusRing}`}
                       onChange={(e) =>
                         onRateCard(card.id, e.target.value as CardMastery)
                       }
                       value={status}
                     >
-                      <option value="new">Chưa học</option>
-                      <option value="learning">Chưa nhớ</option>
-                      <option value="review">Cần ôn</option>
-                      <option value="mastered">Đã thuộc</option>
+                      <option value="new">Not studied</option>
+                      <option value="learning">Still learning</option>
+                      <option value="review">Needs review</option>
+                      <option value="mastered">Mastered</option>
                     </select>
                   </td>
 
@@ -87,7 +87,7 @@ export function FlashcardWordList({
                     <div className="inline-flex items-center gap-1.5">
                       {speechSupported && (
                         <button
-                          aria-label={`Nghe phát âm ${card.term}`}
+                          aria-label={`Listen to pronunciation of ${card.term}`}
                           className={`grid size-8 cursor-pointer place-items-center rounded-lg border border-[#ece9e5] text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
                           onClick={() => speak(card.term)}
                           type="button"
@@ -97,9 +97,7 @@ export function FlashcardWordList({
                       )}
                       <button
                         aria-label={
-                          starred
-                            ? `Bỏ đánh dấu ${card.term}`
-                            : `Đánh dấu ${card.term}`
+                          starred ? `Unstar ${card.term}` : `Star ${card.term}`
                         }
                         aria-pressed={starred}
                         className={`grid size-8 cursor-pointer place-items-center rounded-lg border transition ${focusRing} ${

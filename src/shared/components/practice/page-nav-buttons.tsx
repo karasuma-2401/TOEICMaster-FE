@@ -42,13 +42,13 @@ export function PageNavButtons() {
         <NavIcon>
           <path d="m12 19-7-7 7-7M19 12H5" />
         </NavIcon>
-        Quay lại
+        Go back
       </Link>
       <Link className={button} href="/">
         <NavIcon>
           <path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-9.5Z" />
         </NavIcon>
-        Trang chủ
+        Home
       </Link>
     </div>
   );

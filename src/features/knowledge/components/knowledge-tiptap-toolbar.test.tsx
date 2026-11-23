@@ -65,14 +65,12 @@ describe("KnowledgeTiptapToolbar links", () => {
     const instance = createEditor();
     render(toolbar(instance));
 
-    await user.click(
-      screen.getByRole("button", { name: "Gắn hoặc sửa liên kết" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Add or edit link" }));
     const input = screen.getByPlaceholderText(
-      "Nhập URL (https://..., mailto:..., hoặc /...)",
+      "Enter URL (https://..., mailto:..., or /...)",
     );
     fireEvent.change(input, { target: { value: href } });
-    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
 
     expect(instance.isActive("link")).toBe(false);
     expect(input).toBeInTheDocument();
@@ -83,16 +81,14 @@ describe("KnowledgeTiptapToolbar links", () => {
     const instance = createEditor();
     const { rerender } = render(toolbar(instance));
 
-    await user.click(
-      screen.getByRole("button", { name: "Gắn hoặc sửa liên kết" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Add or edit link" }));
     const input = screen.getByPlaceholderText(
-      "Nhập URL (https://..., mailto:..., hoặc /...)",
+      "Enter URL (https://..., mailto:..., or /...)",
     );
     fireEvent.change(input, {
       target: { value: "  https://example.com/articles?tab=toeic  " },
     });
-    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
 
     const href = "https://example.com/articles?tab=toeic";
     await waitFor(() => expect(instance.isActive("link")).toBe(true));

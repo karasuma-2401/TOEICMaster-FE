@@ -29,7 +29,7 @@ function validate(value: unknown): {
   errors?: ProblemErrors;
 } {
   if (typeof value !== "object" || value === null) {
-    return { errors: { request: ["Dữ liệu đăng ký không hợp lệ."] } };
+    return { errors: { request: ["Invalid registration data."] } };
   }
   const candidate = value as Record<string, unknown>;
   const displayName =
@@ -42,11 +42,11 @@ function validate(value: unknown): {
     typeof candidate.password === "string" ? candidate.password : "";
   const errors: ProblemErrors = {};
   if (!displayName || displayName.length > 100)
-    errors.DisplayName = ["Tên hiển thị phải có từ 1 đến 100 ký tự."];
+    errors.DisplayName = ["Display name must be between 1 and 100 characters."];
   if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    errors.Email = ["Email không hợp lệ."];
+    errors.Email = ["Invalid email address."];
   if (password.length < 8 || password.length > 128)
-    errors.Password = ["Mật khẩu cần từ 8 đến 128 ký tự."];
+    errors.Password = ["Password must be between 8 and 128 characters."];
   if (Object.keys(errors).length > 0) return { errors };
   return { data: { displayName, email, password } };
 }
@@ -69,17 +69,17 @@ function upstreamErrors(value: unknown): ProblemErrors | undefined {
 }
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return error(403, "Yêu cầu không hợp lệ.");
+  if (!sameOrigin(request)) return error(403, "Invalid request.");
   let value: unknown;
   try {
     value = await request.json();
   } catch {
-    return error(400, "Dữ liệu đăng ký không hợp lệ.");
+    return error(400, "Invalid registration data.");
   }
 
   const validated = validate(value);
   if (!validated.data)
-    return error(400, "Dữ liệu đăng ký không hợp lệ.", validated.errors);
+    return error(400, "Invalid registration data.", validated.errors);
 
   try {
     const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
@@ -106,14 +106,14 @@ export async function POST(request: NextRequest) {
         headers: { "Cache-Control": "no-store" },
       });
     if (response.status === 409)
-      return error(409, "Email này đã được sử dụng.");
+      return error(409, "This email is already in use.");
     if (response.status === 400) {
       const body: unknown = await response.json().catch(() => undefined);
-      return error(400, "Dữ liệu đăng ký không hợp lệ.", upstreamErrors(body));
+      return error(400, "Invalid registration data.", upstreamErrors(body));
     }
     if (response.status === 429) return rateLimited(response);
     throw new Error("Unexpected upstream response");
   } catch {
-    return error(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return error(502, "Service unavailable. Please try again later.");
   }
 }

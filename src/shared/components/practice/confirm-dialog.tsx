@@ -9,7 +9,7 @@ export function ConfirmDialog({
   id,
   title,
   children,
-  cancelLabel = "Quay lại",
+  cancelLabel = "Go back",
   confirmLabel,
   onCancel,
   onConfirm,

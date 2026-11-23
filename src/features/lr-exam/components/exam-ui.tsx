@@ -59,12 +59,12 @@ export function LearnerNav() {
     <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-8 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
       <ExamBrand />
       <nav
-        aria-label="Điều hướng chính"
+        aria-label="Main navigation"
         className="flex items-center gap-8 text-[13px]"
       >
-        <span className="text-[#4c4542]">Luyện tập theo Part</span>
+        <span className="text-[#4c4542]">Practice by Part</span>
         <span aria-current="page" className="font-semibold text-[#ff5a1f]">
-          Đề thi thử ETS
+          ETS Mock Tests
         </span>
       </nav>
       <UserMenu />
@@ -171,7 +171,7 @@ export function PassageCard({ passage }: { passage: LrPassage }) {
             ) : null}
             {/* eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions. */}
             <img
-              alt="Hình minh họa nội dung bài đọc"
+              alt="Reading passage illustration"
               className="max-h-[420px] w-auto max-w-full rounded-lg object-contain"
               src={paragraph.imageUrl}
             />

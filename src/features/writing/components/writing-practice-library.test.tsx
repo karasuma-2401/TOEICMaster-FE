@@ -37,9 +37,7 @@ describe("WritingPracticeLibrary", () => {
     mocks.start.mockResolvedValue({ id: "attempt-1" });
 
     render(<WritingPracticeLibrary part={2} />);
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Làm bài Writing" }),
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /Writing/i }));
 
     await waitFor(() => expect(mocks.start).toHaveBeenCalledWith("exercise-1"));
     expect(mocks.push).toHaveBeenCalledWith("/writing/attempts/attempt-1");

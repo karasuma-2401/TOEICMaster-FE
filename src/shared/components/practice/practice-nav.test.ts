@@ -40,14 +40,14 @@ describe("practice navigation", () => {
 
   it("exposes grouped exam/exercise sections and standalone links", () => {
     expect(practiceNavGroups.map((group) => group.label)).toEqual([
-      "Đề thi",
-      "Bài tập",
+      "Exams",
+      "Exercises",
     ]);
     expect(practiceNavLinks.map((link) => [link.label, link.href])).toEqual([
-      ["Kiến thức", "/knowledge"],
+      ["Knowledge", "/knowledge"],
       ["Flashcards", "/flashcards"],
-      ["Phát âm", "/pronunciation"],
-      ["Lịch sử", "/history"],
+      ["Pronunciation", "/pronunciation"],
+      ["History", "/history"],
     ]);
   });
 

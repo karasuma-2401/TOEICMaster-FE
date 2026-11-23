@@ -30,7 +30,7 @@ afterEach(cleanup);
 describe("UserMenu", () => {
   const sampleUser = {
     id: "user-1",
-    displayName: "Nguyễn Văn A",
+    displayName: "Noah Adams",
     email: "learner@example.com",
     phone: "0912345678",
     dateOfBirth: null,
@@ -39,26 +39,26 @@ describe("UserMenu", () => {
     hasPassword: true,
   };
 
-  it("hiển thị icon avatar tròn với chữ cái đầu khi đã đăng nhập", () => {
+  it("renders a circular avatar icon with initials when signed in", () => {
     render(<UserMenu initialUser={sampleUser} />);
 
     const avatarBtn = screen.getByTestId("user-menu-trigger");
-    expect(avatarBtn).toHaveAccessibleName("Mở menu tài khoản");
+    expect(avatarBtn).toHaveAccessibleName("Open account menu");
     expect(avatarBtn).toHaveTextContent("NA");
 
     expect(
-      screen.queryByRole("link", { name: "Đăng nhập" }),
+      screen.queryByRole("link", { name: "Sign in" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "Đăng ký" }),
+      screen.queryByRole("link", { name: "Sign up" }),
     ).not.toBeInTheDocument();
   });
 
-  it("mở dropdown menu với liên kết Hồ sơ cá nhân, Lịch sử làm bài và đóng bằng Escape hoặc click ngoài", async () => {
+  it("opens dropdown menu with Personal profile and Attempt history links and closes on Escape or outside click", async () => {
     const user = userEvent.setup();
     render(
       <div>
-        <button type="button">Ngoài menu</button>
+        <button type="button">Outside menu</button>
         <UserMenu initialUser={sampleUser} />
       </div>,
     );
@@ -68,14 +68,14 @@ describe("UserMenu", () => {
 
     await user.click(avatarBtn);
 
-    const menu = screen.getByRole("menu", { name: "Menu tài khoản" });
-    expect(within(menu).getByText("Nguyễn Văn A")).toBeInTheDocument();
+    const menu = screen.getByRole("menu", { name: "Account menu" });
+    expect(within(menu).getByText("Noah Adams")).toBeInTheDocument();
     expect(within(menu).getByText("learner@example.com")).toBeInTheDocument();
     expect(
-      within(menu).getByRole("menuitem", { name: "Hồ sơ cá nhân" }),
+      within(menu).getByRole("menuitem", { name: "Personal profile" }),
     ).toHaveAttribute("href", "/profile");
     expect(
-      within(menu).getByRole("menuitem", { name: "Lịch sử làm bài" }),
+      within(menu).getByRole("menuitem", { name: "Attempt history" }),
     ).toHaveAttribute("href", "/history");
 
     await user.keyboard("{Escape}");
@@ -84,26 +84,26 @@ describe("UserMenu", () => {
 
     await user.click(avatarBtn);
     expect(screen.getByRole("menu")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Ngoài menu" }));
+    await user.click(screen.getByRole("button", { name: "Outside menu" }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
-  it("hiển thị nút Đăng nhập và Đăng ký khi chưa đăng nhập", () => {
+  it("renders Sign in and Sign up links when signed out", () => {
     render(<UserMenu initialUser={null} />);
 
     expect(screen.queryByTestId("user-menu-trigger")).not.toBeInTheDocument();
 
-    const loginLink = screen.getByRole("link", { name: "Đăng nhập" });
-    const registerLink = screen.getByRole("link", { name: "Đăng ký" });
+    const loginLink = screen.getByRole("link", { name: "Sign in" });
+    const registerLink = screen.getByRole("link", { name: "Sign up" });
 
     expect(loginLink).toHaveAttribute("href", "/login");
     expect(registerLink).toHaveAttribute("href", "/register");
     expect(
-      screen.queryByRole("link", { name: "Hồ sơ cá nhân" }),
+      screen.queryByRole("link", { name: "Personal profile" }),
     ).not.toBeInTheDocument();
   });
 
-  it("chuyển sang trạng thái chưa đăng nhập khi bấm Đăng xuất trong menu", async () => {
+  it("switches to signed-out state when clicking Sign out in the menu", async () => {
     const user = userEvent.setup();
     render(<UserMenu initialUser={sampleUser} />);
 
@@ -111,22 +111,22 @@ describe("UserMenu", () => {
 
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
+    await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(screen.queryByTestId("user-menu-trigger")).not.toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: "Đăng nhập" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Đăng ký" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign up" })).toBeInTheDocument();
   });
 
-  it("mở menu sẵn khi initialOpen = true", () => {
+  it("opens the menu initially when initialOpen = true", () => {
     render(<UserMenu initialOpen={true} initialUser={sampleUser} />);
 
     expect(screen.getByRole("menu")).toBeInTheDocument();
   });
 
-  it("tải hồ sơ thật sau khi xác nhận session và đồng bộ lại khi phát event", async () => {
+  it("loads the full profile after confirming the session and syncs on profile:updated", async () => {
     apiMocks.getSession.mockResolvedValue({
       status: "authenticated",
       user: {
@@ -139,7 +139,7 @@ describe("UserMenu", () => {
       .mockResolvedValueOnce({ ...sampleUser, avatarVersion: "v1" })
       .mockResolvedValueOnce({
         ...sampleUser,
-        displayName: "Nguyễn Văn B",
+        displayName: "Noah Baker",
         avatarVersion: null,
       });
 
@@ -147,7 +147,7 @@ describe("UserMenu", () => {
     const avatarButton = await screen.findByTestId("user-menu-trigger");
     expect(apiMocks.getProfile).toHaveBeenCalledTimes(1);
     expect(
-      screen.getByRole("img", { name: "Ảnh đại diện của Nguyễn Văn A" }),
+      screen.getByRole("img", { name: "Avatar of Noah Adams" }),
     ).toBeInTheDocument();
 
     window.dispatchEvent(new Event("profile:updated"));

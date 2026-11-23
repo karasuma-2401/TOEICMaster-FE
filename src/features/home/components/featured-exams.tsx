@@ -36,24 +36,24 @@ async function loadFeatured(signal: AbortSignal) {
     ...lr.map((exam) => ({
       id: exam.examId,
       title: exam.title,
-      meta: `${exam.totalQuestions} câu · 120 phút · Listening & Reading`,
-      facts: "7 Parts · 10–990 điểm",
+      meta: `${exam.totalQuestions} questions · 120 min · Listening & Reading`,
+      facts: "7 Parts · 10-990 score",
       href: `/exams/lr/${encodeURIComponent(exam.examId)}`,
       publishedAtUtc: exam.publishedAtUtc,
     })),
     ...speaking.map((test) => ({
       id: test.id,
       title: test.title,
-      meta: "~20 phút · 11 câu · Speaking",
-      facts: "5 Parts · 0–200 điểm",
+      meta: "~20 min · 11 questions · Speaking",
+      facts: "5 Parts · 0-200 score",
       href: `/speaking/tests/${encodeURIComponent(test.id)}/practice?mode=full`,
       publishedAtUtc: test.publishedAtUtc ?? "",
     })),
     ...writing.map((test) => ({
       id: test.id,
       title: test.title,
-      meta: "60 phút · 8 câu · Writing",
-      facts: "3 Parts · 0–200 điểm",
+      meta: "60 min · 8 questions · Writing",
+      facts: "3 Parts · 0-200 score",
       href: `/writing/tests/${encodeURIComponent(test.id)}?mode=full`,
       publishedAtUtc: test.publishedAtUtc,
     })),
@@ -82,7 +82,7 @@ export function FeaturedExams() {
   if (exams === null)
     return (
       <>
-        <p className="sr-only">Đang tải đề thi nổi bật…</p>
+        <p className="sr-only">Loading featured tests…</p>
         <div
           aria-hidden="true"
           className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
@@ -100,8 +100,8 @@ export function FeaturedExams() {
   if (exams.length === 0)
     return (
       <EmptyPanel
-        description="Đề mới sẽ xuất hiện ở đây ngay khi được công bố."
-        title="Chưa có đề thi được công bố"
+        description="New tests will appear here as soon as they are published."
+        title="No tests published yet"
       />
     );
 
@@ -113,7 +113,7 @@ export function FeaturedExams() {
           key={exam.id}
         >
           <span className="w-fit rounded-md bg-(--sp-orange-soft) px-2.5 py-1 text-xs font-medium uppercase text-(--sp-brand)">
-            {index === 0 ? "Mới nhất" : "Chuẩn format ETS"}
+            {index === 0 ? "Newest" : "ETS Format"}
           </span>
           <h3 className="mt-3 text-xl font-semibold leading-7">{exam.title}</h3>
           <p className="mt-3 text-[15px] text-(--sp-ink-2)">{exam.meta}</p>
@@ -125,7 +125,7 @@ export function FeaturedExams() {
               className={index === 0 ? primaryAction : secondaryAction}
               href={exam.href}
             >
-              Làm bài ngay
+              Start Test
             </Link>
           </div>
         </article>

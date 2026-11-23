@@ -167,7 +167,7 @@ function parseItem(value: unknown): LrExerciseItem {
   if (!isItem(value))
     throw new LrExerciseBankApiError(
       502,
-      "Phản hồi bài tập từ hệ thống không hợp lệ.",
+      "Invalid exercise response from server.",
     );
   return value;
 }
@@ -182,10 +182,7 @@ function parsePage(value: unknown): LrExercisePage {
     !isNonNegativeInteger(value.totalCount) ||
     !isNonNegativeInteger(value.totalPages)
   )
-    throw new LrExerciseBankApiError(
-      502,
-      "Phản hồi danh sách bài tập không hợp lệ.",
-    );
+    throw new LrExerciseBankApiError(502, "Invalid exercise list response.");
   return value as unknown as LrExercisePage;
 }
 
@@ -210,7 +207,7 @@ function parseSummary(value: unknown): LrExerciseSummary {
   )
     throw new LrExerciseBankApiError(
       502,
-      "Phản hồi tổng quan ngân hàng bài tập không hợp lệ.",
+      "Invalid exercise bank summary response.",
     );
   return value as unknown as LrExerciseSummary;
 }
@@ -221,9 +218,9 @@ async function messageFromResponse(response: Response): Promise<string> {
     .then((body: unknown) =>
       isRecord(body) && typeof body.title === "string"
         ? body.title
-        : "Không thể kết nối dịch vụ.",
+        : "Unable to connect to the service.",
     )
-    .catch(() => "Không thể kết nối dịch vụ.");
+    .catch(() => "Unable to connect to the service.");
 }
 
 async function refreshAdminSession() {
@@ -276,7 +273,7 @@ async function request<T>(
       throw new LrExerciseBankApiError(error.status, error.message);
     if (error instanceof ApiError)
       throw new LrExerciseBankApiError(error.status, error.message);
-    throw new LrExerciseBankApiError(502, "Không thể kết nối dịch vụ.");
+    throw new LrExerciseBankApiError(502, "Unable to connect to the service.");
   }
 }
 
@@ -340,9 +337,6 @@ export async function importLrExerciseItems(
     form,
   );
   if (!isRecord(value) || !isRecord(value.summary))
-    throw new LrExerciseBankApiError(
-      502,
-      "Phản hồi import bài tập không hợp lệ.",
-    );
+    throw new LrExerciseBankApiError(502, "Invalid exercise import response.");
   return parseSummary(value.summary);
 }

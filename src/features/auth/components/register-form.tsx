@@ -36,31 +36,31 @@ const fields: Array<{
 }> = [
   {
     name: "displayName",
-    label: "Tên hiển thị",
+    label: "Display name",
     autoComplete: "name",
     type: "text",
-    placeholder: "Tên của bạn",
+    placeholder: "Your name",
   },
   {
     name: "email",
     label: "Email",
     autoComplete: "email",
     type: "email",
-    placeholder: "ban@example.com",
+    placeholder: "you@example.com",
   },
   {
     name: "password",
-    label: "Mật khẩu",
+    label: "Password",
     autoComplete: "new-password",
     type: "password",
-    placeholder: "Tối thiểu 8 ký tự",
+    placeholder: "At least 8 characters",
   },
   {
     name: "confirmPassword",
-    label: "Xác nhận mật khẩu",
+    label: "Confirm password",
     autoComplete: "new-password",
     type: "password",
-    placeholder: "Nhập lại mật khẩu",
+    placeholder: "Re-enter your password",
   },
 ];
 
@@ -146,7 +146,7 @@ function PasswordToggle({
 }) {
   return (
     <button
-      aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      aria-label={isVisible ? "Hide password" : "Show password"}
       className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
@@ -237,7 +237,7 @@ export function RegisterForm({
     } catch (reason) {
       if (reason instanceof RegisterError) setErrors(reason.fieldErrors);
       setNotice(
-        reason instanceof Error ? reason.message : "Không thể tạo tài khoản.",
+        reason instanceof Error ? reason.message : "Unable to create account.",
       );
     } finally {
       setPending(false);
@@ -322,7 +322,7 @@ export function RegisterForm({
             onChange={updateTerms}
             type="checkbox"
           />
-          <span>Tôi đồng ý với Điều khoản sử dụng</span>
+          <span>I agree to the Terms of Use</span>
         </label>
         {errors.termsAccepted && (
           <p
@@ -339,7 +339,7 @@ export function RegisterForm({
         disabled={pending}
         type="submit"
       >
-        {pending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+        {pending ? "Creating account..." : "Create account"}
       </button>
       {notice && (
         <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
@@ -347,7 +347,7 @@ export function RegisterForm({
         </output>
       )}
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
-        hoặc tiếp tục với
+        or continue with
       </div>
       <GoogleSignIn
         clientId={googleClientId}
@@ -355,16 +355,16 @@ export function RegisterForm({
         returnTo={returnTo}
       />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
-        Bạn đã có tài khoản?{" "}
+        Already have an account?{" "}
         <Link
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           href={authUrl("/login", returnTo)}
         >
-          Đăng nhập
+          Sign in
         </Link>
       </p>
       <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
-        © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
+        © 2025 TOEICMaster. Learn languages, open up the world.
       </p>
     </form>
   );

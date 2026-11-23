@@ -15,7 +15,7 @@ export function partFromMode(mode: SpeakingMode): SpeakingPart | null {
 
 export function displaySpeakingMode(mode: SpeakingMode) {
   const part = partFromMode(mode);
-  return part ? `Luyện Part ${part}` : "Full Test";
+  return part ? `Part ${part} Practice` : "Full Test";
 }
 
 export function modeParts(mode: SpeakingMode): SpeakingPart[] {

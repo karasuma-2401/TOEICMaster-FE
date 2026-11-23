@@ -75,8 +75,10 @@ async function openDeleteConfirmation() {
   const user = userEvent.setup();
   render(<KnowledgeArticlesTab categories={[]} />);
   await screen.findByText("Draft article");
-  await user.click(screen.getByRole("button", { name: "Xóa bài viết" }));
-  const dialog = screen.getByRole("dialog", { name: "Xác nhận xóa bài viết" });
+  await user.click(screen.getByRole("button", { name: "Delete article" }));
+  const dialog = screen.getByRole("dialog", {
+    name: "Confirm article deletion",
+  });
   return { dialog, user };
 }
 
@@ -91,21 +93,23 @@ describe("KnowledgeArticlesTab destructive confirmation", () => {
     );
     const { dialog, user } = await openDeleteConfirmation();
     const confirm = within(dialog).getByRole("button", {
-      name: "Xóa bài viết",
+      name: "Delete article",
     });
 
     await user.click(confirm);
     const pendingConfirm = within(dialog).getByRole("button", {
-      name: "Đang xử lý...",
+      name: "Processing...",
     });
     expect(api.deleteKnowledgeArticle).toHaveBeenCalledTimes(1);
     expect(pendingConfirm).toBeDisabled();
-    expect(within(dialog).getByRole("button", { name: "Hủy" })).toBeDisabled();
+    expect(
+      within(dialog).getByRole("button", { name: "Cancel" }),
+    ).toBeDisabled();
     await user.click(pendingConfirm);
     await user.keyboard("{Escape}");
     expect(api.deleteKnowledgeArticle).toHaveBeenCalledTimes(1);
     expect(
-      screen.getByRole("dialog", { name: "Xác nhận xóa bài viết" }),
+      screen.getByRole("dialog", { name: "Confirm article deletion" }),
     ).toBeInTheDocument();
 
     rejectDelete(new KnowledgeApiError(409, "Article could not be deleted."));
@@ -115,10 +119,10 @@ describe("KnowledgeArticlesTab destructive confirmation", () => {
       ),
     );
     expect(
-      screen.getByRole("dialog", { name: "Xác nhận xóa bài viết" }),
+      screen.getByRole("dialog", { name: "Confirm article deletion" }),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByRole("button", { name: "Xóa bài viết" }),
+      within(dialog).getByRole("button", { name: "Delete article" }),
     ).toBeEnabled();
   });
 });

@@ -22,7 +22,38 @@ export function useSpeakingAttempt(attemptId: string) {
   const accept = useCallback((value: SpeakingAttempt) => {
     setServerOffset(Date.parse(value.serverNowUtc) - Date.now());
     setNow(Date.now());
-    setAttempt(value);
+    setAttempt((current) => {
+      if (!current || value.status === "SUBMITTED") return value;
+
+      const phaseRank = (p: string | null) =>
+        p === "READING"
+          ? 0
+          : p === "PREPARING"
+            ? 1
+            : p === "RESPONDING"
+              ? 2
+              : 3;
+
+      const isCurrentAhead =
+        current.status === "SUBMITTED" ||
+        (current.currentQuestionPosition ?? 0) >
+          (value.currentQuestionPosition ?? 0) ||
+        ((current.currentQuestionPosition ?? 0) ===
+          (value.currentQuestionPosition ?? 0) &&
+          phaseRank(current.currentPhase) > phaseRank(value.currentPhase));
+
+      if (isCurrentAhead) {
+        return {
+          ...current,
+          questions: value.questions.length
+            ? value.questions
+            : current.questions,
+          evaluation: value.evaluation ?? current.evaluation,
+        };
+      }
+
+      return value;
+    });
     setError(null);
   }, []);
 
@@ -33,7 +64,7 @@ export function useSpeakingAttempt(attemptId: string) {
       accept(await getSpeakingAttempt(attemptId));
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể tải lượt làm.",
+        cause instanceof Error ? cause.message : "Could not load the attempt.",
       );
     } finally {
       inFlight.current = false;
@@ -62,7 +93,9 @@ export function useSpeakingAttempt(attemptId: string) {
       accept(await nextSpeakingPhase(attemptId));
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể chuyển bước.",
+        cause instanceof Error
+          ? cause.message
+          : "Could not advance to the next step.",
       );
       await refresh();
     } finally {

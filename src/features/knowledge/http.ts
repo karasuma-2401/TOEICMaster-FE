@@ -82,14 +82,14 @@ export async function knowledgeAdminRequest<T>(
       try {
         await refreshOnce();
       } catch {
-        throw new KnowledgeApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new KnowledgeApiError(401, "Session has expired.");
       }
       response = await send();
     }
   } catch (cause) {
     if (cause instanceof KnowledgeApiError) throw cause;
     if (options.signal?.aborted) throw cause;
-    throw new KnowledgeApiError(502, "Không thể kết nối dịch vụ.");
+    throw new KnowledgeApiError(502, "Could not connect to the service.");
   }
 
   if (!response.ok) throw await failure(response, options.fallback);

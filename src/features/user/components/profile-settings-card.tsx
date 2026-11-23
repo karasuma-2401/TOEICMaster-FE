@@ -36,13 +36,13 @@ export function ProfileSettingsCard() {
     <div className="grid gap-5 lg:grid-cols-2">
       <section className={profileCard} aria-labelledby={`${id}-audio`}>
         <h3 className="text-xl font-semibold text-[#3d3935]" id={`${id}-audio`}>
-          Tốc độ nghe lại bài L&amp;R
+          L&amp;R Review Playback Speed
         </h3>
         <p className="mt-2 text-sm leading-6 text-[#6b655f]">
-          Áp dụng cho trình phát audio trong phần xem lại bài làm Listening.
+          Applies to the audio player in Listening test review.
         </p>
         <label className={`mt-5 ${profileLabel}`} htmlFor={`${id}-rate`}>
-          Tốc độ mặc định
+          Default speed
         </label>
         <select
           className={`${profileInput} cursor-pointer`}
@@ -59,7 +59,7 @@ export function ProfileSettingsCard() {
           ))}
         </select>
         <p className="mt-3 text-xs text-[#6b655f]">
-          Thiết lập được lưu trên trình duyệt này.
+          This setting is saved in this browser.
         </p>
       </section>
 
@@ -68,10 +68,11 @@ export function ProfileSettingsCard() {
           className="text-xl font-semibold text-[#3d3935]"
           id={`${id}-mascot`}
         >
-          Trợ lý Míc
+          Mic Assistant
         </h3>
         <p className="mt-2 text-sm leading-6 text-[#6b655f]">
-          Míc hướng dẫn nhanh ở góc màn hình khi bạn mở một trang mới.
+          Mic provides quick tips in the corner of the screen when you open a
+          new page.
         </p>
         <label className="mt-5 flex items-start gap-3 text-sm text-[#3d3935]">
           <input
@@ -81,9 +82,9 @@ export function ProfileSettingsCard() {
             type="checkbox"
           />
           <span>
-            Ẩn trợ lý Míc
+            Hide Mic assistant
             <span className="mt-1 block text-xs text-[#6b655f]">
-              Bạn vẫn có thể mở lại bằng cách bỏ chọn.
+              You can show it again anytime by unchecking this option.
             </span>
           </span>
         </label>

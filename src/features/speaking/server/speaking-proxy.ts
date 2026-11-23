@@ -47,9 +47,9 @@ export async function forwardSpeaking(
   const path = segments.join("/");
   const route = routes.find((item) => item.pattern.test(path));
   if (!route || !route.methods.includes(method))
-    return problem(404, "Không tìm thấy API Speaking.");
+    return problem(404, "Speaking API endpoint not found.");
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   const session = sessionCookie(request);
   const accessToken =
@@ -99,6 +99,6 @@ export async function forwardSpeaking(
       });
     return response;
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

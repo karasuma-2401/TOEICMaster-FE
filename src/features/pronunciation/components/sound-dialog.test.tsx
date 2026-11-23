@@ -7,7 +7,7 @@ import { SoundDialog } from "./sound-dialog";
 
 vi.mock("./practice-recorder", () => ({
   PracticeRecorder: ({ example }: { example: { word: string } }) => (
-    <p>Luyện từ {example.word}</p>
+    <p>Practice word {example.word}</p>
   ),
 }));
 
@@ -36,53 +36,57 @@ describe("SoundDialog", () => {
     const heading = document.getElementById(
       dialog.getAttribute("aria-labelledby") ?? "",
     );
-    expect(heading).toHaveTextContent("Âm /θ/");
-    expect(within(dialog).getByText(/Phụ âm · vô thanh/)).toBeInTheDocument();
+    expect(heading).toHaveTextContent("Sound /θ/");
+    expect(
+      within(dialog).getByText(/Consonants · voiceless/),
+    ).toBeInTheDocument();
     for (const step of sound.articulation)
       expect(within(dialog).getByText(step)).toBeInTheDocument();
     expect(
-      within(dialog).getByText(`Lỗi thường gặp: ${sound.commonMistake}`),
+      within(dialog).getByText(`Common mistake: ${sound.commonMistake}`),
     ).toBeInTheDocument();
     for (const word of ["think", "three", "month"])
       expect(
-        within(dialog).getByRole("button", { name: `Luyện từ ${word}` }),
+        within(dialog).getByRole("button", { name: `Practice word ${word}` }),
       ).toBeInTheDocument();
-    expect(within(dialog).getByText("Luyện từ think")).toBeInTheDocument();
+    expect(within(dialog).getByText("Practice word think")).toBeInTheDocument();
     expect(
-      within(dialog).getAllByRole("button", { name: "Nghe âm mẫu /θ/" }),
+      within(dialog).getAllByRole("button", {
+        name: "Listen to sample /θ/",
+      }),
     ).not.toHaveLength(0);
   });
 
   it("practises the chosen example word", () => {
     renderDialog({ wordIndex: 2 });
-    expect(screen.getByText("Luyện từ month")).toBeInTheDocument();
+    expect(screen.getByText("Practice word month")).toBeInTheDocument();
   });
 
   it("switches words, jumps to the partner and to neighbours", async () => {
     const props = renderDialog();
     await userEvent.click(
-      screen.getByRole("button", { name: "Luyện từ month" }),
+      screen.getByRole("button", { name: "Practice word month" }),
     );
     expect(props.onWordChange).toHaveBeenCalledWith(2);
     await userEvent.click(screen.getByRole("button", { name: "/ð/" }));
     expect(props.onSelectSound).toHaveBeenLastCalledWith("th-voiced");
-    await userEvent.click(screen.getByRole("button", { name: "Âm sau: /ð/" }));
+    await userEvent.click(screen.getByRole("button", { name: "Next: /ð/" }));
     expect(props.onSelectSound).toHaveBeenLastCalledWith("th-voiced");
     await userEvent.click(
-      screen.getByRole("button", { name: "Âm trước: /v/" }),
+      screen.getByRole("button", { name: "Previous: /v/" }),
     );
     expect(props.onSelectSound).toHaveBeenLastCalledWith("v");
   });
 
   it("closes with the close button", async () => {
     const props = renderDialog();
-    await userEvent.click(screen.getByRole("button", { name: "Đóng" }));
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(props.onClose).toHaveBeenCalled();
   });
 
   it("links to the audio credits", () => {
     renderDialog();
-    expect(screen.getByRole("link", { name: "Nguồn audio" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Audio credits" })).toHaveAttribute(
       "href",
       "/audio/ipa/CREDITS.md",
     );

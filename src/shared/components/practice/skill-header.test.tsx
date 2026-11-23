@@ -37,10 +37,10 @@ describe("SkillHeader", () => {
       within(header).getByRole("button", { name: "Account" }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Mở menu" }));
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
     const dialog = screen.getByRole("dialog");
     expect(
-      within(dialog).getByRole("navigation", { name: "Luyện tập" }),
+      within(dialog).getByRole("navigation", { name: "Practice" }),
     ).toBeInTheDocument();
     expect(
       within(dialog).getByRole("button", { name: "Account" }),

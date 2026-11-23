@@ -50,7 +50,7 @@ export function SpeakingPartTabs({
           Part {part}
           <span className="block text-[11px] font-semibold opacity-80">
             {speakingPartSpecs[part].subtitle} · {partQuestionCount(part)}{" "}
-            câu/đề
+            questions/test
           </span>
         </button>
       ))}
@@ -70,16 +70,16 @@ export function SpeakingExerciseFilters({
   return (
     <AdminFilterBar className="border-b border-(--sp-line) p-3">
       <AdminSearchField
-        label="Tìm bài tập Speaking"
+        label="Search Speaking exercises"
         onChange={(query) => onChange({ query })}
-        placeholder="Tìm theo chủ đề hoặc mã bài tập"
+        placeholder="Search by topic or exercise code"
         suggestions={suggestions}
         value={filter.query}
       />
       <AdminFilterSelect
         allValue="ALL"
-        ariaLabel="Lọc độ khó"
-        label="Độ khó"
+        ariaLabel="Filter difficulty"
+        label="Difficulty"
         onChange={(difficulty: ExerciseFilter["difficulty"]) =>
           onChange({ difficulty })
         }
@@ -91,8 +91,8 @@ export function SpeakingExerciseFilters({
       />
       <AdminFilterSelect
         allValue="ALL"
-        ariaLabel="Lọc trạng thái"
-        label="Trạng thái"
+        ariaLabel="Filter status"
+        label="Status"
         onChange={(status: ExerciseFilter["status"]) => onChange({ status })}
         options={exerciseStatusOptions.map((value) => ({
           value,

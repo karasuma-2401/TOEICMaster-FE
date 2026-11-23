@@ -15,11 +15,11 @@ describe("ContentTabs", () => {
   it("keeps the global exam tab and all three skills connected to their existing test flows", () => {
     render(<ContentTabs section="tests" skill="speaking" />);
 
-    expect(screen.getByRole("link", { name: "Bài tập" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Exercises" })).toHaveAttribute(
       "href",
       "/admin/content/speaking",
     );
-    expect(screen.getByRole("link", { name: "Đề thi" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Tests" })).toHaveAttribute(
       "href",
       "/admin/tests/speaking",
     );

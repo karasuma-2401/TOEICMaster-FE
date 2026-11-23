@@ -31,7 +31,7 @@ function PasswordToggle({
 }) {
   return (
     <button
-      aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      aria-label={isVisible ? "Hide password" : "Show password"}
       className="absolute bottom-0 right-0 top-2 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
@@ -80,21 +80,21 @@ const passwordFields: Array<{
 }> = [
   {
     name: "currentPassword",
-    label: "Mật khẩu hiện tại",
+    label: "Current password",
     autoComplete: "current-password",
-    placeholder: "Nhập mật khẩu hiện tại",
+    placeholder: "Enter current password",
   },
   {
     name: "newPassword",
-    label: "Mật khẩu mới",
+    label: "New password",
     autoComplete: "new-password",
-    placeholder: "Tối thiểu 8 ký tự",
+    placeholder: "At least 8 characters",
   },
   {
     name: "confirmPassword",
-    label: "Xác nhận mật khẩu mới",
+    label: "Confirm new password",
     autoComplete: "new-password",
-    placeholder: "Nhập lại mật khẩu mới",
+    placeholder: "Re-enter new password",
   },
 ];
 
@@ -144,7 +144,7 @@ export function ChangePasswordForm({
       await changePassword(values);
       setValues(initialValues);
       setErrors({});
-      toast.success("Đổi mật khẩu thành công.");
+      toast.success("Password changed successfully.");
     } catch (reason) {
       if (reason instanceof ApiError && reason.status === 400) {
         // Backend reports a wrong current password with a title only, no field errors.
@@ -155,12 +155,12 @@ export function ChangePasswordForm({
         );
       } else if (reason instanceof ApiError && reason.status === 429) {
         setNotice(
-          `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,
+          `Too many attempts. Please try again in ${reason.retryAfter ?? 0} seconds.`,
         );
       } else if (reason instanceof ApiError && reason.status === 401) {
         router.replace("/login?next=%2Fprofile");
       } else {
-        toast.error("Không thể đổi mật khẩu. Vui lòng thử lại.");
+        toast.error("Unable to change password. Please try again.");
       }
     } finally {
       setPending(false);
@@ -170,7 +170,7 @@ export function ChangePasswordForm({
   if (!hasPassword) {
     return (
       <p className="text-sm text-[#736a66]">
-        Tài khoản đăng nhập bằng Google, không có mật khẩu.
+        This account signs in with Google and does not have a password.
       </p>
     );
   }
@@ -220,7 +220,7 @@ export function ChangePasswordForm({
       </div>
 
       <p className="mt-3 text-[13px] text-[#6b655f]">
-        Mật khẩu cần từ 8 đến 128 ký tự.
+        Password must be between 8 and 128 characters.
       </p>
 
       <button
@@ -228,7 +228,7 @@ export function ChangePasswordForm({
         disabled={pending}
         type="submit"
       >
-        {pending ? "Đang đổi mật khẩu..." : "Cập nhật mật khẩu"}
+        {pending ? "Changing password..." : "Update password"}
       </button>
 
       {notice && (
