@@ -224,6 +224,12 @@ describe("scripts/check-guardrails", () => {
         count: 1,
         allowed: 0,
       },
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/demo/server/demo-proxy.ts",
+        count: 1,
+        allowed: 0,
+      },
     ]);
 
     const modern = runGuardrails({
@@ -233,6 +239,72 @@ describe("scripts/check-guardrails", () => {
       },
     });
     expect(modern.ok).toBe(true);
+  });
+
+  it("rejects new raw app API fetch calls with the shared BFF remediation", () => {
+    const result = runGuardrails({
+      files: {
+        "src/app/api/demo/route.ts": `export async function GET() { return fetch("http://localhost:5287/api/v1/demo"); }`,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/app/api/demo/route.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+    expect(formatGuardrailViolation(result.violations[0]!)).toContain(
+      "Use createBffProxy or forwardBffRequest from @/shared/server/bff-proxy",
+    );
+  });
+
+  it("rejects raw fetch in server files even when they import the shared BFF proxy", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/demo/server/service.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; export const GET = () => globalThis.fetch("/api/v1/demo");`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/demo/server/service.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("permits the auth adapter, shared BFF owner, browser clients, tests, and forwarded routes", () => {
+    const result = runGuardrails({
+      baseline: {},
+      files: {
+        "src/features/auth/server/backend.ts": `export const send = () => fetch("/api/v1/auth/login");`,
+        "src/shared/server/bff-proxy.ts": `export const send = () => fetch("/api/v1/demo");`,
+        "src/features/demo/api.ts": `export const send = () => fetch("/api/demo");`,
+        "src/app/api/demo/route.test.ts": `const send = () => fetch("/api/demo");`,
+        "src/app/api/demo/route.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; export const GET = createBffProxy({ upstreamPath: "/api/v1/demo", auth: "public" });`,
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("ratchets exact existing server fetch occurrences without permitting one more", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/lr-exam/server/lr-proxy.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; const first = () => fetch("/first"); const second = () => fetch("/second");`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/lr-exam/server/lr-proxy.ts",
+        count: 2,
+        allowed: 1,
+      },
+    ]);
   });
 
   it("enforces the Wave 3 ratchet when an allowlisted file adds 1 extra violation", () => {

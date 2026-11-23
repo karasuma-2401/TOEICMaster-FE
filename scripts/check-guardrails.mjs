@@ -8,6 +8,12 @@ import { pathToFileURL } from "node:url";
  */
 export const TODO_WAVE3_BASELINE = {
   "no-duplicate-guid-regex": {},
+  "no-raw-bff-fetch": {
+    "src/features/flashcards/server/flashcards-proxy.ts": 1,
+    "src/features/lr-exam/server/lr-proxy.ts": 1,
+    "src/features/speaking/server/speaking-proxy.ts": 1,
+    "src/features/writing/server/writing-proxy.ts": 1,
+  },
   "no-raw-dialog-open": {
     "src/features/admin/components/content/admin-excel-import.tsx": 1,
     "src/features/admin/components/content/admin-overlay.tsx": 2,
@@ -183,6 +189,17 @@ export function inspectSourceFile(relPath, raw) {
     findings["no-new-legacy-proxy"] = 1;
   }
 
+  if (
+    (relPath.startsWith("src/app/api/") ||
+      /^src\/features\/.+\/server\//.test(relPath)) &&
+    relPath !== "src/features/auth/server/backend.ts"
+  ) {
+    const rawFetchMatches = stripped.match(/\bfetch\s*\(/g);
+    if (rawFetchMatches) {
+      findings["no-raw-bff-fetch"] = rawFetchMatches.length;
+    }
+  }
+
   return findings;
 }
 
@@ -236,6 +253,8 @@ export function runGuardrails({
 const RULE_REMEDIATIONS = {
   "no-duplicate-guid-regex":
     "Import isGuid or isNullableGuid from @/shared/lib/guards instead of defining a GUID regex.",
+  "no-raw-bff-fetch":
+    "Use createBffProxy or forwardBffRequest from @/shared/server/bff-proxy instead of raw fetch in BFF routes and server proxies.",
 };
 
 export function formatGuardrailViolation({ rule, file, count, allowed }) {

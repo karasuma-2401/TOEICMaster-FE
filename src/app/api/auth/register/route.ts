@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimited, sameOrigin } from "@/features/auth/server/backend";
+import { forwardBffRequest } from "@/shared/server/bff-proxy";
 
 export const dynamic = "force-dynamic";
 
@@ -82,24 +83,19 @@ export async function POST(request: NextRequest) {
     return error(400, "Invalid registration data.", validated.errors);
 
   try {
-    const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
-    if (
-      !["http:", "https:"].includes(base.protocol) ||
-      base.username ||
-      base.password
-    )
-      throw new Error("Invalid API_BASE_URL");
-
-    const response = await fetch(new URL("/api/v1/auth/register", base), {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+    const headers = new Headers(request.headers);
+    headers.set("Content-Type", "application/json");
+    headers.delete("Content-Length");
+    const response = await forwardBffRequest(
+      new Request(request, { headers, body: JSON.stringify(validated.data) }),
+      {
+        upstreamPath: "/api/v1/auth/register",
+        method: "POST",
+        auth: "public",
+        bodyMode: "json",
+        timeoutMs: 5000,
       },
-      body: JSON.stringify(validated.data),
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
+    );
     if (response.status === 202)
       return new NextResponse(null, {
         status: 202,

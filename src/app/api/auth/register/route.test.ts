@@ -19,6 +19,25 @@ function registrationRequest(body: unknown) {
 }
 
 describe("registration proxy", () => {
+  it("forwards client IP headers through the shared BFF boundary", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const request = registrationRequest({
+      displayName: "Learner",
+      email: "learner@example.com",
+      password: "password123",
+    });
+    request.headers.set("X-Real-IP", "198.51.100.10");
+    request.headers.set("X-Forwarded-Proto", "https");
+
+    expect((await POST(request)).status).toBe(202);
+    const headers = fetchMock.mock.calls[0]![1].headers as Headers;
+    expect(headers.get("X-Forwarded-For")).toBe("198.51.100.10");
+    expect(headers.get("X-Forwarded-Proto")).toBe("https");
+  });
+
   it("validates browser input before contacting the backend", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
