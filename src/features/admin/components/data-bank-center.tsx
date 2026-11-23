@@ -295,7 +295,7 @@ function ExerciseBank({
                 Total questions
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--admin-brand-orange)]">
-                {(summary?.totalQuestionCount ?? 0).toLocaleString("en-US")}
+                {(summary?.totalQuestionCount ?? 0).toLocaleString("vi-VN")}
               </p>
             </div>
             <div className="h-9 w-px bg-[var(--admin-border)]" />
@@ -344,7 +344,7 @@ function ExerciseBank({
                       </p>
                     </div>
                     <span className="text-xs font-bold text-[var(--admin-brand-orange)]">
-                      {(metrics?.questionCount ?? 0).toLocaleString("en-US")}{" "}
+                      {(metrics?.questionCount ?? 0).toLocaleString("vi-VN")}{" "}
                       questions
                     </span>
                   </div>
@@ -436,7 +436,7 @@ function PartWorkspace({
             <span className="text-lg">({definition.vietnamese})</span>
           </h2>
           <p className="mt-2 text-sm text-[var(--admin-muted)]">
-            Manage {count.toLocaleString("en-US")} questions in this Part&apos;s
+            Manage {count.toLocaleString("vi-VN")} questions in this Part&apos;s
             independent bank.
           </p>
         </div>
@@ -662,7 +662,7 @@ function ItemTable({
         </tbody>
       </table>
       <footer className="border-t border-[var(--admin-border)] px-5 py-3 text-xs text-[var(--admin-muted)]">
-        Showing {items.length} / {total.toLocaleString("en-US")}{" "}
+        Showing {items.length} / {total.toLocaleString("vi-VN")}{" "}
         {definition.grouped ? "exercise groups" : "questions"}
       </footer>
     </div>
@@ -1141,8 +1141,8 @@ function CompleteTests() {
   const metrics = summarizeExamDashboard(result?.items ?? [], profiles ?? []);
   const visibleItems = (result?.items ?? []).filter((item) => {
     const matchesQuery = `${item.code} ${item.title}`
-      .toLocaleLowerCase("en-US")
-      .includes(query.trim().toLocaleLowerCase("en-US"));
+      .toLocaleLowerCase("vi-VN")
+      .includes(query.trim().toLocaleLowerCase("vi-VN"));
     const matchesStatus =
       statusFilter === "ALL" || item.status === statusFilter;
     return matchesQuery && matchesStatus;

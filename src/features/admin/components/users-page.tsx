@@ -358,7 +358,7 @@ export function UsersPage() {
               <div className="flex items-center gap-2">
                 <span>
                   Showing {firstItem}-{lastItem} of{" "}
-                  {currentResponse.totalItems.toLocaleString("en-US")}
+                  {currentResponse.totalItems.toLocaleString("vi-VN")}
                 </span>
                 <label className="flex items-center gap-1.5">
                   per page

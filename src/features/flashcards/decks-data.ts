@@ -26,11 +26,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "itinerary",
         phonetic: "/aɪˈtɪn.ə.rer.i/",
         partOfSpeech: "noun",
-        meaningVi: "detailed schedule or plan (for a trip or business travel)",
+        meaningVi: "lịch trình chi tiết (chuyến đi, công tác)",
         exampleEn:
           "Please review the updated travel itinerary before Monday's flight.",
         exampleVi:
-          "Please review the updated business travel schedule before Monday's flight.",
+          "Vui lòng xem lại lịch trình công tác đã cập nhật trước chuyến bay thứ Hai.",
         collocations: [
           "travel itinerary",
           "detailed itinerary",
@@ -44,11 +44,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "accommodate",
         phonetic: "/əˈkɑː.mə.deɪt/",
         partOfSpeech: "verb",
-        meaningVi:
-          "meet (a need or request); hold or seat (a number of people)",
+        meaningVi: "đáp ứng (nhu cầu), chứa được (số lượng người)",
         exampleEn:
           "The conference hall can accommodate up to 300 attendees comfortably.",
-        exampleVi: "The hall can comfortably seat up to 300 attendees.",
+        exampleVi: "Hội trường có thể chứa thoải mái tới 300 người tham dự.",
         collocations: [
           "accommodate a request",
           "accommodate guests",
@@ -62,10 +61,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "agenda",
         phonetic: "/əˈdʒen.də/",
         partOfSpeech: "noun",
-        meaningVi: "meeting agenda, list of topics to discuss",
+        meaningVi: "chương trình nghị sự, danh sách nội dung cuộc họp",
         exampleEn:
           "The budget review is the first item on today's meeting agenda.",
-        exampleVi: "Budget review is the first item on today's meeting agenda.",
+        exampleVi:
+          "Rà soát ngân sách là mục đầu tiên trong chương trình họp hôm nay.",
         collocations: ["on the agenda", "set the agenda", "meeting agenda"],
         toeicPart: "Part 3 · Part 4",
         level: "B1",
@@ -75,11 +75,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "mandatory",
         phonetic: "/ˈmæn.də.tɔːr.i/",
         partOfSpeech: "adjective",
-        meaningVi: "required by rule or policy, compulsory",
+        meaningVi: "bắt buộc (theo quy định)",
         exampleEn:
           "Attendance at the workplace safety briefing is mandatory for all staff.",
         exampleVi:
-          "Attending the workplace safety briefing is mandatory for all employees.",
+          "Việc tham dự buổi phổ biến an toàn lao động là bắt buộc đối với toàn bộ nhân viên.",
         collocations: [
           "mandatory training",
           "mandatory requirement",
@@ -93,11 +93,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "streamline",
         phonetic: "/ˈstriːm.laɪn/",
         partOfSpeech: "verb",
-        meaningVi: "simplify and optimize a process",
+        meaningVi: "tinh giản, tối ưu hóa quy trình",
         exampleEn:
           "The new software will streamline our invoice approval workflow.",
         exampleVi:
-          "The new software will optimize our invoice approval process.",
+          "Phần mềm mới sẽ tối ưu hóa quy trình phê duyệt hóa đơn của chúng ta.",
         collocations: [
           "streamline operations",
           "streamline a process",
@@ -111,11 +111,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "correspondence",
         phonetic: "/ˌkɔːr.əˈspɑːn.dəns/",
         partOfSpeech: "noun",
-        meaningVi: "written communication, letters or emails exchanged",
+        meaningVi: "thư từ giao dịch, trao đổi bằng văn bản",
         exampleEn:
           "All client correspondence must be archived in the shared folder.",
         exampleVi:
-          "All written communication with clients must be archived in the shared folder.",
+          "Mọi thư từ trao đổi với khách hàng phải được lưu trữ trong thư mục dùng chung.",
         collocations: [
           "business correspondence",
           "official correspondence",
@@ -129,11 +129,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "designate",
         phonetic: "/ˈdez.ɪɡ.neɪt/",
         partOfSpeech: "verb",
-        meaningVi: "officially assign or appoint for a specific purpose",
+        meaningVi: "chỉ định, phân công chính thức",
         exampleEn:
           "Management designated the second floor as a quiet working zone.",
         exampleVi:
-          "Management designated the second floor as a quiet work zone.",
+          "Ban quản lý đã chỉ định tầng hai làm khu vực làm việc yên tĩnh.",
         collocations: [
           "designated area",
           "designate a representative",
@@ -147,11 +147,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "promptly",
         phonetic: "/ˈprɑːmpt.li/",
         partOfSpeech: "adverb",
-        meaningVi: "on time, quickly, without delay",
+        meaningVi: "đúng giờ, nhanh chóng, kịp thời",
         exampleEn:
           "The quarterly orientation session will begin promptly at 9:00 A.M.",
-        exampleVi:
-          "The quarterly orientation session will start promptly at 9:00 A.M.",
+        exampleVi: "Buổi định hướng hàng quý sẽ bắt đầu đúng 9:00 sáng.",
         collocations: [
           "respond promptly",
           "arrive promptly",
@@ -177,11 +176,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "stipulate",
         phonetic: "/ˈstɪp.jə.leɪt/",
         partOfSpeech: "verb",
-        meaningVi: "state clearly as a requirement in a contract or agreement",
+        meaningVi: "quy định rõ trong hợp đồng hoặc thỏa thuận",
         exampleEn:
           "The lease stipulates that tenants must give 30 days' notice before moving out.",
         exampleVi:
-          "The lease specifies that tenants must give 30 days' notice before moving out.",
+          "Hợp đồng thuê quy định rõ người thuê phải báo trước 30 ngày trước khi chuyển đi.",
         collocations: [
           "stipulate conditions",
           "as stipulated in",
@@ -195,11 +194,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "abide by",
         phonetic: "/əˈbaɪd baɪ/",
         partOfSpeech: "phrasal verb",
-        meaningVi: "follow or comply with (rules, terms, an agreement)",
+        meaningVi: "tuân thủ, chấp hành (luật lệ, thỏa thuận)",
         exampleEn:
           "Both parties agreed to abide by the revised confidentiality clause.",
-        exampleVi:
-          "Both sides agreed to comply with the amended confidentiality clause.",
+        exampleVi: "Cả hai bên đã đồng ý tuân thủ điều khoản bảo mật sửa đổi.",
         collocations: [
           "abide by the terms",
           "abide by regulations",
@@ -213,11 +211,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "provision",
         phonetic: "/prəˈvɪʒ.ən/",
         partOfSpeech: "noun",
-        meaningVi: "clause or term in a contract; act of supplying",
+        meaningVi: "điều khoản; sự cung cấp",
         exampleEn:
           "We added a warranty provision covering replacement parts for two years.",
         exampleVi:
-          "We added a warranty clause covering replacement parts for two years.",
+          "Chúng tôi đã bổ sung điều khoản bảo hành bao gồm linh kiện thay thế trong hai năm.",
         collocations: [
           "contract provision",
           "under the provisions of",
@@ -231,11 +229,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "renew",
         phonetic: "/rɪˈnuː/",
         partOfSpeech: "verb",
-        meaningVi: "extend the validity of (a contract, subscription, license)",
+        meaningVi: "gia hạn (hợp đồng, gói đăng ký, giấy phép)",
         exampleEn:
           "Clients who renew their annual subscription early receive a 15% discount.",
         exampleVi:
-          "Customers who renew their annual plan early get a 15% discount.",
+          "Khách hàng gia hạn gói thường niên sớm sẽ nhận được ưu đãi giảm 15%.",
         collocations: [
           "renew a contract",
           "automatic renewal",
@@ -249,11 +247,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "obligate",
         phonetic: "/ˈɑːb.lɪ.ɡeɪt/",
         partOfSpeech: "verb",
-        meaningVi: "bind legally or morally to a duty",
+        meaningVi: "ràng buộc, bắt buộc theo nghĩa vụ",
         exampleEn:
           "The supplier is obligated to deliver all components by Friday.",
         exampleVi:
-          "The supplier is required to deliver all components before Friday.",
+          "Nhà cung cấp có nghĩa vụ giao toàn bộ linh kiện trước thứ Sáu.",
         collocations: [
           "be obligated to",
           "contractual obligation",
@@ -267,11 +265,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "amendment",
         phonetic: "/əˈmend.mənt/",
         partOfSpeech: "noun",
-        meaningVi: "formal change or addition to a document or contract",
+        meaningVi: "bản sửa đổi, phụ lục điều chỉnh",
         exampleEn:
           "Any amendment to the service agreement requires written approval.",
         exampleVi:
-          "Any revision to the service agreement requires written approval.",
+          "Mọi sửa đổi đối với thỏa thuận dịch vụ đều cần phê duyệt bằng văn bản.",
         collocations: [
           "proposed amendment",
           "make an amendment",
@@ -285,11 +283,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "consensus",
         phonetic: "/kənˈsen.səs/",
         partOfSpeech: "noun",
-        meaningVi: "general agreement among a group",
+        meaningVi: "sự đồng thuận, nhất trí chung",
         exampleEn:
           "After two hours of negotiation, the committee reached a consensus.",
-        exampleVi:
-          "After two hours of negotiation, the committee reached a general agreement.",
+        exampleVi: "Sau hai giờ đàm phán, ủy ban đã đạt được sự đồng thuận.",
         collocations: [
           "reach a consensus",
           "broad consensus",
@@ -303,11 +300,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "terminate",
         phonetic: "/ˈtɜːr.mɪ.neɪt/",
         partOfSpeech: "verb",
-        meaningVi: "end or cancel (a contract or partnership)",
+        meaningVi: "chấm dứt, hủy bỏ (hợp đồng)",
         exampleEn:
           "Either company may terminate the partnership upon written notice.",
         exampleVi:
-          "Either company may end the partnership upon written notice.",
+          "Một trong hai công ty có thể chấm dứt quan hệ hợp tác khi có thông báo bằng văn bản.",
         collocations: [
           "terminate a contract",
           "early termination",
@@ -333,11 +330,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "reimburse",
         phonetic: "/ˌriː.ɪmˈbɜːrs/",
         partOfSpeech: "verb",
-        meaningVi: "pay back expenses (for business travel or purchases)",
+        meaningVi: "hoàn trả chi phí (công tác, mua sắm)",
         exampleEn:
           "Keep all hotel receipts so the accounting team can reimburse you.",
         exampleVi:
-          "Keep all hotel receipts so the accounting department can repay you.",
+          "Hãy giữ lại toàn bộ hóa đơn khách sạn để bộ phận kế toán có thể hoàn tiền cho bạn.",
         collocations: [
           "reimburse expenses",
           "travel reimbursement",
@@ -351,11 +348,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "discrepancy",
         phonetic: "/dɪˈskrep.ən.si/",
         partOfSpeech: "noun",
-        meaningVi: "difference or mismatch (between figures or invoices)",
+        meaningVi: "sự chênh lệch, sai khác (giữa số liệu, hóa đơn)",
         exampleEn:
           "The auditor noticed a discrepancy between the invoice and the purchase order.",
         exampleVi:
-          "The auditor spotted a mismatch between the invoice and the purchase order.",
+          "Kiểm toán viên phát hiện sự sai khác giữa hóa đơn và đơn đặt hàng.",
         collocations: [
           "billing discrepancy",
           "resolve a discrepancy",
@@ -369,11 +366,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "allocate",
         phonetic: "/ˈæl.ə.keɪt/",
         partOfSpeech: "verb",
-        meaningVi: "assign or distribute (funds or resources)",
+        meaningVi: "phân bổ (ngân sách, nguồn lực)",
         exampleEn:
           "The board allocated additional funds to expand the R&D division.",
         exampleVi:
-          "The board assigned additional budget to expand the R&D division.",
+          "Hội đồng quản trị đã phân bổ thêm ngân sách để mở rộng khối R&D.",
         collocations: [
           "allocate funds",
           "budget allocation",
@@ -387,11 +384,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "revenue",
         phonetic: "/ˈrev.ə.nuː/",
         partOfSpeech: "noun",
-        meaningVi: "total income generated from sales or services",
+        meaningVi: "doanh thu",
         exampleEn:
           "Online subscriptions accounted for 40% of our annual revenue.",
         exampleVi:
-          "Online subscriptions made up 40% of our total annual income.",
+          "Các gói đăng ký trực tuyến chiếm 40% tổng doanh thu thường niên của chúng tôi.",
         collocations: ["annual revenue", "generate revenue", "revenue growth"],
         toeicPart: "Part 4 · Part 7",
         level: "B2",
@@ -401,11 +398,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "overdue",
         phonetic: "/ˌoʊ.vɚˈduː/",
         partOfSpeech: "adjective",
-        meaningVi: "past the due date (for payment or delivery)",
+        meaningVi: "quá hạn (thanh toán, bàn giao)",
         exampleEn:
           "A late fee applies to any balance that is more than 15 days overdue.",
         exampleVi:
-          "A late fee applies to any balance more than 15 days past due.",
+          "Phí trễ hạn áp dụng cho mọi khoản dư quá hạn thanh toán hơn 15 ngày.",
         collocations: ["overdue payment", "overdue invoice", "long overdue"],
         toeicPart: "Part 5 · Part 7",
         level: "B1",
@@ -415,11 +412,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "expenditure",
         phonetic: "/ɪkˈspen.dɪ.tʃɚ/",
         partOfSpeech: "noun",
-        meaningVi: "money spent, operating expenses",
+        meaningVi: "khoản chi tiêu, kinh phí chi ra",
         exampleEn:
           "We need to curb operating expenditure during the third quarter.",
-        exampleVi:
-          "We need to control operating costs during the third quarter.",
+        exampleVi: "Chúng ta cần kiềm chế chi phí vận hành trong quý ba.",
         collocations: [
           "capital expenditure",
           "reduce expenditure",
@@ -433,11 +429,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "forecast",
         phonetic: "/ˈfɔːr.kæst/",
         partOfSpeech: "noun / verb",
-        meaningVi: "prediction or projection of financial performance",
+        meaningVi: "dự báo, bản dự đoán tài chính",
         exampleEn:
           "Analysts forecast steady export demand through the end of the year.",
         exampleVi:
-          "Analysts project steady export demand through the end of the year.",
+          "Các nhà phân tích dự báo nhu cầu xuất khẩu ổn định đến hết năm.",
         collocations: [
           "sales forecast",
           "financial forecast",
@@ -451,9 +447,9 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "deduct",
         phonetic: "/dɪˈdʌkt/",
         partOfSpeech: "verb",
-        meaningVi: "subtract or take away from a total amount",
+        meaningVi: "khấu trừ, trừ bớt vào tổng tiền",
         exampleEn: "The discount will be automatically deducted at checkout.",
-        exampleVi: "The discount will be subtracted automatically at checkout.",
+        exampleVi: "Khoản giảm giá sẽ được khấu trừ tự động khi thanh toán.",
         collocations: [
           "deduct from",
           "tax deduction",
@@ -479,11 +475,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "complimentary",
         phonetic: "/ˌkɑːm.pləˈmen.t̬ɚ.i/",
         partOfSpeech: "adjective",
-        meaningVi: "provided free of charge (as a courtesy service for guests)",
+        meaningVi: "miễn phí (dịch vụ tặng kèm cho khách)",
         exampleEn:
           "All hotel guests receive complimentary breakfast and airport shuttle service.",
         exampleVi:
-          "All staying guests receive free breakfast and airport shuttle service.",
+          "Mọi khách lưu trú đều được tặng bữa sáng miễn phí và xe đưa đón sân bay.",
         collocations: [
           "complimentary breakfast",
           "complimentary upgrade",
@@ -497,10 +493,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "occupancy",
         phonetic: "/ˈɑːk.jə.pən.si/",
         partOfSpeech: "noun",
-        meaningVi: "rate of occupied rooms; maximum capacity",
+        meaningVi: "tỷ lệ lấp đầy phòng, sức chứa tối đa",
         exampleEn: "Peak-season occupancy at the resort reached 95% last July.",
         exampleVi:
-          "Peak-season room occupancy at the resort reached 95% last July.",
+          "Tỷ lệ lấp đầy phòng mùa cao điểm tại khu nghỉ dưỡng đạt 95% vào tháng 7 năm ngoái.",
         collocations: [
           "occupancy rate",
           "maximum occupancy",
@@ -514,11 +510,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "depart",
         phonetic: "/dɪˈpɑːrt/",
         partOfSpeech: "verb",
-        meaningVi: "leave a station, airport, or terminal",
+        meaningVi: "khởi hành, rời bến",
         exampleEn:
           "The express train to Kyoto departs from Platform 4 in ten minutes.",
         exampleVi:
-          "The express train to Kyoto leaves from Platform 4 in ten minutes.",
+          "Chuyến tàu tốc hành đi Kyoto khởi hành từ sân ga số 4 sau mười phút nữa.",
         collocations: [
           "departure gate",
           "depart on schedule",
@@ -532,11 +528,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "amenity",
         phonetic: "/əˈmen.ə.t̬i/",
         partOfSpeech: "noun",
-        meaningVi: "useful or pleasant facility or service",
+        meaningVi: "tiện nghi, dịch vụ tiện ích",
         exampleEn:
           "Modern amenities include high-speed Wi-Fi and a 24-hour fitness center.",
         exampleVi:
-          "Modern facilities include high-speed Wi-Fi and a 24-hour gym.",
+          "Các tiện nghi hiện đại gồm Wi-Fi tốc độ cao và phòng tập mở cửa 24 giờ.",
         collocations: [
           "hotel amenities",
           "local amenities",
@@ -550,11 +546,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "confirm",
         phonetic: "/kənˈfɜːrm/",
         partOfSpeech: "verb",
-        meaningVi: "verify or finalize (a reservation or appointment)",
+        meaningVi: "xác nhận (đặt chỗ, lịch hẹn)",
         exampleEn:
           "Could you confirm my reservation for two nights starting October 12?",
         exampleVi:
-          "Could you verify my two-night reservation starting October 12?",
+          "Bạn có thể xác nhận đặt phòng hai đêm bắt đầu từ ngày 12 tháng 10 giúp tôi không?",
         collocations: [
           "confirm a reservation",
           "confirmation number",
@@ -568,11 +564,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "layover",
         phonetic: "/ˈleɪ.oʊ.vɚ/",
         partOfSpeech: "noun",
-        meaningVi: "waiting period between two connecting flights",
+        meaningVi: "thời gian quá cảnh giữa hai chặng bay",
         exampleEn:
           "Because of the three-hour layover in Seoul, I had time to answer emails.",
         exampleVi:
-          "Thanks to the three-hour stopover in Seoul, I had time to reply to emails.",
+          "Nhờ có ba tiếng quá cảnh ở Seoul, tôi đã có thời gian trả lời email.",
         collocations: ["short layover", "overnight layover", "long layover"],
         toeicPart: "Part 3 · Part 7",
         level: "B2",
@@ -582,11 +578,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "beverage",
         phonetic: "/ˈbev.ɚ.ɪdʒ/",
         partOfSpeech: "noun",
-        meaningVi: "a drink of any kind",
+        meaningVi: "đồ uống, thức uống",
         exampleEn:
           "Light snacks and beverages will be served in the lobby during intermission.",
         exampleVi:
-          "Light snacks and drinks will be served in the lobby during the break.",
+          "Đồ ăn nhẹ và thức uống sẽ được phục vụ tại sảnh trong giờ giải lao.",
         collocations: [
           "food and beverage",
           "refreshing beverage",
@@ -600,11 +596,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "adjacent",
         phonetic: "/əˈdʒeɪ.sənt/",
         partOfSpeech: "adjective",
-        meaningVi: "next to, immediately adjoining",
+        meaningVi: "liền kề, ngay sát bên",
         exampleEn:
           "Parking is available in the garage adjacent to the convention center.",
         exampleVi:
-          "Parking is available in the garage right next to the convention center.",
+          "Chỗ đỗ xe có sẵn tại nhà xe nằm ngay cạnh trung tâm hội nghị.",
         collocations: ["adjacent to", "adjacent building", "adjacent rooms"],
         toeicPart: "Part 1 · Part 5",
         level: "B2",
@@ -626,9 +622,9 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "merchandise",
         phonetic: "/ˈmɜːr.tʃən.daɪs/",
         partOfSpeech: "noun",
-        meaningVi: "goods for sale or retail display",
+        meaningVi: "hàng hóa trưng bày, sản phẩm bán lẻ",
         exampleEn: "Seasonal merchandise is marked down by 30% until Sunday.",
-        exampleVi: "Seasonal goods are discounted by 30% through Sunday.",
+        exampleVi: "Hàng hóa theo mùa được giảm giá 30% cho đến hết Chủ nhật.",
         collocations: [
           "defective merchandise",
           "display merchandise",
@@ -642,10 +638,10 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "demographics",
         phonetic: "/ˌdem.əˈɡræf.ɪks/",
         partOfSpeech: "noun",
-        meaningVi: "statistical customer characteristics (age group, income)",
+        meaningVi: "nhân khẩu học (nhóm tuổi, thu nhập khách hàng)",
         exampleEn: "The campaign was tailored to younger urban demographics.",
         exampleVi:
-          "The campaign was designed specifically for young urban customer groups.",
+          "Chiến dịch được thiết kế riêng cho nhóm khách hàng trẻ ở khu vực đô thị.",
         collocations: [
           "target demographics",
           "customer demographics",
@@ -659,11 +655,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "incentive",
         phonetic: "/ɪnˈsen.tɪv/",
         partOfSpeech: "noun",
-        meaningVi: "reward or benefit that encourages action",
+        meaningVi: "ưu đãi khuyến khích, động lực thúc đẩy",
         exampleEn:
           "Free express shipping served as a strong incentive for repeat orders.",
         exampleVi:
-          "Free express shipping was a strong motivation for repeat orders.",
+          "Miễn phí giao hàng nhanh là động lực lớn thúc đẩy đơn hàng lặp lại.",
         collocations: [
           "financial incentive",
           "offer an incentive",
@@ -677,11 +673,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "launch",
         phonetic: "/lɔːntʃ/",
         partOfSpeech: "verb / noun",
-        meaningVi: "introduce to the market (a product or campaign)",
+        meaningVi: "ra mắt, tung ra thị trường (sản phẩm, chiến dịch)",
         exampleEn:
           "The company plans to launch its eco-friendly packaging line in May.",
         exampleVi:
-          "The company plans to introduce its eco-friendly packaging line in May.",
+          "Công ty dự kiến ra mắt dòng bao bì thân thiện môi trường vào tháng Năm.",
         collocations: ["product launch", "launch a campaign", "launch event"],
         toeicPart: "Part 3 · Part 6",
         level: "B1",
@@ -691,11 +687,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "endorse",
         phonetic: "/ɪnˈdɔːrs/",
         partOfSpeech: "verb",
-        meaningVi: "publicly support, recommend, or promote",
+        meaningVi: "chứng thực, đại diện quảng bá, ủng hộ chính thức",
         exampleEn:
           "Several professional athletes endorse our new running shoes.",
         exampleVi:
-          "Several professional athletes officially promote our new running shoes.",
+          "Nhiều vận động viên chuyên nghiệp đại diện quảng bá cho dòng giày chạy bộ mới của chúng tôi.",
         collocations: [
           "celebrity endorsement",
           "officially endorse",
@@ -709,11 +705,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "competitive",
         phonetic: "/kəmˈpet̬.ə.t̬ɪv/",
         partOfSpeech: "adjective",
-        meaningVi: "as good as or better than others (in price or quality)",
+        meaningVi: "có tính cạnh tranh cao (giá cả, chất lượng)",
         exampleEn:
           "We maintain competitive pricing without compromising material quality.",
         exampleVi:
-          "We keep our prices competitive without sacrificing material quality.",
+          "Chúng tôi duy trì mức giá cạnh tranh mà không đánh đổi chất lượng vật liệu.",
         collocations: [
           "competitive edge",
           "competitive pricing",
@@ -727,11 +723,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "outperform",
         phonetic: "/ˌaʊt.pɚˈfɔːrm/",
         partOfSpeech: "verb",
-        meaningVi: "do better than or achieve higher results than",
+        meaningVi: "vượt trội hơn, đạt hiệu quả cao hơn",
         exampleEn:
           "The updated model outperformed rival devices in battery life tests.",
         exampleVi:
-          "The upgraded model beat rival devices in battery life tests.",
+          "Mẫu cải tiến vượt trội hơn các thiết bị đối thủ trong bài kiểm tra thời lượng pin.",
         collocations: [
           "outperform competitors",
           "outperform expectations",
@@ -745,11 +741,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "survey",
         phonetic: "/ˈsɜːr.veɪ/",
         partOfSpeech: "noun / verb",
-        meaningVi: "questionnaire or study of customer opinions",
+        meaningVi: "khảo sát ý kiến khách hàng",
         exampleEn:
           "Please take two minutes to complete our customer satisfaction survey.",
         exampleVi:
-          "Please take two minutes to fill out our customer satisfaction questionnaire.",
+          "Vui lòng dành hai phút để hoàn thành khảo sát mức độ hài lòng của khách hàng.",
         collocations: [
           "conduct a survey",
           "survey results",
@@ -775,11 +771,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "applicant",
         phonetic: "/ˈæp.lə.kənt/",
         partOfSpeech: "noun",
-        meaningVi: "person who submits a job application",
+        meaningVi: "ứng viên nộp hồ sơ",
         exampleEn:
           "Successful applicants will be contacted for a second-round interview.",
         exampleVi:
-          "Qualified candidates will be contacted for a second-round interview.",
+          "Các ứng viên đạt yêu cầu sẽ được liên hệ để phỏng vấn vòng hai.",
         collocations: [
           "job applicant",
           "qualified applicant",
@@ -793,11 +789,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "credentials",
         phonetic: "/krɪˈden.ʃəlz/",
         partOfSpeech: "noun (plural)",
-        meaningVi: "degrees, certificates, and professional qualifications",
+        meaningVi: "bằng cấp, chứng chỉ và năng lực chuyên môn",
         exampleEn:
           "The hiring panel verified all academic credentials prior to making an offer.",
         exampleVi:
-          "The hiring panel checked all academic qualifications before sending an offer.",
+          "Hội đồng tuyển dụng đã xác minh toàn bộ bằng cấp học thuật trước khi gửi thư mời.",
         collocations: [
           "verify credentials",
           "professional credentials",
@@ -811,11 +807,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "probationary",
         phonetic: "/proʊˈbeɪ.ʃə.ner.i/",
         partOfSpeech: "adjective",
-        meaningVi: "relating to a trial period at a new job",
+        meaningVi: "thuộc giai đoạn thử việc",
         exampleEn:
           "Health benefits begin immediately after the 60-day probationary period.",
         exampleVi:
-          "Health insurance benefits start right after the 60-day trial period.",
+          "Quyền lợi bảo hiểm sức khỏe bắt đầu ngay sau giai đoạn thử việc 60 ngày.",
         collocations: [
           "probationary period",
           "probationary employee",
@@ -829,11 +825,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "proficient",
         phonetic: "/prəˈfɪʃ.ənt/",
         partOfSpeech: "adjective",
-        meaningVi: "skilled and capable in a particular area",
+        meaningVi: "thành thạo, giỏi chuyên môn",
         exampleEn:
           "Candidates must be proficient in spreadsheet modeling and data visualization.",
         exampleVi:
-          "Applicants must be skilled in spreadsheet modeling and data visualization.",
+          "Ứng viên phải thành thạo lập mô hình bảng tính và trực quan hóa dữ liệu.",
         collocations: [
           "proficient in",
           "highly proficient",
@@ -847,11 +843,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "appraisal",
         phonetic: "/əˈpreɪ.zəl/",
         partOfSpeech: "noun",
-        meaningVi: "formal evaluation of work performance",
+        meaningVi: "đánh giá hiệu suất làm việc",
         exampleEn:
           "Annual performance appraisals are scheduled for the first week of December.",
         exampleVi:
-          "Annual performance evaluations are scheduled for the first week of December.",
+          "Các buổi đánh giá hiệu suất thường niên được lên lịch vào tuần đầu tháng 12.",
         collocations: [
           "performance appraisal",
           "conduct an appraisal",
@@ -865,11 +861,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "vacancy",
         phonetic: "/ˈveɪ.kən.si/",
         partOfSpeech: "noun",
-        meaningVi: "an open, unfilled job position",
+        meaningVi: "vị trí tuyển dụng đang trống",
         exampleEn:
           "Internal staff are encouraged to apply for the senior analyst vacancy.",
         exampleVi:
-          "Internal staff are encouraged to apply for the open senior analyst position.",
+          "Nhân sự nội bộ được khuyến khích ứng tuyển vào vị trí chuyên viên phân tích cấp cao đang trống.",
         collocations: ["fill a vacancy", "job vacancy", "current vacancies"],
         toeicPart: "Part 5 · Part 7",
         level: "B2",
@@ -879,11 +875,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "eligible",
         phonetic: "/ˈel.ə.dʒə.bəl/",
         partOfSpeech: "adjective",
-        meaningVi: "meeting the requirements to receive something",
+        meaningVi: "đủ điều kiện, đủ tiêu chuẩn hưởng quyền lợi",
         exampleEn:
           "Full-time employees are eligible for tuition reimbursement after one year.",
         exampleVi:
-          "Full-time staff qualify for tuition assistance after one year of service.",
+          "Nhân viên toàn thời gian đủ điều kiện được hỗ trợ học phí sau một năm làm việc.",
         collocations: [
           "be eligible for",
           "eligible candidates",
@@ -897,11 +893,11 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         term: "mentor",
         phonetic: "/ˈmen.tɔːr/",
         partOfSpeech: "noun / verb",
-        meaningVi: "experienced advisor; to guide and coach",
+        meaningVi: "người cố vấn; hướng dẫn, kèm cặp",
         exampleEn:
           "Each new hire is paired with an experienced mentor during onboarding.",
         exampleVi:
-          "Every new hire is paired with an experienced advisor during onboarding.",
+          "Mỗi nhân viên mới được ghép cặp với một người cố vấn giàu kinh nghiệm trong quá trình hội nhập.",
         collocations: [
           "mentorship program",
           "assign a mentor",

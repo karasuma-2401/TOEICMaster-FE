@@ -11,7 +11,7 @@ export function formatAttemptNumber(value: number) {
 }
 
 export function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
+  return new Date(value).toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

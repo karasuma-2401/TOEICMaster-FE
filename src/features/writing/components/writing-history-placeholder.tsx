@@ -92,7 +92,7 @@ export function WritingHistoryPlaceholder() {
                         {displayMode(attempt.mode)} · {attempt.questionCount}{" "}
                         {attempt.questionCount === 1 ? "question" : "questions"}{" "}
                         ·{" "}
-                        {new Date(attempt.createdAtUtc).toLocaleString("en-US")}
+                        {new Date(attempt.createdAtUtc).toLocaleString("vi-VN")}
                       </p>
                     </div>
                   </div>

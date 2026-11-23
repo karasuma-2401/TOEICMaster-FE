@@ -51,7 +51,7 @@ export function UsersStats({
             </span>
           </span>
           <span className="mt-3 block text-3xl font-bold tracking-tight text-[var(--admin-ink)]">
-            {stats[card.key].toLocaleString("en-US")}
+            {stats[card.key].toLocaleString("vi-VN")}
           </span>
         </button>
       ))}

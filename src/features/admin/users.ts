@@ -177,7 +177,7 @@ export function getAdminUserInitials(fullName: string): string {
 
 export function formatAdminUserDate(value: string | null | undefined): string {
   if (!value || !Number.isFinite(Date.parse(value))) return "Never signed in";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

@@ -45,7 +45,7 @@ export function exerciseHeadline(content: SpeakingContent) {
 }
 
 export function formatUpdatedAt(value: string) {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString("vi-VN", {
     dateStyle: "short",
     timeStyle: "short",
   });
