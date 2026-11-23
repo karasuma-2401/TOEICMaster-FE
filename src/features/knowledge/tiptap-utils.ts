@@ -1,5 +1,7 @@
 import type { KnowledgeTocItem, TiptapDoc, TiptapNode } from "./types";
 
+export { isGuid as isKnowledgeMediaUuid } from "@/shared/lib/guards";
+
 export const EMPTY_TIPTAP_DOC: TiptapDoc = {
   type: "doc",
   content: [{ type: "paragraph" }],
@@ -75,14 +77,8 @@ export function estimateReadMinutes(doc: TiptapDoc): number {
 
 const BACKEND_MEDIA_RE =
   /\/api\/v1\/(?:admin\/)?knowledge\/media\/([0-9a-f-]{36})/i;
-const KNOWLEDGE_MEDIA_UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HTTP_URL_RE = /^https?:\/\//i;
 const MAILTO_URL_RE = /^mailto:/i;
-
-export function isKnowledgeMediaUuid(value: string): boolean {
-  return KNOWLEDGE_MEDIA_UUID_RE.test(value);
-}
 
 function stripControlCharsAndTrim(raw: string): string {
   let result = "";

@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
  * Adding any new violation (or exceeding any baseline count) fails with exit 1.
  */
 export const TODO_WAVE3_BASELINE = {
+  "no-duplicate-guid-regex": {},
   "no-raw-dialog-open": {
     "src/features/admin/components/content/admin-excel-import.tsx": 1,
     "src/features/admin/components/content/admin-overlay.tsx": 2,
@@ -122,6 +123,15 @@ export function inspectSourceFile(relPath, raw) {
   const stripped = stripComments(raw);
   const findings = {};
 
+  if (relPath !== "src/shared/lib/guards.ts") {
+    const guidMatches = stripped.match(
+      /\[(?:0-9a-f|a-f0-9)\]\{8\}-\[(?:0-9a-f|a-f0-9)\]\{4\}-/gi,
+    );
+    if (guidMatches) {
+      findings["no-duplicate-guid-regex"] = guidMatches.length;
+    }
+  }
+
   if (!relPath.startsWith("src/shared/components/ui/")) {
     const dialogMatches = stripped.match(/<dialog\b(?![a-zA-Z0-9_-])/g);
     if (dialogMatches) {
@@ -223,14 +233,22 @@ export function runGuardrails({
   };
 }
 
+const RULE_REMEDIATIONS = {
+  "no-duplicate-guid-regex":
+    "Import isGuid or isNullableGuid from @/shared/lib/guards instead of defining a GUID regex.",
+};
+
+export function formatGuardrailViolation({ rule, file, count, allowed }) {
+  const remediation = RULE_REMEDIATIONS[rule];
+  return `[${rule}] ${file}: found ${count} (baseline allowlist: ${allowed})${remediation ? ` ${remediation}` : ""}`;
+}
+
 function main() {
   const result = runGuardrails();
   if (!result.ok) {
     console.error("Anti-slop guardrail check failed:");
-    for (const v of result.violations) {
-      console.error(
-        `  [${v.rule}] ${v.file}: found ${v.count} (baseline allowlist: ${v.allowed})`,
-      );
+    for (const violation of result.violations) {
+      console.error(`  ${formatGuardrailViolation(violation)}`);
     }
     process.exitCode = 1;
     return;

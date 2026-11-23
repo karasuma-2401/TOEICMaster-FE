@@ -1,48 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { problem, sameOrigin } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
+import { isGuid } from "@/shared/lib/guards";
 
-const GUID_PATTERN =
-  "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const SLUG_PATTERN = "[a-z0-9]+(?:-[a-z0-9]+)*";
-
-const DECKS_ROOT = /^decks$/i;
-const DECK_BY_SLUG = new RegExp(`^decks/${SLUG_PATTERN}$`, "i");
-const DECK_BY_ID = new RegExp(`^decks/${GUID_PATTERN}$`, "i");
-const DECK_CARDS = new RegExp(`^decks/${GUID_PATTERN}/cards$`, "i");
-const DECK_MATCH_RECORDS = new RegExp(
-  `^decks/${GUID_PATTERN}/match-records$`,
-  "i",
-);
-const DECK_PROGRESS = new RegExp(`^decks/${GUID_PATTERN}/progress$`, "i");
-const CARD_PROGRESS = new RegExp(`^cards/${GUID_PATTERN}/progress$`, "i");
+const DECK_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;
 
 type FlashcardMethod = "GET" | "POST" | "PUT" | "DELETE";
+type FlashcardRoute =
+  | "decks"
+  | "deck-by-id"
+  | "deck-by-slug"
+  | "deck-cards"
+  | "deck-match-records"
+  | "deck-progress"
+  | "card-progress";
 
-function isAllowedMethodForPath(
-  path: string,
-  method: FlashcardMethod,
-): boolean {
-  if (DECKS_ROOT.test(path)) return method === "GET" || method === "POST";
-  if (DECK_BY_ID.test(path)) return method === "DELETE";
-  if (DECK_BY_SLUG.test(path)) return method === "GET";
-  if (DECK_CARDS.test(path)) return method === "POST";
-  if (DECK_MATCH_RECORDS.test(path)) return method === "POST";
-  if (DECK_PROGRESS.test(path)) return method === "DELETE";
-  if (CARD_PROGRESS.test(path)) return method === "PUT";
-  return false;
-}
+const ROUTE_METHODS: Record<FlashcardRoute, readonly FlashcardMethod[]> = {
+  decks: ["GET", "POST"],
+  "deck-by-id": ["DELETE"],
+  "deck-by-slug": ["GET"],
+  "deck-cards": ["POST"],
+  "deck-match-records": ["POST"],
+  "deck-progress": ["DELETE"],
+  "card-progress": ["PUT"],
+};
 
-function isKnownPath(path: string): boolean {
-  return (
-    DECKS_ROOT.test(path) ||
-    DECK_BY_ID.test(path) ||
-    DECK_BY_SLUG.test(path) ||
-    DECK_CARDS.test(path) ||
-    DECK_MATCH_RECORDS.test(path) ||
-    DECK_PROGRESS.test(path) ||
-    CARD_PROGRESS.test(path)
-  );
+function classifyPath(segments: string[]): FlashcardRoute | null {
+  const [resource, identifier, action] = segments;
+  const resourceName = resource?.toLowerCase();
+  if (segments.length === 1 && resourceName === "decks") return "decks";
+  if (segments.length === 2 && resourceName === "decks") {
+    if (isGuid(identifier)) return "deck-by-id";
+    return DECK_SLUG.test(identifier) ? "deck-by-slug" : null;
+  }
+  if (segments.length !== 3 || !isGuid(identifier)) return null;
+  const actionName = action.toLowerCase();
+  if (resourceName === "cards" && actionName === "progress") {
+    return "card-progress";
+  }
+  if (resourceName !== "decks") return null;
+  if (actionName === "cards") return "deck-cards";
+  if (actionName === "match-records") return "deck-match-records";
+  if (actionName === "progress") return "deck-progress";
+  return null;
 }
 
 export async function forwardFlashcards(
@@ -51,12 +51,13 @@ export async function forwardFlashcards(
   method: FlashcardMethod,
 ) {
   const path = segments.join("/");
+  const route = classifyPath(segments);
 
-  if (!isKnownPath(path)) {
+  if (!route) {
     return problem(404, "Flashcards API endpoint not found.");
   }
 
-  if (!isAllowedMethodForPath(path, method)) {
+  if (!ROUTE_METHODS[route].includes(method)) {
     return problem(405, "Method not allowed.");
   }
 
@@ -65,7 +66,7 @@ export async function forwardFlashcards(
   }
 
   const isPublic =
-    method === "GET" && (DECKS_ROOT.test(path) || DECK_BY_SLUG.test(path));
+    method === "GET" && (route === "decks" || route === "deck-by-slug");
   const session = sessionCookie(request);
   const hasValidRefresh =
     session !== null &&

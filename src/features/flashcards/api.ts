@@ -8,6 +8,8 @@ import type {
   MatchRecord,
 } from "./types";
 
+export { isGuid as isServerGuid } from "@/shared/lib/guards";
+
 export interface FlashcardWorkspaceApiResponse {
   decks: FlashcardDeck[];
   progress: Record<string, CardProgressRecord>;
@@ -58,13 +60,6 @@ const VALID_MASTERY = new Set<CardMastery>([
   "review",
   "mastered",
 ]);
-
-const GUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isServerGuid(id: string): boolean {
-  return GUID_REGEX.test(id);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

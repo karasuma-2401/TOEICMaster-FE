@@ -1,5 +1,6 @@
 import { AuthError, refreshSession } from "@/features/auth/api";
 import { ApiError, getJson } from "@/shared/api/client";
+import { isGuid } from "@/shared/lib/guards";
 import {
   parseReadingExamPage,
   parseReadingRevision,
@@ -388,15 +389,6 @@ export async function publishReadingRevision(
   if (!isReadingDraft(value))
     throw new AdminExamApiError(502, "Invalid Reading exam publish response.");
   return value;
-}
-
-function isGuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value,
-    )
-  );
 }
 
 function isReadingDraft(value: unknown): value is ReadingDraft {

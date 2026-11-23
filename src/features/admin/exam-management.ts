@@ -1,10 +1,19 @@
+import type { ApiSchema } from "@/shared/api/openapi";
+import { isGuid, isNullableGuid, isOneOf } from "@/shared/lib/guards";
+
+const isRevisionStatus = isOneOf<ApiSchema<"ExamRevisionStatus">>([
+  "Draft",
+  "Published",
+  "Superseded",
+]);
+
 export interface ReadingExamListItem {
   examId: string;
   code: string;
   title: string;
   revisionId: string;
   versionNumber: number;
-  status: "Draft" | "Published";
+  status: ApiSchema<"ExamRevisionStatus">;
   createdAtUtc: string;
 }
 
@@ -66,22 +75,13 @@ export interface ReadingRevision {
   title: string;
   revisionId: string;
   versionNumber: number;
-  status: "Draft" | "Published";
+  status: ApiSchema<"ExamRevisionStatus">;
   scoreProfileId: string;
   blocks: ReadingBlock[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
-function isGuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value,
-    )
-  );
 }
 
 function isDate(value: unknown): value is string {
@@ -100,10 +100,6 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === "string";
 }
 
-function isNullableGuid(value: unknown): value is string | null {
-  return value === null || isGuid(value);
-}
-
 function isReadingExamListItem(value: unknown): value is ReadingExamListItem {
   if (!isRecord(value)) return false;
   return (
@@ -112,7 +108,7 @@ function isReadingExamListItem(value: unknown): value is ReadingExamListItem {
     typeof value.title === "string" &&
     isGuid(value.revisionId) &&
     isPositiveInteger(value.versionNumber) &&
-    (value.status === "Draft" || value.status === "Published") &&
+    isRevisionStatus(value.status) &&
     isDate(value.createdAtUtc)
   );
 }
@@ -194,7 +190,7 @@ export function parseReadingRevision(value: unknown): ReadingRevision {
     typeof value.title !== "string" ||
     !isGuid(value.revisionId) ||
     !isPositiveInteger(value.versionNumber) ||
-    (value.status !== "Draft" && value.status !== "Published") ||
+    !isRevisionStatus(value.status) ||
     !isGuid(value.scoreProfileId) ||
     !Array.isArray(value.blocks) ||
     !value.blocks.every(isReadingBlock)

@@ -1,7 +1,58 @@
 import { describe, expect, it } from "vitest";
-import { runGuardrails } from "./check-guardrails.mjs";
+import {
+  formatGuardrailViolation,
+  runGuardrails,
+} from "./check-guardrails.mjs";
 
 describe("scripts/check-guardrails", () => {
+  it("rejects the past strict exam-management GUID regex and names the shared guards", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/admin/exam-management.ts": `
+          function isGuid(value: unknown): value is string {
+            return typeof value === "string" &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+          }
+        `,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-duplicate-guid-regex",
+        file: "src/features/admin/exam-management.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+    expect(formatGuardrailViolation(result.violations[0]!)).toContain(
+      "Import isGuid or isNullableGuid from @/shared/lib/guards",
+    );
+  });
+
+  it("catches permissive GUID patterns and RegExp strings outside the shared guard", () => {
+    const pattern =
+      "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+    const result = runGuardrails({
+      files: {
+        "src/shared/lib/guards.ts": `const GUID_REGEX = /^${pattern}$/i;`,
+        "src/features/demo/api.ts": `const guid = /^${pattern}$/i;`,
+        "src/features/demo/server/routes.ts": `const guid = new RegExp("^${pattern}$", "i");`,
+        "src/features/demo/note.ts": `// A GUID looks like ${pattern}`,
+        "src/features/demo/api.test.ts": `const guid = /^${pattern}$/i;`,
+      },
+    });
+    expect(result.violations.map(({ rule, file }) => ({ rule, file }))).toEqual(
+      [
+        { rule: "no-duplicate-guid-regex", file: "src/features/demo/api.ts" },
+        {
+          rule: "no-duplicate-guid-regex",
+          file: "src/features/demo/server/routes.ts",
+        },
+      ],
+    );
+  });
+
   it("passes on the real repository production codebase with the Wave 3 ratchet baseline", () => {
     const result = runGuardrails({ rootDir: process.cwd() });
     expect(result.violations).toEqual([]);
