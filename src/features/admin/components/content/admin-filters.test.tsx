@@ -102,6 +102,32 @@ describe("AdminSearchField", () => {
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
+  it("matches suggestions without diacritics", () => {
+    const onChange = vi.fn();
+    render(
+      <AdminSearchField
+        label="Search"
+        onChange={onChange}
+        placeholder="Search"
+        suggestions={[
+          {
+            value: "SPK-01",
+            label: "\u0110\u1ec1 luy\u1ec7n n\u00f3i",
+            hint: "SPK-01",
+          },
+          { value: "SPK-02", label: "Practice", hint: "SPK-02" },
+        ]}
+        value="luyen"
+      />,
+    );
+    fireEvent.focus(screen.getByRole("searchbox"));
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    fireEvent.click(
+      screen.getByRole("button", { name: /\u0110\u1ec1 luy\u1ec7n n\u00f3i/ }),
+    );
+    expect(onChange).toHaveBeenCalledWith("SPK-01");
+  });
+
   it("clears the query", () => {
     const onChange = vi.fn();
     render(

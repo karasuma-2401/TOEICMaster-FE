@@ -173,7 +173,7 @@ export function resultToReport(result: LrResultApi): LrResultReport {
   return {
     examTitle: `Listening & Reading Exam Result - ${result.examTitle}`,
     examIdentity: result.examCode,
-    takenAt: new Date(result.submittedAtUtc).toLocaleDateString("en-US"),
+    takenAt: new Date(result.submittedAtUtc).toLocaleDateString("vi-VN"),
     durationLabel: durationLabel(result.durationSeconds),
     scale: "ETS Standard",
     totalScore: result.totalScaledScore,

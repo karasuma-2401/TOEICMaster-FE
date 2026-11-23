@@ -387,7 +387,7 @@ export function SpeakingTestWorkspace({
       setSavedSignature(
         JSON.stringify([metadata, questions, exerciseIds, contentMode]),
       );
-      setSavedAt(new Date().toLocaleTimeString("en-US"));
+      setSavedAt(new Date().toLocaleTimeString("vi-VN"));
       if (publish)
         current = (await publishSpeakingTest(current.id, current.version)).test;
       setSaved(current);

@@ -80,10 +80,10 @@ export function selectExams(
     sort: ExamSort;
   },
 ) {
-  const needle = query.trim().toLocaleLowerCase("en-US");
+  const needle = query.trim().toLocaleLowerCase("vi-VN");
   return items
     .filter((item) =>
-      `${item.title} ${item.code}`.toLocaleLowerCase("en-US").includes(needle),
+      `${item.title} ${item.code}`.toLocaleLowerCase("vi-VN").includes(needle),
     )
     .filter(
       (item) =>
@@ -91,7 +91,7 @@ export function selectExams(
     )
     .filter((item) => difficulty === "ALL" || item.difficulty === difficulty)
     .toSorted((a, b) => {
-      const order = a.sortKey.localeCompare(b.sortKey, "en-US", {
+      const order = a.sortKey.localeCompare(b.sortKey, "vi-VN", {
         numeric: true,
       });
       return sort === "DESC" ? -order : order;

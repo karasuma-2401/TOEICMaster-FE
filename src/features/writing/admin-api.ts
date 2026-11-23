@@ -242,7 +242,7 @@ export function exerciseDtoToQuestion(
     topic: dto.topic,
     difficulty: fromApiDifficulty(dto.difficulty),
     status: dto.status,
-    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("en-US"),
+    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("vi-VN"),
     rubricNotes: dto.rubricNotes ?? "",
     modelAnswer: dto.modelAnswer ?? "",
     version: dto.version,
@@ -301,7 +301,7 @@ export function testDtoToAdminTest(dto: WritingTestDto): AdminWritingTest {
     timingTemplateId: "toeic-writing-standard",
     questionIds,
     version: dto.version,
-    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("en-US"),
+    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("vi-VN"),
   };
 }
 
