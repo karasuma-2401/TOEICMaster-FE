@@ -43,8 +43,7 @@ export function TestSlotPicker({
           <span className="ml-3">{spec.title}</span>
         </p>
         <span className="text-(--sp-ink-3)">
-          {slotLabels[part].length}{" "}
-          {slotLabels[part].length === 1 ? "slot" : "slots"}
+          {slotLabels[part].length} slot
         </span>
       </header>
       {Array.from({ length: spec.slots }, (_, index) => {

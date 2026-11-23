@@ -23,17 +23,19 @@ type ScoreKey = keyof Pick<
 
 type Band = "good" | "fair" | "low";
 
-// `speech` marks the criteria Azure Speech measures.
+// `speech` marks the criteria Azure Speech measures, shown with an English level.
 const criteria: {
   key: ScoreKey;
-  label: string;
+  vi: string;
+  en: string;
   speech?: boolean;
   /** One line per score band; the backend returns scores, not per-criterion notes. */
   notes: Record<Band, string>;
 }[] = [
   {
     key: "pronunciationScore",
-    label: "Pronunciation",
+    vi: "Pronunciation",
+    en: "Pronunciation",
     speech: true,
     notes: {
       good: "Clear pronunciation on most words.",
@@ -43,7 +45,8 @@ const criteria: {
   },
   {
     key: "prosodyScore",
-    label: "Intonation & Stress",
+    vi: "Intonation & Stress",
+    en: "Intonation & Stress",
     speech: true,
     notes: {
       good: "Natural intonation and stress.",
@@ -53,7 +56,8 @@ const criteria: {
   },
   {
     key: "grammarScore",
-    label: "Grammar",
+    vi: "Grammar",
+    en: "Grammar",
     notes: {
       good: "Accurate sentence structures.",
       fair: "A few grammar errors remain.",
@@ -62,7 +66,8 @@ const criteria: {
   },
   {
     key: "vocabularyScore",
-    label: "Vocabulary",
+    vi: "Vocabulary",
+    en: "Vocabulary",
     notes: {
       good: "Varied and appropriate word choice.",
       fair: "Adequate vocabulary; could be more varied.",
@@ -71,7 +76,8 @@ const criteria: {
   },
   {
     key: "relevanceScore",
-    label: "Cohesion & Relevance",
+    vi: "Cohesion & Relevance",
+    en: "Cohesion & Relevance",
     notes: {
       good: "On-topic and coherent responses.",
       fair: "Some parts did not directly address the prompt.",
@@ -80,10 +86,13 @@ const criteria: {
   },
 ];
 
-const bandLook: Record<Band, { label: string; tone: ChipTone }> = {
-  good: { label: "High", tone: "success" },
-  fair: { label: "Medium", tone: "warning" },
-  low: { label: "Low", tone: "danger" },
+const bandLook: Record<
+  Band,
+  { label: string; english: string; tone: ChipTone }
+> = {
+  good: { label: "Good", english: "High", tone: "success" },
+  fair: { label: "Fair", english: "Medium", tone: "warning" },
+  low: { label: "Needs improvement", english: "Low", tone: "danger" },
 };
 
 const bandOf = (score: number): Band =>
@@ -225,10 +234,15 @@ export function SpeakingResultReport({
                 return (
                   <tr className="border-t border-(--sp-line)" key={row.key}>
                     <td className="py-3">
-                      <p className="font-semibold">{row.label}</p>
+                      <p className="font-semibold">{row.vi}</p>
+                      <p className="text-xs text-(--sp-ink-2)">{row.en}</p>
                     </td>
                     <td>
-                      <Chip tone={look.tone}>{look.label}</Chip>
+                      <Chip tone={look.tone}>
+                        {row.speech
+                          ? `${look.label} (${look.english})`
+                          : look.label}
+                      </Chip>
                     </td>
                     <td className="text-[13px]">
                       <span className="font-semibold">
@@ -253,7 +267,7 @@ export function SpeakingResultReport({
               </p>
               {lowest && (
                 <p className="mt-2 text-xs text-(--sp-ink-2)">
-                  Priority: {lowest.label}
+                  Priority: {lowest.en}
                   {part !== undefined && ` · Part ${part}`}
                 </p>
               )}
@@ -295,7 +309,7 @@ export function SpeakingResultReport({
           </div>
           {strong.length > 0 && (
             <p className="mt-2 text-[13px]">
-              {joinNames(strong.map((row) => row.label))} are your standout
+              {joinNames(strong.map((row) => row.vi))} are your standout
               strengths in this Speaking attempt.
             </p>
           )}
@@ -325,7 +339,7 @@ export function SpeakingResultReport({
           </div>
           {weak.length > 0 && (
             <p className="mt-2 text-[13px]">
-              {joinNames(weak.map((row) => row.label))} should be prioritized to
+              {joinNames(weak.map((row) => row.vi))} should be prioritized to
               raise your Speaking score.
             </p>
           )}

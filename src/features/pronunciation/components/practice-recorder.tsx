@@ -282,7 +282,6 @@ function ErrorBlock({
       <ErrorPanel
         message={error.message}
         onRetry={error.code === "RATE_LIMITED" ? undefined : onRetry}
-        retryLabel="Try again"
       />
     </div>
   );

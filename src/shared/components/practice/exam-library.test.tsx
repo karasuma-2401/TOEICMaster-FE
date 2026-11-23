@@ -90,7 +90,7 @@ describe("ExamLibrary", () => {
       screen.getByRole("combobox", { name: "Status" }),
       "TODO",
     );
-    expect(screen.getByText("6 Speaking tests")).toBeInTheDocument();
+    expect(screen.getByText("6 tests Speaking")).toBeInTheDocument();
     expect(screen.getAllByRole("article")).toHaveLength(6);
   });
 
@@ -124,7 +124,7 @@ describe("ExamLibrary", () => {
       partLinks: [{ href: "/p/1", label: "Part 1", active: true }],
     });
     expect(
-      screen.getByRole("heading", { name: "Speaking Exercises" }),
+      screen.getByRole("heading", { name: "Exercises Speaking" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Part 1" })).toHaveAttribute(
       "aria-current",
@@ -136,7 +136,7 @@ describe("ExamLibrary", () => {
       screen.getByRole("combobox", { name: "Difficulty" }),
       "HARD",
     );
-    expect(screen.getByText("1 Speaking exercise")).toBeInTheDocument();
+    expect(screen.getByText("1 exercises Speaking")).toBeInTheDocument();
   });
 
   it("hides the difficulty filter when items have no difficulty", () => {

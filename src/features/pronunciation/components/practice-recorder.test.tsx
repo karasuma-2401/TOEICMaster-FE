@@ -228,7 +228,7 @@ describe("PracticeRecorder", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Unable to score right now.",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(await screen.findByText("Needs more practice")).toBeInTheDocument();
   });
 

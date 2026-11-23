@@ -87,10 +87,7 @@ export function ReadingExamWorkspace({
     key: string;
     message: string;
   } | null>(null);
-  const [notice, setNotice] = useState<{
-    tone: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -178,17 +175,12 @@ export function ReadingExamWorkspace({
           imageRequired: draft.imageRequired,
         },
       );
-      setNotice({
-        tone: "success",
-        text: `Saved question ${selected.question.number}.`,
-      });
+      setNotice(`Saved question ${selected.question.number}.`);
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error ? reason.message : "Unable to save question.",
-      });
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to save question.",
+      );
     } finally {
       setSaving(false);
     }
@@ -203,17 +195,12 @@ export function ReadingExamWorkspace({
       await updateReadingContexts(examId, revisionId, selected.block.key, {
         contexts,
       });
-      setNotice({
-        tone: "success",
-        text: "Saved shared context for this question group.",
-      });
+      setNotice("Saved shared context for this question group.");
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error ? reason.message : "Unable to save context.",
-      });
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to save context.",
+      );
     } finally {
       setSaving(false);
     }
@@ -231,16 +218,13 @@ export function ReadingExamWorkspace({
         file,
       );
       setDraft({ ...draft, imageAssetId: asset.id });
-      setNotice({
-        tone: "success",
-        text: 'Uploaded image. Click "Save question" to attach it to the test.',
-      });
+      setNotice(
+        'Uploaded image. Click "Save question" to attach it to the test.',
+      );
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error ? reason.message : "Unable to upload image.",
-      });
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to upload image.",
+      );
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -275,17 +259,12 @@ export function ReadingExamWorkspace({
     try {
       const durationMs = await readAudioDurationMs(file);
       await uploadWorkspaceMedia("AudioGroup", blockKey, file, durationMs);
-      setNotice({
-        tone: "success",
-        text: "Finished uploading audio for Listening group.",
-      });
+      setNotice("Finished uploading audio for Listening group.");
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error ? reason.message : "Unable to upload audio.",
-      });
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to upload audio.",
+      );
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -315,17 +294,12 @@ export function ReadingExamWorkspace({
             : context,
         ),
       }));
-      setNotice({
-        tone: "success",
-        text: "Finished uploading context image.",
-      });
+      setNotice("Finished uploading context image.");
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error ? reason.message : "Unable to upload image.",
-      });
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to upload image.",
+      );
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -337,16 +311,14 @@ export function ReadingExamWorkspace({
     setNotice(null);
     try {
       await publishReadingRevision(examId, revisionId);
-      setNotice({ tone: "success", text: "Test has been published." });
+      setNotice("Test has been published.");
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice({
-        tone: "error",
-        text:
-          reason instanceof Error
-            ? reason.message
-            : "Test does not meet publishing requirements yet.",
-      });
+      setNotice(
+        reason instanceof Error
+          ? reason.message
+          : "Test does not meet publishing requirements yet.",
+      );
     } finally {
       setPublishing(false);
     }
@@ -538,9 +510,9 @@ export function ReadingExamWorkspace({
           {notice && (
             <output
               aria-live="polite"
-              className={`block rounded-xl p-3 text-sm ${notice.tone === "success" ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]"}`}
+              className={`block rounded-xl p-3 text-sm ${notice.startsWith("Saved") || notice.startsWith("Uploaded") || notice.startsWith("Finished") || notice.startsWith("Test has been") ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]"}`}
             >
-              {notice.text}
+              {notice}
             </output>
           )}
           {selected && draft ? (
