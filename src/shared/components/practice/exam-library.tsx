@@ -27,7 +27,6 @@ const accents = {
 const copy = {
   exam: {
     noun: "tests",
-    singular: "test",
     crumb: "Mock Tests",
     tag: "Standalone Test",
     heading: "Tests",
@@ -36,11 +35,11 @@ const copy = {
     done: (count: number) =>
       `Attempted ${count} ${count === 1 ? "time" : "times"}`,
     none: "Not attempted yet",
+    scope: "Across attempts in",
     results: "attempt",
   },
   exercise: {
     noun: "exercises",
-    singular: "exercise",
     crumb: "Exercises",
     tag: "Practice by Part",
     heading: "Exercises",
@@ -49,6 +48,7 @@ const copy = {
     done: (count: number) =>
       `Practiced ${count} ${count === 1 ? "time" : "times"}`,
     none: "Not practiced yet",
+    scope: "Across practice sessions in",
     results: "practice session",
   },
 } as const;
@@ -314,7 +314,7 @@ export function ExamLibrary({
               {skill.name} · {text.tag}
             </p>
             <h1 className="mt-3 text-[28px] font-bold leading-9">
-              {skill.name} {text.heading}
+              {text.heading} {skill.name}
             </h1>
             <p className="mt-2 text-[15px] text-(--sp-ink-2)">
               {skill.tagline}
@@ -349,9 +349,7 @@ export function ExamLibrary({
               {best ?? "-"} / {skill.maxScore}
             </p>
             <p className="mt-1 text-[13px] text-(--sp-ink-2)">
-              {best === null
-                ? "No results yet"
-                : `Across ${skill.name} ${text.noun}`}
+              {best === null ? "No results yet" : `${text.scope} ${skill.name}`}
             </p>
           </aside>
         </header>
@@ -456,8 +454,8 @@ export function ExamLibrary({
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className="text-lg font-semibold" id="exam-library-count">
               {loading
-                ? `${skill.name} ${text.heading}`
-                : `${filtered.length} ${skill.name} ${filtered.length === 1 ? text.singular : text.noun}`}
+                ? `${text.heading} ${skill.name}`
+                : `${filtered.length} ${text.noun} ${skill.name}`}
             </h2>
             <p className="text-[13px] text-(--sp-ink-2)">{skill.format}</p>
           </div>

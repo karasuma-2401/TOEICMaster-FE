@@ -29,13 +29,12 @@ const attempt = (evaluation: object | null) =>
 
 describe("SpeakingReview", () => {
   it("shows one question's transcript, flagged words and scores", async () => {
-    const evalData = evaluationDto();
-    vi.mocked(getSpeakingAttempt).mockResolvedValue(attempt(evalData));
+    vi.mocked(getSpeakingAttempt).mockResolvedValue(attempt(evaluationDto()));
     render(<SpeakingReview attemptId="a" position={1} />);
 
     expect(await screen.findByText("conference")).toHaveClass("sp-word-issue");
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
-    expect(screen.getByText(evalData.items[0].feedback)).toBeInTheDocument();
+    expect(screen.getByText("Feedback for question 1.")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /attempt history/i }),
     ).toHaveAttribute("href", "/history");

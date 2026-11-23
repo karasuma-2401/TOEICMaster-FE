@@ -19,22 +19,13 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        permissions: ["microphone"],
-        launchOptions: {
-          args: [
-            "--use-fake-ui-for-media-stream",
-            "--use-fake-device-for-media-stream",
-          ],
-        },
-      },
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
   webServer: {
-    command: "npm run start",
+    command: "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
 });

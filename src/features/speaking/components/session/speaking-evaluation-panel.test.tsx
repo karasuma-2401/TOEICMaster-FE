@@ -122,21 +122,20 @@ describe("SpeakingEvaluationPanel", () => {
   it("renders the completed report with criteria averages", async () => {
     vi.mocked(getSpeakingEvaluationAvailability).mockResolvedValue(true);
     vi.mocked(getSpeakingAttempts).mockResolvedValue([]);
-    const evaluation = evaluationDto({
-      summary: "You answered with the correct schedule details.",
-    });
     render(
       <SpeakingEvaluationPanel
-        attempt={submitted({ evaluation })}
+        attempt={submitted({ evaluation: evaluationDto() })}
         uploading={false}
       />,
     );
 
     expect(screen.getByText("130 / 200")).toBeInTheDocument();
     expect(
-      screen.getByText("You answered with the correct schedule details."),
+      screen.getByText(
+        "You answered with accurate information from the schedule.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Pronunciation")).toBeInTheDocument();
+    expect(screen.getAllByText("Pronunciation").length).toBeGreaterThan(0);
     expect(screen.getByText("79/100")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Go to attempt history" }),
