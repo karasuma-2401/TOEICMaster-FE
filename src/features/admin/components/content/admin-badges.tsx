@@ -28,8 +28,11 @@ export function AdminBadge({
 
 const levels: Record<string, { level: number; label: string }> = {
   EASY: { level: 1, label: "Easy" },
+  "D\u1ec4": { level: 1, label: "Easy" },
   MEDIUM: { level: 2, label: "Medium" },
+  "TRUNG B\u00ccNH": { level: 2, label: "Medium" },
   HARD: { level: 3, label: "Hard" },
+  "KH\u00d3": { level: 3, label: "Hard" },
 };
 const barHeights = ["h-1.5", "h-2.5", "h-3.5"];
 

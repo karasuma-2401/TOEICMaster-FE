@@ -27,6 +27,7 @@ const accents = {
 const copy = {
   exam: {
     noun: "tests",
+    singular: "test",
     crumb: "Mock Tests",
     tag: "Standalone Test",
     heading: "Tests",
@@ -40,6 +41,7 @@ const copy = {
   },
   exercise: {
     noun: "exercises",
+    singular: "exercise",
     crumb: "Exercises",
     tag: "Practice by Part",
     heading: "Exercises",
@@ -314,7 +316,7 @@ export function ExamLibrary({
               {skill.name} · {text.tag}
             </p>
             <h1 className="mt-3 text-[28px] font-bold leading-9">
-              {text.heading} {skill.name}
+              {skill.name} {text.heading}
             </h1>
             <p className="mt-2 text-[15px] text-(--sp-ink-2)">
               {skill.tagline}
@@ -454,8 +456,8 @@ export function ExamLibrary({
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className="text-lg font-semibold" id="exam-library-count">
               {loading
-                ? `${text.heading} ${skill.name}`
-                : `${filtered.length} ${text.noun} ${skill.name}`}
+                ? `${skill.name} ${text.heading}`
+                : `${filtered.length} ${skill.name} ${filtered.length === 1 ? text.singular : text.noun}`}
             </h2>
             <p className="text-[13px] text-(--sp-ink-2)">{skill.format}</p>
           </div>
