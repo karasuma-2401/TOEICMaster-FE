@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/shared/lib/utils";
@@ -177,6 +177,27 @@ export interface ConfirmDialogProps {
   destructive?: boolean;
 }
 
+function useFocusRestoration(open: boolean) {
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (open) {
+      const active = document.activeElement;
+      openerRef.current =
+        active instanceof HTMLElement && active !== document.body
+          ? active
+          : null;
+      return () => {
+        const opener = openerRef.current;
+        if (opener?.isConnected) {
+          queueMicrotask(() => opener.focus());
+        }
+      };
+    }
+    return undefined;
+  }, [open]);
+  return openerRef;
+}
+
 /** Accessible confirmation modal that focuses the cancel button initially and handles Escape cleanly. */
 function ConfirmDialog({
   open = true,
@@ -192,6 +213,7 @@ function ConfirmDialog({
   confirmClassName,
   destructive = false,
 }: ConfirmDialogProps) {
+  const openerRef = useFocusRestoration(open);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const body = description ?? children;
 
@@ -209,10 +231,17 @@ function ConfirmDialog({
           event.preventDefault();
           cancelButtonRef.current?.focus();
         }}
+        onCloseAutoFocus={(event) => {
+          const opener = openerRef.current;
+          if (opener?.isConnected) {
+            event.preventDefault();
+            opener.focus();
+          }
+        }}
         showCloseButton={false}
         size="sm"
       >
-        <DialogTitle id={id}>{title}</DialogTitle>
+        <DialogTitle {...(id ? { id } : {})}>{title}</DialogTitle>
         {body ? (
           <DialogPrimitive.Description asChild>
             <div className="mt-3 text-sm leading-6 text-[var(--tm-ink-muted,#5f5953)]">

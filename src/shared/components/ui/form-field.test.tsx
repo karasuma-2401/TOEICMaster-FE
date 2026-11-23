@@ -5,6 +5,64 @@ import { FormField, FormInput, FormSelect, FormTextarea } from "./form-field";
 import { PasswordInput } from "./password-input";
 
 describe("ui/form-field and ui/password-input", () => {
+  it.each([undefined, "field-email"])(
+    "associates labels and descriptions when the child has its own ID and field ID is %s",
+    (fieldId) => {
+      render(
+        <FormField
+          id={fieldId}
+          label="Contact email"
+          hint="Use your email"
+          error="Invalid email"
+        >
+          <FormInput id="custom-email" placeholder="Contact" />
+        </FormField>,
+      );
+      const input = screen.getByLabelText("Contact email");
+      const expectedId = fieldId ?? "custom-email";
+      expect(input).toHaveAttribute("id", expectedId);
+      expect(input).toHaveAttribute(
+        "aria-describedby",
+        `${expectedId}-hint ${expectedId}-error`,
+      );
+      expect(input).toHaveAccessibleDescription("Use your email Invalid email");
+    },
+  );
+
+  it("keeps render-prop controls associated even when their custom ID conflicts", () => {
+    render(
+      <FormField
+        id="display-name"
+        label="Display name"
+        hint="Visible to learners"
+      >
+        {(controlProps) => <input {...controlProps} id="other-name" />}
+      </FormField>,
+    );
+    expect(screen.getByLabelText("Display name")).toHaveAttribute(
+      "id",
+      "display-name",
+    );
+    expect(screen.getByLabelText("Display name")).toHaveAccessibleDescription(
+      "Visible to learners",
+    );
+  });
+
+  it("preserves external descriptions without duplicating field description IDs", () => {
+    render(
+      <>
+        <p id="external-note">External note</p>
+        <FormField id="contact" label="Contact" hint="Contact hint">
+          <input aria-describedby="external-note contact-hint" />
+        </FormField>
+      </>,
+    );
+    expect(screen.getByLabelText("Contact")).toHaveAttribute(
+      "aria-describedby",
+      "external-note contact-hint",
+    );
+  });
+
   it("wires htmlFor/id, hint, aria-invalid, and role=alert error via aria-describedby", () => {
     const { rerender } = render(
       <FormField hint="Use your work email." id="work-email" label="Email">

@@ -38,6 +38,82 @@ function DemoDialog({ variant = "modal" }: { variant?: "modal" | "drawer" }) {
 }
 
 describe("ui/dialog", () => {
+  it.each(["Escape", "Cancel", "Confirm"])(
+    "restores focus to the opener of a conditionally mounted ConfirmDialog after %s",
+    async (action) => {
+      const user = userEvent.setup();
+      function DeleteDeck() {
+        const [open, setOpen] = useState(false);
+        return (
+          <>
+            <button type="button" onClick={() => setOpen(true)}>
+              Delete deck
+            </button>
+            {open && (
+              <ConfirmDialog
+                title="Delete this deck?"
+                cancelLabel="Cancel"
+                confirmLabel="Confirm"
+                onCancel={() => setOpen(false)}
+                onConfirm={() => setOpen(false)}
+              />
+            )}
+          </>
+        );
+      }
+      render(<DeleteDeck />);
+      const opener = screen.getByRole("button", { name: "Delete deck" });
+      await user.click(opener);
+      await screen.findByRole("dialog", { name: "Delete this deck?" });
+      expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+
+      if (action === "Escape") await user.keyboard("{Escape}");
+      else await user.click(screen.getByRole("button", { name: action }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        expect(opener).toHaveFocus();
+      });
+    },
+  );
+
+  it("respects an explicit close autofocus override", async () => {
+    const user = userEvent.setup();
+    function CustomFocusDialog() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open custom dialog
+          </button>
+          <button type="button" id="next-action">
+            Next action
+          </button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent
+              aria-describedby={undefined}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                document.getElementById("next-action")?.focus();
+              }}
+            >
+              <DialogTitle>Custom focus</DialogTitle>
+            </DialogContent>
+          </Dialog>
+        </>
+      );
+    }
+    render(<CustomFocusDialog />);
+    await user.click(
+      screen.getByRole("button", { name: "Open custom dialog" }),
+    );
+    await screen.findByRole("dialog", { name: "Custom focus" });
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Next action" })).toHaveFocus(),
+    );
+  });
+
   it("opens modal via trigger, exposes accessible title/description, traps focus, closes on Escape, and restores focus", async () => {
     const user = userEvent.setup();
     render(<DemoDialog variant="modal" />);

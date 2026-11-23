@@ -1,17 +1,91 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { writeScopedStorage } from "@/shared/lib/storage";
 import { BUILTIN_FLASHCARD_DECKS } from "./decks-data";
 import {
   buildQuizQuestions,
   filterDeckCards,
   parseFlashcardStore,
+  readFlashcardBestTime,
+  readFlashcardStore,
   slugifyDeckTitle,
   summarizeDeckProgress,
+  writeFlashcardBestTime,
+  writeFlashcardStore,
 } from "./storage";
-import type { CardProgressRecord } from "./types";
+import type { CardProgressRecord, FlashcardStoreState } from "./types";
 
 const sampleCards = BUILTIN_FLASHCARD_DECKS[0].cards;
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+function browserStore() {
+  const values = new Map<string, string>();
+  vi.stubGlobal("window", {
+    localStorage: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        values.set(key, value);
+      },
+    },
+  });
+  return values;
+}
+
 describe("flashcards storage & helpers", () => {
+  it("isolates persisted progress across learners and the guest scope", () => {
+    browserStore();
+    const state: FlashcardStoreState = {
+      progress: {
+        "off-1": {
+          status: "mastered",
+          starred: true,
+          reviewCount: 2,
+          updatedAt: "2026-11-24T00:00:00Z",
+        },
+      },
+      customDecks: [],
+    };
+    writeFlashcardStore(state, "learner-a");
+    expect(readFlashcardStore("learner-a")).toEqual(state);
+    expect(readFlashcardStore("learner-b").progress).toEqual({});
+    expect(readFlashcardStore(null).progress).toEqual({});
+    writeFlashcardStore({ ...state, progress: {} }, "learner-b");
+    expect(readFlashcardStore("learner-a")).toEqual(state);
+  });
+
+  it("does not assign ambiguous legacy progress or match records to any account or guests", () => {
+    const values = browserStore();
+    values.set(
+      "toeicmaster.flashcards.v1",
+      JSON.stringify({ progress: { old: { status: "mastered" } } }),
+    );
+    values.set("toeicmaster.fc.match.best.deck", "1000");
+    for (const userId of [null, "learner-a", "learner-b"]) {
+      expect(readFlashcardStore(userId).progress).toEqual({});
+      expect(readFlashcardBestTime("deck", userId)).toBeNull();
+    }
+    expect(values.size).toBe(2);
+  });
+
+  it("isolates and validates match best times by learner and deck", () => {
+    browserStore();
+    writeFlashcardBestTime("deck-a", 1250, "learner-a");
+    expect(readFlashcardBestTime("deck-a", "learner-a")).toBe(1250);
+    expect(readFlashcardBestTime("deck-b", "learner-a")).toBeNull();
+    expect(readFlashcardBestTime("deck-a", "learner-b")).toBeNull();
+    expect(readFlashcardBestTime("deck-a", null)).toBeNull();
+    writeFlashcardBestTime("deck-a", Number.NaN, "learner-a");
+    expect(readFlashcardBestTime("deck-a", "learner-a")).toBe(1250);
+    writeScopedStorage(
+      { namespace: "flashcards", userId: "learner-a" },
+      "match-best:deck-a",
+      "invalid",
+    );
+    expect(readFlashcardBestTime("deck-a", "learner-a")).toBeNull();
+  });
+
   it("parses empty or malformed JSON safely into empty store", () => {
     expect(parseFlashcardStore(null)).toEqual({
       progress: {},

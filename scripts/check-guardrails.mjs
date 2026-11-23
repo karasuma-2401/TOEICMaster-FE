@@ -14,6 +14,13 @@ export const TODO_WAVE3_BASELINE = {
     "src/features/speaking/server/speaking-proxy.ts": 1,
     "src/features/writing/server/writing-proxy.ts": 1,
   },
+  "no-raw-storage": {
+    "src/features/lr-exam/hooks/use-sequential-listening-player.ts": 2,
+    "src/features/pronunciation/practice-progress.ts": 1,
+    "src/features/user/preferences.ts": 1,
+    "src/shared/components/mascot/guide-mascot.tsx": 2,
+    "src/shared/components/practice/practice-sidebar.tsx": 2,
+  },
   "no-raw-dialog-open": {
     "src/features/admin/components/content/admin-excel-import.tsx": 1,
     "src/features/admin/components/content/admin-overlay.tsx": 2,
@@ -138,6 +145,15 @@ export function inspectSourceFile(relPath, raw) {
     }
   }
 
+  if (relPath !== "src/shared/lib/storage.ts") {
+    const storageMatches = stripped.match(
+      /\b(?:localStorage|sessionStorage)\b/g,
+    );
+    if (storageMatches) {
+      findings["no-raw-storage"] = storageMatches.length;
+    }
+  }
+
   if (!relPath.startsWith("src/shared/components/ui/")) {
     const dialogMatches = stripped.match(/<dialog\b(?![a-zA-Z0-9_-])/g);
     if (dialogMatches) {
@@ -255,6 +271,8 @@ const RULE_REMEDIATIONS = {
     "Import isGuid or isNullableGuid from @/shared/lib/guards instead of defining a GUID regex.",
   "no-raw-bff-fetch":
     "Use createBffProxy or forwardBffRequest from @/shared/server/bff-proxy instead of raw fetch in BFF routes and server proxies.",
+  "no-raw-storage":
+    "Use readScopedStorage or writeScopedStorage from @/shared/lib/storage with an explicit user and namespace scope.",
 };
 
 export function formatGuardrailViolation({ rule, file, count, allowed }) {

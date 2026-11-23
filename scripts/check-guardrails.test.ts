@@ -5,6 +5,63 @@ import {
 } from "./check-guardrails.mjs";
 
 describe("scripts/check-guardrails", () => {
+  it("rejects past raw flashcard localStorage writes with zero baseline", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/flashcards/storage.ts": `export const save = () => localStorage.setItem("flashcards-progress", "{}");`,
+        "src/features/flashcards/components/flashcard-match-game.tsx": `const best = window.localStorage.getItem("toeicmaster.fc.match.best.deck");`,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toHaveLength(2);
+    for (const violation of result.violations) {
+      expect(violation).toMatchObject({
+        rule: "no-raw-storage",
+        count: 1,
+        allowed: 0,
+      });
+      expect(formatGuardrailViolation(violation)).toContain(
+        "@/shared/lib/storage",
+      );
+    }
+  });
+
+  it("allows only the shared storage owner, tests, and explicitly scoped callers", () => {
+    const result = runGuardrails({
+      baseline: {},
+      files: {
+        "src/shared/lib/storage.ts": `const storage = window.localStorage;`,
+        "src/features/flashcards/storage.test.ts": `window.localStorage.setItem("old", "{}");`,
+        "src/features/flashcards/storage.ts": `import { writeScopedStorage } from "@/shared/lib/storage"; export const save = () => writeScopedStorage({ namespace: "flashcards", userId: "learner" }, "progress", "{}");`,
+        "src/features/demo/note.ts": `// Do not use localStorage or sessionStorage directly.`,
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("ratchets other legacy storage references and rejects new sessionStorage owners", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/user/preferences.ts": `const first = window.localStorage; const second = window.localStorage;`,
+        "src/features/demo/preferences.ts": `const storage = globalThis.sessionStorage;`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-storage",
+        file: "src/features/demo/preferences.ts",
+        count: 1,
+        allowed: 0,
+      },
+      {
+        rule: "no-raw-storage",
+        file: "src/features/user/preferences.ts",
+        count: 2,
+        allowed: 1,
+      },
+    ]);
+  });
+
   it("rejects the past strict exam-management GUID regex and names the shared guards", () => {
     const result = runGuardrails({
       files: {
