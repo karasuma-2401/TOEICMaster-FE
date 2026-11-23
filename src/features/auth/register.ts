@@ -28,25 +28,25 @@ export function validateRegistration(
   const displayName = input.displayName.trim();
   const email = input.email.trim();
 
-  if (!displayName) errors.displayName = "Vui lòng nhập tên hiển thị.";
+  if (!displayName) errors.displayName = "Please enter a display name.";
   else if (displayName.length > 100)
-    errors.displayName = "Tên hiển thị không được vượt quá 100 ký tự.";
+    errors.displayName = "Display name must not exceed 100 characters.";
 
-  if (!email) errors.email = "Vui lòng nhập email.";
+  if (!email) errors.email = "Please enter your email.";
   else if (email.length > 254 || !emailPattern.test(email))
-    errors.email = "Email không hợp lệ.";
+    errors.email = "Invalid email address.";
 
-  if (!input.password) errors.password = "Vui lòng nhập mật khẩu.";
+  if (!input.password) errors.password = "Please enter your password.";
   else if (input.password.length < 8 || input.password.length > 128)
-    errors.password = "Mật khẩu cần từ 8 đến 128 ký tự.";
+    errors.password = "Password must be between 8 and 128 characters.";
 
   if (!input.confirmPassword)
-    errors.confirmPassword = "Vui lòng xác nhận mật khẩu.";
+    errors.confirmPassword = "Please confirm your password.";
   else if (input.confirmPassword !== input.password)
-    errors.confirmPassword = "Mật khẩu xác nhận chưa khớp.";
+    errors.confirmPassword = "Confirmation password does not match.";
 
   if (!input.termsAccepted)
-    errors.termsAccepted = "Vui lòng đồng ý với điều khoản sử dụng.";
+    errors.termsAccepted = "Please agree to the terms of use.";
 
   return errors;
 }
@@ -108,7 +108,7 @@ export async function register(
     isProblem(body) && typeof body.title === "string" ? body.title : undefined;
   throw new RegisterError(
     response.status,
-    title ?? "Không thể tạo tài khoản. Vui lòng thử lại.",
+    title ?? "Unable to create account. Please try again.",
     fieldErrors,
   );
 }

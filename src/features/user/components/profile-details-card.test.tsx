@@ -38,7 +38,7 @@ vi.mock("next/navigation", () => ({
 
 const sampleUser: UserProfile = {
   id: "user-1",
-  displayName: "Nguyễn Văn A",
+  displayName: "Noah Adams",
   email: "learner@example.com",
   phone: "0912345678",
   dateOfBirth: "1998-05-12",
@@ -52,7 +52,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.updateProfile.mockResolvedValue({
     ...sampleUser,
-    displayName: "Nguyễn Văn C",
+    displayName: "Noah Clark",
   });
   mocks.uploadAvatar.mockResolvedValue({ ...sampleUser, avatarVersion: "v2" });
   Object.defineProperty(URL, "createObjectURL", {
@@ -66,12 +66,12 @@ beforeEach(() => {
 });
 
 describe("ProfileDetailsCard", () => {
-  it("giữ nút Lưu thay đổi disabled khi chưa có thay đổi", () => {
+  it("keeps Save changes button disabled when there are no changes", () => {
     render(<ProfileDetailsCard profile={sampleUser} />);
-    expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
   });
 
-  it("gửi dữ liệu đã trim, khóa nút trong khi lưu và báo thành công", async () => {
+  it("submits trimmed data, disables the button while saving, and shows success toast", async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
     let finishSave!: (profile: UserProfile) => void;
@@ -81,52 +81,52 @@ describe("ProfileDetailsCard", () => {
       }),
     );
     render(<ProfileDetailsCard onSaved={onSaved} profile={sampleUser} />);
-    const nameInput = screen.getByLabelText("Tên hiển thị");
+    const nameInput = screen.getByLabelText("Display name");
     await user.clear(nameInput);
-    await user.type(nameInput, "  Nguyễn Văn C  ");
-    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await user.type(nameInput, "  Noah Clark  ");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
     expect(mocks.updateProfile).toHaveBeenCalledWith({
-      displayName: "Nguyễn Văn C",
+      displayName: "Noah Clark",
       phone: "0912345678",
       dateOfBirth: "1998-05-12",
       targetScore: 750,
     });
-    expect(screen.getByRole("button", { name: "Đang lưu..." })).toBeDisabled();
-    const saved = { ...sampleUser, displayName: "Nguyễn Văn C" };
+    expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    const saved = { ...sampleUser, displayName: "Noah Clark" };
     finishSave(saved);
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
-    expect(mocks.success).toHaveBeenCalledWith("Đã lưu thông tin.");
+    expect(mocks.success).toHaveBeenCalledWith("Changes saved.");
   });
 
-  it("không gửi khi validation FE thất bại và gán lỗi 400 vào đúng ô", async () => {
+  it("does not submit when client-side validation fails and binds 400 errors to the right field", async () => {
     const user = userEvent.setup();
     render(<ProfileDetailsCard profile={sampleUser} />);
-    const nameInput = screen.getByLabelText("Tên hiển thị");
+    const nameInput = screen.getByLabelText("Display name");
     await user.clear(nameInput);
-    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
     expect(
-      await screen.findByText("Vui lòng nhập tên hiển thị."),
+      await screen.findByText("Please enter a display name."),
     ).toBeInTheDocument();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
 
     await user.type(nameInput, "Linh B");
     mocks.updateProfile.mockRejectedValueOnce(
-      new ApiError(400, "Sai", { displayName: "Tên không hợp lệ." }),
+      new ApiError(400, "Invalid", { displayName: "Invalid name." }),
     );
-    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    expect(await screen.findByText("Tên không hợp lệ.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByText("Invalid name.")).toBeInTheDocument();
     expect(nameInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("hiển thị email chỉ đọc, số điện thoại và ngày sinh", () => {
+  it("displays read-only email, phone number, and date of birth", () => {
     render(<ProfileDetailsCard profile={sampleUser} />);
-    expect(screen.getByLabelText("Ngày sinh")).toHaveValue("1998-05-12");
-    expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0912345678");
+    expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-05-12");
+    expect(screen.getByLabelText("Phone number")).toHaveValue("0912345678");
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
-    expect(screen.getByText(/Đã xác minh/)).toBeInTheDocument();
+    expect(screen.getByText(/Verified/)).toBeInTheDocument();
   });
 
-  it("từ chối ảnh sai và preview rồi upload ảnh hợp lệ đúng một lần", async () => {
+  it("rejects invalid images and previews then uploads a valid image once", async () => {
     const { container } = render(<ProfileDetailsCard profile={sampleUser} />);
     const input =
       container.querySelector<HTMLInputElement>('input[type="file"]')!;
@@ -134,7 +134,7 @@ describe("ProfileDetailsCard", () => {
       target: { files: [new File(["x"], "bad.gif", { type: "image/gif" })] },
     });
     expect(
-      await screen.findByText("Chỉ hỗ trợ ảnh định dạng JPG hoặc PNG."),
+      await screen.findByText("Only JPG or PNG images are supported."),
     ).toBeInTheDocument();
     expect(mocks.uploadAvatar).not.toHaveBeenCalled();
 
@@ -152,7 +152,7 @@ describe("ProfileDetailsCard", () => {
       expect.objectContaining({ name: "ok.png" }),
     );
     expect(
-      screen.getByRole("img", { name: "Ảnh đại diện của Nguyễn Văn A" }),
+      screen.getByRole("img", { name: "Avatar of Noah Adams" }),
     ).toHaveAttribute("src", "blob:avatar-preview");
     finishUpload({ ...sampleUser, avatarVersion: "v2" });
   });

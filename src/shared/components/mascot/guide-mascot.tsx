@@ -10,7 +10,7 @@ import { mascotGuide, type MascotGuide } from "./mascot-tips";
 
 const seenKey = "toeicmaster-mascot-seen";
 
-/** Míc, the TOEICMaster fox with a headset. */
+/** Mic, the TOEICMaster fox with a headset. */
 export function MascotFace({ className }: { className?: string }) {
   return (
     <svg aria-hidden="true" className={className} viewBox="0 0 120 120">
@@ -62,13 +62,13 @@ function GuideBubble({
   const last = step === guide.tips.length - 1;
   return (
     <section
-      aria-label="Hướng dẫn sử dụng"
+      aria-label="User guide"
       className="w-[300px] rounded-xl border border-stone-300 bg-white p-4 text-stone-800 shadow-[0_12px_32px_-12px_rgb(62_44_30/35%)]"
     >
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-sm font-semibold">{guide.title}</h2>
         <button
-          aria-label="Đóng hướng dẫn"
+          aria-label="Close guide"
           className="-mt-1 cursor-pointer px-1 text-lg leading-none text-stone-500 hover:text-stone-900"
           onClick={onClose}
           type="button"
@@ -88,7 +88,7 @@ function GuideBubble({
           onClick={() => (last ? onClose() : setStep(step + 1))}
           type="button"
         >
-          {last ? "Đã hiểu" : "Tiếp"}
+          {last ? "Got it" : "Next"}
         </button>
       </div>
     </section>
@@ -135,7 +135,7 @@ export function GuideMascot() {
       )}
       <button
         aria-expanded={open}
-        aria-label="Hỏi Míc cách sử dụng trang này"
+        aria-label="Ask Mic how to use this page"
         className="size-16 cursor-pointer rounded-full border border-stone-300 bg-white p-1.5 shadow-[0_8px_20px_-8px_rgb(62_44_30/40%)] transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
         onClick={() => setOpen((value) => !value)}
         type="button"

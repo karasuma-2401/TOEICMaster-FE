@@ -33,14 +33,14 @@ export async function forwardAdminExamRequest(
   maximumMultipartBytes?: number,
 ) {
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   const session = sessionCookie(request);
   if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
-    return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+    return problem(401, "Invalid or expired session.");
 
   if (session.role !== "ADMIN")
-    return problem(403, "Bạn không có quyền truy cập chức năng này.");
+    return problem(403, "You do not have permission to access this feature.");
 
   const init: RequestInit = { method };
   if (method !== "GET" && method !== "DELETE") {
@@ -48,7 +48,7 @@ export async function forwardAdminExamRequest(
     if (contentType.startsWith("application/json")) {
       const body: unknown = await request.json().catch(() => null);
       if (!body || typeof body !== "object" || Array.isArray(body))
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request data.");
       init.headers = { "Content-Type": "application/json" };
       init.body = JSON.stringify(body);
     } else if (contentType.startsWith("multipart/form-data")) {
@@ -58,20 +58,20 @@ export async function forwardAdminExamRequest(
         (!Number.isFinite(declaredLength) ||
           declaredLength > maximumMultipartBytes)
       )
-        return problem(413, "Tệp tải lên vượt quá giới hạn cho phép.");
+        return problem(413, "Uploaded file exceeds the allowed size limit.");
       const formData = await request.formData().catch(() => null);
-      if (!formData) return problem(400, "Dữ liệu tệp không hợp lệ.");
+      if (!formData) return problem(400, "Invalid file data.");
       if (maximumMultipartBytes !== undefined) {
         const fileBytes = [...formData.values()].reduce(
           (total, value) => total + (value instanceof File ? value.size : 0),
           0,
         );
         if (fileBytes > maximumMultipartBytes)
-          return problem(413, "Tệp tải lên vượt quá giới hạn cho phép.");
+          return problem(413, "Uploaded file exceeds the allowed size limit.");
       }
       init.body = formData;
     } else {
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request data.");
     }
   }
 
@@ -80,6 +80,6 @@ export async function forwardAdminExamRequest(
       await backendFetch(path, session.accessToken, init),
     );
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

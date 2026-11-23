@@ -10,9 +10,9 @@ import {
 } from "./tiptap-utils";
 
 describe("knowledge tiptap-utils", () => {
-  it("slugifies Vietnamese diacritics and deduplicates heading anchors in TOC", () => {
-    expect(slugifyVietnamese("Mẹo làm bài Đọc hiểu TOEIC!")).toBe(
-      "meo-lam-bai-doc-hieu-toeic",
+  it("slugifies diacritics and deduplicates heading anchors in TOC", () => {
+    expect(slugifyVietnamese("Reading Tips: \u00e9\u00e0\u0111\u0110!")).toBe(
+      "reading-tips-eadd",
     );
 
     const toc = extractTocFromDoc({
@@ -21,19 +21,19 @@ describe("knowledge tiptap-utils", () => {
         {
           type: "heading",
           attrs: { level: 2 },
-          content: [{ type: "text", text: "Giới thiệu" }],
+          content: [{ type: "text", text: "Introduction" }],
         },
         {
           type: "heading",
           attrs: { level: 3 },
-          content: [{ type: "text", text: "Giới thiệu" }],
+          content: [{ type: "text", text: "Introduction" }],
         },
       ],
     });
 
     expect(toc).toEqual([
-      { id: "gioi-thieu", level: 2, text: "Giới thiệu" },
-      { id: "gioi-thieu-2", level: 3, text: "Giới thiệu" },
+      { id: "introduction", level: 2, text: "Introduction" },
+      { id: "introduction-2", level: 3, text: "Introduction" },
     ]);
   });
 

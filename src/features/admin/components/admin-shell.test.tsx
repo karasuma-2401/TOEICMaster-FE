@@ -16,11 +16,11 @@ describe("AdminShell", () => {
   it("places route content inside the admin layout", () => {
     render(
       <AdminShell>
-        <h1>Quản lý người dùng</h1>
+        <h1>User Management</h1>
       </AdminShell>,
     );
     expect(screen.getByRole("main")).toContainElement(
-      screen.getByRole("heading", { name: "Quản lý người dùng" }),
+      screen.getByRole("heading", { name: "User Management" }),
     );
   });
 });

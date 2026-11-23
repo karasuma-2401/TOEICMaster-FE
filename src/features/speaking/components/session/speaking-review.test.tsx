@@ -29,14 +29,15 @@ const attempt = (evaluation: object | null) =>
 
 describe("SpeakingReview", () => {
   it("shows one question's transcript, flagged words and scores", async () => {
-    vi.mocked(getSpeakingAttempt).mockResolvedValue(attempt(evaluationDto()));
+    const evalData = evaluationDto();
+    vi.mocked(getSpeakingAttempt).mockResolvedValue(attempt(evalData));
     render(<SpeakingReview attemptId="a" position={1} />);
 
     expect(await screen.findByText("conference")).toHaveClass("sp-word-issue");
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
-    expect(screen.getByText("Nhận xét câu 1.")).toBeInTheDocument();
+    expect(screen.getByText(evalData.items[0].feedback)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Lịch sử làm bài|Về lịch sử/i }),
+      screen.getByRole("link", { name: /attempt history/i }),
     ).toHaveAttribute("href", "/history");
   });
 
@@ -45,7 +46,7 @@ describe("SpeakingReview", () => {
     render(<SpeakingReview attemptId="a" position={3} />);
 
     expect(
-      await screen.findByText("Không nhận diện được giọng nói trong bản ghi."),
+      await screen.findByText("No speech detected in the recording."),
     ).toBeInTheDocument();
   });
 
@@ -53,7 +54,7 @@ describe("SpeakingReview", () => {
     vi.mocked(getSpeakingAttempt).mockResolvedValue(attempt(null));
     render(<SpeakingReview attemptId="a" position={1} />);
 
-    expect(await screen.findByText("Bài thu âm của bạn")).toBeInTheDocument();
-    expect(screen.queryByText(/Chỉ số AI/)).not.toBeInTheDocument();
+    expect(await screen.findByText("Your recording")).toBeInTheDocument();
+    expect(screen.queryByText(/AI Metrics/)).not.toBeInTheDocument();
   });
 });

@@ -28,12 +28,12 @@ describe("AccountControls", () => {
     const user = userEvent.setup();
     render(<AccountControls />);
 
-    expect(await screen.findByText("Xin chào, Linh")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Đăng xuất" }));
+    expect(await screen.findByText("Hello, Linh")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
     expect(
-      await screen.findByRole("link", { name: "Đăng nhập" }),
+      await screen.findByRole("link", { name: "Sign in" }),
     ).toBeInTheDocument();
     expect(fetchMock.mock.calls[1][0]).toBe("/api/auth/logout");
-    expect(toast.success).toHaveBeenCalledWith("Đã đăng xuất.");
+    expect(toast.success).toHaveBeenCalledWith("Signed out.");
   });
 });

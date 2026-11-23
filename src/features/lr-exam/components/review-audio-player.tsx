@@ -93,7 +93,7 @@ export function ReviewAudioPlayer({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Không thể tải audio xem lại.",
+            : "Unable to load review audio.",
         );
         return;
       }
@@ -111,7 +111,7 @@ export function ReviewAudioPlayer({
       setIsPlaying(false);
       if (!isAbortError(cause)) {
         setError(
-          cause instanceof Error ? cause.message : "Không thể phát audio.",
+          cause instanceof Error ? cause.message : "Unable to play audio.",
         );
       }
     }
@@ -133,7 +133,7 @@ export function ReviewAudioPlayer({
 
   return (
     <section
-      aria-label="Audio xem lại câu hỏi"
+      aria-label="Question review audio"
       className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white p-4"
       data-testid="lr-review-audio-player"
     >
@@ -166,10 +166,10 @@ export function ReviewAudioPlayer({
           type="button"
         >
           {loading
-            ? "Đang tải audio…"
+            ? "Loading audio…"
             : isPlaying
-              ? "Tạm dừng audio"
-              : "Phát audio"}
+              ? "Pause audio"
+              : "Play audio"}
         </button>
 
         <span className="text-xs font-semibold tabular-nums text-[#475569]">
@@ -177,7 +177,7 @@ export function ReviewAudioPlayer({
         </span>
 
         <select
-          aria-label="Tốc độ phát"
+          aria-label="Playback speed"
           className={`min-h-[44px] rounded-xl border border-[#d9d2ce] bg-white px-3 text-xs font-semibold text-[#4c4542] ${focusRing}`}
           data-testid="lr-review-audio-speed"
           onChange={(event) =>
@@ -194,7 +194,7 @@ export function ReviewAudioPlayer({
       </div>
 
       <input
-        aria-label="Tua audio"
+        aria-label="Seek audio"
         className={`h-2 w-full cursor-pointer accent-[#ff5a1f] ${focusRing}`}
         data-testid="lr-review-audio-seek"
         max={Math.max(1, totalSeconds)}

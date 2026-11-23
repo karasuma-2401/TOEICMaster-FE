@@ -7,86 +7,86 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
   {
     match: /^\/speaking\/(tests\/[^/]+\/practice|exercises\/[^/]+\/practice)/,
     guide: {
-      title: "Kiểm tra micro",
+      title: "Check your microphone",
       tips: [
-        "Cho phép trình duyệt dùng micro khi được hỏi.",
-        "Đọc thử vài từ. Thấy báo “Micro hoạt động tốt” là bạn có thể bắt đầu.",
+        "Allow the browser to access your microphone when prompted.",
+        'Read a few words aloud. Once you see "Microphone is working well", you are ready to start.',
       ],
     },
   },
   {
     match: /^\/speaking\/attempts\/[^/]+\/review/,
     guide: {
-      title: "Xem lại bài làm",
+      title: "Review your attempt",
       tips: [
-        "Bấm số câu bên trái để chuyển câu.",
-        "Từ gạch chân là từ AI thấy phát âm chưa rõ. Rê chuột lên để xem điểm.",
+        "Click a question number on the left to switch questions.",
+        "Underlined words are ones the AI flagged as unclear. Hover over them to see the score.",
       ],
     },
   },
   {
     match: /^\/speaking\/parts/,
     guide: {
-      title: "Luyện theo Part",
+      title: "Practice by Part",
       tips: [
-        "Chọn Part ở dãy nút ngay dưới tiêu đề.",
-        "Lọc theo độ khó hoặc trạng thái, rồi bấm Làm bài để luyện.",
+        "Select a Part from the buttons right below the heading.",
+        "Filter by difficulty or status, then click Practice to begin.",
       ],
     },
   },
   {
     match: /^\/speaking/,
     guide: {
-      title: "Trang Speaking",
+      title: "Speaking Page",
       tips: [
-        "Mới bắt đầu? Bấm Bài tập ngay dưới tiêu đề để luyện từng Part trước.",
-        "Khi đã sẵn sàng, chọn một đề thi thử đủ 11 câu.",
-        "Trong lúc thi, nói đủ rồi thì bấm sang câu tiếp, không cần chờ hết giờ.",
+        "Just getting started? Click Exercises right below the heading to practice each Part first.",
+        "When you are ready, pick a full 11-question mock test.",
+        "During a test, once you finish speaking, click Next instead of waiting for the timer.",
       ],
     },
   },
   {
     match: /^\/writing\/practice/,
     guide: {
-      title: "Luyện Writing theo Part",
-      tips: ["Chọn một bài trong danh sách để bắt đầu viết."],
+      title: "Practice Writing by Part",
+      tips: ["Choose an exercise from the list to start writing."],
     },
   },
   {
     match: /^\/writing/,
     guide: {
-      title: "Trang Writing",
+      title: "Writing Page",
       tips: [
-        "Luyện từng Part để quen dạng bài, hoặc làm đề đầy đủ có tính giờ.",
-        "Xem lại các lượt đã làm ở mục Lịch sử.",
+        "Practice individual Parts to get familiar with each task, or take a full timed test.",
+        "Review your past attempts in the History section.",
       ],
     },
   },
   {
     match: /^\/flashcards/,
     guide: {
-      title: "Học Flashcards nhanh",
+      title: "Quick Flashcard Study",
       tips: [
-        "Dùng phím Space để lật thẻ, phím S để nghe phát âm và 1 / 2 / 3 để đánh dấu mức độ nhớ.",
-        "Chuyển sang tab Trắc nghiệm nhanh sau khi lật thẻ để kiểm tra lại trí nhớ.",
+        "Press Space to flip a card, S to hear pronunciation, and 1 / 2 / 3 to rate how well you remember it.",
+        "Switch to the Quick Quiz tab after flipping cards to test your memory.",
       ],
     },
   },
   {
     match: /^\/history/,
     guide: {
-      title: "Lịch sử học tập",
-      tips: ["Mở một lượt đã làm để xem lại kết quả."],
+      title: "Learning History",
+      tips: ["Open any completed attempt to review your results."],
     },
   },
 ];
 
 const home: MascotGuide = {
-  title: "Chào bạn, mình là Míc!",
+  title: "Hi there, I'm Mic!",
   tips: [
-    "Chọn kỹ năng bạn muốn luyện ở khu “Ba bài thi độc lập”.",
-    "Bấm logo TOEICMaster trên thanh đầu trang để về trang chủ.",
-    "Cần trợ giúp lúc nào cứ bấm vào mình ở góc màn hình nhé.",
+    'Choose the skill you want to practice in the "Three standalone tests" section.',
+    "Click the TOEICMaster logo in the top bar to return to the home page.",
+    "Whenever you need help, just click me in the corner of the screen.",
   ],
 };
 

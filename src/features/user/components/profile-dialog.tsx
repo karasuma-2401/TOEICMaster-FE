@@ -110,9 +110,9 @@ export function ProfileDialog({
         ref={dialogRef}
         tabIndex={-1}
       >
-        {/* Nút đóng (X) */}
+        {/* Close button (X) */}
         <button
-          aria-label="Đóng"
+          aria-label="Close"
           className="absolute top-5 right-5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-[#a89f9b] transition hover:bg-[#f5f1ef] hover:text-[#342d2a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           onClick={onClose}
           type="button"
@@ -137,17 +137,17 @@ export function ProfileDialog({
           className="pr-10 text-[28px] font-bold leading-tight text-[#2f2b28]"
           id="profile-dialog-title"
         >
-          Hồ sơ &amp; mục tiêu học tập
+          Profile &amp; Learning Goal
         </h2>
         <p className="mt-1.5 pr-10 text-[15px] text-[#6b655f]">
-          Cá nhân hóa hành trình chinh phục TOEIC của bạn.
+          Personalize your journey to master TOEIC.
         </p>
 
         <div className="mt-5">
           <ProfileWorkspace onSaved={onSaved} profile={user} />
         </div>
 
-        {/* Phần chân popup với nút Đăng xuất */}
+        {/* Footer with Sign out button */}
         <div className="mt-5 flex items-center justify-between border-t border-[#e4dfda] pt-4 text-xs">
           <button
             className="inline-flex cursor-pointer items-center gap-2 font-semibold text-[#ed361c] transition hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
@@ -168,10 +168,10 @@ export function ProfileDialog({
                 strokeWidth="1.8"
               />
             </svg>
-            Đăng xuất
+            Sign out
           </button>
           <span className="text-[10px] text-[#c8c0bc]">
-            © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
+            © 2025 TOEICMaster. Learn a language, open up the world.
           </span>
         </div>
       </dialog>

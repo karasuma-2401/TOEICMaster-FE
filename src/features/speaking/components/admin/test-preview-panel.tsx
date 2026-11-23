@@ -18,12 +18,12 @@ export function TestPreviewPanel({
         <h3 className="flex items-center gap-2 font-semibold">
           <MonitorIcon size={18} /> Live Preview
         </h3>
-        <Chip tone="success">Đồng bộ</Chip>
+        <Chip tone="success">Synced</Chip>
       </div>
       <section className="overflow-hidden rounded-[14px] border border-(--sp-line) bg-(--sp-surface)">
         <header className="flex justify-between border-b border-(--sp-line) px-4 py-2.5 text-xs">
           <b className="font-semibold">TOEICMaster</b>
-          <span className="text-(--sp-ink-3)">Góc nhìn thí sinh</span>
+          <span className="text-(--sp-ink-3)">Candidate view</span>
         </header>
         <div className="p-4">
           {exercise ? (
@@ -34,7 +34,7 @@ export function TestPreviewPanel({
             />
           ) : (
             <p className="p-8 text-center text-[13px] text-(--sp-ink-3)">
-              Chưa chọn bài để xem trước.
+              No exercise selected for preview.
             </p>
           )}
         </div>
@@ -47,7 +47,7 @@ export function TestPreviewPanel({
               {exercise.code} · {exercise.topic}
             </p>
             <p className="text-xs text-(--sp-ink-3)">
-              Bản xem trước tĩnh · Không ghi âm thật
+              Static preview · No live recording
             </p>
           </div>
         </div>

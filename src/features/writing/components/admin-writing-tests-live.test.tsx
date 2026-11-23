@@ -86,7 +86,7 @@ it("loads a legacy draft question into the independent editor without saving it 
   });
 
   render(<AdminWritingTestsLive />);
-  fireEvent.click(await screen.findByRole("button", { name: "Chỉnh sửa" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
 
   await waitFor(() =>
     expect(mocks.getExercise).toHaveBeenCalledWith("exercise-1"),
@@ -105,23 +105,25 @@ it("opens a question from the builder navigation and keeps edits when switching"
     value: scroll,
   });
   render(<AdminWritingTestsLive />);
-  fireEvent.click(screen.getByRole("button", { name: "+ Tạo đề Writing" }));
-  const dialog = screen.getByRole("dialog", { name: "Soạn đề Writing" });
+  fireEvent.click(
+    screen.getByRole("button", { name: "+ Create Writing test" }),
+  );
+  const dialog = screen.getByRole("dialog", { name: "Writing test builder" });
   const navigation = within(dialog).getByRole("navigation", {
-    name: "Đi tới câu hỏi",
+    name: "Jump to question",
   });
   fireEvent.click(
-    within(navigation).getByRole("button", { name: "Part 2 · Câu 1" }),
+    within(navigation).getByRole("button", { name: "Part 2 · Question 1" }),
   );
   const target = dialog.querySelector<HTMLDetailsElement>(
     "#writing-builder-question-5",
   );
   expect(target?.open).toBe(true);
   expect(scroll).toHaveBeenCalled();
-  const sender = within(target!).getByLabelText("Người gửi *");
+  const sender = within(target!).getByLabelText("Sender *");
   fireEvent.change(sender, { target: { value: "Alex" } });
   fireEvent.click(
-    within(navigation).getByRole("button", { name: "Part 3 · Câu 1" }),
+    within(navigation).getByRole("button", { name: "Part 3 · Question 1" }),
   );
   expect(sender).toHaveValue("Alex");
 });
@@ -129,21 +131,21 @@ it("opens a question from the builder navigation and keeps edits when switching"
 it.each([
   {
     status: "DRAFT",
-    button: "Xóa",
+    button: "Delete",
     method: mocks.deleteTest,
-    message: "Đã xóa đề nháp.",
+    message: "Draft test deleted.",
   },
   {
     status: "PUBLISHED",
-    button: "Lưu trữ",
+    button: "Archive",
     method: mocks.archiveTest,
-    message: "Đã lưu trữ đề Writing.",
+    message: "Writing test archived.",
   },
   {
     status: "ARCHIVED",
-    button: "Khôi phục",
+    button: "Restore",
     method: mocks.restoreTest,
-    message: "Đã khôi phục đề Writing.",
+    message: "Writing test restored.",
   },
 ])(
   "confirms $button and sends the current version",
@@ -192,15 +194,17 @@ it("shows an error instead of reporting success when a lifecycle operation fails
     totalPages: 1,
   });
   mocks.archiveTest.mockRejectedValue(
-    new Error("Đề đã thay đổi. Hãy tải lại."),
+    new Error("Test has changed. Please reload."),
   );
   vi.spyOn(window, "confirm").mockReturnValue(true);
   render(<AdminWritingTestsLive />);
   fireEvent.click(
-    await screen.findByRole("button", { name: "Lưu trữ" }, { timeout: 10000 }),
+    await screen.findByRole("button", { name: "Archive" }, { timeout: 10000 }),
   );
-  expect(await screen.findByRole("alert")).toHaveTextContent("Đề đã thay đổi");
-  expect(screen.queryByText("Đã lưu trữ đề Writing.")).not.toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Test has changed",
+  );
+  expect(screen.queryByText("Writing test archived.")).not.toBeInTheDocument();
 });
 
 it("opens a published test with its frozen content and without editing actions", async () => {
@@ -244,9 +248,9 @@ it("opens a published test with its frozen content and without editing actions",
   mocks.getTest.mockResolvedValue(published);
 
   render(<AdminWritingTestsLive />);
-  fireEvent.click(await screen.findByRole("button", { name: "Xem" }));
+  fireEvent.click(await screen.findByRole("button", { name: "View" }));
   const dialog = await screen.findByRole("dialog", {
-    name: "Chi tiết đề Writing",
+    name: "Writing test details",
   });
   expect(
     within(dialog).getByRole("img", { name: "Office scene" }),
@@ -254,13 +258,13 @@ it("opens a published test with its frozen content and without editing actions",
   expect(within(dialog).getByText("Suggest a time.")).toBeInTheDocument();
   expect(within(dialog).queryByText("Internal only")).not.toBeInTheDocument();
   expect(
-    screen.queryByRole("button", { name: "Chỉnh sửa" }),
+    screen.queryByRole("button", { name: "Edit" }),
   ).not.toBeInTheDocument();
   expect(mocks.getExercise).not.toHaveBeenCalled();
   fireEvent.click(
-    within(dialog).getByRole("button", { name: "Đóng chi tiết đề" }),
+    within(dialog).getByRole("button", { name: "Close test details" }),
   );
   expect(
-    screen.queryByRole("dialog", { name: "Chi tiết đề Writing" }),
+    screen.queryByRole("dialog", { name: "Writing test details" }),
   ).not.toBeInTheDocument();
 });

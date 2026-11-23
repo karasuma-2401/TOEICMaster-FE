@@ -69,7 +69,7 @@ export function KnowledgeTiptapEditor({
       TableCell,
       Placeholder.configure({
         placeholder:
-          "Bắt đầu viết nội dung bài kiến thức TOEIC... Dùng tiêu đề H2/H3 để tự tạo bảng mục lục.",
+          "Start writing your TOEIC knowledge article... Use H2/H3 headings to auto-generate the table of contents.",
       }),
     ],
     content: value,
@@ -110,10 +110,10 @@ export function KnowledgeTiptapEditor({
     try {
       const asset = await uploadKnowledgeImage(file);
       insertAsset(asset);
-      toast.success("Đã chèn hình ảnh vào bài viết.");
+      toast.success("Image inserted into article.");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Không thể tải lên hình ảnh.",
+        err instanceof Error ? err.message : "Could not upload image.",
       );
     } finally {
       setUploading(false);
@@ -137,7 +137,7 @@ export function KnowledgeTiptapEditor({
         onClose={() => setMediaPickerOpen(false)}
         onSelect={insertAsset}
         open={mediaPickerOpen}
-        title="Chèn hình ảnh vào bài viết"
+        title="Insert image into article"
       />
     </div>
   );

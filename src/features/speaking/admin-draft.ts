@@ -106,7 +106,7 @@ export function toSpeakingDraft(
   }
 }
 
-/** Validates the draft and builds the request body, or returns a Vietnamese error. */
+/** Validates the draft and builds the request body, or returns an error message. */
 export function fromSpeakingDraft(
   draft: SpeakingDraft,
 ): { input: SpeakingExerciseInput } | { error: string } {
@@ -119,15 +119,17 @@ export function fromSpeakingDraft(
     modelAnswer: draft.modelAnswer.trim(),
   };
   if (!base.code || !base.topic)
-    return { error: "Mã bài và chủ đề là bắt buộc." };
+    return { error: "Exercise code and topic are required." };
   if (!base.modelAnswer)
-    return { error: "Bài mẫu là bắt buộc để chấm và tự đánh giá." };
+    return {
+      error: "Model answer is required for grading and self-assessment.",
+    };
   const questions = draft.questions.map((question) => question.trim());
   switch (draft.part) {
     case 1:
       return draft.passage.trim()
         ? { input: { ...base, part: 1, passage: draft.passage.trim() } }
-        : { error: "Part 1 cần đoạn văn để đọc." };
+        : { error: "Part 1 requires a passage to read aloud." };
     case 2:
       return draft.imageAssetId && draft.imageAlt.trim()
         ? {
@@ -138,7 +140,9 @@ export function fromSpeakingDraft(
               imageAlt: draft.imageAlt.trim(),
             },
           }
-        : { error: "Part 2 cần ảnh đã tải lên và mô tả ảnh." };
+        : {
+            error: "Part 2 requires an uploaded image and image description.",
+          };
     case 3:
       return draft.context.trim() && questions.every(Boolean)
         ? {
@@ -149,7 +153,7 @@ export function fromSpeakingDraft(
               questions,
             },
           }
-        : { error: "Part 3 cần bối cảnh và đủ 3 câu hỏi." };
+        : { error: "Part 3 requires a context and all 3 questions." };
     case 4: {
       const rows = parseDocumentRows(draft.documentRows);
       if (
@@ -158,10 +162,11 @@ export function fromSpeakingDraft(
         rows.some((row) => !row.label || !row.value)
       )
         return {
-          error: "Part 4 cần tiêu đề và bảng thông tin dạng “nhãn | nội dung”.",
+          error:
+            "Part 4 requires a title and an information table in 'label | value' format.",
         };
       if (!questions.every(Boolean))
-        return { error: "Part 4 cần đủ 3 câu hỏi." };
+        return { error: "Part 4 requires all 3 questions." };
       return {
         input: {
           ...base,
@@ -176,7 +181,7 @@ export function fromSpeakingDraft(
     case 5:
       return draft.prompt.trim()
         ? { input: { ...base, part: 5, prompt: draft.prompt.trim() } }
-        : { error: "Part 5 cần đề bài nêu quan điểm." };
+        : { error: "Part 5 requires an opinion prompt." };
   }
 }
 

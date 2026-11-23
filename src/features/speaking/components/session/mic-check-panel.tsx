@@ -60,7 +60,7 @@ export function MicCheckPanel({
         setHeard(voiceMilliseconds >= 1000);
         if (voiceMilliseconds < 1000)
           setTestError(
-            "Chưa nhận đủ tín hiệu giọng nói. Hãy kiểm tra micro và thu thử lại.",
+            "Not enough voice signal detected. Please check your microphone and try again.",
           );
       }
     }, 100);
@@ -85,9 +85,11 @@ export function MicCheckPanel({
   const ready = mic.status === "ready";
   return (
     <section className="sp-card mx-auto max-w-[640px] space-y-5 p-6">
-      <h2 className="text-xl font-semibold">Kiểm tra thiết bị · 3 bước</h2>
+      <h2 className="text-xl font-semibold">Device check · 3 steps</h2>
       <div>
-        <h3 className="font-semibold">1. Cấp quyền và chọn micro</h3>
+        <h3 className="font-semibold">
+          1. Grant permission and select microphone
+        </h3>
         <p aria-live="polite" className="mt-2 text-sm">
           {microphoneMessages[mic.status]}
         </p>
@@ -97,11 +99,11 @@ export function MicCheckPanel({
           onClick={() => void mic.acquire()}
           type="button"
         >
-          Cho phép micro
+          Allow microphone
         </button>
         {ready && mic.devices.length > 0 && (
           <label className="mt-3 block text-sm">
-            Micro
+            Microphone
             <select
               className="mt-1 block w-full rounded-lg border p-2"
               disabled={starting || testing}
@@ -115,7 +117,7 @@ export function MicCheckPanel({
             >
               {mic.devices.map((device) => (
                 <option key={device.deviceId} value={device.deviceId}>
-                  {device.label || "Micro"}
+                  {device.label || "Microphone"}
                 </option>
               ))}
             </select>
@@ -123,7 +125,7 @@ export function MicCheckPanel({
         )}
       </div>
       <div>
-        <h3 className="font-semibold">2. Nói thử trong 5 giây</h3>
+        <h3 className="font-semibold">2. Speak for 5 seconds</h3>
         <p className="mt-2 text-sm" lang="en">
           Hello, I am ready for the TOEIC Speaking test.
         </p>
@@ -134,7 +136,7 @@ export function MicCheckPanel({
           onClick={recordTest}
           type="button"
         >
-          {testing ? `Đang thu thử ${elapsed}/5 giây…` : "Thu thử 5 giây"}
+          {testing ? `Recording test ${elapsed}/5s…` : "Record 5-second test"}
         </button>
         {testError && (
           <p role="alert" className="mt-2 text-sm text-(--sp-danger)">
@@ -143,10 +145,10 @@ export function MicCheckPanel({
         )}
       </div>
       <div>
-        <h3 className="font-semibold">3. Nghe lại và xác nhận</h3>
+        <h3 className="font-semibold">3. Play back and confirm</h3>
         {recording && !testing && (
           <audio
-            aria-label="Bản thu kiểm tra"
+            aria-label="Test recording"
             className="mt-3 w-full"
             controls
             src={recording.url}
@@ -161,12 +163,12 @@ export function MicCheckPanel({
           onClick={mic.verify}
           type="button"
         >
-          Tôi nghe rõ bản thu
+          I can hear my recording clearly
         </button>
         <p aria-live="polite" className="mt-2 text-sm">
           {mic.verified
-            ? "Kiểm tra thiết bị đã đạt."
-            : "Nghe hết bản thu rồi xác nhận trước khi bắt đầu."}
+            ? "Device check passed."
+            : "Listen to the full recording and confirm before starting."}
         </p>
       </div>
       <button
@@ -175,7 +177,7 @@ export function MicCheckPanel({
         onClick={() => onStart(false)}
         type="button"
       >
-        {starting ? "Đang tạo lượt làm…" : "Bắt đầu làm bài →"}
+        {starting ? "Creating attempt…" : "Start test →"}
       </button>
       {!requireDevices && (
         <button
@@ -184,13 +186,14 @@ export function MicCheckPanel({
           onClick={() => onStart(true)}
           type="button"
         >
-          Luyện không ghi âm
+          Practice without recording
         </button>
       )}
       <p className="text-xs text-(--sp-ink-3)">
-        Micro được giữ kết nối trong lượt làm để tránh xin quyền lại. Ngoài bản
-        thu thử trên máy, âm thanh chỉ được ghi trong pha trả lời; bản thu thử
-        không được gửi lên máy chủ.
+        Your microphone stays connected during the attempt so you will not be
+        asked for permission again. Aside from the local test recording, audio
+        is only recorded during the response phase; the test recording is never
+        sent to the server.
       </p>
     </section>
   );

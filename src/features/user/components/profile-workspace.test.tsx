@@ -23,7 +23,7 @@ vi.mock("@/features/history/api", () => ({
 
 const sampleProfile: UserProfile = {
   id: "user-1",
-  displayName: "Nguyễn Văn A",
+  displayName: "Noah Adams",
   email: "learner@example.com",
   phone: "0912345678",
   dateOfBirth: "1998-05-12",
@@ -51,14 +51,14 @@ describe("ProfileWorkspace", () => {
     expect(screen.getByTestId("profile-section-security")).toBeInTheDocument();
     expect(screen.getByTestId("profile-section-settings")).toBeInTheDocument();
 
-    expect(screen.getByLabelText("Ngày sinh")).toHaveValue("1998-05-12");
+    expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-05-12");
 
-    const rateSelect = screen.getByLabelText("Tốc độ mặc định");
+    const rateSelect = screen.getByLabelText("Default speed");
     await user.selectOptions(rateSelect, "1.2");
     expect(localStorage.getItem("toeicmaster-review-audio-rate")).toBe("1.2");
 
     const mascotToggle = screen.getByRole("checkbox", {
-      name: /Ẩn trợ lý Míc/,
+      name: /Hide Mic assistant/,
     });
     await user.click(mascotToggle);
     expect(localStorage.getItem("toeicmaster-mascot-hidden")).toBe("1");

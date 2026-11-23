@@ -65,7 +65,7 @@ async function errorFrom(response: Response): Promise<AuthError> {
   const title =
     isObject(body) && typeof body.title === "string"
       ? body.title
-      : "Không thể kết nối dịch vụ. Vui lòng thử lại.";
+      : "Unable to reach the service. Please try again.";
   return new AuthError(response.status, title, {
     email: first("Email"),
     password: first("Password"),
@@ -91,7 +91,7 @@ async function authenticate(
   if (!response.ok) throw await errorFrom(response);
   const result: unknown = await response.json().catch(() => null);
   const user = isObject(result) ? userFrom(result.user) : null;
-  if (!user) throw new AuthError(502, "Phản hồi đăng nhập không hợp lệ.");
+  if (!user) throw new AuthError(502, "Invalid sign-in response.");
   return user;
 }
 
@@ -155,7 +155,7 @@ export async function verifyPasswordReset(
     typeof body.expiresAtUtc !== "string" ||
     !Number.isFinite(Date.parse(body.expiresAtUtc))
   )
-    throw new AuthError(502, "Phản hồi đặt lại mật khẩu không hợp lệ.");
+    throw new AuthError(502, "Invalid password reset response.");
   return { resetToken: body.resetToken, expiresAtUtc: body.expiresAtUtc };
 }
 
@@ -185,5 +185,5 @@ export async function getSession(): Promise<SessionState> {
   const user = isObject(body) ? userFrom(body.user) : null;
   if (isObject(body) && body.status === "authenticated" && user)
     return { status: "authenticated", user };
-  throw new AuthError(502, "Phản hồi phiên đăng nhập không hợp lệ.");
+  throw new AuthError(502, "Invalid session response.");
 }

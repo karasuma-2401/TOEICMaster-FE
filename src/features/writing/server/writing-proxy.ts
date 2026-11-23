@@ -61,9 +61,10 @@ export async function forwardWriting(
   segments: string[],
   method: "GET" | "POST" | "PUT",
 ) {
-  if (!validPath(segments)) return problem(404, "Không tìm thấy API Writing.");
+  if (!validPath(segments))
+    return problem(404, "Writing API endpoint not found.");
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   const path = segments.join("/");
   const isAttemptPath =
@@ -98,19 +99,18 @@ export async function forwardWriting(
       path,
     );
     if (!raw) {
-      if (!acceptsEmptyBody)
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      if (!acceptsEmptyBody) return problem(400, "Invalid request payload.");
     } else {
       if (!request.headers.get("content-type")?.startsWith("application/json"))
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       let body: unknown;
       try {
         body = JSON.parse(raw);
       } catch {
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       }
       if (!body || typeof body !== "object" || Array.isArray(body))
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       headers.set("Content-Type", "application/json");
       init.body = JSON.stringify(body);
     }
@@ -121,6 +121,6 @@ export async function forwardWriting(
     url.search = new URL(request.url).search;
     return upstreamResponse(await fetch(url, init), anonymousSession);
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

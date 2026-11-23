@@ -8,8 +8,8 @@ export const EMPTY_TIPTAP_DOC: TiptapDoc = {
 export function slugifyVietnamese(source: string, maxLength = 80): string {
   const replaced = source
     .trim()
-    .replaceAll("đ", "d")
-    .replaceAll("Đ", "d")
+    .replaceAll("\u0111", "d")
+    .replaceAll("\u0110", "d")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
@@ -136,10 +136,10 @@ export function formatBytes(bytes: number): string {
 }
 
 export function formatDateTimeVi(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

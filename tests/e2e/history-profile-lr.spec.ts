@@ -491,7 +491,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
 
-    await expect(page.getByText(/Sắp ra mắt/i)).toHaveCount(0);
+    await expect(page.getByText(/Coming soon/i)).toHaveCount(0);
     await expect(page.getByTestId("attempt-history-section")).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "ETS 2026 Test 01" }).first(),
@@ -503,10 +503,10 @@ test.describe("History, Profile, and L&R Flow", () => {
     const trigger = page.getByTestId("user-menu-trigger");
     await trigger.click();
     await expect(
-      page.getByRole("menuitem", { name: "Hồ sơ cá nhân" }),
+      page.getByRole("menuitem", { name: "Personal profile" }),
     ).toHaveAttribute("href", "/profile");
     await expect(
-      page.getByRole("menuitem", { name: "Lịch sử làm bài" }),
+      page.getByRole("menuitem", { name: "Attempt history" }),
     ).toHaveAttribute("href", "/history");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("menu")).toHaveCount(0);
@@ -520,7 +520,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/listening");
     await expect(page.getByTestId("attempt-history-section")).toBeVisible();
-    await expect(page.getByText("Bạn đã thi 2 lần")).toBeVisible();
+    await expect(page.getByText("Attempted 2 times")).toBeVisible();
     await expect(page.getByText("855 / 990").first()).toBeVisible();
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "03-listening-history-1440x900.png");
@@ -536,20 +536,20 @@ test.describe("History, Profile, and L&R Flow", () => {
       await assertCleanDomGeometry(page);
     }
 
-    // /history unified page: 8 total items (2 LR + 1 SP + 5 WR), skill filter & Xem thêm
+    // /history unified page: 8 total items (2 LR + 1 SP + 5 WR), skill filter & Show more
     await page.goto("/history");
     await expect(
-      page.getByRole("heading", { name: "Lịch sử làm bài" }),
+      page.getByRole("heading", { name: "Attempt History" }),
     ).toBeVisible();
     await expect(page.getByText("Writing Test 01")).toBeVisible();
 
     const filterGroup = page.getByRole("group", {
-      name: "Lọc lịch sử theo kỹ năng",
+      name: "Filter history by skill",
     });
     await filterGroup.getByRole("button", { name: "Speaking" }).click();
     await expect(page.getByText("Speaking Test 01")).toBeVisible();
     await expect(page.getByText("Writing Test 01")).toHaveCount(0);
-    await filterGroup.getByRole("button", { name: "Tất cả" }).click();
+    await filterGroup.getByRole("button", { name: "All" }).click();
     await assertCleanDomGeometry(page);
 
     // /profile single-page 4 sections + dateOfBirth PUT + settings persistence
@@ -559,7 +559,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     await expect(page.getByTestId("profile-section-history")).toBeVisible();
     await expect(page.getByTestId("profile-section-security")).toBeVisible();
     await expect(page.getByTestId("profile-section-settings")).toBeVisible();
-    const dobInput = page.getByLabel("Ngày sinh");
+    const dobInput = page.getByLabel("Date of birth");
     await expect(dobInput).toHaveValue("1998-05-12");
 
     // Edit dateOfBirth & verify PUT /api/profile sends updated dateOfBirth
@@ -567,13 +567,13 @@ test.describe("History, Profile, and L&R Flow", () => {
       (req) => req.url().endsWith("/api/profile") && req.method() === "PUT",
     );
     await dobInput.fill("1999-07-20");
-    await page.getByRole("button", { name: "Lưu thay đổi" }).click();
+    await page.getByRole("button", { name: "Save changes" }).click();
     const putReq = await putPromise;
     expect(putReq.postDataJSON()).toMatchObject({ dateOfBirth: "1999-07-20" });
 
     // Persist reviewAudioRate = 1.2 & mascotHidden
-    await page.getByLabel("Tốc độ mặc định").selectOption("1.2");
-    await page.getByRole("checkbox", { name: /Ẩn trợ lý Míc/ }).click();
+    await page.getByLabel("Default speed").selectOption("1.2");
+    await page.getByRole("checkbox", { name: /Hide Mic assistant/ }).click();
     const prefs = await page.evaluate(() => ({
       rate: localStorage.getItem("toeicmaster-review-audio-rate"),
       mascot: localStorage.getItem("toeicmaster-mascot-hidden"),
@@ -581,7 +581,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     expect(prefs).toEqual({ rate: "1.2", mascot: "1" });
 
     // Toggle mascot back on for clean screenshot
-    await page.getByRole("checkbox", { name: /Ẩn trợ lý Míc/ }).click();
+    await page.getByRole("checkbox", { name: /Hide Mic assistant/ }).click();
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "04-profile-single-page-1440x900.png");
 
@@ -679,7 +679,7 @@ test.describe("History, Profile, and L&R Flow", () => {
                     status: "wrong",
                     isFlagged: false,
                     explanation: "They discuss boarding gates.",
-                    translation: "Họ nói về cổng lên máy bay.",
+                    translation: "They are talking about the boarding gate.",
                     imageAssetId: null,
                   },
                 ],
@@ -768,9 +768,9 @@ test.describe("History, Profile, and L&R Flow", () => {
     // 1. L&R Result (Screen 18)
     await page.goto(`/exams/lr/attempts/${ATTEMPT_LR}/result`);
     await expect(page.getByText("855")).toBeVisible();
-    await expect(page.getByText(/89 \/ 100 câu đúng/)).toBeVisible();
+    await expect(page.getByText(/89 \/ 100 correct/)).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Về lịch sử làm bài" }),
+      page.getByRole("link", { name: "Back to Attempt History" }),
     ).toHaveAttribute("href", "/history");
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "05-lr-result-1440x900.png");
@@ -780,9 +780,9 @@ test.describe("History, Profile, and L&R Flow", () => {
       localStorage.setItem("toeicmaster-review-audio-rate", "1.2");
     });
     await page.goto(`/exams/lr/attempts/${ATTEMPT_LR}/review`);
-    await expect(page.getByRole("tab", { name: /Làm sai/ })).toBeVisible();
-    await expect(page.getByText("Đáp án đúng")).toBeVisible();
-    await expect(page.getByText("Bạn chọn")).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Incorrect/ })).toBeVisible();
+    await expect(page.getByText("Correct answer")).toBeVisible();
+    await expect(page.getByText("Your choice")).toBeVisible();
     await expect(page.getByTestId("lr-review-audio-speed")).toHaveValue("1.2");
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "06-lr-review-1440x900.png");
@@ -790,26 +790,28 @@ test.describe("History, Profile, and L&R Flow", () => {
     // 3. Speaking Result & Review (/history back links)
     await page.goto(`/speaking/attempts/${ATTEMPT_SP}`);
     await expect(
-      page.getByRole("link", { name: "Về lịch sử làm bài" }),
+      page.getByRole("link", { name: "Go to attempt history" }),
     ).toHaveAttribute("href", "/history");
     await assertCleanDomGeometry(page);
 
     await page.goto(`/speaking/attempts/${ATTEMPT_SP}/review/1`);
     await expect(
-      page.getByRole("link", { name: /Lịch sử làm bài|Về lịch sử/i }),
+      page.getByRole("link", {
+        name: /Attempt history|Go to attempt history/i,
+      }),
     ).toHaveAttribute("href", "/history");
     await assertCleanDomGeometry(page);
 
     // 4. Writing Result & Review Sentence Diff (Screens 26 & 27)
     await page.goto(`/writing/attempts/${ATTEMPT_WR}/result`);
     await expect(
-      page.getByRole("link", { name: "Xem lịch sử" }),
+      page.getByRole("link", { name: "View history" }),
     ).toHaveAttribute("href", "/history");
     await assertCleanDomGeometry(page);
 
     await page.goto(`/writing/attempts/${ATTEMPT_WR}/review`);
     await expect(page.getByText("High-score Model Essay")).toBeVisible();
-    await expect(page.getByText("Nhận xét của AI")).toBeVisible();
+    await expect(page.getByText("AI Feedback")).toBeVisible();
     await expect(page.getByTestId("writing-sentence-diff")).toBeVisible();
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "07-writing-review-diff-1440x900.png");
@@ -820,7 +822,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     await expect(player.locator('input[type="range"]')).toHaveCount(0);
     const toggle = page.getByTestId("lr-master-audio-toggle");
     await toggle.click();
-    await expect(toggle).toHaveAccessibleName("Đang phát · Khóa tạm dừng");
+    await expect(toggle).toHaveAccessibleName("Playing · Pause Locked");
     await expect(toggle).toBeDisabled();
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "08-lr-locked-audio-1440x900.png");
@@ -878,7 +880,7 @@ test.describe("History, Profile, and L&R Flow", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(
-      page.getByText("Đăng nhập để xem lịch sử làm bài"),
+      page.getByText("Sign in to view your attempt history"),
     ).toBeVisible();
     await assertCleanDomGeometry(page);
     await captureScreenshot(page, "09-guest-empty-state-390x844.png");

@@ -11,9 +11,9 @@ export function Pagination({
   const cell =
     "sp-focus grid size-9 place-items-center rounded-lg border border-(--sp-line) bg-(--sp-surface) text-[13px] disabled:cursor-not-allowed disabled:opacity-40";
   return (
-    <nav aria-label="Phân trang" className="flex items-center gap-2">
+    <nav aria-label="Pagination" className="flex items-center gap-2">
       <button
-        aria-label="Trang trước"
+        aria-label="Previous page"
         className={cell}
         disabled={page <= 1}
         onClick={() => onPage(page - 1)}
@@ -33,7 +33,7 @@ export function Pagination({
         </button>
       ))}
       <button
-        aria-label="Trang sau"
+        aria-label="Next page"
         className={cell}
         disabled={page >= pages}
         onClick={() => onPage(page + 1)}

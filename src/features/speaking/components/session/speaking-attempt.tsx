@@ -104,7 +104,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
             onRetry={() => void session.refresh()}
           />
         ) : (
-          <SpLoading label="Đang tải lượt làm Speaking…" />
+          <SpLoading label="Loading Speaking attempt…" />
         )}
       </SpPage>
     );
@@ -120,7 +120,9 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
 
   const exit = () => {
     if (
-      window.confirm("Thoát phòng thi? Đồng hồ vẫn tiếp tục chạy trên máy chủ.")
+      window.confirm(
+        "Exit the test room? The timer will continue running on the server.",
+      )
     )
       router.push("/speaking");
   };
@@ -139,10 +141,10 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
             onClick={exit}
             type="button"
           >
-            Thoát <XIcon size={15} />
+            Exit <XIcon size={15} />
           </button>
         </div>
-        <ol aria-label="Tiến độ câu hỏi" className="flex gap-px">
+        <ol aria-label="Question progress" className="flex gap-px">
           {attempt.questions.map((item) => {
             const position = question?.position ?? 1;
             return (
@@ -151,7 +153,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
                 className={`h-1.5 flex-1 ${item.position < position ? "bg-(--sp-brand)" : item.position === position ? "bg-(--sp-amber)" : "bg-white/20"}`}
                 key={item.position}
               >
-                <span className="sr-only">Câu {item.position}</span>
+                <span className="sr-only">Question {item.position}</span>
               </li>
             );
           })}
@@ -174,7 +176,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
                   {microphoneMessages[recorder.status]}
                 </p>
                 <p className="text-[13px] text-(--sp-danger)">
-                  Đồng hồ vẫn tiếp tục chạy trên máy chủ.
+                  The timer continues running on the server.
                 </p>
               </div>
             </div>
@@ -185,7 +187,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
                 onClick={() => void requestAccess()}
                 type="button"
               >
-                Kết nối lại
+                Reconnect
               </button>
             )}
           </div>
@@ -210,7 +212,7 @@ export function SpeakingAttemptRun({ attemptId }: { attemptId: string }) {
             total={attempt.questions.length}
           />
         ) : (
-          <SpLoading label="Đang đồng bộ với máy chủ…" />
+          <SpLoading label="Syncing with server…" />
         )}
       </main>
     </div>

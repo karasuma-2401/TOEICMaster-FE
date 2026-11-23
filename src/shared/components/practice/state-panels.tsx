@@ -15,7 +15,7 @@ export function LoadingPanel({ label }: { label: string }) {
 export function ErrorPanel({
   message,
   onRetry,
-  retryLabel = "Thử lại",
+  retryLabel = "Retry",
 }: {
   message: ReactNode;
   onRetry?: () => void;

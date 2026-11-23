@@ -27,26 +27,26 @@ export async function forwardAdminUsers(
   method: "GET" | "POST" | "PATCH" | "DELETE",
 ) {
   if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
 
   const session = sessionCookie(request);
   if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
-    return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+    return problem(401, "Invalid or expired session.");
 
   const role = (session as typeof session & { role?: unknown }).role;
   if (role !== "ADMIN")
-    return problem(403, "Bạn không có quyền truy cập chức năng này.");
+    return problem(403, "You do not have permission to access this feature.");
 
   const init: RequestInit = { method };
   const contentType = request.headers.get("content-type") ?? "";
   const bodyRequired =
     method === "PATCH" || (method === "POST" && path === "/api/v1/admin/users");
   if (bodyRequired && !contentType.startsWith("application/json"))
-    return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+    return problem(400, "Invalid request data.");
   if (contentType.startsWith("application/json")) {
     const body: unknown = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body))
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request data.");
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body);
   }
@@ -55,7 +55,7 @@ export async function forwardAdminUsers(
     const upstream = await backendFetch(path, session.accessToken, init);
     return upstreamResponse(upstream);
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }
 

@@ -36,13 +36,13 @@ function errorFor(response: Response): PronunciationApiError {
   if (status === 401)
     return new PronunciationApiError(
       "UNAUTHORIZED",
-      "Đăng nhập để được chấm phát âm.",
+      "Sign in to get your pronunciation scored.",
       status,
     );
   if (status === 400 || status === 413 || status === 422)
     return new PronunciationApiError(
       "INVALID_AUDIO",
-      "Bản thu không hợp lệ. Hãy thu lại rõ hơn và ngắn hơn 10 giây.",
+      "Invalid recording. Please record more clearly and keep it under 10 seconds.",
       status,
     );
   if (status === 429) {
@@ -52,15 +52,15 @@ function errorFor(response: Response): PronunciationApiError {
     return new PronunciationApiError(
       "RATE_LIMITED",
       wait
-        ? `Bạn thử quá nhanh, hãy chờ ${wait} giây rồi thu lại.`
-        : "Bạn thử quá nhanh, hãy chờ một chút rồi thu lại.",
+        ? `You're trying too fast. Please wait ${wait} seconds before recording again.`
+        : "You're trying too fast. Please wait a moment before recording again.",
       status,
       wait,
     );
   }
   return new PronunciationApiError(
     "UNAVAILABLE",
-    "Chưa chấm được lúc này. Bạn vẫn có thể nghe lại bản thu và so với âm mẫu.",
+    "Unable to score right now. You can still replay your recording and compare it with the sample audio.",
     status,
   );
 }
@@ -88,7 +88,7 @@ export async function assessPronunciation(
     if (signal?.aborted) throw error;
     throw new PronunciationApiError(
       "NETWORK",
-      "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.",
+      "Could not connect to the server. Check your network and try again.",
     );
   }
 
@@ -101,7 +101,7 @@ export async function assessPronunciation(
     if (error instanceof InvalidAssessmentError)
       throw new PronunciationApiError(
         "INVALID_RESPONSE",
-        "Kết quả chấm không đọc được. Hãy thử lại.",
+        "Could not read the assessment result. Please try again.",
         response.status,
       );
     throw error;

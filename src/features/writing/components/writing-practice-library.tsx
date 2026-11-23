@@ -20,17 +20,19 @@ import { WritingHeader } from "./writing-header";
 
 const parts = {
   1: {
-    subtitle: "Viết câu theo tranh",
-    description: "Ảnh và hai từ/cụm từ bắt buộc cho mỗi câu.",
+    subtitle: "Write sentences based on pictures",
+    description:
+      "A picture and two required words or phrases for each question.",
   },
   2: {
-    subtitle: "Viết email phản hồi",
-    description: "Đọc email, đáp ứng đầy đủ yêu cầu và viết phản hồi phù hợp.",
+    subtitle: "Respond to an email",
+    description:
+      "Read the email, address all prompts, and write an appropriate response.",
   },
   3: {
-    subtitle: "Viết bài luận quan điểm",
+    subtitle: "Write an opinion essay",
     description:
-      "Nêu quan điểm, phát triển lập luận và viết bài luận hoàn chỉnh.",
+      "State your opinion, develop supporting arguments, and write a complete essay.",
   },
 } as const;
 
@@ -38,8 +40,8 @@ const partNumbers = [1, 2, 3] as const;
 
 // The backend gives Writing exercises no date, so they are ordered by code.
 const sortOptions: { value: ExamSort; label: string }[] = [
-  { value: "ASC", label: "Mã A–Z" },
-  { value: "DESC", label: "Mã Z–A" },
+  { value: "ASC", label: "Code A-Z" },
+  { value: "DESC", label: "Code Z-A" },
 ];
 
 function parseDifficulty(value: string): ExamDifficulty | null {
@@ -70,7 +72,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
       } catch (cause) {
         if (signal?.aborted) return;
         setError(
-          cause instanceof Error ? cause.message : "Không thể tải bài tập.",
+          cause instanceof Error ? cause.message : "Unable to load exercises.",
         );
       } finally {
         if (!signal?.aborted) setLoading(false);
@@ -96,7 +98,9 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
         router.push(`/writing/attempts/${encodeURIComponent(attempt.id)}`);
       } catch (cause) {
         setError(
-          cause instanceof Error ? cause.message : "Không thể bắt đầu bài tập.",
+          cause instanceof Error
+            ? cause.message
+            : "Unable to start the exercise.",
         );
         setStarting(null);
       }
@@ -120,7 +124,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
         code: exercise.code,
         title: exercise.topic,
         badge: `Part ${part} · ${difficulty ? difficultyLabels[difficulty] : exercise.difficulty}`,
-        meta: `1 câu · Không tính giờ · Điểm tiêu chí 0–${part === 1 ? 3 : part === 2 ? 4 : 5}`,
+        meta: `1 question · Untimed · Rubric score 0-${part === 1 ? 3 : part === 2 ? 4 : 5}`,
         action: {
           onStart: () => void start(exercise.id),
           starting: starting === exercise.id,
@@ -136,8 +140,8 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
 
   return (
     <ExamLibrary
-      emptyDescription="Admin cần công bố bài tập cho Part này."
-      emptyTitle={`Chưa có bài tập ở Part ${part}`}
+      emptyDescription="An admin needs to publish exercises for this Part."
+      emptyTitle={`No exercises in Part ${part} yet`}
       error={error}
       header={<WritingHeader wide />}
       items={items}
@@ -153,7 +157,7 @@ export function WritingPracticeLibrary({ part }: { part: 1 | 2 | 3 }) {
         id: "writing",
         name: "Writing",
         tagline: parts[part].description,
-        format: `Part ${part} · ${parts[part].subtitle} · Phản hồi từ AI`,
+        format: `Part ${part} · ${parts[part].subtitle} · AI feedback`,
         maxScore: part === 1 ? 3 : part === 2 ? 4 : 5,
         examHref: "/writing",
         exerciseHref: "/writing/practice/1",

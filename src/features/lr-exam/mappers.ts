@@ -43,7 +43,7 @@ function examSummary(
     id: sheet.examId,
     title: sheet.examTitle,
     identity: sheet.examCode,
-    breadcrumb: `Trang chủ / Đề thi thử / ${sheet.examCode}`,
+    breadcrumb: `Home / Mock Tests / ${sheet.examCode}`,
     totalQuestions: sheet.totalQuestions,
     durationMinutes: Math.ceil(sheet.timeLimitSeconds / 60),
     scoreScale: "10–990",
@@ -74,13 +74,13 @@ export function sheetToRoomState(
       part: block.part as LrQuestionGroup["part"],
       first,
       last,
-      heading: `PART ${block.part} · CÂU ${first}–${last}`,
+      heading: `PART ${block.part} · QUESTIONS ${first}–${last}`,
       description: block.part <= 4 ? "Listening" : "Reading",
       ...(contexts.length > 0
         ? {
             passage: {
-              label: `PART ${block.part} · CÂU ${first}–${last}`,
-              title: `Nội dung Part ${block.part}`,
+              label: `PART ${block.part} · QUESTIONS ${first}–${last}`,
+              title: `Part ${block.part} Passage`,
               paragraphs: contexts.map((context) => ({
                 text: context.text ?? "",
                 ...(context.imageAssetId && mediaUrls[context.imageAssetId]
@@ -143,7 +143,7 @@ export function sheetToRoomState(
 function durationLabel(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds % 60;
-  return `${minutes} phút ${remainder} giây`;
+  return `${minutes} minutes ${remainder} seconds`;
 }
 
 export function resultToReport(result: LrResultApi): LrResultReport {
@@ -171,9 +171,9 @@ export function resultToReport(result: LrResultApi): LrResultReport {
   );
 
   return {
-    examTitle: `Kết quả bài thi Listening & Reading - ${result.examTitle}`,
+    examTitle: `Listening & Reading Exam Result - ${result.examTitle}`,
     examIdentity: result.examCode,
-    takenAt: new Date(result.submittedAtUtc).toLocaleDateString("vi-VN"),
+    takenAt: new Date(result.submittedAtUtc).toLocaleDateString("en-US"),
     durationLabel: durationLabel(result.durationSeconds),
     scale: "ETS Standard",
     totalScore: result.totalScaledScore,
@@ -215,7 +215,7 @@ export function reviewToState(
         const correct = question.correctKey;
         if (!choiceKeys.includes(correct as LrChoiceKey)) {
           throw new Error(
-            `Thiếu đáp án đúng cho câu ${question.number} trong dữ liệu review.`,
+            `Missing correct answer for question ${question.number} in review data.`,
           );
         }
 
@@ -225,7 +225,7 @@ export function reviewToState(
           !choiceKeys.includes(selected as LrChoiceKey)
         ) {
           throw new Error(
-            `Đáp án đã chọn của câu ${question.number} không hợp lệ.`,
+            `Selected answer for question ${question.number} is invalid.`,
           );
         }
 
@@ -244,7 +244,7 @@ export function reviewToState(
           analysis: {
             summary:
               question.explanation ??
-              "Chưa có lời giải chi tiết cho câu hỏi này.",
+              "No detailed explanation is available for this question.",
             ...(question.translation ? { notes: [question.translation] } : {}),
             skill: `Listening & Reading · Part ${question.part}`,
           },
@@ -270,7 +270,7 @@ export function reviewToState(
         ? {
             passage: {
               label: `PART ${block.part}`,
-              title: `Nội dung Part ${block.part}`,
+              title: `Part ${block.part} Passage`,
               paragraphs: contexts.map((context) => ({
                 text: context.text ?? "",
                 ...(context.imageAssetId && mediaUrls[context.imageAssetId]
@@ -289,7 +289,7 @@ export function reviewToState(
       id: review.examId,
       title: review.examTitle,
       identity: review.examCode,
-      breadcrumb: `Trang chủ / Đề thi thử / ${review.examCode}`,
+      breadcrumb: `Home / Mock Tests / ${review.examCode}`,
       totalQuestions: 200,
       durationMinutes: 120,
       scoreScale: "10–990",

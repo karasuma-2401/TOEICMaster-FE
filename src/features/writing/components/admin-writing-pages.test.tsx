@@ -44,9 +44,9 @@ it("shows the actual image and keywords when previewing a Part 1 exercise", asyn
   });
   render(<AdminWritingContentPage />);
   fireEvent.click(
-    await screen.findByRole("button", { name: "Xem" }, { timeout: 10000 }),
+    await screen.findByRole("button", { name: "View" }, { timeout: 10000 }),
   );
-  const dialog = screen.getByRole("dialog", { name: "Preview bài tập" });
+  const dialog = screen.getByRole("dialog", { name: "Preview exercise" });
   expect(
     within(dialog).getByRole("img", { name: "A person at a desk" }),
   ).toHaveAttribute("src", "/api/admin/writing/media/asset-1");
@@ -60,7 +60,7 @@ it("locks a dedicated workspace to its route Part", async () => {
 
   render(<AdminWritingContentPage part={2} />);
 
-  await screen.findByText("Không tìm thấy bài tập phù hợp");
+  await screen.findByText("No matching exercises found");
   expect(mocks.list).toHaveBeenLastCalledWith(
     expect.objectContaining({ part: 2 }),
     expect.any(AbortSignal),

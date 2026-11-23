@@ -19,8 +19,8 @@ const skill: ExamLibrarySkill = {
   id: "writing",
   name: "Writing",
   tagline:
-    "Viết câu theo tranh, phản hồi email và trình bày quan điểm trong bài luận.",
-  format: "8 câu · 60 phút · 0–200 điểm · 3 Parts",
+    "Write sentences based on pictures, respond to emails, and express your opinion in an essay.",
+  format: "8 questions · 60 min · 0-200 pts · 3 Parts",
   maxScore: 200,
   examHref: "/writing",
   exerciseHref: "/writing/practice/1",
@@ -34,9 +34,7 @@ function duration(test: WritingTestSummaryApi) {
     0,
   );
   const minutes = Math.floor(seconds / 60);
-  return seconds % 60
-    ? `${minutes} phút ${seconds % 60} giây`
-    : `${minutes} phút`;
+  return seconds % 60 ? `${minutes} min ${seconds % 60} sec` : `${minutes} min`;
 }
 
 export function WritingLibrary() {
@@ -59,7 +57,9 @@ export function WritingLibrary() {
     } catch (cause) {
       if (signal?.aborted) return;
       setError(
-        cause instanceof Error ? cause.message : "Không thể tải đề Writing.",
+        cause instanceof Error
+          ? cause.message
+          : "Unable to load Writing tests.",
       );
     } finally {
       if (!signal?.aborted) setLoading(false);
@@ -95,7 +95,7 @@ export function WritingLibrary() {
         code: test.code,
         title: test.title,
         badge: `${test.parts.length} Parts`,
-        meta: `${questions} câu · ${duration(test)} · 0–200 điểm`,
+        meta: `${questions} ${questions === 1 ? "question" : "questions"} · ${duration(test)} · 0-200 pts`,
         action: {
           href: `/writing/tests/${encodeURIComponent(test.id)}?mode=full`,
         },
@@ -109,16 +109,16 @@ export function WritingLibrary() {
 
   return (
     <ExamLibrary
-      emptyDescription="Admin cần tạo và publish một đề đủ 5 câu Part 1, 2 câu Part 2 và 1 câu Part 3."
-      emptyTitle="Chưa có đề Writing được công bố"
+      emptyDescription="An admin needs to create and publish a test with 5 Part 1 questions, 2 Part 2 questions, and 1 Part 3 question."
+      emptyTitle="No published Writing tests yet"
       error={error}
       header={<WritingHeader wide />}
       historySection={
         <AttemptHistorySection
-          description="Các lần làm Writing của bạn được lưu tại đây."
+          description="Your Writing attempts are saved here."
           limit={3}
           skills={["writing"]}
-          title="Lịch sử làm bài Writing"
+          title="Writing attempt history"
         />
       }
       items={items}

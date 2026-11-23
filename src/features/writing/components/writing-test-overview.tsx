@@ -27,9 +27,7 @@ import { WritingHeader } from "./writing-header";
 
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
-  return seconds % 60
-    ? `${minutes} phút ${seconds % 60} giây`
-    : `${minutes} phút`;
+  return seconds % 60 ? `${minutes} min ${seconds % 60} sec` : `${minutes} min`;
 }
 
 function shortDuration(seconds: number) {
@@ -38,19 +36,19 @@ function shortDuration(seconds: number) {
 
 const partGuides = {
   1: {
-    title: "Viết câu theo tranh",
+    title: "Write sentences based on pictures",
     detail:
-      "Dùng cả hai từ khóa để viết một câu mô tả đúng nội dung từng bức tranh. Chú ý cấu trúc và ngữ pháp.",
+      "Use both keywords to write one sentence accurately describing each picture. Pay attention to structure and grammar.",
   },
   2: {
-    title: "Phản hồi email",
+    title: "Respond to an email",
     detail:
-      "Đọc yêu cầu và viết email trả lời đầy đủ các ý được hỏi. Sử dụng văn phong lịch sự, phù hợp ngữ cảnh.",
+      "Read the directions and write an email addressing all required points. Use a polite tone suited to the context.",
   },
   3: {
-    title: "Bài luận quan điểm",
+    title: "Opinion essay",
     detail:
-      "Trình bày quan điểm với lý do và ví dụ cụ thể. Khuyến nghị tối thiểu 300 từ, bố cục mở bài, thân bài và kết luận.",
+      "Present your opinion with clear reasons and specific examples. At least 300 words recommended, structured into an introduction, body paragraphs, and conclusion.",
   },
 } as const;
 
@@ -79,7 +77,7 @@ export function WritingTestOverview({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải đề Writing.",
+              : "Unable to load the Writing test.",
           );
       }
     },
@@ -103,9 +101,7 @@ export function WritingTestOverview({
       router.push(`/writing/attempts/${encodeURIComponent(attempt.id)}`);
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể bắt đầu lượt làm bài.",
+        cause instanceof Error ? cause.message : "Unable to start the attempt.",
       );
       setStarting(false);
     }
@@ -114,17 +110,17 @@ export function WritingTestOverview({
   if (!test && !error)
     return (
       <PracticePage header={<WritingHeader />}>
-        <LoadingPanel label="Đang tải đề Writing…" />
+        <LoadingPanel label="Loading Writing test..." />
       </PracticePage>
     );
   if (!test)
     return (
       <PracticePage header={<WritingHeader />}>
-        <BackLink href="/writing" label="Quay lại thư viện" />
+        <BackLink href="/writing" label="Back to library" />
         <ErrorPanel
           message={error}
           onRetry={() => void load()}
-          retryLabel="Thử tải lại"
+          retryLabel="Retry"
         />
       </PracticePage>
     );
@@ -144,17 +140,20 @@ export function WritingTestOverview({
     0,
   );
   const stats = [
-    { value: `${questionCount} câu`, label: "tuần tự · khóa sau khi chuyển" },
+    {
+      value: `${questionCount} ${questionCount === 1 ? "question" : "questions"}`,
+      label: "sequential · locked after advancing",
+    },
     selectedPart
-      ? { value: `Part ${selectedPart.part}`, label: "luyện riêng một Part" }
+      ? { value: `Part ${selectedPart.part}`, label: "single-part practice" }
       : {
           value: `${test.parts.length} Parts`,
-          label: `Part 1–${test.parts.length} · tuần tự`,
+          label: `Part 1-${test.parts.length} · sequential`,
         },
     selectedPart
-      ? { value: formatDuration(totalSeconds), label: "tổng thời gian" }
-      : { value: "0–200", label: "thang điểm ước tính" },
-    { value: "Tự động", label: "lưu và khóa sau mỗi câu" },
+      ? { value: formatDuration(totalSeconds), label: "total time" }
+      : { value: "0-200", label: "estimated score scale" },
+    { value: "Auto", label: "save and lock after each question" },
   ];
   const guides = test.parts.flatMap((part, index) => {
     const first =
@@ -166,7 +165,8 @@ export function WritingTestOverview({
     return [
       {
         part,
-        range: first === last ? `Câu ${first}` : `Câu ${first}–${last}`,
+        range:
+          first === last ? `Question ${first}` : `Questions ${first}-${last}`,
       },
     ];
   });
@@ -177,8 +177,8 @@ export function WritingTestOverview({
       <div className="mx-auto max-w-[1000px]">
         <Breadcrumbs
           items={[
-            { label: "Trang chủ", href: "/" },
-            { label: selectedPart ? "Bài tập" : "Đề thi thử" },
+            { label: "Home", href: "/" },
+            { label: selectedPart ? "Exercises" : "Practice tests" },
             { label: "Writing", href: "/writing" },
             { label: test.title },
           ]}
@@ -186,8 +186,8 @@ export function WritingTestOverview({
         <div className={`mt-4 p-6 sm:p-8 ${surfaceCard}`}>
           <p className={`${greenTag} px-2.5 py-1 text-xs`}>
             {selectedPart
-              ? "WRITING · LUYỆN THEO PART"
-              : "WRITING · BÀI THI ĐỘC LẬP"}
+              ? "WRITING · PRACTICE BY PART"
+              : "WRITING · FULL TEST"}
           </p>
           <h1 className="mt-4 text-[28px] font-semibold leading-9 text-[#3d3935]">
             {test.title}
@@ -208,9 +208,11 @@ export function WritingTestOverview({
             ))}
           </dl>
           <p className="mt-5 text-lg font-semibold leading-7 text-[#3d3935]">
-            {selectedPart ? "Phần luyện tập" : "Bài thi"} gồm {questionCount}{" "}
-            câu hỏi tuần tự. Mỗi câu có thời gian chuẩn bị và thời gian làm bài
-            riêng. Khi chuyển câu, câu trước sẽ tự động khóa lại vĩnh viễn.
+            {selectedPart ? "This practice section" : "This test"} includes{" "}
+            {questionCount} sequential{" "}
+            {questionCount === 1 ? "question" : "questions"}. Each question has
+            its own preparation and response time. Once you move on, the
+            previous question is permanently locked.
           </p>
           <div
             className={`mt-5 grid gap-6 ${selectedPart ? "" : "md:grid-cols-3"}`}
@@ -224,8 +226,8 @@ export function WritingTestOverview({
                   Part {part.part} · {partGuides[part.part].title}
                 </h2>
                 <p className="mt-2 text-[13px] text-[#6b655f]">
-                  {range} · {shortDuration(part.preparationSeconds)} chuẩn bị +{" "}
-                  {shortDuration(part.responseSeconds)} viết
+                  {range} · {shortDuration(part.preparationSeconds)} prep +{" "}
+                  {shortDuration(part.responseSeconds)} writing
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#4a4541]">
                   {partGuides[part.part].detail}
@@ -248,11 +250,12 @@ export function WritingTestOverview({
             </svg>
             <div>
               <h2 className="font-semibold text-[#3d3935]">
-                Chặn dán nội dung từ bên ngoài · Khóa spellcheck
+                External paste blocked · Spellcheck disabled
               </h2>
               <p className="mt-1 text-sm leading-6 text-[#4a4541]">
-                Chỉ nhập bài trực tiếp. Không có gợi ý chính tả hoặc ngữ pháp
-                trong phòng thi. Bài được lưu tự động và tự khóa sau mỗi câu.
+                Type your response directly. No spelling or grammar suggestions
+                are available during the test. Your work is saved automatically
+                and locked after each question.
               </p>
             </div>
           </div>
@@ -263,8 +266,8 @@ export function WritingTestOverview({
               onChange={(event) => setReady(event.target.checked)}
               type="checkbox"
             />
-            Tôi đã đọc quy chế, sẵn sàng làm bài và đảm bảo kết nối mạng ổn
-            định.
+            I have read the rules, am ready to begin, and have a stable internet
+            connection.
           </label>
           {error && (
             <div className="mt-4">
@@ -273,7 +276,7 @@ export function WritingTestOverview({
           )}
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <Link className={secondaryAction} href="/writing">
-              ← Về danh sách đề Writing
+              ← Back to Writing test list
             </Link>
             <button
               className={primaryAction}
@@ -281,18 +284,19 @@ export function WritingTestOverview({
               onClick={() => void start()}
               type="button"
             >
-              {starting ? "Đang tạo lượt làm…" : "BẮT ĐẦU LÀM BÀI WRITING"}
+              {starting ? "Starting attempt..." : "START WRITING TEST"}
             </button>
           </div>
         </div>
         <p className="mt-4 text-[13px] text-[#6b655f]">
           {!selectedPart && (
             <>
-              Tổng thời lượng <span>{formatDuration(totalSeconds)}</span> ·{" "}
+              Total duration <span>{formatDuration(totalSeconds)}</span> ·{" "}
             </>
           )}
-          Writing có {questionCount} câu tuần tự, khóa sau mỗi câu · Khuyến nghị
-          dùng Chrome mới nhất
+          Writing has {questionCount} sequential{" "}
+          {questionCount === 1 ? "question" : "questions"}, locked after each
+          question · Latest Chrome recommended
         </p>
       </div>
     </PracticePage>

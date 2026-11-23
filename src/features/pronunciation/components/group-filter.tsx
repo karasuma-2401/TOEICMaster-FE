@@ -12,12 +12,12 @@ export function GroupFilter({
   onChange: (value: GroupFilterValue) => void;
 }) {
   const options: { id: GroupFilterValue; label: string }[] = [
-    { id: "all", label: "Tất cả" },
+    { id: "all", label: "All" },
     ...groupOrder.map((id) => ({ id, label: groupLabels[id] })),
   ];
   return (
     <fieldset className="flex min-w-0 flex-wrap gap-2 border-0 p-0">
-      <legend className="sr-only">Lọc theo nhóm âm</legend>
+      <legend className="sr-only">Filter by sound group</legend>
       {options.map((option) => (
         <button
           aria-pressed={option.id === value}

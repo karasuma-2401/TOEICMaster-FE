@@ -75,7 +75,7 @@ describe("registration proxy", () => {
         .fn()
         .mockResolvedValueOnce(
           Response.json(
-            { errors: { Email: ["Email không hợp lệ."] } },
+            { errors: { Email: ["Invalid email address."] } },
             { status: 400 },
           ),
         )
@@ -90,13 +90,13 @@ describe("registration proxy", () => {
     const validation = await POST(registrationRequest(request));
     expect(validation.status).toBe(400);
     expect(await validation.json()).toMatchObject({
-      errors: { Email: ["Email không hợp lệ."] },
+      errors: { Email: ["Invalid email address."] },
     });
 
     const conflict = await POST(registrationRequest(request));
     expect(conflict.status).toBe(409);
     expect(await conflict.json()).toMatchObject({
-      title: "Email này đã được sử dụng.",
+      title: "This email is already in use.",
     });
   });
 

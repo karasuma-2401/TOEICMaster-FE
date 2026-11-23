@@ -43,7 +43,8 @@ export function TestSlotPicker({
           <span className="ml-3">{spec.title}</span>
         </p>
         <span className="text-(--sp-ink-3)">
-          {slotLabels[part].length} slot
+          {slotLabels[part].length}{" "}
+          {slotLabels[part].length === 1 ? "slot" : "slots"}
         </span>
       </header>
       {Array.from({ length: spec.slots }, (_, index) => {
@@ -69,24 +70,24 @@ export function TestSlotPicker({
             </span>
             <div className="min-w-40 flex-1">
               <p className="flex flex-wrap items-center gap-2">
-                {exercise?.topic ?? "Chưa chọn bài tập"}
+                {exercise?.topic ?? "No exercise selected"}
                 {duplicate && (
-                  <span className="sp-chip sp-chip-danger">Trùng bài</span>
+                  <span className="sp-chip sp-chip-danger">Duplicate</span>
                 )}
                 {focused && !duplicate && (
-                  <span className="text-xs text-(--sp-brand)">Đang xem</span>
+                  <span className="text-xs text-(--sp-brand)">Viewing</span>
                 )}
               </p>
               <p
                 className={`text-xs ${duplicate ? "text-(--sp-danger)" : "text-(--sp-ink-3)"}`}
               >
-                {exercise ? exercise.code : "Chọn 1 bài từ ngân hàng bài tập"}
+                {exercise ? exercise.code : "Select an exercise from the bank"}
               </p>
             </div>
             <AdminFilterSelect
-              allLabel="Chọn bài"
+              allLabel="Select exercise"
               allValue=""
-              ariaLabel={`Chọn bài cho ${label}`}
+              ariaLabel={`Select exercise for ${label}`}
               disabled={disabled}
               onChange={(next) => {
                 if (next) onChange(index, next);
@@ -98,22 +99,22 @@ export function TestSlotPicker({
               value=""
             />
             <button
-              aria-label={`Xem ${label}`}
+              aria-label={`View ${label}`}
               className="sp-btn sp-btn-ghost sp-btn-sm"
               disabled={!id}
               onClick={() => onFocus(id)}
               type="button"
             >
-              Xem
+              View
             </button>
             <button
-              aria-label={`Gỡ ${label}`}
+              aria-label={`Remove ${label}`}
               className="sp-btn sp-btn-ghost sp-btn-sm"
               disabled={!id || disabled}
               onClick={() => onChange(index, "")}
               type="button"
             >
-              Gỡ
+              Remove
             </button>
           </div>
         );

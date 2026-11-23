@@ -12,25 +12,25 @@ import {
 import { setSessionCookie } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return problem(403, "Yêu cầu không hợp lệ.");
+  if (!sameOrigin(request)) return problem(403, "Invalid request.");
   const body = await readBody(request);
-  if (!body) return problem(400, "Dữ liệu đăng nhập không hợp lệ.");
+  if (!body) return problem(400, "Invalid sign-in data.");
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
   const rememberMe = body.rememberMe === true;
   const errors: Record<string, string[]> = {};
   if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    errors.Email = ["Email không hợp lệ."];
+    errors.Email = ["Invalid email address."];
   if (!password || password.length > 128)
-    errors.Password = ["Mật khẩu không hợp lệ."];
+    errors.Password = ["Invalid password."];
   if (Object.keys(errors).length)
-    return problem(400, "Dữ liệu đăng nhập không hợp lệ.", errors);
+    return problem(400, "Invalid sign-in data.", errors);
   try {
     const upstream = await postAuth("login", { email, password, rememberMe });
     if (upstream.status === 400)
-      return upstreamProblem(upstream, 400, "Dữ liệu đăng nhập không hợp lệ.");
+      return upstreamProblem(upstream, 400, "Invalid sign-in data.");
     if (upstream.status === 401)
-      return problem(401, "Email hoặc mật khẩu không chính xác.");
+      return problem(401, "Incorrect email or password.");
     if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected auth status");
     const session = await authenticationResult(upstream, rememberMe);
@@ -38,6 +38,6 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, session);
     return response;
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

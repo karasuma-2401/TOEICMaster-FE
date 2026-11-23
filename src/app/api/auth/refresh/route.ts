@@ -13,16 +13,16 @@ import {
 } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return problem(403, "Yêu cầu không hợp lệ.");
+  if (!sameOrigin(request)) return problem(403, "Invalid request.");
   const current = sessionCookie(request);
   if (!current || Date.parse(current.refreshTokenExpiresAtUtc) <= Date.now())
-    return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+    return problem(401, "Session is invalid or has expired.");
   try {
     const upstream = await postAuth("refresh", {
       refreshToken: current.refreshToken,
     });
     if (upstream.status === 401)
-      return problem(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+      return problem(401, "Session is invalid or has expired.");
     if (upstream.status === 429) return rateLimited(upstream);
     if (upstream.status !== 200) throw new Error("Unexpected refresh status");
     const session = await authenticationResult(upstream, current.rememberMe);
@@ -30,6 +30,6 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, session);
     return response;
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

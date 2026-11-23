@@ -10,7 +10,7 @@ import {
 
 const user = {
   id: "user-1",
-  fullName: "Nguyễn Minh Anh",
+  fullName: "Nguyen Minh Anh",
   email: "minh@example.com",
   role: "USER",
   status: "ACTIVE",
@@ -60,7 +60,7 @@ describe("admin users data", () => {
   });
 
   it("formats names and missing timestamps safely", () => {
-    expect(getAdminUserInitials("Nguyễn Minh Anh")).toBe("NA");
-    expect(formatAdminUserDate(null)).toBe("Chưa đăng nhập");
+    expect(getAdminUserInitials("Nguyen Minh Anh")).toBe("NA");
+    expect(formatAdminUserDate(null)).toBe("Never signed in");
   });
 });

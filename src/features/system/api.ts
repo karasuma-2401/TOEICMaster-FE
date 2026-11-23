@@ -15,7 +15,7 @@ export async function ping(signal?: AbortSignal): Promise<PingResponse> {
     !("status" in value) ||
     value.status !== "ok"
   ) {
-    throw new Error("Phản hồi dịch vụ không hợp lệ.");
+    throw new Error("Invalid service response.");
   }
   return { service: value.service, status: value.status };
 }

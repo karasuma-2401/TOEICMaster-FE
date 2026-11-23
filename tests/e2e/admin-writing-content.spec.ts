@@ -6,7 +6,7 @@ import {
   loginAsAdmin,
 } from "./admin-writing-helpers";
 
-test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writing)", () => {
+test.describe("Admin Writing - Exercise Bank (/admin/content/writing)", () => {
   let backend: MockWritingAdminBackend;
 
   test.beforeEach(async ({ page, context }) => {
@@ -19,14 +19,14 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     ).toBeVisible();
   });
 
-  test("TC-CONTENT-01: Hiển thị danh sách câu hỏi lẻ và chuyển tab giữa Part 1, Part 2, Part 3", async ({
+  test("TC-CONTENT-01: Displays exercise list and switches tabs between Part 1, Part 2, Part 3", async ({
     page,
   }) => {
-    // Mặc định tab Part 1 được chọn
+    // Part 1 tab is selected by default
     await expect(page.getByText("WP1-SEED-01")).toBeVisible();
     await expect(page.getByText("Office Workspace")).toBeVisible();
 
-    // Chuyển sang Part 2
+    // Switch to Part 2
     await page.getByRole("link", { name: /Part 2/ }).click();
     await expect(
       page.getByRole("heading", { name: "Writing Part 2" }),
@@ -34,7 +34,7 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     await expect(page.getByText("WP2-SEED-01")).toBeVisible();
     await expect(page.getByText("Customer Meeting")).toBeVisible();
 
-    // Chuyển sang Part 3
+    // Switch to Part 3
     await page.getByRole("link", { name: /Part 3/ }).click();
     await expect(
       page.getByRole("heading", { name: "Writing Part 3" }),
@@ -43,268 +43,264 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
     await expect(page.getByText("Remote Work Opinion")).toBeVisible();
   });
 
-  test("TC-CONTENT-02: Lọc bài tập theo từ khóa tìm kiếm và trạng thái", async ({
+  test("TC-CONTENT-02: Filters exercises by search keyword and status", async ({
     page,
   }) => {
-    // Tìm kiếm bài tập
-    const searchInput = page.getByLabel("Tìm bài tập Writing");
+    // Search exercises
+    const searchInput = page.getByLabel("Search Writing exercises");
     await searchInput.fill("Office");
     await expect(page.getByText("WP1-SEED-01")).toBeVisible();
 
-    await searchInput.fill("Không tồn tại");
+    await searchInput.fill("Nonexistent");
     await expect(page.getByText("WP1-SEED-01")).not.toBeVisible();
-    await expect(
-      page.getByText("Không tìm thấy bài tập phù hợp"),
-    ).toBeVisible();
+    await expect(page.getByText("No matching exercises found")).toBeVisible();
 
-    // Xóa tìm kiếm và lọc trạng thái
+    // Clear search and filter by status
     await searchInput.clear();
-    await page.getByLabel("Lọc trạng thái").selectOption("DRAFT");
-    await expect(
-      page.getByText("Không tìm thấy bài tập phù hợp"),
-    ).toBeVisible();
+    await page.getByLabel("Filter by status").selectOption("DRAFT");
+    await expect(page.getByText("No matching exercises found")).toBeVisible();
 
-    await page.getByLabel("Lọc trạng thái").selectOption("PUBLISHED");
+    await page.getByLabel("Filter by status").selectOption("PUBLISHED");
     await expect(page.getByText("WP1-SEED-01")).toBeVisible();
   });
 
-  test("TC-CONTENT-03: Thêm mới câu hỏi Part 1 thành công (Happy Path: Đầy đủ thông tin & upload ảnh)", async ({
+  test("TC-CONTENT-03: Adds new Part 1 exercise successfully (Happy Path: Complete info & image upload)", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("WRITING PART 1")).toBeVisible();
 
-    // Điền thông tin chung
-    await dialog.getByLabel("Mã bài *").fill("WP1-NEW-01");
-    await dialog.getByLabel("Chủ đề *").fill("Office Meeting Room");
-    await dialog.getByLabel("Độ khó").selectOption("Trung bình");
+    // Fill general information
+    await dialog.getByLabel("Exercise code *").fill("WP1-NEW-01");
+    await dialog.getByLabel("Topic *").fill("Office Meeting Room");
+    await dialog.getByLabel("Difficulty").selectOption("Medium");
 
-    // Upload ảnh đề bài hợp lệ
+    // Upload valid prompt image
     const validImage = path.join(FIXTURES_DIR, "valid-sample.png");
     await dialog.locator('input[type="file"]').setInputFiles(validImage);
     await expect(dialog.getByText("valid-sample.png")).toBeVisible();
 
-    // Điền từ khóa Part 1
-    await dialog.getByLabel("Từ gợi ý 1 *").fill("colleagues");
-    await dialog.getByLabel("Từ gợi ý 2 *").fill("discuss");
+    // Fill Part 1 keywords
+    await dialog.getByLabel("Keyword 1 *").fill("colleagues");
+    await dialog.getByLabel("Keyword 2 *").fill("discuss");
     await dialog
-      .getByLabel("Alt text ảnh")
+      .getByLabel("Image alt text")
       .fill("Colleagues discussing in a meeting room");
 
-    // Lưu bài tập
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // Save exercise
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
 
-    // Thông báo thành công và bài tập xuất hiện trên bảng
+    // Success notice and exercise appears in table
     await expect(dialog).not.toBeVisible();
-    await expect(page.getByText("Đã lưu bài tập.")).toBeVisible();
+    await expect(page.getByText("Exercise saved.")).toBeVisible();
     await expect(page.getByText("WP1-NEW-01")).toBeVisible();
   });
 
-  test("TC-CONTENT-04: Thêm câu hỏi Part 1 thất bại khi thiếu thông tin bắt buộc (Validation Error)", async ({
+  test("TC-CONTENT-04: Fails to add Part 1 exercise when required fields are missing (Validation Error)", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
 
-    // 1. Khi chưa điền ảnh và từ gợi ý (mặc định đã có code WP1-NEW)
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // 1. When image and keywords are not filled (default code WP1-NEW is prefilled)
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog.getByRole("alert")).toContainText(
-      "Part 1 cần ảnh và hai từ gợi ý.",
+      "Part 1 requires an image and two keywords.",
     );
 
-    // 2. Xóa trắng mã bài -> Báo lỗi mã bài và chủ đề là bắt buộc
-    await dialog.getByLabel("Mã bài *").clear();
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // 2. Clear exercise code -> Reports error that code and topic are required
+    await dialog.getByLabel("Exercise code *").clear();
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog.getByRole("alert")).toContainText(
-      "Mã bài và chủ đề là bắt buộc.",
+      "Exercise code and topic are required.",
     );
   });
 
-  test("TC-CONTENT-05: Upload ảnh Part 1 - Chặn file sai định dạng (.txt)", async ({
+  test("TC-CONTENT-05: Part 1 image upload - Blocks invalid file format (.txt)", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
 
-    await dialog.getByLabel("Mã bài *").fill("WP1-INVALID-FMT");
-    await dialog.getByLabel("Chủ đề *").fill("Test Format");
-    await dialog.getByLabel("Từ gợi ý 1 *").fill("key1");
-    await dialog.getByLabel("Từ gợi ý 2 *").fill("key2");
+    await dialog.getByLabel("Exercise code *").fill("WP1-INVALID-FMT");
+    await dialog.getByLabel("Topic *").fill("Test Format");
+    await dialog.getByLabel("Keyword 1 *").fill("key1");
+    await dialog.getByLabel("Keyword 2 *").fill("key2");
 
-    // Upload file .txt thay vì ảnh
+    // Upload .txt file instead of an image
     const invalidFile = path.join(FIXTURES_DIR, "invalid-format.txt");
     await dialog.locator('input[type="file"]').setInputFiles(invalidFile);
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
 
-    // Hệ thống báo lỗi định dạng ảnh
+    // System displays invalid image format error
     await expect(dialog.getByRole("alert")).toContainText(
-      "Định dạng ảnh không hợp lệ",
+      "Invalid image format",
     );
   });
 
-  test("TC-CONTENT-06: Upload ảnh Part 1 - Chặn file quá dung lượng cho phép (> 5MB)", async ({
+  test("TC-CONTENT-06: Part 1 image upload - Blocks file exceeding size limit (> 5MB)", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
 
-    await dialog.getByLabel("Mã bài *").fill("WP1-OVERSIZED");
-    await dialog.getByLabel("Chủ đề *").fill("Test Size");
-    await dialog.getByLabel("Từ gợi ý 1 *").fill("big");
-    await dialog.getByLabel("Từ gợi ý 2 *").fill("file");
+    await dialog.getByLabel("Exercise code *").fill("WP1-OVERSIZED");
+    await dialog.getByLabel("Topic *").fill("Test Size");
+    await dialog.getByLabel("Keyword 1 *").fill("big");
+    await dialog.getByLabel("Keyword 2 *").fill("file");
 
     // Upload file > 5MB
     const oversizedImage = path.join(FIXTURES_DIR, "oversized-image.png");
     await dialog.locator('input[type="file"]').setInputFiles(oversizedImage);
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
 
-    // Hệ thống báo lỗi kích thước vượt quá 5 MiB
-    await expect(dialog.getByRole("alert")).toContainText("vượt quá 5 MiB");
+    // System displays file size exceeds 5 MiB error
+    await expect(dialog.getByRole("alert")).toContainText("exceeds 5 MiB");
   });
 
-  test("TC-CONTENT-07: Thêm mới câu hỏi Part 2 thành công và kiểm tra validation khi thiếu trường", async ({
+  test("TC-CONTENT-07: Adds new Part 2 exercise successfully and checks validation when fields are missing", async ({
     page,
   }) => {
-    // Chuyển tab Part 2
+    // Switch to Part 2 tab
     await page.getByRole("link", { name: /Part 2/ }).click();
     await expect(
       page.getByRole("heading", { name: "Writing Part 2" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
     await expect(dialog.getByText("WRITING PART 2")).toBeVisible();
 
-    // 1. Kiểm tra validation khi thiếu trường
-    await dialog.getByLabel("Mã bài *").fill("WP2-NEW-01");
-    await dialog.getByLabel("Chủ đề *").fill("Supplier Delay");
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // 1. Check validation when fields are missing
+    await dialog.getByLabel("Exercise code *").fill("WP2-NEW-01");
+    await dialog.getByLabel("Topic *").fill("Supplier Delay");
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog.getByRole("alert")).toContainText(
-      "Part 2 cần đủ email đề bài và yêu cầu phản hồi.",
+      "Part 2 requires the complete prompt email and response directions.",
     );
 
-    // 2. Điền đầy đủ thông tin Part 2
+    // 2. Fill complete Part 2 details
     await dialog.getByLabel("From *").fill("purchasing@company.com");
     await dialog.getByLabel("To *").fill("vendor@supplier.com");
     await dialog.getByLabel("Subject *").fill("Order Delivery Status");
     await dialog
-      .getByLabel("Nội dung email *")
+      .getByLabel("Email body *")
       .fill("When will batch #902 be shipped?");
     await dialog
-      .getByLabel("Yêu cầu phản hồi *")
+      .getByLabel("Response directions *")
       .fill("Apologize and provide the tracking code.");
 
-    // Bấm lưu
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // Click save
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog).not.toBeVisible();
-    await expect(page.getByText("Đã lưu bài tập.")).toBeVisible();
+    await expect(page.getByText("Exercise saved.")).toBeVisible();
     await expect(page.getByText("WP2-NEW-01")).toBeVisible();
   });
 
-  test("TC-CONTENT-08: Thêm mới câu hỏi Part 3 thành công và kiểm tra validation khi thiếu đề bài", async ({
+  test("TC-CONTENT-08: Adds new Part 3 exercise successfully and checks validation when prompt is missing", async ({
     page,
   }) => {
-    // Chuyển tab Part 3
+    // Switch to Part 3 tab
     await page.getByRole("link", { name: /Part 3/ }).click();
     await expect(
       page.getByRole("heading", { name: "Writing Part 3" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "+ Thêm bài tập" }).click();
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    await page.getByRole("button", { name: "+ Add exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
     await expect(dialog.getByText("WRITING PART 3")).toBeVisible();
 
-    // 1. Kiểm tra validation khi thiếu đề bài
-    await dialog.getByLabel("Mã bài *").fill("WP3-NEW-01");
-    await dialog.getByLabel("Chủ đề *").fill("Higher Education");
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    // 1. Check validation when prompt is missing
+    await dialog.getByLabel("Exercise code *").fill("WP3-NEW-01");
+    await dialog.getByLabel("Topic *").fill("Higher Education");
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog.getByRole("alert")).toContainText(
-      "Part 3 cần đề bài và số từ tối thiểu.",
+      "Part 3 requires a prompt and minimum word count.",
     );
 
-    // 2. Điền đầy đủ thông tin Part 3
+    // 2. Fill complete Part 3 details
     await dialog
-      .getByLabel("Chủ đề bài luận *")
+      .getByLabel("Essay prompt *")
       .fill("Should university education be free for all students?");
-    await dialog.getByLabel("Số từ tối thiểu *").fill("300");
+    await dialog.getByLabel("Minimum word count *").fill("300");
     await dialog
-      .getByLabel("Dàn ý gợi ý")
+      .getByLabel("Suggested outline")
       .fill("1. Intro\n2. Social equity\n3. Fiscal impact\n4. Conclusion");
 
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog).not.toBeVisible();
-    await expect(page.getByText("Đã lưu bài tập.")).toBeVisible();
+    await expect(page.getByText("Exercise saved.")).toBeVisible();
     await expect(page.getByText("WP3-NEW-01")).toBeVisible();
   });
 
-  test("TC-CONTENT-09: Chỉnh sửa bài tập hiện có thành công", async ({
+  test("TC-CONTENT-09: Edits existing exercise successfully", async ({
     page,
   }) => {
-    // Click nút "Sửa" trên dòng bài tập đầu tiên của Part 1
+    // Click "Edit" button on the first row of Part 1
     const firstRow = page.locator("tbody tr").first();
-    await firstRow.getByRole("button", { name: "Sửa" }).click();
+    await firstRow.getByRole("button", { name: "Edit" }).click();
 
-    const dialog = page.getByRole("dialog", { name: "Form bài tập Writing" });
+    const dialog = page.getByRole("dialog", { name: "Writing exercise form" });
     await expect(dialog).toBeVisible();
 
-    // Sửa chủ đề
-    const topicInput = dialog.getByLabel("Chủ đề *");
+    // Edit topic
+    const topicInput = dialog.getByLabel("Topic *");
     await topicInput.clear();
     await topicInput.fill("Updated Office Workspace");
 
-    await dialog.getByRole("button", { name: "Lưu bài tập" }).click();
+    await dialog.getByRole("button", { name: "Save exercise" }).click();
     await expect(dialog).not.toBeVisible();
-    await expect(page.getByText("Đã lưu bài tập.")).toBeVisible();
+    await expect(page.getByText("Exercise saved.")).toBeVisible();
     await expect(page.getByText("Updated Office Workspace")).toBeVisible();
   });
 
-  test("TC-CONTENT-10: Xóa/Lưu trữ bài tập hiện có thành công", async ({
+  test("TC-CONTENT-10: Deletes/Archives existing exercise successfully", async ({
     page,
   }) => {
-    // Đăng ký confirm dialog tự động đồng ý
+    // Register confirm dialog auto-accept
     page.on("dialog", (dialog) => dialog.accept());
 
     const firstRow = page.locator("tbody tr").first();
-    await firstRow.getByRole("button", { name: "Lưu trữ" }).click();
+    await firstRow.getByRole("button", { name: "Archive" }).click();
 
-    await expect(page.getByText("Đã lưu trữ bài tập.")).toBeVisible();
+    await expect(page.getByText("Exercise archived.")).toBeVisible();
   });
 
-  test("TC-CONTENT-11: Import câu hỏi lẻ Part 1 bằng file Excel (.xlsx) hợp lệ", async ({
+  test("TC-CONTENT-11: Imports single Part 1 exercises via valid Excel (.xlsx) file", async ({
     page,
   }) => {
     await page.getByRole("button", { name: "⇧ Import Excel" }).click();
-    const dialog = page.getByRole("dialog", { name: "Import Excel Writing" });
+    const dialog = page.getByRole("dialog", { name: "Import Writing Excel" });
     await expect(dialog).toBeVisible();
 
-    // Chọn file Excel hợp lệ
+    // Select valid Excel file
     const validFile = path.join(FIXTURES_DIR, "valid-part1-exercise.xlsx");
     await dialog
       .locator('input[type="file"][accept=".xlsx"]')
       .setInputFiles(validFile);
 
-    // Bảng preview hiển thị các dòng hợp lệ
-    await expect(dialog.getByText("Hợp lệ").first()).toBeVisible();
+    // Preview table displays valid rows
+    await expect(dialog.getByText("Valid").first()).toBeVisible();
 
-    // Nút import được kích hoạt
-    const importBtn = dialog.getByRole("button", { name: "Import bài tập" });
+    // Import button is enabled
+    const importBtn = dialog.getByRole("button", { name: "Import exercises" });
     await expect(importBtn).toBeEnabled();
     await importBtn.click();
 
-    // Thành công đóng modal và báo thông báo
+    // Success closes modal and shows notice
     await expect(dialog).not.toBeVisible();
     await expect(
-      page.getByText("Đã import dữ liệu bài tập thành công."),
+      page.getByText("Exercises imported successfully."),
     ).toBeVisible();
   });
 
-  test("TC-CONTENT-12: Import câu hỏi lẻ thất bại khi file Excel thiếu cột bắt buộc", async ({
+  test("TC-CONTENT-12: Fails to import single exercises when Excel file is missing required columns", async ({
     page,
   }) => {
     await page.getByRole("button", { name: "⇧ Import Excel" }).click();
-    const dialog = page.getByRole("dialog", { name: "Import Excel Writing" });
+    const dialog = page.getByRole("dialog", { name: "Import Writing Excel" });
 
-    // Chọn file Excel thiếu cột
+    // Select Excel file missing columns
     const invalidFile = path.join(
       FIXTURES_DIR,
       "invalid-part1-missing-cols.xlsx",
@@ -313,11 +309,11 @@ test.describe("Admin Writing - Ngân hàng câu hỏi lẻ (/admin/content/writi
       .locator('input[type="file"][accept=".xlsx"]')
       .setInputFiles(invalidFile);
 
-    // Bảng preview hiển thị lỗi
-    await expect(dialog.getByText("Thiếu Difficulty.")).toBeVisible();
+    // Preview table displays errors
+    await expect(dialog.getByText("Missing Difficulty.")).toBeVisible();
 
-    // Nút import bị vô hiệu hóa
-    const importBtn = dialog.getByRole("button", { name: "Import bài tập" });
+    // Import button is disabled
+    const importBtn = dialog.getByRole("button", { name: "Import exercises" });
     await expect(importBtn).toBeDisabled();
   });
 });

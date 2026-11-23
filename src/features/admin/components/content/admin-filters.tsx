@@ -99,7 +99,7 @@ const fold = (text: string) =>
   text
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
-    .replace(/đ/gi, "d")
+    .replace(/\u0111/gi, "d")
     .toLowerCase();
 
 const panelClass =
@@ -203,7 +203,11 @@ export function SearchSuggestions({
         },
       })}
       {visible && (
-        <ul aria-label="Gợi ý tìm kiếm" className={panelClass} ref={panelRef}>
+        <ul
+          aria-label="Search suggestions"
+          className={panelClass}
+          ref={panelRef}
+        >
           {matches.map((item) => (
             <li key={item.value}>
               <button
@@ -283,7 +287,7 @@ export function AdminSearchField({
           />
           {value && (
             <button
-              aria-label="Xóa nội dung tìm kiếm"
+              aria-label="Clear search"
               className={`absolute right-1.5 top-1/2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)] hover:text-[var(--admin-ink)] ${adminFocus}`}
               onClick={() => onChange("")}
               type="button"
@@ -316,7 +320,7 @@ export function AdminFilterSelect<T extends string>({
   ariaLabel,
   value,
   allValue,
-  allLabel = "Tất cả",
+  allLabel = "All",
   options,
   onChange,
   disabled = false,

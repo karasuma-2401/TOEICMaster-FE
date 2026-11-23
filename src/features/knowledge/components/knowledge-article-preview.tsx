@@ -205,7 +205,7 @@ export function KnowledgeArticlePreview({
         const alt =
           typeof node.attrs?.alt === "string"
             ? node.attrs.alt
-            : "Hình ảnh bài viết";
+            : "Article image";
         if (!src) return null;
         return (
           <figure className="my-4" key={key}>
@@ -229,11 +229,11 @@ export function KnowledgeArticlePreview({
       {!publicView && (
         <div className="flex items-center justify-between rounded-xl border border-(--admin-warning)/25 bg-(--admin-warning-soft) px-4 py-2.5 text-xs font-medium text-(--admin-warning)">
           <span>
-            Chế độ xem trước Admin (Preview Mode) — Hiển thị giống bố cục bài
-            báo hoàn thiện dành cho Học viên.
+            Admin Preview Mode - Displays the finished article layout as seen by
+            learners.
           </span>
           <span className="rounded-full bg-white/80 px-2.5 py-0.5 font-semibold">
-            Trạng thái: {status}
+            Status: {status}
           </span>
         </div>
       )}
@@ -256,12 +256,12 @@ export function KnowledgeArticlePreview({
               </span>
             ) : null}
             <span className="text-(--admin-muted)">
-              - {readMinutes} phút đọc
+              - {readMinutes} min read
             </span>
           </div>
 
           <h1 className="text-2xl font-extrabold leading-tight text-(--admin-ink) sm:text-3xl">
-            {title.trim() || "Chưa có tiêu đề bài viết"}
+            {title.trim() || "Untitled article"}
           </h1>
 
           {summary.trim() ? (
@@ -311,15 +311,15 @@ export function KnowledgeArticlePreview({
 
         <aside className="h-fit rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm lg:sticky lg:top-6">
           <h2 className="text-sm font-bold uppercase tracking-wide text-(--admin-muted)">
-            Mục lục bài viết
+            Table of contents
           </h2>
           {toc.length === 0 ? (
             <p className="mt-3 text-xs text-(--admin-muted)">
-              Thêm tiêu đề H2, H3 hoặc H4 trong trình soạn thảo để tự động sinh
-              mục lục cuộn nhanh.
+              Add H2, H3, or H4 headings in the editor to automatically generate
+              a quick-jump table of contents.
             </p>
           ) : (
-            <nav aria-label="Mục lục bài viết" className="mt-3 space-y-1.5">
+            <nav aria-label="Table of contents" className="mt-3 space-y-1.5">
               {toc.map((item) => (
                 <button
                   className={`block w-full rounded-md px-2 py-1 text-left text-xs text-(--admin-ink-soft) transition hover:bg-(--admin-nav-active) hover:text-(--admin-brand-red) ${

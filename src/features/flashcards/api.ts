@@ -227,7 +227,7 @@ async function readErrorMessage(response: Response): Promise<string> {
   } catch {
     // Fall back to generic message.
   }
-  return `Yêu cầu thất bại (HTTP ${response.status}).`;
+  return `Request failed (HTTP ${response.status}).`;
 }
 
 export async function getFlashcardWorkspace(): Promise<FlashcardWorkspaceApiResponse> {

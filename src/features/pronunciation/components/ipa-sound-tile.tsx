@@ -14,7 +14,7 @@ export function IpaSoundTile({
   return (
     <button
       aria-haspopup="dialog"
-      aria-label={`Âm /${sound.symbol}/, ví dụ ${example}${practiced ? ", đã luyện" : ""}`}
+      aria-label={`Sound /${sound.symbol}/, example ${example}${practiced ? ", practiced" : ""}`}
       className={`relative flex min-h-20 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-(--sp-line)/70 bg-white px-2 py-3 text-center transition hover:border-(--sp-hero-line) hover:shadow-(--sp-shadow-card) ${focusRing}`}
       onClick={() => onSelect(sound.slug)}
       type="button"

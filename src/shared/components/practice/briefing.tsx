@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function RuleList({
   id,
-  title = "Quy tắc làm bài",
+  title = "Test rules",
   rules,
 }: {
   id: string;
@@ -41,7 +41,7 @@ export interface StructureItem {
 
 export function StructureList({
   id,
-  title = "Cấu trúc đề",
+  title = "Test structure",
   items,
 }: {
   id: string;

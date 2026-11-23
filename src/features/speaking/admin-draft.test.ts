@@ -40,7 +40,7 @@ describe("Speaking admin draft", () => {
   it("reports missing required content", () => {
     const filled = { code: "SP", topic: "Work", modelAnswer: "Answer" };
     expect(fromSpeakingDraft(toSpeakingDraft(undefined, 1))).toEqual({
-      error: "Mã bài và chủ đề là bắt buộc.",
+      error: "Exercise code and topic are required.",
     });
     expect(
       fromSpeakingDraft({
@@ -48,14 +48,18 @@ describe("Speaking admin draft", () => {
         code: "SP",
         topic: "T",
       }),
-    ).toEqual({ error: "Bài mẫu là bắt buộc để chấm và tự đánh giá." });
+    ).toEqual({
+      error: "Model answer is required for grading and self-assessment.",
+    });
     expect(
       fromSpeakingDraft({
         ...toSpeakingDraft(undefined, 2),
         ...filled,
         imageAlt: "A photo",
       }),
-    ).toEqual({ error: "Part 2 cần ảnh đã tải lên và mô tả ảnh." });
+    ).toEqual({
+      error: "Part 2 requires an uploaded image and image description.",
+    });
     expect(
       fromSpeakingDraft({
         ...toSpeakingDraft(undefined, 4),
@@ -64,7 +68,8 @@ describe("Speaking admin draft", () => {
         documentRows: "missing separator",
       }),
     ).toEqual({
-      error: "Part 4 cần tiêu đề và bảng thông tin dạng “nhãn | nội dung”.",
+      error:
+        "Part 4 requires a title and an information table in 'label | value' format.",
     });
   });
 

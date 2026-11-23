@@ -24,11 +24,11 @@ describe("SubmitConfirmDialog", () => {
       />,
     );
     expect(screen.getByRole("dialog")).toHaveAccessibleName(
-      "Xác nhận nộp bài thi?",
+      "Confirm Exam Submission?",
     );
-    expect(screen.getByText("14 phút 25 giây")).toBeInTheDocument();
+    expect(screen.getByText("14 minutes 25 seconds")).toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole("button", { name: "Xác nhận nộp bài L&R" }),
+      screen.getByRole("button", { name: "Confirm L&R Submission" }),
     );
     expect(onConfirm).toHaveBeenCalled();
     fireEvent.keyDown(document, { key: "Escape" });

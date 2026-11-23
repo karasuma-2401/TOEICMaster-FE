@@ -34,7 +34,7 @@ export function AdminDrawer({
             <h2 className="mt-1 text-xl font-bold">{title}</h2>
           </div>
           <button
-            aria-label={`Đóng ${label.toLocaleLowerCase("vi-VN")}`}
+            aria-label={`Close ${label.toLocaleLowerCase("en-US")}`}
             className="size-9 rounded-lg text-xl hover:bg-slate-100"
             onClick={onClose}
             type="button"
@@ -72,7 +72,7 @@ export function AdminModal({
         open
       >
         <button
-          aria-label={`Đóng ${label.toLocaleLowerCase("vi-VN")}`}
+          aria-label={`Close ${label.toLocaleLowerCase("en-US")}`}
           className="absolute right-4 top-4 size-9 rounded-lg text-xl hover:bg-slate-100"
           onClick={onClose}
           type="button"

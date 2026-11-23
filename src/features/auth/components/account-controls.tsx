@@ -50,7 +50,7 @@ export function AccountControls() {
           setError(
             reason instanceof Error
               ? reason.message
-              : "Không thể kiểm tra phiên đăng nhập.",
+              : "Unable to verify session.",
           );
       });
     return () => {
@@ -64,10 +64,10 @@ export function AccountControls() {
     try {
       await logout();
       setState({ status: "guest" });
-      toast.success("Đã đăng xuất.");
+      toast.success("Signed out.");
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể đăng xuất.",
+        reason instanceof Error ? reason.message : "Unable to sign out.",
       );
     } finally {
       setPending(false);
@@ -78,23 +78,23 @@ export function AccountControls() {
     <div className="flex flex-col items-end gap-1 text-sm">
       {state?.status === "authenticated" ? (
         <div className="flex items-center gap-3">
-          <span>Xin chào, {state.user.displayName}</span>
+          <span>Hello, {state.user.displayName}</span>
           <button
             className="rounded-md px-2 py-1 text-blue-700 hover:underline focus-visible:outline-2"
             disabled={pending}
             onClick={signOut}
             type="button"
           >
-            {pending ? "Đang đăng xuất..." : "Đăng xuất"}
+            {pending ? "Signing out..." : "Sign out"}
           </button>
         </div>
       ) : state?.status === "guest" || error ? (
         <div className="flex gap-3">
           <Link className="text-blue-700 hover:underline" href="/login">
-            Đăng nhập
+            Sign in
           </Link>
           <Link className="text-blue-700 hover:underline" href="/register">
-            Đăng ký
+            Sign up
           </Link>
         </div>
       ) : null}

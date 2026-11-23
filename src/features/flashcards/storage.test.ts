@@ -48,7 +48,7 @@ describe("flashcards storage & helpers", () => {
           slug: "my-deck",
           title: "My TOEIC List",
           cards: [
-            { id: "k1", term: "invoice", meaningVi: "hóa đơn" },
+            { id: "k1", term: "invoice", meaningVi: "invoice" },
             { id: "k2", term: "", meaningVi: "invalid" },
           ],
         },
@@ -133,9 +133,9 @@ describe("flashcards storage & helpers", () => {
     }
   });
 
-  it("slugifies Vietnamese deck titles cleanly", () => {
-    expect(slugifyDeckTitle("Từ vựng Hợp đồng & Đàm phán")).toBe(
-      "tu-vung-hop-dong-dam-phan",
+  it("slugifies deck titles cleanly", () => {
+    expect(slugifyDeckTitle("Contracts & Negotiation Vocabulary!")).toBe(
+      "contracts-negotiation-vocabulary",
     );
   });
 });

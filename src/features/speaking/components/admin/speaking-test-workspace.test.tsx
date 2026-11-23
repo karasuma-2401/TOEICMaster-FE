@@ -68,7 +68,7 @@ const open = async () => {
 describe("SpeakingTestWorkspace", () => {
   it("keeps slot two, leaves the workspace open after save, and uses the new version", async () => {
     await open();
-    fireEvent.click(screen.getByRole("button", { name: "Lưu bản nháp" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     await vi.waitFor(() => expect(updateSpeakingTest).toHaveBeenCalledOnce());
     expect(
       vi.mocked(updateSpeakingTest).mock.calls[0][2].exerciseIds?.[1][1],
@@ -77,12 +77,10 @@ describe("SpeakingTestWorkspace", () => {
       vi.mocked(updateSpeakingTest).mock.calls[0][2].exerciseIds?.[1][0],
     ).toBeUndefined();
     await vi.waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Lưu bản nháp" }),
-      ).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled(),
     );
     expect(screen.getByRole("dialog")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Lưu bản nháp" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     await vi.waitFor(() =>
       expect(updateSpeakingTest).toHaveBeenLastCalledWith(
         expect.any(String),
@@ -94,14 +92,18 @@ describe("SpeakingTestWorkspace", () => {
 
   it("searches on the server and disables the exercise already assigned to Q2", async () => {
     await open();
-    fireEvent.click(screen.getByRole("button", { name: "Chọn bài cho Q1" }));
-    const picker = screen.getByRole("region", { name: "Chọn bài Part 1" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Select exercise for Q1" }),
+    );
+    const picker = screen.getByRole("region", {
+      name: "Select Part 1 exercise",
+    });
     expect(
-      await within(picker).findByRole("button", { name: "Chọn SP1-SECOND" }),
+      await within(picker).findByRole("button", { name: "Select SP1-SECOND" }),
     ).toBeDisabled();
-    expect(within(picker).getByText(/Đang dùng ở Q2/)).toBeVisible();
+    expect(within(picker).getByText(/Used in Q2/)).toBeVisible();
     fireEvent.change(
-      within(picker).getByLabelText("Tìm mã hoặc chủ đề bài tập"),
+      within(picker).getByLabelText("Search exercise code or topic"),
       { target: { value: "oldest" } },
     );
     await vi.waitFor(() =>
@@ -119,24 +121,29 @@ describe("SpeakingTestWorkspace", () => {
   it("shows every validation error and keeps local edits during a version conflict", async () => {
     await open();
     vi.mocked(updateSpeakingTest).mockRejectedValueOnce(
-      new SpeakingApiError(422, "Lỗi", {
-        content: ["Câu 1 và Câu 2 trùng", "Câu 5 và Câu 8 trùng"],
+      new SpeakingApiError(422, "Error", {
+        content: [
+          "Question 1 and Question 2 are duplicates",
+          "Question 5 and Question 8 are duplicates",
+        ],
       }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Lưu bản nháp" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Chưa lưu được");
-    expect(alert).toHaveTextContent("Câu 1 và Câu 2 trùng");
-    expect(alert).toHaveTextContent("Câu 5 và Câu 8 trùng");
+    expect(alert).toHaveTextContent("Unable to save");
+    expect(alert).toHaveTextContent("Question 1 and Question 2 are duplicates");
+    expect(alert).toHaveTextContent("Question 5 and Question 8 are duplicates");
     vi.mocked(updateSpeakingTest).mockRejectedValueOnce(
-      new SpeakingApiError(409, "Phiên bản cũ", {}, "VERSION_CONFLICT"),
+      new SpeakingApiError(409, "Outdated version", {}, "VERSION_CONFLICT"),
     );
-    fireEvent.change(screen.getByLabelText("Tên đề *"), {
+    fireEvent.change(screen.getByLabelText("Test title *"), {
       target: { value: "Local edit" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu bản nháp" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     fireEvent.click(
-      await screen.findByRole("button", { name: "Tải lại bản mới để so sánh" }),
+      await screen.findByRole("button", {
+        name: "Reload latest version to compare",
+      }),
     );
     expect(await screen.findByDisplayValue("Local edit")).toBeVisible();
   });
@@ -144,10 +151,10 @@ describe("SpeakingTestWorkspace", () => {
   it("asks before discarding edits", async () => {
     const callbacks = await open();
     vi.spyOn(window, "confirm").mockReturnValue(false);
-    fireEvent.change(screen.getByLabelText("Tên đề *"), {
+    fireEvent.change(screen.getByLabelText("Test title *"), {
       target: { value: "Unsaved" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Đóng builder" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close builder" }));
     expect(window.confirm).toHaveBeenCalled();
     expect(callbacks.onClose).not.toHaveBeenCalled();
   });
@@ -168,17 +175,15 @@ describe("SpeakingTestWorkspace", () => {
       }),
     );
     await open();
-    fireEvent.change(screen.getByLabelText("Mã đề nhân bản"), {
+    fireEvent.change(screen.getByLabelText("Clone test code"), {
       target: { value: "COPY" },
     });
-    fireEvent.change(screen.getByLabelText("Tên đề nhân bản"), {
+    fireEvent.change(screen.getByLabelText("Clone test title"), {
       target: { value: "Copied test" },
     });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Nhân bản thành nháp" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Clone as draft" }));
     await vi.waitFor(() =>
-      expect(screen.getByLabelText("Mã đề *")).toHaveValue("COPY"),
+      expect(screen.getByLabelText("Test code *")).toHaveValue("COPY"),
     );
     expect(cloneSpeakingTest).toHaveBeenCalledWith(
       expect.any(String),
@@ -186,6 +191,6 @@ describe("SpeakingTestWorkspace", () => {
       "COPY",
       "Copied test",
     );
-    expect(screen.getByRole("button", { name: "Lưu bản nháp" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
   });
 });

@@ -43,7 +43,7 @@ export function ForgotPasswordPanel() {
       setNotice(
         reason instanceof Error
           ? reason.message
-          : "Không thể gửi mã xác minh. Vui lòng thử lại.",
+          : "Unable to send verification code. Please try again.",
       );
     } finally {
       setPending(false);
@@ -76,17 +76,17 @@ export function ForgotPasswordPanel() {
   return (
     <section aria-labelledby="recovery-title">
       <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
-        KHÔI PHỤC TÀI KHOẢN
+        ACCOUNT RECOVERY
       </p>
       <h1
         className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
         id="recovery-title"
       >
-        Quên mật khẩu?
+        Forgot password?
       </h1>
       <p className="mx-auto mt-3 max-w-[23rem] text-center text-[13px] leading-5 text-[#a89f9b]">
-        Nhập email đã đăng ký, chúng tôi sẽ gửi cho bạn mã xác minh để đặt lại
-        mật khẩu.
+        Enter your registered email and we will send you a verification code to
+        reset your password.
       </p>
       <form className="mt-8" noValidate onSubmit={submit}>
         <label
@@ -106,7 +106,7 @@ export function ForgotPasswordPanel() {
             setEmailError(undefined);
             setNotice(undefined);
           }}
-          placeholder="ban@example.com"
+          placeholder="you@example.com"
           type="email"
           value={email}
         />
@@ -124,7 +124,7 @@ export function ForgotPasswordPanel() {
           disabled={pending}
           type="submit"
         >
-          {pending ? "Đang gửi..." : "Gửi mã xác minh"}
+          {pending ? "Sending..." : "Send verification code"}
         </button>
       </form>
       {notice && (
@@ -133,12 +133,12 @@ export function ForgotPasswordPanel() {
         </output>
       )}
       <p className="mt-6 text-center text-[11px] text-[#a8a09c]">
-        Bạn đã nhớ mật khẩu?{" "}
+        Remember your password?{" "}
         <Link
           className="font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           href="/login"
         >
-          Quay lại đăng nhập
+          Back to sign in
         </Link>
       </p>
     </section>

@@ -46,21 +46,21 @@ vi.mock("@/features/writing/attempt-api", () => ({
 describe("WritingTestOverview", () => {
   it("shows the precise full-test duration", async () => {
     render(<WritingTestOverview mode="full" testId="test-1" />);
-    expect(await screen.findByText("57 phút 30 giây")).toBeInTheDocument();
+    expect(await screen.findByText("57 min 30 sec")).toBeInTheDocument();
   });
 
   it("shows only the selected Part's timing and structure in practice mode", async () => {
     render(<WritingTestOverview mode="part-2" testId="test-1" />);
 
     expect(
-      await screen.findByText("WRITING · LUYỆN THEO PART"),
+      await screen.findByText("WRITING · PRACTICE BY PART"),
     ).toBeInTheDocument();
-    expect(screen.getByText("2 câu")).toBeInTheDocument();
-    expect(screen.getByText("20 phút")).toBeInTheDocument();
+    expect(screen.getByText("2 questions")).toBeInTheDocument();
+    expect(screen.getByText("20 min")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Part 2 · Phản hồi email" }),
+      screen.getByRole("heading", { name: "Part 2 · Respond to an email" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Câu 6–7 · 60s chuẩn bị/)).toBeInTheDocument();
+    expect(screen.getByText(/Questions 6-7 · 60s prep/)).toBeInTheDocument();
     expect(screen.queryByText(/Part 3 ·/)).not.toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe("WritingTestOverview", () => {
     render(<WritingTestOverview mode="full" testId="test-1" />);
 
     const start = await screen.findByRole("button", {
-      name: "BẮT ĐẦU LÀM BÀI WRITING",
+      name: "START WRITING TEST",
     });
     expect(start).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));

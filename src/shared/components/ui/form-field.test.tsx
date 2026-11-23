@@ -7,7 +7,7 @@ import { PasswordInput } from "./password-input";
 describe("ui/form-field and ui/password-input", () => {
   it("wires htmlFor/id, hint, aria-invalid, and role=alert error via aria-describedby", () => {
     const { rerender } = render(
-      <FormField hint="Dùng email công ty." id="work-email" label="Email">
+      <FormField hint="Use your work email." id="work-email" label="Email">
         <FormInput placeholder="you@company.com" />
       </FormField>,
     );
@@ -20,8 +20,8 @@ describe("ui/form-field and ui/password-input", () => {
 
     rerender(
       <FormField
-        error="Email không hợp lệ."
-        hint="Dùng email công ty."
+        error="Invalid email."
+        hint="Use your work email."
         id="work-email"
         label="Email"
         required
@@ -31,7 +31,7 @@ describe("ui/form-field and ui/password-input", () => {
     );
 
     const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("Email không hợp lệ.");
+    expect(alert).toHaveTextContent("Invalid email.");
     expect(alert).toHaveAttribute("id", "work-email-error");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input).toHaveAttribute(
@@ -44,10 +44,10 @@ describe("ui/form-field and ui/password-input", () => {
   it("supports FormTextarea and FormSelect inside FormField", () => {
     render(
       <div>
-        <FormField error="Bắt buộc" id="bio" label="Giới thiệu">
+        <FormField error="Required" id="bio" label="Bio">
           <FormTextarea />
         </FormField>
-        <FormField id="level" label="Trình độ">
+        <FormField id="level" label="Level">
           <FormSelect defaultValue="B1">
             <option value="B1">B1</option>
             <option value="B2">B2</option>
@@ -56,23 +56,27 @@ describe("ui/form-field and ui/password-input", () => {
       </div>,
     );
 
-    const textarea = screen.getByLabelText("Giới thiệu");
+    const textarea = screen.getByLabelText("Bio");
     expect(textarea).toHaveAttribute("aria-invalid", "true");
     expect(textarea).toHaveAttribute("aria-describedby", "bio-error");
 
-    const select = screen.getByLabelText("Trình độ");
+    const select = screen.getByLabelText("Level");
     expect(select).toHaveValue("B1");
     expect(select).not.toHaveAttribute("aria-invalid");
   });
 
   it("links only error ID in aria-describedby when hint is omitted", () => {
     render(
-      <FormField error="Trường bắt buộc." id="full-name" label="Họ tên">
+      <FormField
+        error="This field is required."
+        id="full-name"
+        label="Full name"
+      >
         <FormInput />
       </FormField>,
     );
 
-    const input = screen.getByLabelText("Họ tên");
+    const input = screen.getByLabelText("Full name");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input).toHaveAttribute("aria-describedby", "full-name-error");
   });
@@ -80,24 +84,24 @@ describe("ui/form-field and ui/password-input", () => {
   it("PasswordInput toggles input type between password and text with accessible button state", async () => {
     const user = userEvent.setup();
     render(
-      <FormField error="Quá ngắn" id="pw" label="Mật khẩu">
+      <FormField error="Too short" id="pw" label="Password">
         <PasswordInput defaultValue="secret123" />
       </FormField>,
     );
 
-    const input = screen.getByLabelText("Mật khẩu");
+    const input = screen.getByLabelText("Password");
     const toggle = screen.getByTestId("password-visibility-toggle");
 
     expect(input).toHaveAttribute("type", "password");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input).toHaveAttribute("aria-describedby", "pw-error");
     expect(toggle).toHaveAttribute("aria-pressed", "false");
-    expect(toggle).toHaveAttribute("aria-label", "Hiện mật khẩu");
+    expect(toggle).toHaveAttribute("aria-label", "Show password");
 
     await user.click(toggle);
     expect(input).toHaveAttribute("type", "text");
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(toggle).toHaveAttribute("aria-label", "Ẩn mật khẩu");
+    expect(toggle).toHaveAttribute("aria-label", "Hide password");
 
     await user.click(toggle);
     expect(input).toHaveAttribute("type", "password");

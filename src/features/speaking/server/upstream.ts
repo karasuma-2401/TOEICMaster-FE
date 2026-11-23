@@ -39,19 +39,19 @@ export async function readForwardBody(
     if (!contentType.startsWith("multipart/form-data"))
       return {
         ok: false,
-        response: problem(400, "Cần gửi file dạng multipart."),
+        response: problem(400, "File must be sent as multipart form data."),
       };
     const declared = Number(request.headers.get("content-length") ?? "0");
     if (declared > multipart)
       return {
         ok: false,
-        response: problem(413, "File vượt quá giới hạn cho phép."),
+        response: problem(413, "File exceeds the allowed size limit."),
       };
     const body = await request.arrayBuffer();
     if (body.byteLength > multipart)
       return {
         ok: false,
-        response: problem(413, "File vượt quá giới hạn cho phép."),
+        response: problem(413, "File exceeds the allowed size limit."),
       };
     return { ok: true, body, contentType };
   }
@@ -59,13 +59,13 @@ export async function readForwardBody(
   if (!contentType.startsWith("application/json"))
     return {
       ok: false,
-      response: problem(400, "Dữ liệu yêu cầu không hợp lệ."),
+      response: problem(400, "Invalid request payload."),
     };
   const value: unknown = await request.json().catch(() => null);
   if (!value || typeof value !== "object" || Array.isArray(value))
     return {
       ok: false,
-      response: problem(400, "Dữ liệu yêu cầu không hợp lệ."),
+      response: problem(400, "Invalid request payload."),
     };
   return {
     ok: true,

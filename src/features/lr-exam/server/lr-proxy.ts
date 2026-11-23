@@ -49,13 +49,13 @@ export async function forwardLr(
   method: "GET" | "POST" | "PUT",
 ) {
   if (!validPath(segments)) {
-    return problem(404, "Không tìm thấy API Listening & Reading.");
+    return problem(404, "Listening & Reading API endpoint not found.");
   }
   if (method !== "GET" && isGetOnlyPath(segments)) {
-    return problem(405, "Phương thức không được hỗ trợ.");
+    return problem(405, "Method not allowed.");
   }
   if (method !== "GET" && !sameOrigin(request)) {
-    return problem(403, "Yêu cầu không hợp lệ.");
+    return problem(403, "Invalid request.");
   }
 
   const path = segments.join("/");
@@ -75,7 +75,7 @@ export async function forwardLr(
     Date.parse(session.refreshTokenExpiresAtUtc) > Date.now();
 
   if (!isPublic && !hasValidRefresh) {
-    return problem(401, "Vui lòng đăng nhập để làm bài thi.");
+    return problem(401, "Please sign in to take the exam.");
   }
 
   const headers = new Headers({ Accept: "application/json" });
@@ -105,23 +105,23 @@ export async function forwardLr(
       if (
         !request.headers.get("content-type")?.startsWith("application/json")
       ) {
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       }
 
       try {
         const parsed: unknown = JSON.parse(raw);
 
         if (parsed === null || typeof parsed !== "object") {
-          return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+          return problem(400, "Invalid request payload.");
         }
 
         headers.set("Content-Type", "application/json");
         init.body = JSON.stringify(parsed);
       } catch {
-        return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+        return problem(400, "Invalid request payload.");
       }
     } else if (!bodyless) {
-      return problem(400, "Dữ liệu yêu cầu không hợp lệ.");
+      return problem(400, "Invalid request payload.");
     }
   }
 
@@ -162,6 +162,6 @@ export async function forwardLr(
       headers: responseHeaders,
     });
   } catch {
-    return problem(502, "Dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.");
+    return problem(502, "Service unavailable. Please try again later.");
   }
 }

@@ -10,7 +10,7 @@ import {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Writing attempt API", () => {
-  it("explains generic backend validation errors in Vietnamese", async () => {
+  it("explains generic backend validation errors in English", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -23,7 +23,7 @@ describe("Writing attempt API", () => {
         ),
     );
     await expect(getWritingPracticeExercises(1)).rejects.toThrow(
-      "Thông tin yêu cầu không hợp lệ",
+      "Invalid request information",
     );
   });
   it("refreshes an expired signed-in session before retrying history", async () => {
@@ -113,9 +113,7 @@ describe("Writing attempt API", () => {
         }),
       ),
     );
-    await expect(getWritingPracticeExercises(2)).rejects.toThrow(
-      "không hợp lệ",
-    );
+    await expect(getWritingPracticeExercises(2)).rejects.toThrow("Invalid");
   });
   it("keeps a final answer request alive when the learner leaves the page", async () => {
     const fetchMock = vi

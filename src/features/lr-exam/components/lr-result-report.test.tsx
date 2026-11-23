@@ -20,10 +20,10 @@ vi.mock("./exam-ui", async (importOriginal) => {
 afterEach(cleanup);
 
 const report: LrResultReport = {
-  examTitle: "Kết quả bài thi Listening & Reading - ETS 2024 Test 01",
+  examTitle: "Listening & Reading Exam Result - ETS 2024 Test 01",
   examIdentity: "ETS-2024-01",
-  takenAt: "19/11/2026",
-  durationLabel: "112 phút 45 giây",
+  takenAt: "11/19/2026",
+  durationLabel: "112 minutes 45 seconds",
   scale: "ETS Standard",
   totalScore: 855,
   maxScore: 990,
@@ -54,16 +54,20 @@ describe("LrResultReportView", () => {
     );
 
     expect(screen.getByText("855")).toBeInTheDocument();
-    expect(screen.getByText(/89 \/ 100 câu đúng/)).toBeInTheDocument();
-    expect(screen.getByText(/83 \/ 100 câu đúng/)).toBeInTheDocument();
+    expect(screen.getByText(/89 \/ 100 correct/)).toBeInTheDocument();
+    expect(screen.getByText(/83 \/ 100 correct/)).toBeInTheDocument();
     expect(
-      screen.getByText(/Đạt mục tiêu đề ra \(Mục tiêu 800\)/),
+      screen.getByText(/Target achieved \(Target 800\)/),
     ).toBeInTheDocument();
-    expect(screen.getByText("LISTENING SECTION (100 CÂU)")).toBeInTheDocument();
-    expect(screen.getByText("READING SECTION (100 CÂU)")).toBeInTheDocument();
-    expect(screen.getAllByText("Xuất sắc").length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+      screen.getByText("LISTENING SECTION (100 QUESTIONS)"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("READING SECTION (100 QUESTIONS)"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Excellent").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("link", { name: "Back to Attempt History" }),
     ).toHaveAttribute("href", "/history");
   });
 });

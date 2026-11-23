@@ -37,18 +37,18 @@ export interface IpaSound {
 }
 
 export const groupLabels: Record<IpaGroup, string> = {
-  monophthong: "Nguyên âm đơn",
-  diphthong: "Nguyên âm đôi",
-  consonant: "Phụ âm",
+  monophthong: "Monophthongs",
+  diphthong: "Diphthongs",
+  consonant: "Consonants",
 };
 
 export const subgroupLabels: Record<IpaSubgroup, string> = {
-  short: "ngắn",
-  long: "dài",
-  centring: "kết thúc bằng /ə/",
-  closing: "kết thúc bằng /ɪ/ hoặc /ʊ/",
-  voiceless: "vô thanh",
-  voiced: "hữu thanh",
+  short: "short",
+  long: "long",
+  centring: "ending in /ə/",
+  closing: "ending in /ɪ/ or /ʊ/",
+  voiceless: "voiceless",
+  voiced: "voiced",
 };
 
 export const groupOrder: readonly IpaGroup[] = [
@@ -77,28 +77,29 @@ function sound(input: SoundInput): IpaSound {
 }
 
 const americanNote =
-  "Hệ thống chấm theo giọng Mỹ nên âm này được so với cách đọc Mỹ tương ứng.";
+  "The scoring engine uses American English, so this sound is compared against the closest American pronunciation.";
 
 export const ipaSounds: readonly IpaSound[] = [
-  // Nguyên âm đơn
+  // Monophthongs
   sound({
     slug: "i-long",
     symbol: "iː",
     group: "monophthong",
     subgroup: "long",
     articulation: [
-      "Kéo hai khóe môi sang ngang như đang cười.",
-      "Mặt lưỡi nâng cao, đầu lưỡi chạm nhẹ sau răng cửa dưới.",
-      "Giữ âm dài hơn /ɪ/.",
+      "Stretch the corners of your mouth sideways as if smiling.",
+      "Raise the front of your tongue high, with the tip lightly touching behind the lower front teeth.",
+      "Hold the sound longer than /ɪ/.",
     ],
-    commonMistake: "Đọc ngắn như /ɪ/ nên “sheep” nghe thành “ship”.",
+    commonMistake:
+      "Pronouncing it short like /ɪ/, making “sheep” sound like “ship”.",
     examples: [
       ex("sheep", "ʃ[iː]p"),
       ex("see", "s[iː]"),
       ex("teacher", "t[iː]tʃə"),
     ],
     azurePhonemes: [["i"]],
-    confusions: { ɪ: "Kéo môi sang ngang hơn và giữ âm lâu hơn." },
+    confusions: { ɪ: "Pull your lips wider and hold the vowel longer." },
   }),
   sound({
     slug: "i-short",
@@ -106,18 +107,20 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Môi hơi mở, thả lỏng, không kéo căng sang ngang.",
-      "Lưỡi nâng cao nhưng thấp và lùi hơn /iː/.",
-      "Đọc ngắn, dứt khoát.",
+      "Keep your lips slightly open and relaxed, without stretching them sideways.",
+      "Raise your tongue high, but slightly lower and further back than for /iː/.",
+      "Keep the sound short and crisp.",
     ],
-    commonMistake: "Kéo dài thành /iː/ như chữ “i” tiếng Việt.",
+    commonMistake: "Stretching it out into a long /iː/ sound.",
     examples: [
       ex("ship", "ʃ[ɪ]p"),
       ex("sit", "s[ɪ]t"),
       ex("business", "b[ɪ]znəs"),
     ],
     azurePhonemes: [["ɪ"]],
-    confusions: { i: "Thả lỏng môi và đọc ngắn hơn, đừng kéo dài." },
+    confusions: {
+      i: "Relax your lips and make the sound shorter; do not draw it out.",
+    },
   }),
   sound({
     slug: "u-short",
@@ -125,14 +128,15 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Môi tròn nhẹ, hơi đưa ra trước, không chu mạnh.",
-      "Cuống lưỡi nâng lên phía sau.",
-      "Đọc ngắn.",
+      "Round your lips slightly and push them forward gently, without pouting strongly.",
+      "Raise the back of your tongue.",
+      "Keep the sound short.",
     ],
-    commonMistake: "Chu môi và kéo dài thành /uː/.",
+    commonMistake:
+      "Rounding your lips too tightly and drawing it out into /uː/.",
     examples: [ex("good", "g[ʊ]d"), ex("book", "b[ʊ]k"), ex("put", "p[ʊ]t")],
     azurePhonemes: [["ʊ"]],
-    confusions: { u: "Thả lỏng môi hơn và đọc ngắn." },
+    confusions: { u: "Relax your lips more and keep the sound short." },
   }),
   sound({
     slug: "u-long",
@@ -140,18 +144,20 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "long",
     articulation: [
-      "Chu tròn môi về phía trước.",
-      "Cuống lưỡi nâng cao về phía sau.",
-      "Giữ âm dài.",
+      "Round your lips into a tight circle and push them forward.",
+      "Raise the back of your tongue high.",
+      "Hold the sound long.",
     ],
-    commonMistake: "Đọc ngắn nên “food” nghe gần “foot”.",
+    commonMistake: "Saying it too short, making “food” sound close to “foot”.",
     examples: [
       ex("shoot", "ʃ[uː]t"),
       ex("food", "f[uː]d"),
       ex("blue", "bl[uː]"),
     ],
     azurePhonemes: [["u"]],
-    confusions: { ʊ: "Chu môi tròn hơn và giữ âm lâu hơn." },
+    confusions: {
+      ʊ: "Round your lips more tightly and hold the sound longer.",
+    },
   }),
   sound({
     slug: "e",
@@ -159,13 +165,15 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Mở miệng vừa, môi hơi kéo sang ngang.",
-      "Lưỡi ở độ cao trung bình, phía trước.",
+      "Open your mouth moderately, with your lips slightly stretched sideways.",
+      "Keep your tongue at mid-height toward the front.",
     ],
-    commonMistake: "Mở miệng quá rộng nên nghe thành /æ/.",
+    commonMistake: "Opening your mouth too wide so it sounds like /æ/.",
     examples: [ex("bed", "b[e]d"), ex("many", "m[e]ni"), ex("said", "s[e]d")],
     azurePhonemes: [["ɛ"]],
-    confusions: { æ: "Khép miệng bớt lại, hàm dưới không hạ thấp như /æ/." },
+    confusions: {
+      æ: "Close your mouth a bit more and do not drop your lower jaw as low as for /æ/.",
+    },
   }),
   sound({
     slug: "schwa",
@@ -173,11 +181,12 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Thả lỏng hoàn toàn môi, lưỡi và hàm.",
-      "Miệng hé nhẹ, phát ra âm “ơ” rất ngắn và nhẹ.",
-      "Chỉ xuất hiện ở âm tiết không nhấn.",
+      "Completely relax your lips, tongue, and jaw.",
+      "Part your lips slightly and produce a very short, weak “uh” sound.",
+      "Only appears in unstressed syllables.",
     ],
-    commonMistake: "Đọc rõ theo mặt chữ (a, o, e) thay vì đọc lướt “ơ”.",
+    commonMistake:
+      "Pronouncing the full vowel based on spelling (a, o, e) instead of a quick, unstressed “uh”.",
     examples: [
       ex("teacher", "tiːtʃ[ə]"),
       ex("about", "[ə]baʊt"),
@@ -191,11 +200,12 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "long",
     articulation: [
-      "Môi thả lỏng, hơi mở, không tròn.",
-      "Lưỡi ở giữa miệng, giữ yên.",
-      "Kéo dài như “ơ” dài.",
+      "Keep your lips relaxed and slightly open, not rounded.",
+      "Hold your tongue steady in the middle of your mouth.",
+      "Draw out the sound like a long “er”.",
     ],
-    commonMistake: "Đọc ngắn hoặc tròn môi thành “ô”.",
+    commonMistake:
+      "Saying it too short or rounding your lips into an “oh” sound.",
     examples: [
       ex("bird", "b[ɜː]d"),
       ex("work", "w[ɜː]k"),
@@ -210,11 +220,12 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "long",
     articulation: [
-      "Môi tròn, đưa ra trước.",
-      "Cuống lưỡi nâng lên vừa phải.",
-      "Giữ âm dài như “o” kéo dài.",
+      "Round your lips and push them forward.",
+      "Raise the back of your tongue moderately.",
+      "Hold the sound long like an extended “aw”.",
     ],
-    commonMistake: "Đọc ngắn thành /ɒ/ hoặc “ô” tiếng Việt.",
+    commonMistake:
+      "Saying it too short like /ɒ/ or closing your lips into an “oh” sound.",
     examples: [ex("door", "d[ɔː]"), ex("law", "l[ɔː]"), ex("walk", "w[ɔː]k")],
     azurePhonemes: [["ɔ"]],
   }),
@@ -224,11 +235,11 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Hạ hàm dưới, mở miệng rộng.",
-      "Kéo môi sang ngang, lưỡi thấp và ở phía trước.",
-      "Âm nằm giữa “a” và “e”.",
+      "Drop your lower jaw and open your mouth wide.",
+      "Pull your lips sideways, keeping your tongue low and forward.",
+      "The sound sits between “a” and “e”.",
     ],
-    commonMistake: "Đọc thành /e/ nên “bad” nghe như “bed”.",
+    commonMistake: "Pronouncing it like /e/, making “bad” sound like “bed”.",
     examples: [
       ex("cat", "k[æ]t"),
       ex("bank", "b[æ]ŋk"),
@@ -236,7 +247,7 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["æ"]],
     confusions: {
-      ɛ: "Hạ hàm dưới nhiều hơn, mở miệng rộng như sắp nói “a”.",
+      ɛ: "Drop your lower jaw more and open your mouth wide as if about to say “ah”.",
     },
   }),
   sound({
@@ -245,14 +256,14 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Mở miệng vừa, môi thả lỏng.",
-      "Lưỡi hơi lùi về sau, ở độ cao trung bình.",
-      "Đọc ngắn như “ă”.",
+      "Open your mouth moderately with relaxed lips.",
+      "Pull your tongue slightly back at mid-height.",
+      "Keep the sound short like a quick “uh”.",
     ],
-    commonMistake: "Đọc thành “a” dài /ɑː/.",
+    commonMistake: "Drawing it out into a long “ah” /ɑː/.",
     examples: [ex("up", "[ʌ]p"), ex("cup", "k[ʌ]p"), ex("money", "m[ʌ]ni")],
     azurePhonemes: [["ʌ"]],
-    confusions: { ɑ: "Đọc ngắn và khép miệng hơn, gần “ă”." },
+    confusions: { ɑ: "Keep it shorter and close your mouth slightly more." },
   }),
   sound({
     slug: "a-long",
@@ -260,14 +271,14 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "long",
     articulation: [
-      "Mở miệng rộng, hàm dưới hạ thấp.",
-      "Lưỡi nằm thấp, lùi về sau.",
-      "Giữ âm dài như “a” kéo dài.",
+      "Open your mouth wide and drop your lower jaw.",
+      "Keep your tongue low and pulled back.",
+      "Hold the sound long like an extended “ah”.",
     ],
-    commonMistake: "Đọc ngắn thành /ʌ/.",
+    commonMistake: "Saying it too short like /ʌ/.",
     examples: [ex("far", "f[ɑː]"), ex("car", "k[ɑː]"), ex("start", "st[ɑː]t")],
     azurePhonemes: [["ɑ"]],
-    confusions: { ʌ: "Mở miệng rộng hơn và giữ âm lâu hơn." },
+    confusions: { ʌ: "Open your mouth wider and hold the sound longer." },
   }),
   sound({
     slug: "o-short",
@@ -275,27 +286,28 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "monophthong",
     subgroup: "short",
     articulation: [
-      "Mở miệng rộng, môi hơi tròn.",
-      "Lưỡi thấp, lùi về sau.",
-      "Đọc ngắn như “o”.",
+      "Open your mouth wide with slightly rounded lips.",
+      "Keep your tongue low and pulled back.",
+      "Keep the sound short like a crisp “o”.",
     ],
-    commonMistake: "Đọc thành “ô” khép miệng.",
+    commonMistake: "Rounding and closing your lips into an “oh” sound.",
     examples: [ex("on", "[ɒ]n"), ex("hot", "h[ɒ]t"), ex("job", "dʒ[ɒ]b")],
     azurePhonemes: [["ɑ"], ["ɔ"]],
-    scoringNote: "Giọng Mỹ không có /ɒ/; hệ thống chấm theo /ɑ/ của giọng Mỹ.",
+    scoringNote:
+      "American English does not have /ɒ/; the engine scores it against American /ɑ/.",
   }),
 
-  // Nguyên âm đôi
+  // Diphthongs
   sound({
     slug: "ie",
     symbol: "ɪə",
     group: "diphthong",
     subgroup: "centring",
     articulation: [
-      "Bắt đầu ở /ɪ/, môi thả lỏng.",
-      "Lướt nhẹ về /ə/, miệng hé ra một chút.",
+      "Start on /ɪ/ with relaxed lips.",
+      "Glide gently into /ə/ as your mouth opens slightly.",
     ],
-    commonMistake: "Chỉ đọc /ɪ/ mà thiếu phần lướt về /ə/.",
+    commonMistake: "Saying only /ɪ/ without gliding into /ə/.",
     examples: [ex("here", "h[ɪə]"), ex("near", "n[ɪə]"), ex("idea", "aɪd[ɪə]")],
     azurePhonemes: [
       ["ɪ", "ɹ"],
@@ -310,10 +322,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "closing",
     articulation: [
-      "Bắt đầu ở /e/, miệng mở vừa.",
-      "Lướt lên /ɪ/, hàm khép lại dần.",
+      "Start on /e/ with your mouth moderately open.",
+      "Glide up into /ɪ/ as your jaw gradually closes.",
     ],
-    commonMistake: "Đọc thành “ê” đơn, thiếu phần lướt lên /ɪ/.",
+    commonMistake: "Pronouncing a flat single vowel without gliding up to /ɪ/.",
     examples: [
       ex("wait", "w[eɪ]t"),
       ex("day", "d[eɪ]"),
@@ -327,10 +339,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "centring",
     articulation: [
-      "Bắt đầu ở /ʊ/, môi tròn nhẹ.",
-      "Lướt về /ə/, môi thả lỏng.",
+      "Start on /ʊ/ with slightly rounded lips.",
+      "Glide into /ə/ as your lips relax.",
     ],
-    commonMistake: "Đọc thành “ua” với “a” quá rõ.",
+    commonMistake: "Over-pronouncing the ending as a strong “ah”.",
     examples: [
       ex("tourist", "t[ʊə]rɪst"),
       ex("pure", "pj[ʊə]"),
@@ -349,10 +361,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "closing",
     articulation: [
-      "Bắt đầu ở /ɔː/, môi tròn.",
-      "Lướt lên /ɪ/, môi kéo sang ngang.",
+      "Start on /ɔː/ with rounded lips.",
+      "Glide up to /ɪ/ while pulling your lips sideways.",
     ],
-    commonMistake: "Đọc như “oi” tiếng Việt nhưng quá ngắn.",
+    commonMistake: "Saying it too abruptly without a smooth glide.",
     examples: [
       ex("boy", "b[ɔɪ]"),
       ex("join", "dʒ[ɔɪ]n"),
@@ -366,10 +378,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "closing",
     articulation: [
-      "Bắt đầu ở /ə/, môi thả lỏng.",
-      "Lướt về /ʊ/, môi tròn dần.",
+      "Start on /ə/ with relaxed lips.",
+      "Glide into /ʊ/ as your lips gradually round.",
     ],
-    commonMistake: "Đọc thành “ô” đơn, không có chuyển động môi.",
+    commonMistake: "Pronouncing a single flat “oh” without lip movement.",
     examples: [ex("show", "ʃ[əʊ]"), ex("go", "g[əʊ]"), ex("phone", "f[əʊ]n")],
     azurePhonemes: [["oʊ"]],
     scoringNote: americanNote,
@@ -379,8 +391,11 @@ export const ipaSounds: readonly IpaSound[] = [
     symbol: "eə",
     group: "diphthong",
     subgroup: "centring",
-    articulation: ["Bắt đầu ở /e/, miệng mở vừa.", "Lướt về /ə/, thả lỏng."],
-    commonMistake: "Đọc thành “e” đơn hoặc “ia”.",
+    articulation: [
+      "Start on /e/ with your mouth moderately open.",
+      "Glide into /ə/ as your mouth relaxes.",
+    ],
+    commonMistake: "Pronouncing it as a flat “e” or drifting toward “ear”.",
     examples: [ex("wear", "w[eə]"), ex("hair", "h[eə]"), ex("care", "k[eə]")],
     azurePhonemes: [
       ["ɛ", "ɹ"],
@@ -394,10 +409,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "closing",
     articulation: [
-      "Bắt đầu với miệng mở rộng như “a”.",
-      "Lướt lên /ɪ/, hàm khép lại.",
+      "Start with your mouth open wide as for “ah”.",
+      "Glide up into /ɪ/ as your jaw closes.",
     ],
-    commonMistake: "Đọc thành “ai” quá ngắn hoặc thiếu /ɪ/ ở cuối.",
+    commonMistake: "Saying it too short or dropping the final /ɪ/.",
     examples: [ex("my", "m[aɪ]"), ex("time", "t[aɪ]m"), ex("price", "pr[aɪ]s")],
     azurePhonemes: [["aɪ"]],
   }),
@@ -407,10 +422,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "diphthong",
     subgroup: "closing",
     articulation: [
-      "Bắt đầu với miệng mở rộng như “a”.",
-      "Lướt về /ʊ/, môi tròn lại.",
+      "Start with your mouth open wide as for “ah”.",
+      "Glide into /ʊ/ as your lips round.",
     ],
-    commonMistake: "Đọc thành “ao” với “o” quá rõ.",
+    commonMistake: "Ending on an overly open “o” instead of rounding to /ʊ/.",
     examples: [
       ex("cow", "k[aʊ]"),
       ex("now", "n[aʊ]"),
@@ -419,7 +434,7 @@ export const ipaSounds: readonly IpaSound[] = [
     azurePhonemes: [["aʊ"]],
   }),
 
-  // Phụ âm: cặp vô thanh / hữu thanh
+  // Consonants: voiceless / voiced pairs
   sound({
     slug: "p",
     symbol: "p",
@@ -427,11 +442,12 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "b",
     articulation: [
-      "Mím hai môi lại, giữ hơi phía sau.",
-      "Bật môi ra, đẩy luồng hơi mạnh.",
-      "Dây thanh không rung.",
+      "Press both lips together and build up air behind them.",
+      "Release your lips with a strong puff of air.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Không bật hơi nên nghe giống /b/; bỏ âm /p/ ở cuối từ.",
+    commonMistake:
+      "Not aspirating enough so it sounds like /b/; dropping final /p/.",
     examples: [
       ex("pea", "[p]iː"),
       ex("paper", "[p]eɪpə"),
@@ -439,7 +455,7 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["p"]],
     confusions: {
-      b: "Bật hơi mạnh hơn; đặt tay trước miệng phải cảm thấy hơi.",
+      b: "Release a stronger puff of air; you should feel breath on your hand in front of your mouth.",
     },
   }),
   sound({
@@ -449,18 +465,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "p",
     articulation: [
-      "Mím hai môi lại.",
-      "Bật môi ra nhẹ, ít hơi hơn /p/.",
-      "Dây thanh rung.",
+      "Press both lips together.",
+      "Release your lips gently with less air than /p/.",
+      "Your vocal cords vibrate.",
     ],
-    commonMistake: "Bỏ âm /b/ ở cuối từ như “job”.",
+    commonMistake: "Dropping final /b/ in words like “job”.",
     examples: [
       ex("boat", "[b]əʊt"),
       ex("job", "dʒɒ[b]"),
       ex("about", "ə[b]aʊt"),
     ],
     azurePhonemes: [["b"]],
-    confusions: { p: "Cho dây thanh rung và bật hơi nhẹ hơn." },
+    confusions: {
+      p: "Vibrate your vocal cords and use a gentler release of air.",
+    },
   }),
   sound({
     slug: "t",
@@ -469,18 +487,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "d",
     articulation: [
-      "Đặt đầu lưỡi lên lợi ngay sau răng cửa trên.",
-      "Bật lưỡi xuống, đẩy hơi ra.",
-      "Dây thanh không rung.",
+      "Place your tongue tip on the alveolar ridge right behind your upper front teeth.",
+      "Snap your tongue down and push out a burst of air.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Đọc như “t” tiếng Việt, không bật hơi; bỏ /t/ cuối từ.",
+    commonMistake: "Pronouncing it without aspiration, or dropping final /t/.",
     examples: [
       ex("tea", "[t]iː"),
       ex("ticket", "[t]ɪkɪt"),
       ex("meet", "miː[t]"),
     ],
     azurePhonemes: [["t"]],
-    confusions: { d: "Bật hơi mạnh hơn, dây thanh không rung." },
+    confusions: {
+      d: "Release a stronger puff of air without vibrating your vocal cords.",
+    },
   }),
   sound({
     slug: "d",
@@ -489,14 +509,14 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "t",
     articulation: [
-      "Đặt đầu lưỡi lên lợi sau răng cửa trên.",
-      "Bật lưỡi xuống nhẹ.",
-      "Dây thanh rung.",
+      "Place your tongue tip on the alveolar ridge behind your upper front teeth.",
+      "Release your tongue gently downward.",
+      "Your vocal cords vibrate.",
     ],
-    commonMistake: "Đọc như “đ” tiếng Việt hoặc bỏ /d/ cuối từ.",
+    commonMistake: "Articulating it too heavily or dropping final /d/.",
     examples: [ex("dog", "[d]ɒg"), ex("desk", "[d]esk"), ex("need", "niː[d]")],
     azurePhonemes: [["d"]],
-    confusions: { t: "Cho dây thanh rung khi bật lưỡi." },
+    confusions: { t: "Vibrate your vocal cords as you release your tongue." },
   }),
   sound({
     slug: "ch",
@@ -505,18 +525,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "j",
     articulation: [
-      "Đầu lưỡi chạm lợi trên, môi hơi tròn và đưa ra.",
-      "Bật lưỡi ra thành tiếng xì như “ch”.",
-      "Dây thanh không rung.",
+      "Touch your tongue tip to the upper gum ridge while rounding and pushing your lips forward.",
+      "Release the air sharply into a “ch” sound.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Đọc thành “ch” tiếng Việt, môi không tròn.",
+    commonMistake: "Not rounding your lips enough when saying “ch”.",
     examples: [
       ex("cheese", "[tʃ]iːz"),
       ex("check", "[tʃ]ek"),
       ex("watch", "wɒ[tʃ]"),
     ],
     azurePhonemes: [["tʃ"]],
-    confusions: { ʃ: "Chặn hơi bằng đầu lưỡi trước rồi mới bật ra." },
+    confusions: {
+      ʃ: "Stop the airflow with your tongue tip first before releasing it.",
+    },
   }),
   sound({
     slug: "j",
@@ -525,10 +547,10 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "ch",
     articulation: [
-      "Khẩu hình giống /tʃ/, môi tròn và đưa ra.",
-      "Bật lưỡi ra, dây thanh rung.",
+      "Use the same mouth shape as /tʃ/, with lips rounded and pushed forward.",
+      "Release your tongue while vibrating your vocal cords.",
     ],
-    commonMistake: "Đọc thành /z/ hoặc “gi” tiếng Việt.",
+    commonMistake: "Pronouncing it like /z/ or softening the initial stop.",
     examples: [
       ex("June", "[dʒ]uːn"),
       ex("job", "[dʒ]ɒb"),
@@ -536,8 +558,8 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["dʒ"]],
     confusions: {
-      z: "Chặn hơi bằng đầu lưỡi trên lợi rồi bật ra, môi tròn.",
-      ʒ: "Chặn hơi bằng đầu lưỡi trước rồi mới bật ra.",
+      z: "Stop the air with your tongue tip on the gum ridge first, with rounded lips.",
+      ʒ: "Stop the airflow with your tongue tip first before releasing it.",
     },
   }),
   sound({
@@ -547,14 +569,16 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "g",
     articulation: [
-      "Nâng cuống lưỡi chạm ngạc mềm.",
-      "Bật cuống lưỡi xuống, đẩy hơi ra.",
-      "Dây thanh không rung.",
+      "Raise the back of your tongue to touch the soft palate.",
+      "Drop the back of your tongue and push out a burst of air.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Bỏ âm /k/ cuối từ như “book”.",
+    commonMistake: "Dropping final /k/ in words like “book”.",
     examples: [ex("car", "[k]ɑː"), ex("call", "[k]ɔːl"), ex("book", "bʊ[k]")],
     azurePhonemes: [["k"]],
-    confusions: { ɡ: "Bật hơi mạnh hơn, dây thanh không rung." },
+    confusions: {
+      ɡ: "Release a stronger puff of air without vibrating your vocal cords.",
+    },
   }),
   sound({
     slug: "g",
@@ -563,13 +587,15 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "k",
     articulation: [
-      "Nâng cuống lưỡi chạm ngạc mềm.",
-      "Bật xuống nhẹ, dây thanh rung.",
+      "Raise the back of your tongue to touch the soft palate.",
+      "Release gently while vibrating your vocal cords.",
     ],
-    commonMistake: "Bỏ âm /g/ cuối từ như “bag”.",
+    commonMistake: "Dropping final /g/ in words like “bag”.",
     examples: [ex("go", "[g]əʊ"), ex("bag", "bæ[g]"), ex("again", "ə[g]en")],
     azurePhonemes: [["ɡ"], ["g"]],
-    confusions: { k: "Cho dây thanh rung và bật hơi nhẹ hơn." },
+    confusions: {
+      k: "Vibrate your vocal cords and use a gentler release of air.",
+    },
   }),
   sound({
     slug: "f",
@@ -578,18 +604,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "v",
     articulation: [
-      "Đặt răng cửa trên chạm nhẹ môi dưới.",
-      "Thổi hơi qua khe giữa răng và môi.",
-      "Dây thanh không rung.",
+      "Touch your upper front teeth lightly to your lower lip.",
+      "Blow air steadily through the gap between your teeth and lip.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Bỏ /f/ cuối từ hoặc đọc thành /p/.",
+    commonMistake: "Dropping final /f/ or closing both lips like /p/.",
     examples: [
       ex("fly", "[f]laɪ"),
       ex("office", "ɒ[f]ɪs"),
       ex("phone", "[f]əʊn"),
     ],
     azurePhonemes: [["f"]],
-    confusions: { p: "Đừng mím môi; để răng trên chạm môi dưới và thổi hơi." },
+    confusions: {
+      p: "Do not press your lips together; rest your upper teeth on your lower lip and blow air.",
+    },
   }),
   sound({
     slug: "v",
@@ -598,10 +626,11 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "f",
     articulation: [
-      "Răng cửa trên chạm nhẹ môi dưới.",
-      "Thổi hơi và cho dây thanh rung.",
+      "Rest your upper front teeth lightly on your lower lip.",
+      "Blow air through while vibrating your vocal cords.",
     ],
-    commonMistake: "Đọc thành /b/ hoặc /w/; bỏ /v/ cuối từ như “have”.",
+    commonMistake:
+      "Pronouncing it like /b/ or /w/; dropping final /v/ in words like “have”.",
     examples: [
       ex("video", "[v]ɪdiəʊ"),
       ex("very", "[v]eri"),
@@ -609,9 +638,9 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["v"]],
     confusions: {
-      b: "Đừng mím môi; để răng trên chạm môi dưới.",
-      w: "Đừng tròn môi; để răng trên chạm môi dưới.",
-      f: "Cho dây thanh rung khi thổi hơi.",
+      b: "Do not press both lips together; touch your upper teeth to your lower lip.",
+      w: "Do not round your lips; touch your upper teeth to your lower lip.",
+      f: "Vibrate your vocal cords as you blow air.",
     },
   }),
   sound({
@@ -621,12 +650,12 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "th-voiced",
     articulation: [
-      "Đặt đầu lưỡi giữa hai hàm răng, hơi thò ra.",
-      "Thổi hơi qua khe giữa lưỡi và răng trên.",
-      "Dây thanh không rung.",
+      "Place the tip of your tongue gently between your upper and lower teeth, sticking out slightly.",
+      "Blow air through the gap between your tongue and upper teeth.",
+      "Your vocal cords do not vibrate.",
     ],
     commonMistake:
-      "Đọc thành /t/ hoặc /s/ nên “think” nghe như “tink”, “sink”.",
+      "Pronouncing it like /t/ or /s/, making “think” sound like “tink” or “sink”.",
     examples: [
       ex("think", "[θ]ɪŋk"),
       ex("three", "[θ]riː"),
@@ -634,9 +663,9 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["θ"]],
     confusions: {
-      s: "Đặt đầu lưỡi giữa hai hàm răng rồi thổi hơi, đừng để lưỡi sau răng.",
-      t: "Không chặn hơi; để lưỡi giữa hai hàm răng và thổi liên tục.",
-      f: "Dùng lưỡi thay vì môi dưới để tạo khe hơi.",
+      s: "Place your tongue tip between your teeth and blow air, instead of keeping it behind your teeth.",
+      t: "Do not block the air; keep your tongue between your teeth and blow steadily.",
+      f: "Use your tongue instead of your lower lip to create the narrow gap.",
     },
   }),
   sound({
@@ -646,10 +675,11 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "th-voiceless",
     articulation: [
-      "Đầu lưỡi đặt giữa hai hàm răng.",
-      "Thổi hơi và cho dây thanh rung.",
+      "Place your tongue tip gently between your upper and lower teeth.",
+      "Blow air while vibrating your vocal cords.",
     ],
-    commonMistake: "Đọc thành /d/ hoặc /z/ nên “this” nghe như “dis”.",
+    commonMistake:
+      "Pronouncing it like /d/ or /z/, making “this” sound like “dis”.",
     examples: [
       ex("this", "[ð]ɪs"),
       ex("mother", "mʌ[ð]ə"),
@@ -657,8 +687,8 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["ð"]],
     confusions: {
-      d: "Không chặn hơi; để lưỡi giữa hai hàm răng và cho dây thanh rung.",
-      z: "Đưa đầu lưỡi ra giữa hai hàm răng thay vì để sau răng.",
+      d: "Do not block the air; keep your tongue between your teeth and vibrate your vocal cords.",
+      z: "Bring your tongue tip between your teeth instead of keeping it behind them.",
     },
   }),
   sound({
@@ -668,18 +698,19 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "z",
     articulation: [
-      "Đầu lưỡi gần lợi trên, hai hàm răng gần khít.",
-      "Thổi hơi tạo tiếng xì.",
-      "Dây thanh không rung.",
+      "Bring your tongue tip close to the upper gum ridge with your teeth nearly closed.",
+      "Blow air out to create a crisp hissing sound.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Bỏ /s/ cuối từ (số nhiều, ngôi thứ ba) hoặc đọc thành /ʃ/.",
+    commonMistake:
+      "Dropping final /s/ (plurals, third-person singular) or pronouncing it like /ʃ/.",
     examples: [
       ex("see", "[s]iː"),
       ex("sales", "[s]eɪlz"),
       ex("price", "praɪ[s]"),
     ],
     azurePhonemes: [["s"]],
-    confusions: { ʃ: "Kéo môi sang ngang, đừng tròn môi." },
+    confusions: { ʃ: "Pull your lips sideways; do not round them." },
   }),
   sound({
     slug: "z",
@@ -688,17 +719,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiced",
     pairSlug: "s",
     articulation: [
-      "Khẩu hình giống /s/.",
-      "Cho dây thanh rung, tạo tiếng “zzz” như ong bay.",
+      "Use the same mouth shape as /s/.",
+      "Vibrate your vocal cords to make a buzzing “zzz” sound.",
     ],
-    commonMistake: "Đọc thành /s/ ở cuối từ như “plans”.",
+    commonMistake:
+      "Pronouncing it as voiceless /s/ at the end of words like “plans”.",
     examples: [
       ex("zoo", "[z]uː"),
       ex("busy", "bɪ[z]i"),
       ex("plans", "plæn[z]"),
     ],
     azurePhonemes: [["z"]],
-    confusions: { s: "Cho dây thanh rung; đặt tay lên cổ phải thấy rung." },
+    confusions: {
+      s: "Vibrate your vocal cords; place a hand on your throat to feel the vibration.",
+    },
   }),
   sound({
     slug: "sh",
@@ -707,18 +741,20 @@ export const ipaSounds: readonly IpaSound[] = [
     subgroup: "voiceless",
     pairSlug: "zh",
     articulation: [
-      "Môi tròn, đưa ra trước.",
-      "Lưỡi lùi hơn /s/, thổi hơi tạo tiếng “sh”.",
-      "Dây thanh không rung.",
+      "Round your lips and push them forward.",
+      "Pull your tongue slightly further back than for /s/ and blow out a soft “sh” sound.",
+      "Your vocal cords do not vibrate.",
     ],
-    commonMistake: "Đọc thành /s/ vì không tròn môi.",
+    commonMistake: "Pronouncing it like /s/ by not rounding your lips.",
     examples: [
       ex("shall", "[ʃ]æl"),
       ex("shop", "[ʃ]ɒp"),
       ex("station", "steɪ[ʃ]n"),
     ],
     azurePhonemes: [["ʃ"]],
-    confusions: { s: "Tròn môi và lùi lưỡi về sau một chút." },
+    confusions: {
+      s: "Round your lips and pull your tongue slightly further back.",
+    },
   }),
   sound({
     slug: "zh",
@@ -726,8 +762,11 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     pairSlug: "sh",
-    articulation: ["Khẩu hình giống /ʃ/, môi tròn.", "Cho dây thanh rung."],
-    commonMistake: "Đọc thành /z/ hoặc “gi” tiếng Việt.",
+    articulation: [
+      "Use the same mouth shape as /ʃ/, with rounded lips.",
+      "Vibrate your vocal cords.",
+    ],
+    commonMistake: "Pronouncing it like /z/ or softening it.",
     examples: [
       ex("television", "telɪvɪ[ʒ]n"),
       ex("usually", "juː[ʒ]uəli"),
@@ -735,19 +774,22 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["ʒ"]],
     confusions: {
-      z: "Tròn môi và lùi lưỡi về sau như khi nói /ʃ/.",
-      ʃ: "Cho dây thanh rung.",
+      z: "Round your lips and pull your tongue back as for /ʃ/.",
+      ʃ: "Vibrate your vocal cords.",
     },
   }),
 
-  // Phụ âm còn lại: âm mũi, âm bên, bán nguyên âm, /h/
+  // Remaining consonants: nasals, lateral, approximants, /h/
   sound({
     slug: "m",
     symbol: "m",
     group: "consonant",
     subgroup: "voiced",
-    articulation: ["Mím hai môi.", "Cho hơi thoát qua mũi, dây thanh rung."],
-    commonMistake: "Nuốt /m/ ở cuối từ như “team”.",
+    articulation: [
+      "Press both lips together.",
+      "Let the air flow out through your nose while vibrating your vocal cords.",
+    ],
+    commonMistake: "Swallowing final /m/ in words like “team”.",
     examples: [
       ex("man", "[m]æn"),
       ex("meeting", "[m]iːtɪŋ"),
@@ -761,14 +803,14 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Đầu lưỡi chạm lợi trên.",
-      "Cho hơi thoát qua mũi, dây thanh rung.",
+      "Touch your tongue tip to the upper gum ridge.",
+      "Let the air flow out through your nose while vibrating your vocal cords.",
     ],
-    commonMistake: "Đọc lẫn với /ŋ/ ở cuối từ.",
+    commonMistake: "Confusing it with /ŋ/ at the end of words.",
     examples: [ex("now", "[n]aʊ"), ex("name", "[n]eɪm"), ex("plan", "plæ[n]")],
     azurePhonemes: [["n"]],
     confusions: {
-      ŋ: "Đưa đầu lưỡi lên chạm lợi trên thay vì dùng cuống lưỡi.",
+      ŋ: "Touch your tongue tip to the upper gum ridge instead of using the back of your tongue.",
     },
   }),
   sound({
@@ -777,17 +819,19 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Nâng cuống lưỡi chạm ngạc mềm như khi nói /k/.",
-      "Cho hơi thoát qua mũi, không bật /g/ ra.",
+      "Raise the back of your tongue to the soft palate as if saying /k/.",
+      "Let the air flow out through your nose without releasing a /g/.",
     ],
-    commonMistake: "Đọc thành /n/ hoặc thêm /g/ phía sau.",
+    commonMistake: "Pronouncing it like /n/ or adding an extra /g/ at the end.",
     examples: [
       ex("sing", "sɪ[ŋ]"),
       ex("meeting", "miːtɪ[ŋ]"),
       ex("long", "lɒ[ŋ]"),
     ],
     azurePhonemes: [["ŋ"]],
-    confusions: { n: "Dùng cuống lưỡi chặn phía sau, đầu lưỡi để yên." },
+    confusions: {
+      n: "Block the air at the back with your tongue and keep your tongue tip relaxed.",
+    },
   }),
   sound({
     slug: "h",
@@ -795,10 +839,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiceless",
     articulation: [
-      "Mở miệng theo nguyên âm đi sau.",
-      "Thở hơi nhẹ ra từ cổ họng.",
+      "Shape your mouth for the following vowel.",
+      "Breathe out a gentle puff of air from your throat.",
     ],
-    commonMistake: "Bỏ hẳn /h/ hoặc đọc quá nặng như “kh”.",
+    commonMistake: "Dropping /h/ completely or making it too harsh and raspy.",
     examples: [
       ex("hat", "[h]æt"),
       ex("hotel", "[h]əʊtel"),
@@ -812,18 +856,21 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Đầu lưỡi chạm lợi trên.",
-      "Hơi thoát ra hai bên lưỡi, dây thanh rung.",
-      "Ở cuối từ, giữ lưỡi chạm lợi một chút.",
+      "Touch your tongue tip to the upper gum ridge.",
+      "Let air flow around both sides of your tongue while vibrating your vocal cords.",
+      "At the end of a word, hold your tongue tip on the gum ridge briefly.",
     ],
-    commonMistake: "Bỏ /l/ cuối từ như “email” hoặc đọc thành /n/.",
+    commonMistake:
+      "Dropping final /l/ in words like “email” or confusing it with /n/.",
     examples: [
       ex("love", "[l]ʌv"),
       ex("late", "[l]eɪt"),
       ex("email", "iːmeɪ[l]"),
     ],
     azurePhonemes: [["l"]],
-    confusions: { n: "Để hơi thoát hai bên lưỡi, không qua mũi." },
+    confusions: {
+      n: "Let air escape along both sides of your tongue, not through your nose.",
+    },
   }),
   sound({
     slug: "r",
@@ -831,10 +878,10 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Cong đầu lưỡi lên, không chạm vòm miệng.",
-      "Môi hơi tròn, dây thanh rung.",
+      "Curl your tongue tip slightly upward without touching the roof of your mouth.",
+      "Round your lips slightly and vibrate your vocal cords.",
     ],
-    commonMistake: "Rung lưỡi như “r” tiếng Việt hoặc đọc thành /l/, /z/.",
+    commonMistake: "Trilling the tongue or substituting /l/ or /z/.",
     examples: [
       ex("red", "[r]ed"),
       ex("report", "[r]ɪpɔːt"),
@@ -842,8 +889,8 @@ export const ipaSounds: readonly IpaSound[] = [
     ],
     azurePhonemes: [["ɹ"], ["r"]],
     confusions: {
-      l: "Đừng để đầu lưỡi chạm lợi; cong lưỡi lên và tròn môi.",
-      z: "Không để lưỡi gần răng; cong lưỡi lên phía sau.",
+      l: "Do not let your tongue tip touch the gum ridge; curl it up and round your lips.",
+      z: "Keep your tongue away from your teeth and curl it back.",
     },
   }),
   sound({
@@ -852,13 +899,15 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Chu tròn môi như khi nói /uː/.",
-      "Mở môi nhanh sang nguyên âm tiếp theo.",
+      "Round your lips tightly as if saying /uː/.",
+      "Open your lips quickly into the following vowel.",
     ],
-    commonMistake: "Đọc thành /v/ hoặc “qu”.",
+    commonMistake: "Pronouncing it like /v/ or adding a hard /k/ sound.",
     examples: [ex("wet", "[w]et"), ex("work", "[w]ɜːk"), ex("quick", "k[w]ɪk")],
     azurePhonemes: [["w"]],
-    confusions: { v: "Không để răng chạm môi; chỉ chu tròn môi." },
+    confusions: {
+      v: "Do not touch your teeth to your lip; only round your lips.",
+    },
   }),
   sound({
     slug: "y",
@@ -866,10 +915,11 @@ export const ipaSounds: readonly IpaSound[] = [
     group: "consonant",
     subgroup: "voiced",
     articulation: [
-      "Mặt lưỡi nâng gần vòm miệng như khi nói /iː/.",
-      "Lướt nhanh sang nguyên âm tiếp theo.",
+      "Raise the front of your tongue near the hard palate as for /iː/.",
+      "Glide quickly into the following vowel.",
     ],
-    commonMistake: "Đọc thành “gi” hoặc bỏ /j/ như “use” thành “ooz”.",
+    commonMistake:
+      "Turning it into a /z/ or /dʒ/ sound, or dropping /j/ so “use” sounds like “ooz”.",
     examples: [ex("yes", "[j]es"), ex("year", "[j]ɪə"), ex("use", "[j]uːz")],
     azurePhonemes: [["j"]],
   }),

@@ -203,8 +203,8 @@ export class MockWritingAdminBackend {
       {
         id: "test-draft-01",
         code: "WT-DRAFT-01",
-        title: "Đề thi Writing Bản nháp 01",
-        description: "Đề thi nháp kiểm thử vòng đời đề",
+        title: "Writing Draft Test 01",
+        description: "Draft test for lifecycle testing",
         status: "DRAFT",
         version: 1,
         questions: draftQuestions,
@@ -214,8 +214,8 @@ export class MockWritingAdminBackend {
       {
         id: "test-published-01",
         code: "WT-PUB-01",
-        title: "Đề thi Writing Đã công bố 01",
-        description: "Đề thi chuẩn đã xuất bản đóng băng nội dung",
+        title: "Writing Published Test 01",
+        description: "Standard published test with frozen content",
         status: "PUBLISHED",
         version: 1,
         questions: draftQuestions,
@@ -225,8 +225,8 @@ export class MockWritingAdminBackend {
       {
         id: "test-archived-01",
         code: "WT-ARC-01",
-        title: "Đề thi Writing Đã lưu trữ 01",
-        description: "Đề thi cũ đã lưu trữ",
+        title: "Writing Archived Test 01",
+        description: "Old archived test",
         status: "ARCHIVED",
         version: 1,
         questions: draftQuestions,
@@ -358,7 +358,7 @@ export class MockWritingAdminBackend {
         // Check if file contains invalid missing columns fixture or valid fixture
         if (
           postData.includes("invalid-part1-missing-cols.xlsx") ||
-          postData.includes("Thiếu") ||
+          postData.includes("Missing") ||
           postData.includes("WP1-ERR")
         ) {
           return route.fulfill({
@@ -375,9 +375,9 @@ export class MockWritingAdminBackend {
                   code: "WP1-ERR-01",
                   isValid: false,
                   errors: [
-                    "Thiếu Difficulty.",
-                    "Thiếu Status.",
-                    "Thiếu ImageAssetId.",
+                    "Missing Difficulty.",
+                    "Missing Status.",
+                    "Missing ImageAssetId.",
                   ],
                 },
               ],
@@ -451,7 +451,7 @@ export class MockWritingAdminBackend {
             contentType: "application/json",
             body: JSON.stringify({
               status: 400,
-              title: "Ảnh không được vượt quá 5 MiB.",
+              title: "Image exceeds 5 MiB.",
             }),
           });
         }
@@ -467,7 +467,7 @@ export class MockWritingAdminBackend {
             contentType: "application/json",
             body: JSON.stringify({
               status: 400,
-              title: "Định dạng ảnh không hợp lệ. Chỉ chấp nhận JPG hoặc PNG.",
+              title: "Invalid image format. Only JPG or PNG is accepted.",
             }),
           });
         }
@@ -580,8 +580,8 @@ export class MockWritingAdminBackend {
           postData.includes("toeic-lr-exam")
         ) {
           const errors = postData.includes("invalid-counts")
-            ? ["Part 1 cần đúng 5 câu."]
-            : ["File cần đủ 4 sheet: Manifest, Part1, Part2, Part3."];
+            ? ["Part 1 must have exactly 5 questions."]
+            : ["File must have all 4 sheets: Manifest, Part1, Part2, Part3."];
 
           return route.fulfill({
             status: 200,
@@ -602,7 +602,7 @@ export class MockWritingAdminBackend {
             errors: [],
             test: {
               code: "WT-IMP-FULL",
-              title: "Đề thi Writing Import Thành công",
+              title: "Writing Test Imported Successfully",
               description: "Imported from Excel",
               questions: Array.from({ length: 8 }, (_, i) => ({
                 part: i < 5 ? 1 : i < 7 ? 2 : 3,
@@ -617,7 +617,7 @@ export class MockWritingAdminBackend {
         const newTest: MockTest = {
           id: `test-imp-${Date.now()}`,
           code: "WT-IMP-FULL",
-          title: "Đề thi Writing Import Thành công",
+          title: "Writing Test Imported Successfully",
           description: "Imported from Excel",
           status: "DRAFT",
           version: 1,
@@ -664,7 +664,7 @@ export class MockWritingAdminBackend {
               body: JSON.stringify({
                 status: 400,
                 title:
-                  "Đề thi phải có đúng 8 câu hỏi chuẩn 5/2/1 trước khi xuất bản.",
+                  "Test must have exactly 8 questions (5/2/1) before publishing.",
               }),
             });
           }
@@ -713,8 +713,7 @@ export class MockWritingAdminBackend {
               contentType: "application/json",
               body: JSON.stringify({
                 status: 400,
-                title:
-                  "Đề thi đã công bố bị đóng băng nội dung, không được phép chỉnh sửa.",
+                title: "Published test content is frozen and cannot be edited.",
               }),
             });
           }
@@ -736,7 +735,7 @@ export class MockWritingAdminBackend {
               contentType: "application/json",
               body: JSON.stringify({
                 status: 400,
-                title: "Chỉ được xóa đề ở trạng thái bản nháp.",
+                title: "Only draft tests can be deleted.",
               }),
             });
           }

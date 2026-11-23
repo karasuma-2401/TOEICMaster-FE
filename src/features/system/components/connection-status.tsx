@@ -23,10 +23,10 @@ export function ConnectionStatus() {
     <div className="mt-10 flex items-center gap-4 text-sm text-slate-600">
       <output aria-live="polite">
         {state === "loading"
-          ? "Đang kiểm tra kết nối…"
+          ? "Checking connection…"
           : state === "ready"
-            ? "Đã kết nối dịch vụ."
-            : "Chưa kết nối được dịch vụ."}
+            ? "Connected to service."
+            : "Unable to connect to service."}
       </output>
       {state === "error" && (
         <button
@@ -36,7 +36,7 @@ export function ConnectionStatus() {
             setAttempt((value) => value + 1);
           }}
         >
-          Thử lại
+          Retry
         </button>
       )}
     </div>

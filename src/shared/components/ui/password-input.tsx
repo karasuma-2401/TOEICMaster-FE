@@ -18,8 +18,8 @@ export interface PasswordInputProps extends Omit<
 export function PasswordInput({
   className,
   wrapperClassName,
-  showLabel = "Hiện mật khẩu",
-  hideLabel = "Ẩn mật khẩu",
+  showLabel = "Show password",
+  hideLabel = "Hide password",
   disabled,
   ...props
 }: PasswordInputProps) {

@@ -136,17 +136,17 @@ export async function importWritingExerciseFile(
       method: "POST",
       form,
       refresh: true,
-      fallback: "Không thể xử lý file Excel.",
+      fallback: "Could not process the Excel file.",
     },
   );
   if (!result || typeof result !== "object")
-    throw new Error("Phản hồi import không hợp lệ.");
+    throw new Error("Invalid import response.");
   if (!validate) {
     if (
       !("importedCount" in result) ||
       typeof result.importedCount !== "number"
     )
-      throw new Error("Phản hồi import không hợp lệ.");
+      throw new Error("Invalid import response.");
     return result.importedCount;
   }
   if (
@@ -171,7 +171,7 @@ export async function importWritingExerciseFile(
         typeof row.isValid === "boolean",
     )
   )
-    throw new Error("Phản hồi kiểm tra Excel không hợp lệ.");
+    throw new Error("Invalid Excel validation response.");
   return result as WritingImportPreview;
 }
 
@@ -184,14 +184,14 @@ export async function importWritingTestFile(file: File, validate: boolean) {
       method: "POST",
       form,
       refresh: true,
-      fallback: "Không thể xử lý file đề thi.",
+      fallback: "Could not process the test file.",
     },
   );
   if (!result || typeof result !== "object")
-    throw new Error("Phản hồi import không hợp lệ.");
+    throw new Error("Invalid import response.");
   if (!validate) {
     if (!("id" in result) || typeof result.id !== "string")
-      throw new Error("Phản hồi import không hợp lệ.");
+      throw new Error("Invalid import response.");
     return { id: result.id };
   }
   if (
@@ -201,7 +201,7 @@ export async function importWritingTestFile(file: File, validate: boolean) {
     !Array.isArray(result.errors) ||
     !result.errors.every((error: unknown) => typeof error === "string")
   )
-    throw new Error("Phản hồi kiểm tra file đề thi không hợp lệ.");
+    throw new Error("Invalid test file validation response.");
   return { isValid: result.isValid, errors: result.errors as string[] };
 }
 
@@ -209,11 +209,11 @@ export function toApiDifficulty(
   diff: WritingDifficulty,
 ): "EASY" | "MEDIUM" | "HARD" {
   switch (diff) {
-    case "Dễ":
+    case "Easy":
       return "EASY";
-    case "Trung bình":
+    case "Medium":
       return "MEDIUM";
-    case "Khó":
+    case "Hard":
       return "HARD";
     default:
       return "EASY";
@@ -223,13 +223,13 @@ export function toApiDifficulty(
 export function fromApiDifficulty(diff: string): WritingDifficulty {
   switch (diff.toUpperCase()) {
     case "EASY":
-      return "Dễ";
+      return "Easy";
     case "MEDIUM":
-      return "Trung bình";
+      return "Medium";
     case "HARD":
-      return "Khó";
+      return "Hard";
     default:
-      return "Dễ";
+      return "Easy";
   }
 }
 
@@ -242,7 +242,7 @@ export function exerciseDtoToQuestion(
     topic: dto.topic,
     difficulty: fromApiDifficulty(dto.difficulty),
     status: dto.status,
-    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("vi-VN"),
+    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("en-US"),
     rubricNotes: dto.rubricNotes ?? "",
     modelAnswer: dto.modelAnswer ?? "",
     version: dto.version,
@@ -301,7 +301,7 @@ export function testDtoToAdminTest(dto: WritingTestDto): AdminWritingTest {
     timingTemplateId: "toeic-writing-standard",
     questionIds,
     version: dto.version,
-    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("vi-VN"),
+    updatedAtLabel: new Date(dto.updatedAtUtc).toLocaleString("en-US"),
   };
 }
 
@@ -333,7 +333,7 @@ export async function listWritingExercises(
   return (await writingRequest(`${base}/exercises${qs ? `?${qs}` : ""}`, {
     signal,
     refresh: true,
-    fallback: "Không thể tải danh sách bài tập Writing.",
+    fallback: "Could not load Writing exercises.",
   })) as WritingExercisePageDto;
 }
 
@@ -346,7 +346,7 @@ export async function getWritingExercise(
     {
       signal,
       refresh: true,
-      fallback: "Không thể tải chi tiết bài tập Writing.",
+      fallback: "Could not load Writing exercise details.",
     },
   )) as WritingExerciseDto;
 }
@@ -358,7 +358,7 @@ export async function createWritingExercise(
     method: "POST",
     json: input,
     refresh: true,
-    fallback: "Không thể tạo bài tập Writing.",
+    fallback: "Could not create Writing exercise.",
   })) as WritingExerciseDto;
 }
 
@@ -373,7 +373,7 @@ export async function updateWritingExercise(
       method: "PUT",
       json: { version, exercise },
       refresh: true,
-      fallback: "Không thể cập nhật bài tập Writing.",
+      fallback: "Could not update Writing exercise.",
     },
   )) as WritingExerciseDto;
 }
@@ -387,7 +387,7 @@ export async function archiveWritingExercise(
     {
       method: "DELETE",
       refresh: true,
-      fallback: "Không thể lưu trữ bài tập Writing.",
+      fallback: "Could not archive Writing exercise.",
     },
   );
 }
@@ -401,7 +401,7 @@ export async function uploadWritingImage(
     method: "POST",
     form,
     refresh: true,
-    fallback: "Không thể tải ảnh đề bài lên.",
+    fallback: "Could not upload prompt image.",
   })) as WritingMediaAssetDto;
 }
 
@@ -418,7 +418,7 @@ export async function listWritingTests(
   return (await writingRequest(`${base}/tests${qs ? `?${qs}` : ""}`, {
     signal,
     refresh: true,
-    fallback: "Không thể tải danh sách đề Writing.",
+    fallback: "Could not load Writing tests.",
   })) as WritingTestPageDto;
 }
 
@@ -429,7 +429,7 @@ export async function getWritingTest(
   return (await writingRequest(`${base}/tests/${encodeURIComponent(testId)}`, {
     signal,
     refresh: true,
-    fallback: "Không thể tải chi tiết đề Writing.",
+    fallback: "Could not load Writing test details.",
   })) as WritingTestDto;
 }
 
@@ -440,7 +440,7 @@ export async function createWritingTest(
     method: "POST",
     json: input,
     refresh: true,
-    fallback: "Không thể tạo đề Writing.",
+    fallback: "Could not create Writing test.",
   })) as WritingTestDto;
 }
 
@@ -453,7 +453,7 @@ export async function updateWritingTest(
     method: "PUT",
     json: { version, test },
     refresh: true,
-    fallback: "Không thể cập nhật đề Writing.",
+    fallback: "Could not update Writing test.",
   })) as WritingTestDto;
 }
 
@@ -467,7 +467,7 @@ export async function publishWritingTest(
       method: "POST",
       json: { version },
       refresh: true,
-      fallback: "Không thể công bố đề Writing.",
+      fallback: "Could not publish Writing test.",
     },
   )) as WritingTestDto;
 }
@@ -481,7 +481,7 @@ export async function deleteWritingTestDraft(
     {
       method: "DELETE",
       refresh: true,
-      fallback: "Không thể xóa đề nháp Writing.",
+      fallback: "Could not delete Writing test draft.",
     },
   );
 }
@@ -496,7 +496,7 @@ export async function archiveWritingTest(
       method: "POST",
       json: { version },
       refresh: true,
-      fallback: "Không thể lưu trữ đề Writing.",
+      fallback: "Could not archive Writing test.",
     },
   )) as WritingTestDto;
 }
@@ -511,7 +511,7 @@ export async function restoreWritingTest(
       method: "POST",
       json: { version },
       refresh: true,
-      fallback: "Không thể khôi phục đề Writing.",
+      fallback: "Could not restore Writing test.",
     },
   )) as WritingTestDto;
 }

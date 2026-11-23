@@ -48,7 +48,7 @@ async function errorFrom(response: Response): Promise<ApiError> {
     "title" in body &&
     typeof body.title === "string"
       ? body.title
-      : "Không thể kết nối dịch vụ. Vui lòng thử lại.";
+      : "Unable to connect to the service. Please try again.";
   return new ApiError(
     response.status,
     title,
@@ -82,7 +82,7 @@ async function send(path: string, init: RequestInit = {}): Promise<Response> {
       await refreshWithLock();
       response = await request();
     } catch {
-      throw new ApiError(401, "Phiên đăng nhập đã hết hạn.");
+      throw new ApiError(401, "Your session has expired.");
     }
   }
   if (!response.ok) throw await errorFrom(response);
@@ -129,7 +129,7 @@ function isBackendProfile(value: unknown): value is BackendProfile {
 async function profileResponse(response: Response): Promise<UserProfile> {
   const body: unknown = await response.json().catch(() => null);
   if (!isBackendProfile(body))
-    throw new ApiError(502, "Phản hồi hồ sơ không hợp lệ.");
+    throw new ApiError(502, "Invalid profile response.");
   // Backend always returns the same avatar path, so a per-fetch version busts the browser image cache.
   return {
     id: body.id,

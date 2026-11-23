@@ -4,7 +4,7 @@ export type KnowledgeSkill =
 export type KnowledgeArticleStatus = "Draft" | "Published" | "Archived";
 
 export const KNOWLEDGE_SKILLS: { value: KnowledgeSkill; label: string }[] = [
-  { value: "General", label: "Tổng hợp (General)" },
+  { value: "General", label: "General" },
   { value: "Listening", label: "Listening" },
   { value: "Reading", label: "Reading" },
   { value: "Speaking", label: "Speaking" },
@@ -15,9 +15,9 @@ export const KNOWLEDGE_STATUSES: {
   value: KnowledgeArticleStatus;
   label: string;
 }[] = [
-  { value: "Draft", label: "Bản nháp" },
-  { value: "Published", label: "Đã xuất bản" },
-  { value: "Archived", label: "Lưu trữ" },
+  { value: "Draft", label: "Draft" },
+  { value: "Published", label: "Published" },
+  { value: "Archived", label: "Archived" },
 ];
 
 export interface TiptapMark {

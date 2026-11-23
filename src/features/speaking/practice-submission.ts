@@ -43,7 +43,10 @@ export async function submitPracticeTake(
   const position = attempt.currentQuestionPosition;
   const question = attempt.questions.find((item) => item.position === position);
   if (attempt.currentPhase !== "RESPONDING" || !question)
-    throw new SpeakingApiError(409, "Không thể mở lượt gửi bản thu.");
+    throw new SpeakingApiError(
+      409,
+      "Could not start the recording submission attempt.",
+    );
 
   await uploadSpeakingRecording(
     attempt.id,

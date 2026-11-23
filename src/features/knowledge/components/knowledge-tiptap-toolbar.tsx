@@ -66,7 +66,7 @@ export function KnowledgeTiptapToolbar({
     }
     const safeHref = sanitizeKnowledgeHref(linkUrl);
     if (safeHref === null) {
-      toast.error("Link phải bắt đầu bằng https://, http://, mailto: hoặc /");
+      toast.error("Link must start with https://, http://, mailto:, or /");
       return;
     }
     editor
@@ -90,23 +90,23 @@ export function KnowledgeTiptapToolbar({
     <div className="sticky top-14 z-20 rounded-t-xl bg-(--admin-surface)/95 shadow-xs backdrop-blur-xs">
       <div className="flex flex-wrap items-center gap-1 rounded-t-xl border-b border-(--admin-border) bg-(--admin-surface-muted) px-3 py-2">
         <button
-          aria-label="Đoạn văn thường"
+          aria-label="Paragraph"
           className={toolBtn(Boolean(editor?.isActive("paragraph")))}
           onClick={() => editor?.chain().focus().setParagraph().run()}
-          title="Đoạn văn thường"
+          title="Paragraph"
           type="button"
         >
           <ToolbarIcon d="M13 4v16m4-16v16M13 4H9.5a4.5 4.5 0 0 0 0 9H13" />
         </button>
         {([2, 3, 4] as const).map((level) => (
           <button
-            aria-label={`Tiêu đề H${level}`}
+            aria-label={`Heading H${level}`}
             className={toolBtn(Boolean(editor?.isActive("heading", { level })))}
             key={level}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level }).run()
             }
-            title={`Tiêu đề H${level} (tự động đưa vào mục lục)`}
+            title={`Heading H${level} (added to table of contents)`}
             type="button"
           >
             H{level}
@@ -116,37 +116,37 @@ export function KnowledgeTiptapToolbar({
         <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
-          aria-label="In đậm"
+          aria-label="Bold"
           className={toolBtn(Boolean(editor?.isActive("bold")))}
           onClick={() => editor?.chain().focus().toggleBold().run()}
-          title="In đậm (Ctrl+B)"
+          title="Bold (Ctrl+B)"
           type="button"
         >
           <ToolbarIcon d="M7 5h6a3.5 3.5 0 0 1 0 7H7V5Zm0 7h7a3.5 3.5 0 0 1 0 7H7v-7Z" />
         </button>
         <button
-          aria-label="In nghiêng"
+          aria-label="Italic"
           className={toolBtn(Boolean(editor?.isActive("italic")))}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
-          title="In nghiêng (Ctrl+I)"
+          title="Italic (Ctrl+I)"
           type="button"
         >
           <ToolbarIcon d="M19 4h-9m4 16H5M15 4 9 20" />
         </button>
         <button
-          aria-label="Gạch ngang chữ"
+          aria-label="Strikethrough"
           className={toolBtn(Boolean(editor?.isActive("strike")))}
           onClick={() => editor?.chain().focus().toggleStrike().run()}
-          title="Gạch ngang chữ"
+          title="Strikethrough"
           type="button"
         >
           <ToolbarIcon d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6m-2-8h16" />
         </button>
         <button
-          aria-label="Mã nội tuyến"
+          aria-label="Inline code"
           className={toolBtn(Boolean(editor?.isActive("code")))}
           onClick={() => editor?.chain().focus().toggleCode().run()}
-          title="Mã nội tuyến (Code)"
+          title="Inline code"
           type="button"
         >
           <ToolbarIcon d="m16 18 6-6-6-6M8 6l-6 6 6 6" />
@@ -155,37 +155,37 @@ export function KnowledgeTiptapToolbar({
         <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
-          aria-label="Danh sách gạch đầu dòng"
+          aria-label="Bulleted list"
           className={toolBtn(Boolean(editor?.isActive("bulletList")))}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          title="Danh sách gạch đầu dòng"
+          title="Bulleted list"
           type="button"
         >
           <ToolbarIcon d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
         </button>
         <button
-          aria-label="Danh sách đánh số"
+          aria-label="Numbered list"
           className={toolBtn(Boolean(editor?.isActive("orderedList")))}
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          title="Danh sách đánh số"
+          title="Numbered list"
           type="button"
         >
           <ToolbarIcon d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M4 18h2a1 1 0 0 0 0-2H4v-2h3" />
         </button>
         <button
-          aria-label="Khối trích dẫn"
+          aria-label="Blockquote"
           className={toolBtn(Boolean(editor?.isActive("blockquote")))}
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          title="Khối trích dẫn / ghi chú nổi bật"
+          title="Blockquote / highlight note"
           type="button"
         >
           <ToolbarIcon d="M10 11H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v6c0 2.667-1.333 4.333-4 5m14-7h-4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v6c0 2.667-1.333 4.333-4 5" />
         </button>
         <button
-          aria-label="Đường kẻ ngang phân cách"
+          aria-label="Horizontal divider"
           className={toolBtn(false)}
           onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-          title="Chèn đường kẻ ngang phân cách"
+          title="Insert horizontal divider"
           type="button"
         >
           <ToolbarIcon d="M4 12h16" />
@@ -194,7 +194,7 @@ export function KnowledgeTiptapToolbar({
         <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
-          aria-label="Gắn hoặc sửa liên kết"
+          aria-label="Add or edit link"
           className={toolBtn(Boolean(editor?.isActive("link")) || linkOpen)}
           onClick={() => {
             const currentHref = editor?.getAttributes("link").href;
@@ -202,19 +202,19 @@ export function KnowledgeTiptapToolbar({
             setTableOpen(false);
             setLinkOpen((prev) => !prev);
           }}
-          title="Gắn liên kết (Link)"
+          title="Add link"
           type="button"
         >
           <ToolbarIcon d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </button>
         <button
-          aria-label="Chèn bảng nhiều dòng nhiều cột"
+          aria-label="Insert table"
           className={toolBtn(inTable || tableOpen)}
           onClick={() => {
             setLinkOpen(false);
             setTableOpen((prev) => !prev);
           }}
-          title="Chèn bảng (Table)"
+          title="Insert table"
           type="button"
         >
           <ToolbarIcon d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm0 5h18M3 15h18M9 3v18M15 3v18" />
@@ -232,20 +232,20 @@ export function KnowledgeTiptapToolbar({
           type="file"
         />
         <button
-          aria-label="Tải ảnh mới từ máy"
+          aria-label="Upload image from device"
           className={toolBtn(false)}
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
-          title={uploading ? "Đang tải ảnh lên..." : "Tải ảnh mới từ máy"}
+          title={uploading ? "Uploading image..." : "Upload image from device"}
           type="button"
         >
           <ToolbarIcon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m14-7-5-5-5 5m5-5v12" />
         </button>
         <button
-          aria-label="Chọn ảnh từ thư viện"
+          aria-label="Choose image from library"
           className={toolBtn(false)}
           onClick={onOpenMediaPicker}
-          title="Chọn ảnh từ thư viện Media"
+          title="Choose image from media library"
           type="button"
         >
           <ToolbarIcon d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm5.5 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM21 15l-5-5L5 21" />
@@ -254,21 +254,21 @@ export function KnowledgeTiptapToolbar({
         <span className="mx-1 h-4 w-px bg-(--admin-border)" />
 
         <button
-          aria-label="Hoàn tác"
+          aria-label="Undo"
           className={toolBtn(false)}
           disabled={!editor?.can().undo()}
           onClick={() => editor?.chain().focus().undo().run()}
-          title="Hoàn tác (Ctrl+Z)"
+          title="Undo (Ctrl+Z)"
           type="button"
         >
           <ToolbarIcon d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
         </button>
         <button
-          aria-label="Làm lại"
+          aria-label="Redo"
           className={toolBtn(false)}
           disabled={!editor?.can().redo()}
           onClick={() => editor?.chain().focus().redo().run()}
-          title="Làm lại (Ctrl+Y)"
+          title="Redo (Ctrl+Y)"
           type="button"
         >
           <ToolbarIcon d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
@@ -286,7 +286,7 @@ export function KnowledgeTiptapToolbar({
                 applyLink();
               }
             }}
-            placeholder="Nhập URL (https://..., mailto:..., hoặc /...)"
+            placeholder="Enter URL (https://..., mailto:..., or /...)"
             type="url"
             value={linkUrl}
           />
@@ -295,7 +295,7 @@ export function KnowledgeTiptapToolbar({
             onClick={applyLink}
             type="button"
           >
-            Áp dụng
+            Apply
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2.5 py-1 text-xs text-(--admin-ink-soft) hover:bg-(--admin-surface-muted)"
@@ -306,7 +306,7 @@ export function KnowledgeTiptapToolbar({
             }}
             type="button"
           >
-            Bỏ link
+            Remove link
           </button>
         </div>
       ) : null}
@@ -314,7 +314,7 @@ export function KnowledgeTiptapToolbar({
       {tableOpen ? (
         <div className="flex flex-wrap items-center gap-3 border-b border-(--admin-border) bg-(--admin-row-hover) px-4 py-2 text-xs">
           <label className="flex items-center gap-1.5 font-semibold text-(--admin-ink-soft)">
-            Số dòng
+            Rows
             <input
               className="w-16 rounded-md border border-(--admin-border) bg-white px-2 py-1 text-xs outline-none focus:border-(--admin-brand-orange)"
               max={20}
@@ -325,7 +325,7 @@ export function KnowledgeTiptapToolbar({
             />
           </label>
           <label className="flex items-center gap-1.5 font-semibold text-(--admin-ink-soft)">
-            Số cột
+            Columns
             <input
               className="w-16 rounded-md border border-(--admin-border) bg-white px-2 py-1 text-xs outline-none focus:border-(--admin-brand-orange)"
               max={10}
@@ -341,14 +341,14 @@ export function KnowledgeTiptapToolbar({
               onChange={(e) => setTableWithHeader(e.target.checked)}
               type="checkbox"
             />
-            Có dòng tiêu đề
+            Header row
           </label>
           <button
             className="admin-primary-action cursor-pointer rounded-md px-3 py-1 text-xs font-bold"
             onClick={insertCustomTable}
             type="button"
           >
-            Chèn bảng
+            Insert table
           </button>
         </div>
       ) : null}
@@ -356,28 +356,28 @@ export function KnowledgeTiptapToolbar({
       {inTable ? (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-(--admin-border) bg-(--admin-surface-muted)/60 px-3 py-1.5 text-xs">
           <span className="mr-1 font-semibold text-(--admin-muted)">
-            Thao tác bảng:
+            Table actions:
           </span>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) transition hover:bg-(--admin-surface-muted)"
             onClick={() => editor?.chain().focus().addRowBefore().run()}
             type="button"
           >
-            + Dòng trên
+            + Row above
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) transition hover:bg-(--admin-surface-muted)"
             onClick={() => editor?.chain().focus().addRowAfter().run()}
             type="button"
           >
-            + Dòng dưới
+            + Row below
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) transition hover:bg-(--admin-danger-soft)"
             onClick={() => editor?.chain().focus().deleteRow().run()}
             type="button"
           >
-            - Xóa dòng
+            - Delete row
           </button>
           <span className="mx-0.5 h-3.5 w-px bg-(--admin-border)" />
           <button
@@ -385,21 +385,21 @@ export function KnowledgeTiptapToolbar({
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
             type="button"
           >
-            + Cột trái
+            + Column left
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-ink) transition hover:bg-(--admin-surface-muted)"
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
             type="button"
           >
-            + Cột phải
+            + Column right
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) transition hover:bg-(--admin-danger-soft)"
             onClick={() => editor?.chain().focus().deleteColumn().run()}
             type="button"
           >
-            - Xóa cột
+            - Delete column
           </button>
           <span className="mx-0.5 h-3.5 w-px bg-(--admin-border)" />
           <button
@@ -407,14 +407,14 @@ export function KnowledgeTiptapToolbar({
             onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
             type="button"
           >
-            Đổi dòng tiêu đề
+            Toggle header row
           </button>
           <button
             className="cursor-pointer rounded-md border border-(--admin-border) bg-white px-2 py-1 text-(--admin-danger) transition hover:bg-(--admin-danger-soft)"
             onClick={() => editor?.chain().focus().deleteTable().run()}
             type="button"
           >
-            Xóa bảng
+            Delete table
           </button>
         </div>
       ) : null}

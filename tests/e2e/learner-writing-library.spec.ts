@@ -4,7 +4,7 @@ import {
   loginAsUser,
 } from "./learner-writing-helpers";
 
-test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện tập (/writing)", () => {
+test.describe("Learner Writing - Test Library, Overview & Practice (/writing)", () => {
   let backend: MockWritingLearnerBackend;
 
   test.beforeEach(async ({ page, context }) => {
@@ -13,15 +13,15 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
     await loginAsUser(context);
   });
 
-  test("TC-LEARN-01: Thư viện đề thi Writing (/writing) - Hiển thị danh sách đề thi Full Test đã PUBLISHED và tìm kiếm", async ({
+  test("TC-LEARN-01: Writing test library (/writing) - Displays published Full Tests and supports search", async ({
     page,
   }) => {
     await page.goto("/writing");
     await expect(
-      page.getByRole("heading", { name: "Đề thi Writing", level: 1 }),
+      page.getByRole("heading", { name: "Writing Tests", level: 1 }),
     ).toBeVisible();
 
-    // Hiển thị các đề thi Full test
+    // Display Full tests
     const catalog = page.locator(
       'section[aria-labelledby="exam-library-count"]',
     );
@@ -38,8 +38,8 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
       }),
     ).toBeVisible();
 
-    // Tìm kiếm đề thi theo mã
-    const searchInput = page.getByPlaceholder("Tìm kiếm tên đề Writing...");
+    // Search test by code
+    const searchInput = page.getByPlaceholder("Search Writing tests...");
     await searchInput.fill("WT-PUB-FULL-01");
     await expect(
       catalog.getByRole("heading", {
@@ -55,116 +55,118 @@ test.describe("Learner Writing - Thư viện đề thi, Hướng dẫn & Luyện
     ).not.toBeVisible();
   });
 
-  test("TC-LEARN-02: Thư viện đề thi Writing (/writing) - Mở trang luyện tập và chuyển giữa các Part", async ({
+  test("TC-LEARN-02: Writing test library (/writing) - Opens practice page and switches between Parts", async ({
     page,
   }) => {
     await page.goto("/writing");
 
-    await page.getByRole("link", { name: "Bài tập", exact: true }).click();
+    await page.getByRole("link", { name: "Exercises", exact: true }).click();
     await expect(page).toHaveURL(/\/writing\/practice\/1/);
     await expect(
-      page.getByRole("heading", { name: "Bài tập Writing", level: 1 }),
+      page.getByRole("heading", { name: "Writing Exercises", level: 1 }),
     ).toBeVisible();
 
-    // Kiểm tra 3 Part
+    // Verify 3 Parts
     await expect(
-      page.getByRole("link", { name: "Part 1 · Viết câu theo tranh" }),
+      page.getByRole("link", {
+        name: "Part 1 · Write sentences based on pictures",
+      }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Part 3 · Viết bài luận quan điểm" }),
+      page.getByRole("link", { name: "Part 3 · Write an opinion essay" }),
     ).toBeVisible();
 
     await page
-      .getByRole("link", { name: "Part 2 · Viết email phản hồi" })
+      .getByRole("link", { name: "Part 2 · Respond to an email" })
       .click();
     await expect(page).toHaveURL(/\/writing\/practice\/2/);
   });
 
-  test("TC-LEARN-03: Hướng dẫn thi (/writing/tests/[id]) - Xem tổng quan bài thi, thời gian chi tiết từng phần trước khi bắt đầu", async ({
+  test("TC-LEARN-03: Test overview (/writing/tests/[id]) - Displays test overview and per-part timing before starting", async ({
     page,
   }) => {
     await page.goto("/writing/tests/test-pub-01");
 
-    // Hiển thị tiêu đề đề thi và các thông số
+    // Display test title and stats
     await expect(
       page.getByRole("heading", { name: "TOEIC Writing Simulation Test 01" }),
     ).toBeVisible();
-    await expect(page.getByText("8 câu", { exact: true })).toBeVisible();
+    await expect(page.getByText("8 questions", { exact: true })).toBeVisible();
 
-    // Hiển thị cấu trúc từng phần
-    await expect(page.getByText("Part 1 · Viết câu theo tranh")).toBeVisible();
-    await expect(page.getByText("Part 2 · Phản hồi email")).toBeVisible();
-    await expect(page.getByText("Part 3 · Bài luận quan điểm")).toBeVisible();
+    // Display per-part structure
+    await expect(
+      page.getByText("Part 1 · Write sentences based on pictures"),
+    ).toBeVisible();
+    await expect(page.getByText("Part 2 · Respond to an email")).toBeVisible();
+    await expect(page.getByText("Part 3 · Opinion essay")).toBeVisible();
 
-    // Nút bắt đầu làm bài
+    // Start test button
     const startBtn = page.getByRole("button", {
-      name: "BẮT ĐẦU LÀM BÀI WRITING",
+      name: "START WRITING TEST",
     });
     await expect(startBtn).toBeDisabled();
     await page.getByRole("checkbox").check();
     await expect(startBtn).toBeEnabled();
   });
 
-  test("TC-LEARN-04: Hướng dẫn thi (/writing/tests/[id]) - Bắt đầu làm bài thi chuyển hướng đến phòng thi ảo", async ({
+  test("TC-LEARN-04: Test overview (/writing/tests/[id]) - Starting the test redirects to the virtual exam room", async ({
     page,
   }) => {
     await page.goto("/writing/tests/test-pub-01");
 
     await page.getByRole("checkbox").check();
-    await page.getByRole("button", { name: "BẮT ĐẦU LÀM BÀI WRITING" }).click();
+    await page.getByRole("button", { name: "START WRITING TEST" }).click();
 
-    // Chuyển hướng sang phòng thi ảo /writing/attempts/[id]
+    // Redirects to virtual exam room /writing/attempts/[id]
     await expect(page).toHaveURL(/\/writing\/attempts\/att-test-/);
     await expect(
       page.getByText("TOEIC Writing Simulation Test 01"),
     ).toBeVisible();
   });
 
-  test("TC-LEARN-05: Luyện tập câu hỏi lẻ (/writing/practice/[part]) - Danh sách bài tập lẻ không giới hạn thời gian", async ({
+  test("TC-LEARN-05: Single exercise practice (/writing/practice/[part]) - Displays untimed single exercises", async ({
     page,
   }) => {
     await page.goto("/writing/practice/1");
     await expect(
-      page.getByRole("heading", { name: "Bài tập Writing", level: 1 }),
+      page.getByRole("heading", { name: "Writing Exercises", level: 1 }),
     ).toBeVisible();
 
-    // Hiển thị danh sách bài tập Part 1
+    // Display Part 1 exercises list
     await expect(page.getByText("Coffee Break Discussion")).toBeVisible();
 
-    // Bắt đầu luyện bài tập
+    // Start practicing an exercise
     await page
       .locator("article", { hasText: "Coffee Break Discussion" })
-      .getByRole("button", { name: "Làm bài Writing" })
+      .getByRole("button", { name: "Practice Writing" })
       .click();
 
-    // Mở phòng thi ở chế độ luyện tập không giới hạn thời gian
+    // Opens exam room in untimed practice mode
     await expect(page).toHaveURL(/\/writing\/attempts\/att-prac-/);
-    await expect(
-      page.getByText("Luyện tập không giới hạn thời gian"),
-    ).toBeVisible();
+    await expect(page.getByText("Untimed practice")).toBeVisible();
   });
 
-  test("TC-LEARN-06: Lịch sử làm bài (/history/writing) - Xem danh sách bài đã làm và mở lại kết quả", async ({
+  test("TC-LEARN-06: Attempt history (/history/writing) - Views completed attempts and reopens results", async ({
     page,
   }) => {
     await page.goto("/history/writing");
     await expect(
-      page.getByRole("heading", { name: "Lượt làm bài của bạn" }),
+      page.getByRole("heading", { name: "Your attempts" }),
     ).toBeVisible();
 
-    // Hiển thị bài đã làm trong danh sách
+    // Display completed attempt in list
     await expect(
       page.getByText("TOEIC Writing Simulation Test 01").first(),
     ).toBeVisible();
-    await expect(page.getByText("AI ước tính 170/200")).toBeVisible();
+    await expect(page.getByText("AI estimate 170/200")).toBeVisible();
 
-    // Bấm "Xem trạng thái" để mở báo cáo chi tiết
-    await page.getByRole("link", { name: "Xem trạng thái" }).first().click();
+    // Click "View status" to open detailed report
+    await page.getByRole("link", { name: "View status" }).first().click();
     await expect(page).toHaveURL(
       /\/writing\/attempts\/att-completed-01\/result/,
     );
     await expect(
-      page.getByRole("heading", { name: "Kết quả Writing" }),
+      page.getByRole("heading", { name: "Writing Results" }),
     ).toBeVisible();
   });
 });

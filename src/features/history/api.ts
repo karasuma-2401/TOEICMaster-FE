@@ -152,7 +152,7 @@ export function mapWritingAttempt(
       : (attempt.maxRawScore ??
         attempt.questionCount *
           (attempt.mode === "PART_1" ? 3 : attempt.mode === "PART_2" ? 4 : 5)),
-    subScoreLabel: fullTest ? null : "Điểm tiêu chí AI",
+    subScoreLabel: fullTest ? null : "AI Rubric Score",
     evaluationStatus: attempt.evaluationStatus,
     timestampUtc: attempt.submittedAtUtc ?? attempt.createdAtUtc,
     durationSeconds: null,

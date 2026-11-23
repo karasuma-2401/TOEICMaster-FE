@@ -57,14 +57,14 @@ export function AdminUnderlineTabs<T extends string>({
 }
 
 const skills: { id: ContentSkill; label: string; parts: string }[] = [
-  { id: "listening-reading", label: "Listening & Reading", parts: "7 Part" },
-  { id: "speaking", label: "Speaking", parts: "5 Part" },
-  { id: "writing", label: "Writing", parts: "3 Part" },
+  { id: "listening-reading", label: "Listening & Reading", parts: "7 Parts" },
+  { id: "speaking", label: "Speaking", parts: "5 Parts" },
+  { id: "writing", label: "Writing", parts: "3 Parts" },
 ];
 
 const sectionLabel: Record<ContentSection, string> = {
-  content: "Bài tập",
-  tests: "Đề thi",
+  content: "Exercises",
+  tests: "Tests",
 };
 
 function href(skill: ContentSkill, section: ContentSection) {
@@ -86,7 +86,7 @@ export function ContentTabs({
   return (
     <div className="mb-5 border-b border-(--admin-border)">
       <div className="flex min-h-14 flex-wrap items-end justify-between gap-x-6">
-        <nav aria-label="Kỹ năng TOEIC" className="flex overflow-x-auto">
+        <nav aria-label="TOEIC skills" className="flex overflow-x-auto">
           {skills.map((item) => {
             const active = item.id === skill;
             return (
@@ -102,7 +102,7 @@ export function ContentTabs({
           })}
         </nav>
         <nav
-          aria-label="Phân loại dữ liệu"
+          aria-label="Data categories"
           className="mb-2 inline-flex overflow-hidden rounded-lg bg-(--admin-surface-muted) p-1"
         >
           {(Object.keys(sectionLabel) as ContentSection[]).map((item) => {

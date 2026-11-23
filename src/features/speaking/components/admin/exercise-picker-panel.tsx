@@ -54,7 +54,7 @@ export function ExercisePickerPanel({
         if (!controller.signal.aborted) setPage(result);
       } catch (cause) {
         if (!controller.signal.aborted)
-          setError(errorMessage(cause, "Không thể tìm bài tập."));
+          setError(errorMessage(cause, "Unable to search exercises."));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -66,19 +66,19 @@ export function ExercisePickerPanel({
   }, [part, query, difficulty, pageNumber, retry]);
   return (
     <section
-      aria-label={`Chọn bài Part ${part}`}
+      aria-label={`Select Part ${part} exercise`}
       className="space-y-3 rounded-xl border border-[var(--admin-border)] bg-white p-4"
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold">Chọn bài · Part {part}</h3>
+        <h3 className="font-bold">Select exercise · Part {part}</h3>
         <button className={adminSecondary} onClick={onClose} type="button">
-          Đóng bộ chọn
+          Close picker
         </button>
       </div>
       <input
-        aria-label="Tìm mã hoặc chủ đề bài tập"
+        aria-label="Search exercise code or topic"
         className={adminInput}
-        placeholder="Tìm mã hoặc chủ đề…"
+        placeholder="Search code or topic..."
         value={query}
         onChange={(event) => {
           setQuery(event.target.value);
@@ -86,7 +86,7 @@ export function ExercisePickerPanel({
         }}
       />
       <select
-        aria-label="Độ khó bài tập"
+        aria-label="Exercise difficulty"
         className={adminInput}
         value={difficulty}
         onChange={(event) => {
@@ -94,10 +94,10 @@ export function ExercisePickerPanel({
           setPageNumber(1);
         }}
       >
-        <option value="">Tất cả độ khó</option>
-        <option value="EASY">Dễ</option>
-        <option value="MEDIUM">Trung bình</option>
-        <option value="HARD">Khó</option>
+        <option value="">All difficulties</option>
+        <option value="EASY">Easy</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HARD">Hard</option>
       </select>
       {error && (
         <div role="alert">
@@ -107,12 +107,12 @@ export function ExercisePickerPanel({
             onClick={() => setRetry((value) => value + 1)}
             type="button"
           >
-            Thử lại
+            Retry
           </button>
         </div>
       )}
       {loading ? (
-        <output>Đang tìm bài tập…</output>
+        <output>Searching exercises...</output>
       ) : (
         !error && (
           <ul className="divide-y divide-[var(--admin-border)]">
@@ -126,7 +126,7 @@ export function ExercisePickerPanel({
                   <small className="block">
                     {exercise.difficulty}
                     {selected[exercise.id]
-                      ? ` · Đang dùng ở ${selected[exercise.id]}`
+                      ? ` · Used in ${selected[exercise.id]}`
                       : ""}
                   </small>
                 </span>
@@ -136,11 +136,11 @@ export function ExercisePickerPanel({
                   onClick={() => onPick(exercise)}
                   type="button"
                 >
-                  Chọn {exercise.code}
+                  Select {exercise.code}
                 </button>
               </li>
             ))}
-            {page?.items.length === 0 && <li>Không có bài phù hợp.</li>}
+            {page?.items.length === 0 && <li>No matching exercises found.</li>}
           </ul>
         )
       )}
@@ -149,7 +149,7 @@ export function ExercisePickerPanel({
         page={pageNumber}
         pages={Math.max(1, page?.totalPages ?? 1)}
         total={page?.totalCount ?? 0}
-        unit="bài"
+        unit="exercises"
       />
       <a
         className="text-sm underline"
@@ -157,7 +157,7 @@ export function ExercisePickerPanel({
         target="_blank"
         rel="noreferrer"
       >
-        Tạo bài mới ↗
+        Create new exercise ↗
       </a>
     </section>
   );

@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest) {
     !(typeof body.dateOfBirth === "string" || body.dateOfBirth === null) ||
     !(typeof body.targetScore === "number" || body.targetScore === null)
   ) {
-    return problem(400, "Dữ liệu hồ sơ không hợp lệ.");
+    return problem(400, "Invalid profile data.");
   }
   const editableProfile = {
     displayName: body.displayName,

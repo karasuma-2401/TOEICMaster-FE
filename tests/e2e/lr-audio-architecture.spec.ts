@@ -148,7 +148,7 @@ function buildReviewPayload() {
             status: "wrong",
             isFlagged: false,
             explanation: "The man is typing on a laptop at his desk.",
-            translation: "Người đàn ông đang gõ máy tính xách tay tại bàn.",
+            translation: "The man is typing on a laptop at his desk.",
             imageAssetId: IMAGE_1,
           },
           {
@@ -192,7 +192,7 @@ function buildReviewPayload() {
             status: "correct",
             isFlagged: false,
             explanation: "Passive voice requires the past participle.",
-            translation: "Báo cáo quý đã được nộp trước trưa.",
+            translation: "The quarterly report was submitted before noon.",
             imageAssetId: null,
           },
         ],
@@ -331,13 +331,13 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
     const masterPlayer = page.getByTestId("lr-master-audio-player");
     await expect(masterPlayer).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Trình phát audio phần Listening" }),
+      page.getByRole("region", { name: "Listening audio player" }),
     ).toBeVisible();
     await expect(page.locator("audio")).toHaveCount(1);
     await expect(masterPlayer.locator('input[type="range"]')).toHaveCount(0);
 
     const toggle = page.getByTestId("lr-master-audio-toggle");
-    await expect(toggle).toHaveAccessibleName("Bắt đầu phát Listening");
+    await expect(toggle).toHaveAccessibleName("Start Listening Audio");
     await expect(page.getByTestId("lr-master-audio-time")).toHaveText(
       /00:00\s*\/\s*00:\d{2}/,
     );
@@ -350,7 +350,7 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
 
     // Start playback on desktop (ETS lock: cannot pause once started)
     await toggle.click();
-    await expect(toggle).toHaveAccessibleName("Đang phát · Khóa tạm dừng");
+    await expect(toggle).toHaveAccessibleName("Playing · Pause Locked");
     await expect(toggle).toBeDisabled();
 
     // Mobile 390x844
@@ -439,7 +439,7 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
     const reviewPlayer = page.getByTestId("lr-review-audio-player");
     await expect(reviewPlayer).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Audio xem lại câu hỏi" }),
+      page.getByRole("region", { name: "Question review audio" }),
     ).toBeVisible();
     await expect(reviewPlayer).toContainText(/00:00\s*\/\s*00:45/);
     expect(audioFetchCount).toBe(0);
@@ -464,12 +464,12 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
     await expect(reviewPlayer.getByRole("alert")).toHaveCount(0);
 
     // Switch to Q2 (same audioAssetId) -> reuses cache
-    await page.getByRole("button", { name: /^Câu 2\b/ }).click();
+    await page.getByRole("button", { name: /^Question 2\b/ }).click();
     await page.getByTestId("lr-review-audio-toggle").click();
     expect(audioFetchCount).toBe(1);
 
     // Switch to Part 5 Q101 -> ReviewAudioPlayer must NOT render
-    await page.getByRole("button", { name: /^Câu 101\b/ }).click();
+    await page.getByRole("button", { name: /^Question 101\b/ }).click();
     await expect(page.getByTestId("lr-review-audio-player")).toHaveCount(0);
 
     expect(pageErrors).toEqual([]);
@@ -518,7 +518,7 @@ test.describe("LR Audio Architecture E2E & Visual Guardrails", () => {
         await route.fulfill({
           status: 502,
           contentType: "application/json",
-          body: JSON.stringify({ message: "Không thể tải audio xem lại." }),
+          body: JSON.stringify({ message: "Unable to load review audio." }),
         });
       },
     );

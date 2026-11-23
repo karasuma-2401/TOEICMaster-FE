@@ -1,36 +1,40 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Authentication - Login Page", () => {
-  test("Hiển thị giao diện đăng nhập đầy đủ các trường", async ({ page }) => {
+  test("Displays the login UI with all required fields", async ({ page }) => {
     await page.goto("/login");
 
-    // Kiểm tra title trang
-    await expect(page).toHaveTitle(/Đăng nhập/);
+    // Verify page title
+    await expect(page).toHaveTitle(/Sign In/);
 
-    // Kiểm tra các trường nhập liệu và nút bấm
+    // Verify input fields and submit button
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Đăng nhập" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   });
 
-  test("Hiển thị lỗi validation khi submit form trống", async ({ page }) => {
+  test("Displays validation errors when submitting an empty form", async ({
+    page,
+  }) => {
     await page.goto("/login");
 
-    // Click nút đăng nhập mà không nhập gì
-    await page.getByRole("button", { name: "Đăng nhập" }).click();
+    // Click the Sign in button without entering anything
+    await page.getByRole("button", { name: "Sign in" }).click();
 
-    // Phải hiển thị thông báo lỗi
+    // Validation error messages must be visible
     await expect(page.locator("#email-error")).toBeVisible();
     await expect(page.locator("#password-error")).toBeVisible();
   });
 
-  test("Chuyển hướng sang trang đăng ký khi click link", async ({ page }) => {
+  test("Redirects to the registration page when clicking the sign-up link", async ({
+    page,
+  }) => {
     await page.goto("/login");
 
-    // Click link Đăng ký miễn phí và chờ URL chuyển sang /register
+    // Click the Sign up for free link and wait for URL to navigate to /register
     await Promise.all([
       page.waitForURL(/\/register/),
-      page.getByRole("link", { name: "Đăng ký miễn phí" }).click(),
+      page.getByRole("link", { name: "Sign up for free" }).click(),
     ]);
 
     await expect(page).toHaveURL(/\/register/);

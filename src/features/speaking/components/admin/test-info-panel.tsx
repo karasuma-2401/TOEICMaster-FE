@@ -24,12 +24,12 @@ export function TestInfoPanel({
   );
   return (
     <AdminPanel
-      description={`TOEIC Speaking chuẩn · 11 câu · khoảng ${formatMinutes(totalSeconds)}`}
-      title="Thông tin đề"
+      description={`Standard TOEIC Speaking · 11 questions · about ${formatMinutes(totalSeconds)}`}
+      title="Test info"
     >
       <fieldset className="space-y-4" disabled={disabled}>
         <label className="block text-sm font-semibold">
-          Mã đề *
+          Test code *
           <input
             className={adminInput}
             onChange={(event) => onChange({ code: event.target.value })}
@@ -37,7 +37,7 @@ export function TestInfoPanel({
           />
         </label>
         <label className="block text-sm font-semibold">
-          Tên đề *
+          Test title *
           <input
             className={adminInput}
             onChange={(event) => onChange({ title: event.target.value })}
@@ -45,7 +45,7 @@ export function TestInfoPanel({
           />
         </label>
         <label className="block text-sm font-semibold">
-          Mô tả
+          Description
           <textarea
             className={adminTextarea}
             onChange={(event) => onChange({ description: event.target.value })}

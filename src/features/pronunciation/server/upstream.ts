@@ -29,11 +29,14 @@ export async function readMultipart(
   if (!contentType.startsWith("multipart/form-data"))
     return {
       ok: false,
-      response: problem(400, "Cần gửi bản thu dạng multipart."),
+      response: problem(400, "Recording must be sent as multipart form data."),
     };
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > limit)
-    return { ok: false, response: problem(413, "Bản thu vượt quá giới hạn.") };
+    return {
+      ok: false,
+      response: problem(413, "Recording exceeds the size limit."),
+    };
   const reader = request.body?.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -47,7 +50,7 @@ export async function readMultipart(
           void reader.cancel().catch(() => {});
           return {
             ok: false,
-            response: problem(413, "Bản thu vượt quá giới hạn."),
+            response: problem(413, "Recording exceeds the size limit."),
           };
         }
         if (value.byteLength > 0) chunks.push(value);

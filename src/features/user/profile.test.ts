@@ -9,39 +9,39 @@ import {
 } from "./profile";
 
 describe("validateProfile", () => {
-  it("chấp nhận dữ liệu hợp lệ", () => {
+  it("accepts valid data", () => {
     const errors = validateProfile({
-      displayName: "Nguyễn Văn A",
+      displayName: "Noah Adams",
       email: "learner@example.com",
     });
     expect(errors).toEqual({});
   });
 
-  it("báo lỗi khi tên hiển thị rỗng hoặc chỉ có khoảng trắng", () => {
+  it("returns an error when displayName is empty or whitespace only", () => {
     expect(
       validateProfile({
         displayName: "   ",
         email: "linh@example.com",
       }),
     ).toEqual({
-      displayName: "Vui lòng nhập tên hiển thị.",
+      displayName: "Please enter a display name.",
     });
   });
 
-  it("báo lỗi khi tên hiển thị vượt quá 100 ký tự", () => {
+  it("returns an error when displayName exceeds 100 characters", () => {
     expect(
       validateProfile({
         displayName: "a".repeat(101),
         email: "linh@example.com",
       }),
     ).toEqual({
-      displayName: "Tên hiển thị không được vượt quá 100 ký tự.",
+      displayName: "Display name must not exceed 100 characters.",
     });
   });
 });
 
-describe("validateProfile phone và điểm mục tiêu", () => {
-  it("chấp nhận số điện thoại 0 hoặc +84 và để trống", () => {
+describe("validateProfile phone and targetScore", () => {
+  it("accepts phone numbers starting with 0 or +84, or blank", () => {
     for (const phone of ["0912345678", "+84912345678", "", null]) {
       expect(
         validateProfile({ displayName: "Linh", email: "x@y.z", phone }),
@@ -49,15 +49,15 @@ describe("validateProfile phone và điểm mục tiêu", () => {
     }
   });
 
-  it("báo lỗi số điện thoại sai định dạng", () => {
+  it("returns an error for invalid phone formats", () => {
     for (const phone of ["0123456", "09123456789", "abcdefghij"]) {
       expect(
         validateProfile({ displayName: "Linh", email: "x@y.z", phone }).phone,
-      ).toBe("Số điện thoại không hợp lệ.");
+      ).toBe("Invalid phone number.");
     }
   });
 
-  it("kiểm tra khoảng 10-990 và bội số của 5 của điểm mục tiêu", () => {
+  it("validates targetScore range 10-990 and multiple of 5", () => {
     for (const targetScore of [10, 990, "750", ""]) {
       expect(
         validateProfile({ displayName: "Linh", email: "x@y.z", targetScore }),
@@ -67,17 +67,17 @@ describe("validateProfile phone và điểm mục tiêu", () => {
       expect(
         validateProfile({ displayName: "Linh", email: "x@y.z", targetScore })
           .targetScore,
-      ).toBe("Điểm TOEIC mục tiêu phải từ 10 đến 990.");
+      ).toBe("Target TOEIC score must be between 10 and 990.");
     }
     expect(
       validateProfile({ displayName: "Linh", email: "x@y.z", targetScore: 752 })
         .targetScore,
-    ).toBe("Điểm TOEIC mục tiêu phải là bội số của 5.");
+    ).toBe("Target TOEIC score must be a multiple of 5.");
   });
 });
 
 describe("toUpdateRequest", () => {
-  it("trim dữ liệu, chuyển chuỗi rỗng thành null và không gửi email", () => {
+  it("trims values, converts empty strings to null, and omits email", () => {
     expect(
       toUpdateRequest({
         displayName: "  Linh  ",
@@ -108,7 +108,7 @@ describe("toUpdateRequest", () => {
 });
 
 describe("validateAvatarFile", () => {
-  it("chỉ chấp nhận JPG, PNG đúng MIME và kích thước", () => {
+  it("only accepts JPG or PNG with matching MIME type and valid size", () => {
     for (const file of [
       { name: "photo.gif", type: "image/gif", size: 10 },
       { name: "photo.webp", type: "image/webp", size: 10 },
@@ -116,19 +116,19 @@ describe("validateAvatarFile", () => {
       { name: "photo.png", type: "image/jpeg", size: 10 },
     ]) {
       expect(validateAvatarFile(file)).toBe(
-        "Chỉ hỗ trợ ảnh định dạng JPG hoặc PNG.",
+        "Only JPG or PNG images are supported.",
       );
     }
     expect(
       validateAvatarFile({ name: "empty.png", type: "image/png", size: 0 }),
-    ).toBe("Tệp ảnh không hợp lệ.");
+    ).toBe("Invalid image file.");
     expect(
       validateAvatarFile({
         name: "large.png",
         type: "image/png",
         size: AVATAR_MAX_BYTES + 1,
       }),
-    ).toBe("Ảnh không được vượt quá 2MB.");
+    ).toBe("Image size must not exceed 2MB.");
     expect(
       validateAvatarFile({
         name: "limit.png",
@@ -140,7 +140,7 @@ describe("validateAvatarFile", () => {
 });
 
 describe("validatePasswordChange", () => {
-  it("chấp nhận mật khẩu hợp lệ", () => {
+  it("accepts a valid password change input", () => {
     expect(
       validatePasswordChange({
         currentPassword: "current-password-123",
@@ -150,7 +150,7 @@ describe("validatePasswordChange", () => {
     ).toEqual({});
   });
 
-  it("báo lỗi khi để trống các trường", () => {
+  it("returns errors when fields are empty", () => {
     expect(
       validatePasswordChange({
         currentPassword: "",
@@ -158,13 +158,13 @@ describe("validatePasswordChange", () => {
         confirmPassword: "",
       }),
     ).toEqual({
-      currentPassword: "Vui lòng nhập mật khẩu hiện tại.",
-      newPassword: "Vui lòng nhập mật khẩu mới.",
-      confirmPassword: "Vui lòng xác nhận mật khẩu mới.",
+      currentPassword: "Please enter your current password.",
+      newPassword: "Please enter a new password.",
+      confirmPassword: "Please confirm your new password.",
     });
   });
 
-  it("báo lỗi khi mật khẩu mới quá ngắn hoặc quá dài", () => {
+  it("returns an error when newPassword is too short or too long", () => {
     expect(
       validatePasswordChange({
         currentPassword: "current-password-123",
@@ -172,7 +172,7 @@ describe("validatePasswordChange", () => {
         confirmPassword: "1234567",
       }),
     ).toEqual({
-      newPassword: "Mật khẩu cần từ 8 đến 128 ký tự.",
+      newPassword: "Password must be between 8 and 128 characters.",
     });
 
     expect(
@@ -182,11 +182,11 @@ describe("validatePasswordChange", () => {
         confirmPassword: "a".repeat(129),
       }),
     ).toEqual({
-      newPassword: "Mật khẩu cần từ 8 đến 128 ký tự.",
+      newPassword: "Password must be between 8 and 128 characters.",
     });
   });
 
-  it("báo lỗi khi mật khẩu mới trùng với mật khẩu hiện tại", () => {
+  it("returns an error when newPassword matches currentPassword", () => {
     expect(
       validatePasswordChange({
         currentPassword: "same-password-123",
@@ -194,11 +194,12 @@ describe("validatePasswordChange", () => {
         confirmPassword: "same-password-123",
       }),
     ).toEqual({
-      newPassword: "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
+      newPassword:
+        "New password must not be the same as your current password.",
     });
   });
 
-  it("báo lỗi khi xác nhận mật khẩu không khớp", () => {
+  it("returns an error when confirmPassword does not match", () => {
     expect(
       validatePasswordChange({
         currentPassword: "current-password-123",
@@ -206,14 +207,14 @@ describe("validatePasswordChange", () => {
         confirmPassword: "different-password-789",
       }),
     ).toEqual({
-      confirmPassword: "Mật khẩu xác nhận chưa khớp.",
+      confirmPassword: "Confirmation password does not match.",
     });
   });
 });
 
 describe("getInitials", () => {
-  it("tạo chữ cái đầu từ tên hiển thị", () => {
-    expect(getInitials("Nguyễn Văn A")).toBe("NA");
+  it("creates initials from displayName", () => {
+    expect(getInitials("Noah Adams")).toBe("NA");
     expect(getInitials("Linh")).toBe("LI");
     expect(getInitials("   ")).toBe("U");
   });

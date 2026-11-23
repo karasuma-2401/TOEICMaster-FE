@@ -35,8 +35,9 @@ const skills = {
   listening: {
     id: "listening",
     name: "Listening",
-    tagline: "Luyện nghe theo 4 Part với audio phát liên tục như phòng thi.",
-    format: "100 câu · 45 phút · 5–495 điểm · 4 Parts",
+    tagline:
+      "Practice listening across 4 Parts with continuous audio just like the real exam.",
+    format: "100 questions · 45 minutes · 5–495 points · 4 Parts",
     maxScore: 990,
     examHref: "/listening-reading",
     exerciseHref: "/listening/practice/1",
@@ -44,8 +45,9 @@ const skills = {
   reading: {
     id: "reading",
     name: "Reading",
-    tagline: "Luyện đọc theo 3 Part và quản lý thời gian cho 100 câu hỏi.",
-    format: "100 câu · 75 phút · 5–495 điểm · 3 Parts",
+    tagline:
+      "Practice reading across 3 Parts and manage your time for 100 questions.",
+    format: "100 questions · 75 minutes · 5–495 points · 3 Parts",
     maxScore: 990,
     examHref: "/listening-reading",
     exerciseHref: "/reading/practice/5",
@@ -54,8 +56,8 @@ const skills = {
     id: "listening",
     name: "Listening & Reading",
     tagline:
-      "Làm trọn đề Listening & Reading 200 câu trong 120 phút như kỳ thi thật.",
-    format: "200 câu · 120 phút · 10–990 điểm · 7 Parts",
+      "Take a full 200-question Listening & Reading test in 120 minutes just like the real exam.",
+    format: "200 questions · 120 minutes · 10–990 points · 7 Parts",
     maxScore: 990,
     examHref: "/listening-reading",
     exerciseHref: "/listening/practice/1",
@@ -77,8 +79,8 @@ function toLibraryItem(
     id: exam.examId,
     code: exam.code,
     title: exam.title,
-    badge: `Bản ${exam.versionNumber} · Full Test`,
-    meta: `${exam.totalQuestions} câu · 120 phút · Listening & Reading`,
+    badge: `Version ${exam.versionNumber} · Full Test`,
+    meta: `${exam.totalQuestions} questions · 120 minutes · Listening & Reading`,
     action: { href: `/exams/lr/${exam.examId}` },
     sortKey: exam.publishedAtUtc,
     difficulty: null,
@@ -109,14 +111,14 @@ function toPracticeLibraryItem(
   statistics?: LrPracticeItemStatisticsApi,
 ): ExamLibraryItem {
   const difficultyLabels: Record<string, string> = {
-    easy: "Dễ",
-    medium: "Trung bình",
-    hard: "Khó",
+    easy: "Easy",
+    medium: "Medium",
+    hard: "Hard",
   };
 
   const kindLabels: Record<string, string> = {
-    single: "Câu hỏi đơn",
-    group: "Nhóm câu hỏi",
+    single: "Single Question",
+    group: "Question Group",
   };
 
   const difficulty = item.difficulty?.toLowerCase() ?? "";
@@ -130,7 +132,7 @@ function toPracticeLibraryItem(
       [difficultyLabels[difficulty], kindLabels[kind]]
         .filter(Boolean)
         .join(" · ") || `Part ${part}`,
-    meta: `${item.questionCount} câu hỏi`,
+    meta: `${item.questionCount} ${item.questionCount === 1 ? "question" : "questions"}`,
     action: {
       href: `/${skill}/practice/${part}/${encodeURIComponent(item.id)}`,
     },
@@ -166,9 +168,7 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
       .catch((cause) => {
         if (controller.signal.aborted) return;
         setError(
-          cause instanceof Error
-            ? cause.message
-            : "Không thể tải danh sách đề thi.",
+          cause instanceof Error ? cause.message : "Unable to load exam list.",
         );
       })
       .finally(() => {
@@ -198,16 +198,16 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
 
   return (
     <ExamLibrary
-      emptyDescription={`Hiện chưa có đề thi ${name} nào được công bố. Vui lòng quay lại sau.`}
-      emptyTitle={`Chưa có đề thi ${name}`}
+      emptyDescription={`No ${name} exams have been published yet. Please check back later.`}
+      emptyTitle={`No ${name} exams yet`}
       error={error}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       historySection={
         <AttemptHistorySection
-          description={`Các lần làm đề ${name} được lưu tại đây.`}
+          description={`Your ${name} exam attempts are saved here.`}
           limit={3}
           skills={["lr"]}
-          title="Lịch sử làm bài L&R"
+          title="L&R Attempt History"
         />
       }
       items={items}
@@ -219,12 +219,12 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
           ? [
               {
                 href: "/listening/practice/1",
-                label: "Bài tập Listening",
+                label: "Listening Practice",
                 active: false,
               },
               {
                 href: "/reading/practice/5",
-                label: "Bài tập Reading",
+                label: "Reading Practice",
                 active: false,
               },
             ]
@@ -292,7 +292,7 @@ export function ListeningReadingPractice({
           message:
             cause instanceof Error
               ? cause.message
-              : "Không thể tải danh sách bài luyện.",
+              : "Unable to load practice items.",
         });
       })
       .finally(() => {
@@ -310,8 +310,8 @@ export function ListeningReadingPractice({
 
   return (
     <ExamLibrary
-      emptyDescription={`Hiện chưa có bài luyện ${name} nào được công bố trong Part ${part}.`}
-      emptyTitle={`Chưa có bài luyện ${name} Part ${part}`}
+      emptyDescription={`No ${name} practice items have been published for Part ${part} yet.`}
+      emptyTitle={`No ${name} Part ${part} practice items yet`}
       error={error}
       header={<SkillHeader account={<UserMenu />} active={skill} wide />}
       items={items}
@@ -325,7 +325,7 @@ export function ListeningReadingPractice({
       }))}
       skill={{
         ...skills[skill],
-        format: `Part ${part} · ${current?.title} · ${current?.questions} câu trong đề thi`,
+        format: `Part ${part} · ${current?.title} · ${current?.questions} questions in exam`,
       }}
       skillLinks={[
         {

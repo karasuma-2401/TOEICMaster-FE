@@ -14,7 +14,7 @@ function PasswordToggle({
 }) {
   return (
     <button
-      aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      aria-label={isVisible ? "Hide password" : "Show password"}
       className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
@@ -76,16 +76,16 @@ export function ResetPasswordPanel({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (newPassword.length < 8 || newPassword.length > 128) {
-      setPasswordError("Mật khẩu mới cần từ 8 đến 128 ký tự.");
+      setPasswordError("New password must be between 8 and 128 characters.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("Mật khẩu xác nhận chưa khớp.");
+      setPasswordError("Confirmation password does not match.");
       return;
     }
     if (Date.parse(expiresAtUtc) <= Date.now()) {
       setPasswordError(
-        "Mã đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu mã mới.",
+        "The password reset code has expired. Please request a new code.",
       );
       return;
     }
@@ -96,7 +96,7 @@ export function ResetPasswordPanel({
     try {
       await resetPassword(resetToken, newPassword);
       toast.success(
-        "Mật khẩu của bạn đã được đặt lại. Hãy đăng nhập bằng mật khẩu mới.",
+        "Your password has been reset. Please sign in with your new password.",
       );
       router.replace("/login");
     } catch (reason) {
@@ -105,7 +105,7 @@ export function ResetPasswordPanel({
       setRequestError(
         reason instanceof Error
           ? reason.message
-          : "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
+          : "Unable to reset password. Please try again.",
       );
     } finally {
       setPending(false);
@@ -115,23 +115,24 @@ export function ResetPasswordPanel({
   return (
     <section aria-labelledby="reset-password-title">
       <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
-        KHÔI PHỤC TÀI KHOẢN
+        ACCOUNT RECOVERY
       </p>
       <h1
         className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
         id="reset-password-title"
       >
-        Đặt mật khẩu mới
+        Set a new password
       </h1>
       <p className="mx-auto mt-3 max-w-[23rem] text-center text-[13px] leading-5 text-[#a89f9b]">
-        Chọn mật khẩu mới gồm ít nhất 8 ký tự để bảo vệ tài khoản của bạn.
+        Choose a new password with at least 8 characters to protect your
+        account.
       </p>
       <form className="mt-8" noValidate onSubmit={submit}>
         <label
           className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
           htmlFor="newPassword"
         >
-          Mật khẩu mới
+          New password
         </label>
         <div className="relative">
           <input
@@ -144,7 +145,7 @@ export function ResetPasswordPanel({
               setNewPassword(event.target.value);
               setPasswordError(undefined);
             }}
-            placeholder="Tối thiểu 8 ký tự"
+            placeholder="At least 8 characters"
             type={showNewPassword ? "text" : "password"}
             value={newPassword}
           />
@@ -157,7 +158,7 @@ export function ResetPasswordPanel({
           className="mb-1.5 mt-3.5 block text-[11px] font-bold text-[#4e4542]"
           htmlFor="confirmNewPassword"
         >
-          Xác nhận mật khẩu mới
+          Confirm new password
         </label>
         <div className="relative">
           <input
@@ -170,7 +171,7 @@ export function ResetPasswordPanel({
               setConfirmPassword(event.target.value);
               setPasswordError(undefined);
             }}
-            placeholder="Nhập lại mật khẩu mới"
+            placeholder="Re-enter new password"
             type={showConfirmation ? "text" : "password"}
             value={confirmPassword}
           />
@@ -198,7 +199,7 @@ export function ResetPasswordPanel({
           disabled={pending}
           type="submit"
         >
-          {pending ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
+          {pending ? "Resetting..." : "Reset password"}
         </button>
       </form>
       <button
@@ -206,7 +207,7 @@ export function ResetPasswordPanel({
         onClick={onRestart}
         type="button"
       >
-        Yêu cầu mã mới
+        Request a new code
       </button>
     </section>
   );

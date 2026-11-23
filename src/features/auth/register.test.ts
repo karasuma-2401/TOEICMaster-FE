@@ -26,11 +26,11 @@ describe("validateRegistration", () => {
         termsAccepted: false,
       }),
     ).toEqual({
-      displayName: "Vui lòng nhập tên hiển thị.",
-      email: "Email không hợp lệ.",
-      password: "Mật khẩu cần từ 8 đến 128 ký tự.",
-      confirmPassword: "Mật khẩu xác nhận chưa khớp.",
-      termsAccepted: "Vui lòng đồng ý với điều khoản sử dụng.",
+      displayName: "Please enter a display name.",
+      email: "Invalid email address.",
+      password: "Password must be between 8 and 128 characters.",
+      confirmPassword: "Confirmation password does not match.",
+      termsAccepted: "Please agree to the terms of use.",
     });
   });
 });
@@ -69,8 +69,8 @@ describe("register", () => {
       vi.fn().mockResolvedValue(
         Response.json(
           {
-            title: "Dữ liệu đăng ký không hợp lệ.",
-            errors: { Email: ["Email không hợp lệ."] },
+            title: "Invalid registration data.",
+            errors: { Email: ["Invalid email address."] },
           },
           { status: 400 },
         ),
@@ -84,8 +84,8 @@ describe("register", () => {
         password: "password",
       }),
     ).rejects.toEqual(
-      new RegisterError(400, "Dữ liệu đăng ký không hợp lệ.", {
-        email: "Email không hợp lệ.",
+      new RegisterError(400, "Invalid registration data.", {
+        email: "Invalid email address.",
       }),
     );
   });
@@ -97,7 +97,7 @@ describe("register", () => {
         .fn()
         .mockResolvedValue(
           Response.json(
-            { title: "Email này đã được sử dụng.", status: 409 },
+            { title: "This email is already in use.", status: 409 },
             { status: 409 },
           ),
         ),
@@ -109,6 +109,6 @@ describe("register", () => {
         email: "linh@example.com",
         password: "password",
       }),
-    ).rejects.toEqual(new RegisterError(409, "Email này đã được sử dụng."));
+    ).rejects.toEqual(new RegisterError(409, "This email is already in use."));
   });
 });

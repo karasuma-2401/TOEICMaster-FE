@@ -8,7 +8,7 @@ vi.mock("@/features/admin/components/users-page", () => ({
   UsersPage: () => {
     throw suspended;
   },
-  UsersPageSkeleton: () => <div>Đang tải trang quản lý người dùng</div>,
+  UsersPageSkeleton: () => <div>Loading user management page</div>,
 }));
 
 import AdminUsersRoute from "./page";
@@ -17,7 +17,7 @@ describe("AdminUsersRoute", () => {
   it("places the users page under a Suspense fallback", () => {
     render(<AdminUsersRoute />);
     expect(
-      screen.getByText("Đang tải trang quản lý người dùng"),
+      screen.getByText("Loading user management page"),
     ).toBeInTheDocument();
   });
 });

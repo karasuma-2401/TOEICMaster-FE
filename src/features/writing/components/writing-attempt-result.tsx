@@ -39,7 +39,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải trạng thái bài làm.",
+              : "Could not load attempt status.",
           );
       }
     },
@@ -72,7 +72,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Không thể yêu cầu chấm AI lúc này.",
+          : "Could not request AI evaluation right now.",
       );
     } finally {
       setSubmittingConsent(false);
@@ -86,31 +86,31 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
       <section className={`p-7 sm:p-10 ${surfaceCard}`}>
         <p className={eyebrow}>WRITING RESULT</p>
         <h1 className="mt-3 text-3xl font-bold">
-          {isComplete ? "Kết quả Writing" : "Đã nộp bài Writing"}
+          {isComplete ? "Writing Results" : "Writing Attempt Submitted"}
         </h1>
         <p className="mt-3 max-w-prose leading-7 text-slate-600">
-          Bài làm đã được lưu an toàn trên server. Điểm AI là ước tính phục vụ
-          luyện tập, không phải kết quả TOEIC/ETS chính thức.
+          Your response has been saved safely on the server. AI scores are
+          estimates for practice only, not official TOEIC/ETS scores.
         </p>
         {attempt ? (
           <div className="mt-7">
             <StatGrid
               className="sm:grid-cols-3"
               items={[
-                { label: "Dạng làm", value: displayMode(attempt.mode) },
+                { label: "Mode", value: displayMode(attempt.mode) },
                 {
-                  label: "Số câu đã nộp",
-                  value: `${attempt.questions.length} câu`,
+                  label: "Questions submitted",
+                  value: `${attempt.questions.length} ${attempt.questions.length === 1 ? "question" : "questions"}`,
                 },
                 {
-                  label: "Trạng thái",
+                  label: "Status",
                   value: isComplete
-                    ? "Đã có kết quả"
+                    ? "Results ready"
                     : needsConsent
-                      ? "Chờ xác nhận"
+                      ? "Awaiting confirmation"
                       : evaluationStatus === "FAILED"
-                        ? "Chấm bài thất bại"
-                        : "Đang chấm AI",
+                        ? "Evaluation failed"
+                        : "AI grading",
                   accent: true,
                 },
               ]}
@@ -120,19 +120,20 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
           <ErrorPanel
             message={error}
             onRetry={() => void load()}
-            retryLabel="Thử tải lại"
+            retryLabel="Retry"
           />
         ) : (
-          <LoadingPanel label="Đang tải trạng thái bài làm…" />
+          <LoadingPanel label="Loading attempt status…" />
         )}
         {attempt && needsConsent && (
           <section className="mt-7 rounded-2xl border border-orange-200 bg-orange-50 p-5">
-            <h2 className="font-bold">Gửi bài để AI chấm ước tính</h2>
+            <h2 className="font-bold">Submit for AI estimated scoring</h2>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              Khi xác nhận, nội dung đề, ảnh đề bài và bài viết của bạn sẽ được
-              gửi đến Gemini để tạo điểm ước tính và phản hồi. Với Gemini Free
-              Tier, nội dung có thể được dùng để cải thiện sản phẩm của nhà cung
-              cấp. Không gửi thông tin cá nhân vào bài làm.
+              When you confirm, the prompt, prompt image, and your writing will
+              be sent to Gemini to generate an estimated score and feedback.
+              With Gemini Free Tier, content may be used to improve the
+              provider&apos;s products. Do not include personal information in
+              your writing.
             </p>
             <label className="mt-4 flex gap-3 rounded-xl bg-white/70 p-3 text-sm leading-6 text-slate-800 ring-1 ring-orange-100">
               <input
@@ -142,7 +143,8 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
                 type="checkbox"
               />
               <span>
-                Tôi đồng ý gửi bài làm đến dịch vụ AI để chấm ước tính.
+                I agree to send my writing to the AI service for estimated
+                scoring.
               </span>
             </label>
             <button
@@ -151,7 +153,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
               onClick={() => void queueEvaluation()}
               type="button"
             >
-              {submittingConsent ? "Đang gửi yêu cầu…" : "Đồng ý và chấm bài"}
+              {submittingConsent ? "Submitting request…" : "Agree and grade"}
             </button>
             {error && (
               <div className="mt-4">
@@ -167,19 +169,19 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
               className="mt-1 size-4 shrink-0 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600"
             />
             <div>
-              <h2 className="font-bold">AI đang chấm bài</h2>
+              <h2 className="font-bold">AI is grading your writing</h2>
               <p className="mt-1">
-                Bạn có thể rời trang; kết quả sẽ được lưu lại. Trạng thái này tự
-                cập nhật mỗi 5 giây.
+                You can leave this page; your results will be saved. This status
+                updates automatically every 5 seconds.
                 {evaluationStatus === "RETRYING" &&
-                  " Hệ thống đang thử lại sau khi dịch vụ AI bận."}
+                  " The system is retrying because the AI service is busy."}
               </p>
             </div>
           </section>
         )}
         {attempt && evaluation?.status === "FAILED" && (
           <section className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
-            <h2 className="font-bold">Chưa thể chấm bài lúc này</h2>
+            <h2 className="font-bold">Unable to grade right now</h2>
             <p className="mt-1">{evaluation.failureMessage}</p>
             <button
               className={`mt-4 ${secondaryAction} border-amber-400`}
@@ -187,7 +189,7 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
               onClick={() => void queueEvaluation()}
               type="button"
             >
-              {submittingConsent ? "Đang gửi…" : "Thử chấm lại"}
+              {submittingConsent ? "Sending…" : "Retry grading"}
             </button>
           </section>
         )}
@@ -203,18 +205,18 @@ export function WritingAttemptResult({ attemptId }: { attemptId: string }) {
         )}
         <div className="mt-8 flex flex-wrap gap-3 border-t border-slate-100 pt-6">
           <Link className={primaryAction} href="/history">
-            Xem lịch sử
+            View history
           </Link>
           {attempt && (
             <Link
               className={secondaryAction}
               href={`/writing/attempts/${encodeURIComponent(attemptId)}/review`}
             >
-              Xem lại bài viết
+              Review writing
             </Link>
           )}
           <Link className={secondaryAction} href="/writing">
-            Làm đề khác
+            Try another test
           </Link>
         </div>
       </section>

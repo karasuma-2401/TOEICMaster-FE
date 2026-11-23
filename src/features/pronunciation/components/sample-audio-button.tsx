@@ -47,14 +47,14 @@ export function SampleAudioButton({
     <div className="relative shrink-0">
       <button
         aria-label={
-          playing ? `Dừng âm mẫu /${symbol}/` : `Nghe âm mẫu /${symbol}/`
+          playing ? `Stop sample /${symbol}/` : `Listen to sample /${symbol}/`
         }
         className={`${pill} ${pillIdle} ${focusRing} whitespace-nowrap px-3 text-(--sp-ink)`}
         onClick={() => void toggle()}
         type="button"
       >
         {playing ? <StopIcon /> : <SpeakerIcon />}
-        {playing ? "Dừng" : "Nghe âm mẫu"}
+        {playing ? "Stop" : "Play sample"}
       </button>
       <audio
         onEnded={() => setPlaying(false)}
@@ -70,7 +70,9 @@ export function SampleAudioButton({
       </audio>
       {failed && (
         <div className="absolute right-0 top-full z-10 mt-2 w-60">
-          <InlineError>Không phát được audio mẫu của âm này.</InlineError>
+          <InlineError>
+            Could not play the sample audio for this sound.
+          </InlineError>
         </div>
       )}
     </div>

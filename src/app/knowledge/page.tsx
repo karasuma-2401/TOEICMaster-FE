@@ -39,7 +39,7 @@ export default function KnowledgePage() {
       .catch((cause) => {
         if (!controller.signal.aborted)
           setError(
-            cause instanceof Error ? cause.message : "Không thể tải bài học.",
+            cause instanceof Error ? cause.message : "Unable to load articles.",
           );
       });
     return () => controller.abort();
@@ -61,29 +61,29 @@ export default function KnowledgePage() {
     <>
       <section className="border-b border-[#ece9e5] pb-8">
         <p className="text-sm font-semibold text-[#df5a28]">
-          THƯ VIỆN KIẾN THỨC
+          KNOWLEDGE LIBRARY
         </p>
         <h1 className="mt-2 text-4xl font-bold text-[#2f2b28]">
-          Học đúng trọng tâm TOEIC
+          Focused TOEIC Study
         </h1>
         <p className="mt-3 max-w-2xl text-[#6b655f]">
-          Tài liệu, bài làm mẫu và kiến thức theo từng kỹ năng.
+          Guides, sample responses, and study notes organized by skill.
         </p>
       </section>
       <form className="my-6 flex flex-wrap gap-3" onSubmit={search}>
         <input
-          aria-label="Tìm bài học"
+          aria-label="Search articles"
           className="min-w-56 flex-1 rounded-xl border border-[#d8d0c5] bg-white px-4 py-3"
           defaultValue={query}
           name="q"
-          placeholder="Tìm kiến thức, tài liệu…"
+          placeholder="Search articles, guides…"
         />
         <select
-          aria-label="Kỹ năng"
+          aria-label="Skill"
           className="rounded-xl border border-[#d8d0c5] bg-white px-3"
           name="skill"
         >
-          <option value="">Mọi kỹ năng</option>
+          <option value="">All skills</option>
           {["General", "Listening", "Reading", "Speaking", "Writing"].map(
             (skill) => (
               <option key={skill}>{skill}</option>
@@ -91,11 +91,11 @@ export default function KnowledgePage() {
           )}
         </select>
         <select
-          aria-label="Danh mục"
+          aria-label="Category"
           className="rounded-xl border border-[#d8d0c5] bg-white px-3"
           name="categoryId"
         >
-          <option value="">Mọi danh mục</option>
+          <option value="">All categories</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -106,17 +106,18 @@ export default function KnowledgePage() {
           className="rounded-xl bg-[#df5a28] px-5 py-3 font-semibold text-white"
           type="submit"
         >
-          Tìm bài học
+          Search articles
         </button>
       </form>
       {error ? (
         <p role="alert">{error}</p>
       ) : !data ? (
-        <output>Đang tải bài học…</output>
+        <output>Loading articles…</output>
       ) : (
         <section>
           <p className="mb-4 text-sm text-[#6b655f]">
-            {data.totalCount} bài học dành cho bạn
+            {data.totalCount} {data.totalCount === 1 ? "article" : "articles"}{" "}
+            for you
           </p>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {data.items.map((article) => (
@@ -139,7 +140,7 @@ export default function KnowledgePage() {
                   className="mt-4 inline-block font-semibold text-[#c74422]"
                   href={`/knowledge/${article.slug}`}
                 >
-                  Đọc bài học →
+                  Read article →
                 </Link>
               </article>
             ))}

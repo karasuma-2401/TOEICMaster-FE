@@ -22,21 +22,21 @@ describe("GuideMascot", () => {
   it("renders when mascot preference is not hidden and hides when setMascotHidden(true) is called", async () => {
     render(<GuideMascot />);
     expect(
-      await screen.findByRole("button", { name: /Míc/i }),
+      await screen.findByRole("button", { name: /Mic/i }),
     ).toBeInTheDocument();
 
     setMascotHidden(true);
 
     await waitFor(() => {
       expect(
-        screen.queryByRole("button", { name: /Míc/i }),
+        screen.queryByRole("button", { name: /Mic/i }),
       ).not.toBeInTheDocument();
     });
 
     setMascotHidden(false);
 
     expect(
-      await screen.findByRole("button", { name: /Míc/i }),
+      await screen.findByRole("button", { name: /Mic/i }),
     ).toBeInTheDocument();
   });
 });

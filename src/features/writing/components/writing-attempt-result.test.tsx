@@ -8,7 +8,10 @@ vi.mock("@/features/writing/attempt-api", () => ({
   getWritingAttempt: vi.fn().mockResolvedValue({
     mode: "PART_1",
     questions: [{ part: 1 }],
-    evaluation: { status: "FAILED", failureMessage: "Không thể chấm bài." },
+    evaluation: {
+      status: "FAILED",
+      failureMessage: "Could not grade writing.",
+    },
   }),
   displayMode: () => "Writing Part 1",
   grantWritingEvaluationConsent: vi.fn(),
@@ -19,12 +22,12 @@ afterEach(cleanup);
 it("shows a failed status instead of claiming the AI is still grading", async () => {
   render(<WritingAttemptResult attemptId="attempt-1" />);
 
-  expect(await screen.findByText("Chấm bài thất bại")).toBeInTheDocument();
-  expect(screen.queryByText("Đang chấm AI")).not.toBeInTheDocument();
+  expect(await screen.findByText("Evaluation failed")).toBeInTheDocument();
+  expect(screen.queryByText("AI grading")).not.toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "Thử chấm lại" }),
+    screen.getByRole("button", { name: "Retry grading" }),
   ).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /lịch sử/i })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: /history/i })).toHaveAttribute(
     "href",
     "/history",
   );

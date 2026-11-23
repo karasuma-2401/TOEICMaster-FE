@@ -21,7 +21,7 @@ import { UsersTable } from "./users-table";
 function downloadCurrentPage(users: AdminUser[]) {
   const escape = (value: string) => `"${value.replaceAll('"', '""')}"`;
   const rows = [
-    ["Họ tên", "Email", "Vai trò", "Trạng thái", "Đăng nhập gần nhất"],
+    ["Full name", "Email", "Role", "Status", "Last sign-in"],
     ...users.map((user) => [
       user.fullName,
       user.email,
@@ -44,7 +44,7 @@ function downloadCurrentPage(users: AdminUser[]) {
 function LoadingState() {
   return (
     <div
-      aria-label="Đang tải danh sách người dùng"
+      aria-label="Loading user list"
       aria-live="polite"
       className="space-y-3 p-4"
     >
@@ -60,7 +60,7 @@ function LoadingState() {
 
 export function UsersPageSkeleton() {
   return (
-    <div aria-label="Đang tải trang quản lý người dùng" aria-busy="true">
+    <div aria-label="Loading user management page" aria-busy="true">
       <div className="mb-6 space-y-3">
         <div className="h-3 w-40 animate-pulse rounded bg-[var(--admin-skeleton)]" />
         <div className="h-9 w-64 animate-pulse rounded bg-[var(--admin-skeleton)]" />
@@ -76,7 +76,7 @@ export function UsersPageSkeleton() {
       </div>
       <div className="mt-5 h-[68px] animate-pulse rounded-xl bg-[var(--admin-skeleton)]" />
       <section
-        aria-label="Danh sách người dùng"
+        aria-label="User list"
         className="mt-4 overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]"
       >
         <LoadingState />
@@ -143,10 +143,7 @@ export function UsersPage() {
         const reasonError =
           reason instanceof AdminUsersApiError
             ? reason
-            : new AdminUsersApiError(
-                502,
-                "Không thể tải danh sách người dùng.",
-              );
+            : new AdminUsersApiError(502, "Unable to load user list.");
         setRequestError({ key: requestKey, error: reasonError });
       })
       .finally(() => {
@@ -160,7 +157,9 @@ export function UsersPage() {
 
   useEffect(() => {
     if (error?.status !== 403) return;
-    toast.error("Tài khoản của bạn không có quyền truy cập khu vực quản trị.");
+    toast.error(
+      "Your account does not have permission to access the admin area.",
+    );
     router.replace("/");
   }, [error, router]);
 
@@ -203,23 +202,23 @@ export function UsersPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
-            QUẢN TRỊ / NGƯỜI DÙNG
+            ADMIN / USERS
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--admin-ink)] sm:text-3xl">
-            Quản lý người dùng
+            User Management
           </h1>
           <p className="mt-1.5 text-sm text-[var(--admin-muted)]">
-            Xem, tìm kiếm và quản lý tài khoản học viên cùng quản trị viên.
+            View, search, and manage learner and administrator accounts.
           </p>
         </div>
         <button
           className="h-11 rounded-lg px-4 text-sm font-bold text-white shadow-[var(--admin-action-shadow)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--admin-brand-red)]"
           disabled
           style={{ background: "var(--admin-brand-gradient)" }}
-          title="Tạo người dùng sẽ có ở bước tiếp theo"
+          title="User creation will be available in the next step"
           type="button"
         >
-          + Thêm người dùng
+          + Add user
         </button>
       </div>
 
@@ -262,7 +261,7 @@ export function UsersPage() {
       />
 
       <section
-        aria-label="Danh sách người dùng"
+        aria-label="User list"
         className="mt-4 overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]"
       >
         {loading ? (
@@ -274,16 +273,16 @@ export function UsersPage() {
           >
             <h2 className="font-bold">
               {error.status === 403
-                ? "Không có quyền truy cập"
+                ? "Access denied"
                 : error.status === 401
-                  ? "Phiên đăng nhập đã hết hạn"
-                  : "Không tải được danh sách"}
+                  ? "Session expired"
+                  : "Unable to load list"}
             </h2>
             <p className="mt-1 text-sm">
               {error.status === 403
-                ? "Tài khoản của bạn không được phép quản lý người dùng."
+                ? "Your account is not permitted to manage users."
                 : error.status === 401
-                  ? "Vui lòng đăng nhập lại để tiếp tục."
+                  ? "Please sign in again to continue."
                   : error.message}
             </p>
             {error.status === 401 ? (
@@ -291,7 +290,7 @@ export function UsersPage() {
                 className="mt-3 inline-flex rounded-lg bg-white px-3 py-2 text-sm font-semibold underline focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
                 href={`/login?next=${encodeURIComponent("/admin/users")}`}
               >
-                Đăng nhập lại
+                Sign in again
               </Link>
             ) : (
               <button
@@ -299,7 +298,7 @@ export function UsersPage() {
                 onClick={() => setRetry((current) => current + 1)}
                 type="button"
               >
-                Thử lại
+                Retry
               </button>
             )}
           </div>
@@ -313,13 +312,13 @@ export function UsersPage() {
             </span>
             <h2 className="mt-4 text-base font-bold text-[var(--admin-ink)]">
               {currentResponse.stats.totalUsers === 0
-                ? "Chưa có người dùng nào"
-                : "Không tìm thấy kết quả phù hợp"}
+                ? "No users yet"
+                : "No matching results found"}
             </h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-[var(--admin-muted)]">
               {currentResponse.stats.totalUsers === 0
-                ? "Danh sách sẽ hiển thị tại đây khi có tài khoản mới."
-                : "Thử thay đổi từ khóa hoặc xóa bộ lọc hiện tại."}
+                ? "Accounts will appear here once new users are added."
+                : "Try changing your search keyword or clearing the current filters."}
             </p>
             {currentResponse.stats.totalUsers !== 0 && (
               <button
@@ -329,7 +328,7 @@ export function UsersPage() {
                 }
                 type="button"
               >
-                Xóa bộ lọc
+                Clear filters
               </button>
             )}
           </div>
@@ -358,13 +357,13 @@ export function UsersPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--admin-border)] px-4 py-3 text-xs text-[var(--admin-muted)] sm:px-5">
               <div className="flex items-center gap-2">
                 <span>
-                  Hiển thị {firstItem}–{lastItem} /{" "}
-                  {currentResponse.totalItems.toLocaleString("vi-VN")}
+                  Showing {firstItem}-{lastItem} of{" "}
+                  {currentResponse.totalItems.toLocaleString("en-US")}
                 </span>
                 <label className="flex items-center gap-1.5">
-                  mỗi trang
+                  per page
                   <select
-                    aria-label="Số người dùng mỗi trang"
+                    aria-label="Users per page"
                     className="rounded-md border border-[var(--admin-border)] bg-[var(--admin-surface)] px-2 py-1 text-[var(--admin-ink)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
                     onChange={(event) =>
                       updateQuery({
@@ -385,9 +384,9 @@ export function UsersPage() {
                   </select>
                 </label>
               </div>
-              <nav aria-label="Phân trang" className="flex items-center gap-1">
+              <nav aria-label="Pagination" className="flex items-center gap-1">
                 <button
-                  aria-label="Trang trước"
+                  aria-label="Previous page"
                   className="size-9 rounded-lg border border-[var(--admin-border)] disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={query.page <= 1}
                   onClick={() => updateQuery({ page: String(query.page - 1) })}
@@ -405,7 +404,7 @@ export function UsersPage() {
                   / {Math.max(1, currentResponse.totalPages)}
                 </span>
                 <button
-                  aria-label="Trang sau"
+                  aria-label="Next page"
                   className="size-9 rounded-lg border border-[var(--admin-border)] disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={query.page >= currentResponse.totalPages}
                   onClick={() => updateQuery({ page: String(query.page + 1) })}

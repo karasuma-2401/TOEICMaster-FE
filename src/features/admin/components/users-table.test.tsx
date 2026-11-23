@@ -6,7 +6,7 @@ import { UsersTable } from "./users-table";
 
 const user: AdminUser = {
   id: "usr-1",
-  fullName: "Nguyễn Minh Anh",
+  fullName: "Nguyen Minh Anh",
   email: "minh@example.com",
   role: "USER",
   status: "ACTIVE",
@@ -32,15 +32,15 @@ describe("UsersTable", () => {
       />,
     );
     expect(
-      screen.getByRole("row", { name: /Nguyễn Minh Anh/ }),
+      screen.getByRole("row", { name: /Nguyen Minh Anh/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: /Ngày tạo/ }),
+      screen.getByRole("columnheader", { name: /Created/ }),
     ).toHaveAttribute("aria-sort", "descending");
     fireEvent.click(
-      screen.getByRole("checkbox", { name: "Chọn Nguyễn Minh Anh" }),
+      screen.getByRole("checkbox", { name: "Select Nguyen Minh Anh" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: /Người dùng/ }));
+    fireEvent.click(screen.getByRole("button", { name: /User/ }));
     expect(onSelectionChange).toHaveBeenCalledWith("usr-1", true);
     expect(onSort).toHaveBeenCalledWith("fullName");
   });

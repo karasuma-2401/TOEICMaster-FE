@@ -22,8 +22,8 @@ describe("session helpers", () => {
     expect(formatCountdown(-5)).toBe("00:00");
   });
 
-  it("formats remaining time in Vietnamese", () => {
-    expect(formatRemainingText(14 * 60 + 25)).toBe("14 phút 25 giây");
+  it("formats remaining time in English", () => {
+    expect(formatRemainingText(14 * 60 + 25)).toBe("14 minutes 25 seconds");
   });
 
   it("shortens long missing lists", () => {

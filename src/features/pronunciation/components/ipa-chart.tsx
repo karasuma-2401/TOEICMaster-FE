@@ -83,7 +83,7 @@ function GroupSection({
           {groupLabels[group]}
         </h2>
         <p className="text-[13px] text-(--sp-ink-2)">
-          {sounds.length} âm{done > 0 ? ` · Đã luyện ${done}` : ""}
+          {sounds.length} sounds{done > 0 ? ` · Practiced ${done}` : ""}
         </p>
       </div>
       <div className="mt-4">{children}</div>
@@ -96,7 +96,7 @@ function ConsonantGrid({ tile }: { tile: (sound: IpaSound) => ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
       <ul
-        aria-label="Cặp vô thanh và hữu thanh"
+        aria-label="Voiceless and voiced pairs"
         className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4"
       >
         {pairs.map(([voiceless, voiced]) => (

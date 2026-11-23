@@ -9,9 +9,9 @@ export function isFreePracticePart(part: SpeakingPart) {
 }
 
 export const difficultyLabels: Record<SpeakingDifficulty, string> = {
-  EASY: "Dễ",
-  MEDIUM: "Trung bình",
-  HARD: "Khó",
+  EASY: "Easy",
+  MEDIUM: "Medium",
+  HARD: "Hard",
 };
 
 export function countWords(text: string) {
@@ -31,25 +31,25 @@ export function markPauses(passage: string) {
 }
 
 export const practiceIntro: Partial<Record<SpeakingPart, string>> = {
-  1: "Luyện phát âm, trọng âm và ngữ điệu. Nói thử, nghe lại và tự tin tiến bộ.",
-  2: "Luyện mô tả người, vật và hoạt động. Nói thử, nghe lại và tự tin tiến bộ.",
-  5: "Luyện nêu quan điểm kèm lý do và ví dụ. Nói thử, nghe lại và tự tin tiến bộ.",
+  1: "Practice pronunciation, word stress, and intonation. Speak, play back, and improve with confidence.",
+  2: "Practice describing people, objects, and activities. Speak, play back, and improve with confidence.",
+  5: "Practice expressing an opinion with reasons and examples. Speak, play back, and improve with confidence.",
 };
 
 export const practiceTips: Partial<Record<SpeakingPart, string[]>> = {
   1: [
-    "Đọc rõ âm cuối của từng từ.",
-    "Lên giọng nhẹ ở phần liệt kê, hạ giọng cuối câu trần thuật.",
-    "Giữ tốc độ đều, không ngắt giữa cụm danh từ.",
+    "Pronounce final consonants clearly.",
+    "Use rising intonation slightly for lists and falling intonation at the end of statements.",
+    "Keep a steady pace without pausing inside noun phrases.",
   ],
   2: [
-    "Mở đầu bằng bối cảnh chung của bức tranh.",
-    "Mô tả người và hành động trước, rồi đến đồ vật nổi bật.",
-    "Dùng thì hiện tại tiếp diễn cho hành động đang diễn ra.",
+    "Start with the overall scene of the picture.",
+    "Describe the people and their actions first, then key objects.",
+    "Use the present continuous tense for actions in progress.",
   ],
   5: [
-    "Nêu rõ quan điểm ngay trong câu đầu.",
-    "Đưa hai lý do, mỗi lý do kèm một ví dụ cụ thể.",
-    "Kết lại bằng một câu khẳng định quan điểm.",
+    "State your opinion clearly in the opening sentence.",
+    "Give two reasons, each supported by a specific example.",
+    "Wrap up with a concluding sentence restating your opinion.",
   ],
 };

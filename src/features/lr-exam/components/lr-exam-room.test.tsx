@@ -74,9 +74,9 @@ describe("LrExamRoom", () => {
     expect(
       screen.getAllByRole("radio", { checked: true }).length,
     ).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: "Nộp bài thi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit Exam" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Xác nhận nộp bài L&R" }),
+      screen.getByRole("button", { name: "Confirm L&R Submission" }),
     );
     expect(push).toHaveBeenCalledWith("/result");
   });
@@ -84,7 +84,9 @@ describe("LrExamRoom", () => {
   it("renders the reading phase with a locked listening palette", () => {
     render(<LrExamRoom {...loadRoomState("x", 147)} resultHref="/result" />);
     expect(screen.getByText("QUESTION 147")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Câu 1(,|$)/ })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /^Question 1(,|$)/ }),
+    ).toBeDisabled();
   });
 
   it("renders a single ListeningMasterPlayer without per-block audio elements or seekbars", async () => {
@@ -100,26 +102,26 @@ describe("LrExamRoom", () => {
     );
 
     const player = screen.getByTestId("lr-master-audio-player");
-    expect(
-      screen.getByRole("region", { name: "Trình phát audio phần Listening" }),
-    ).toBe(player);
+    expect(screen.getByRole("region", { name: "Listening audio player" })).toBe(
+      player,
+    );
 
     // Zero per-block <audio> elements: at most 1 unified <audio> element in DOM.
     expect(container.querySelectorAll("audio").length).toBeLessThanOrEqual(1);
     expect(player.querySelector('input[type="range"]')).toBeNull();
 
-    expect(player).toHaveTextContent(/Part 1\s*·\s*Câu 1/);
+    expect(player).toHaveTextContent(/Part 1\s*·\s*Question 1/);
     expect(screen.getByTestId("lr-master-audio-time")).toHaveTextContent(
       /00:00\s*\/\s*00:35/,
     );
 
     const toggle = screen.getByTestId("lr-master-audio-toggle");
-    expect(toggle).toHaveAccessibleName("Bắt đầu phát Listening");
+    expect(toggle).toHaveAccessibleName("Start Listening Audio");
     fireEvent.click(toggle);
 
     await waitFor(() => {
       const lockedButton = screen.getByTestId("lr-master-audio-toggle");
-      expect(lockedButton).toHaveAccessibleName("Đang phát · Khóa tạm dừng");
+      expect(lockedButton).toHaveAccessibleName("Playing · Pause Locked");
       expect(lockedButton).toBeDisabled();
     });
 

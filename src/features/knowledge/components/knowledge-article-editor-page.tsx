@@ -106,9 +106,7 @@ export function KnowledgeArticleEditorPage({
         }
       } catch (err) {
         toast.error(
-          err instanceof Error
-            ? err.message
-            : "Không thể tải dữ liệu bài viết.",
+          err instanceof Error ? err.message : "Could not load article data.",
         );
       } finally {
         if (active) setLoading(false);
@@ -166,15 +164,15 @@ export function KnowledgeArticleEditorPage({
 
   async function handleSave() {
     if (!title.trim()) {
-      toast.error("Vui lòng nhập tiêu đề bài viết.");
+      toast.error("Please enter an article title.");
       return;
     }
     if (!summary.trim()) {
-      toast.error("Vui lòng nhập mô tả ngắn (tóm tắt) cho bài viết.");
+      toast.error("Please enter a short summary for the article.");
       return;
     }
     if (!categoryId) {
-      toast.error("Vui lòng chọn danh mục bài viết (hoặc tạo danh mục trước).");
+      toast.error("Please select an article category (or create one first).");
       return;
     }
 
@@ -199,17 +197,17 @@ export function KnowledgeArticleEditorPage({
           input,
         );
         applyDetail(updated);
-        toast.success("Đã lưu thay đổi bài viết.");
+        toast.success("Article changes saved.");
       } else {
         const created = await createKnowledgeArticle(input);
-        toast.success("Đã tạo bài viết bản nháp.");
+        toast.success("Draft article created.");
         router.replace(`/admin/knowledge/${created.id}`);
       }
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể lưu bài viết.",
+          : "Could not save article.",
       );
     } finally {
       setSaving(false);
@@ -229,21 +227,21 @@ export function KnowledgeArticleEditorPage({
     try {
       if (action === "publish") {
         applyDetail(await publishKnowledgeArticle(article.id, article.version));
-        toast.success("Đã xuất bản bài viết công khai!");
+        toast.success("Article published!");
       } else if (action === "unpublish") {
         applyDetail(
           await unpublishKnowledgeArticle(article.id, article.version),
         );
-        toast.success("Đã gỡ bài viết về bản nháp.");
+        toast.success("Article unpublished to draft.");
       } else if (action === "archive") {
         applyDetail(await archiveKnowledgeArticle(article.id, article.version));
-        toast.success("Đã chuyển bài viết vào lưu trữ.");
+        toast.success("Article moved to archive.");
       }
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể cập nhật trạng thái bài viết.",
+          : "Could not update article status.",
       );
     } finally {
       setSaving(false);
@@ -255,14 +253,14 @@ export function KnowledgeArticleEditorPage({
     setSaving(true);
     try {
       await deleteKnowledgeArticle(article.id, article.version);
-      toast.success("Đã xóa bài viết.");
+      toast.success("Article deleted.");
       setDeleteDialogOpen(false);
       router.push("/admin/knowledge");
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể xóa bài viết.",
+          : "Could not delete article.",
       );
     } finally {
       setSaving(false);
@@ -272,7 +270,7 @@ export function KnowledgeArticleEditorPage({
   if (loading) {
     return (
       <div className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-12 text-center text-sm text-(--admin-muted)">
-        Đang tải trình soạn thảo bài viết...
+        Loading article editor...
       </div>
     );
   }
@@ -312,14 +310,14 @@ export function KnowledgeArticleEditorPage({
                 className="block text-xs font-semibold text-(--admin-ink-soft)"
                 htmlFor="article-title"
               >
-                Tiêu đề bài viết *
+                Article title *
               </label>
               <input
                 className={`${adminInput} text-base font-bold text-(--admin-ink)`}
                 id="article-title"
                 maxLength={200}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="VD: Chiến lược làm bài Reading đạt 450+ điểm"
+                placeholder="e.g. Reading Strategies for 450+ Score"
                 value={title}
               />
             </div>
@@ -329,14 +327,14 @@ export function KnowledgeArticleEditorPage({
                 className="block text-xs font-semibold text-(--admin-ink-soft)"
                 htmlFor="article-summary"
               >
-                Tóm tắt ngắn (Summary) *
+                Short summary *
               </label>
               <textarea
                 className={`${adminTextarea} min-h-18 text-sm text-(--admin-ink)`}
                 id="article-summary"
                 maxLength={500}
                 onChange={(e) => setSummary(e.target.value)}
-                placeholder="Đoạn giới thiệu ngắn hiển thị ngoài danh sách bài viết..."
+                placeholder="Brief introduction displayed on the article list..."
                 rows={2}
                 value={summary}
               />
@@ -344,7 +342,7 @@ export function KnowledgeArticleEditorPage({
 
             <div>
               <span className="mb-1.5 block text-xs font-semibold text-(--admin-ink-soft)">
-                Nội dung bài viết (Rich Text Editor) *
+                Article content (Rich Text Editor) *
               </span>
               <KnowledgeTiptapEditor onChange={setContent} value={content} />
             </div>
@@ -382,17 +380,17 @@ export function KnowledgeArticleEditorPage({
           if (!coverImageAlt) setCoverImageAlt(asset.originalFileName);
         }}
         open={coverPickerOpen}
-        title="Chọn ảnh bìa bài viết"
+        title="Choose article cover image"
       />
 
       <KnowledgeConfirmDialog
-        confirmLabel="Xóa bài viết"
-        description={`Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${article?.title ?? ""}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Delete article"
+        description={`Are you sure you want to permanently delete "${article?.title ?? ""}"? This action cannot be undone.`}
         onCancel={() => setDeleteDialogOpen(false)}
         onConfirm={() => void confirmDeleteArticle()}
         open={deleteDialogOpen}
         pending={saving}
-        title="Xác nhận xóa bài viết"
+        title="Confirm article deletion"
       />
     </div>
   );

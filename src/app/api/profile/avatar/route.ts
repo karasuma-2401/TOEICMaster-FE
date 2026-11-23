@@ -17,8 +17,8 @@ export async function PUT(request: NextRequest) {
     file.size <= 0 ||
     file.size > AVATAR_MAX_BYTES
   ) {
-    return problem(400, "Ảnh không hợp lệ hoặc vượt quá 2MB.", {
-      avatar: ["Ảnh không hợp lệ hoặc vượt quá 2MB."],
+    return problem(400, "Invalid image or file size exceeds 2MB.", {
+      avatar: ["Invalid image or file size exceeds 2MB."],
     });
   }
   const body = new FormData();

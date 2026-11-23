@@ -87,7 +87,10 @@ export function ReadingExamWorkspace({
     key: string;
     message: string;
   } | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -122,9 +125,7 @@ export function ReadingExamWorkspace({
         setLoadError({
           key: requestKey,
           message:
-            reason instanceof Error
-              ? reason.message
-              : "Không thể tải bản nháp.",
+            reason instanceof Error ? reason.message : "Unable to load draft.",
         });
       })
       .finally(() => {
@@ -177,12 +178,17 @@ export function ReadingExamWorkspace({
           imageRequired: draft.imageRequired,
         },
       );
-      setNotice(`Đã lưu câu ${selected.question.number}.`);
+      setNotice({
+        tone: "success",
+        text: `Saved question ${selected.question.number}.`,
+      });
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Không thể lưu câu hỏi.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error ? reason.message : "Unable to save question.",
+      });
     } finally {
       setSaving(false);
     }
@@ -197,12 +203,17 @@ export function ReadingExamWorkspace({
       await updateReadingContexts(examId, revisionId, selected.block.key, {
         contexts,
       });
-      setNotice("Đã lưu nội dung chung của cụm câu hỏi.");
+      setNotice({
+        tone: "success",
+        text: "Saved shared context for this question group.",
+      });
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Không thể lưu ngữ cảnh.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error ? reason.message : "Unable to save context.",
+      });
     } finally {
       setSaving(false);
     }
@@ -220,11 +231,16 @@ export function ReadingExamWorkspace({
         file,
       );
       setDraft({ ...draft, imageAssetId: asset.id });
-      setNotice("Đã tải ảnh lên. Nhấn “Lưu câu hỏi” để gắn ảnh vào đề.");
+      setNotice({
+        tone: "success",
+        text: 'Uploaded image. Click "Save question" to attach it to the test.',
+      });
     } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Không thể tải ảnh lên.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error ? reason.message : "Unable to upload image.",
+      });
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -259,12 +275,17 @@ export function ReadingExamWorkspace({
     try {
       const durationMs = await readAudioDurationMs(file);
       await uploadWorkspaceMedia("AudioGroup", blockKey, file, durationMs);
-      setNotice("Đã hoàn tất tải audio cho nhóm Listening.");
+      setNotice({
+        tone: "success",
+        text: "Finished uploading audio for Listening group.",
+      });
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Không thể tải audio lên.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error ? reason.message : "Unable to upload audio.",
+      });
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -294,12 +315,17 @@ export function ReadingExamWorkspace({
             : context,
         ),
       }));
-      setNotice("Đã hoàn tất tải ảnh ngữ cảnh.");
+      setNotice({
+        tone: "success",
+        text: "Finished uploading context image.",
+      });
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Không thể tải ảnh lên.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error ? reason.message : "Unable to upload image.",
+      });
     } finally {
       setSaving(false);
       event.target.value = "";
@@ -311,14 +337,16 @@ export function ReadingExamWorkspace({
     setNotice(null);
     try {
       await publishReadingRevision(examId, revisionId);
-      setNotice("Đề đã được xuất bản.");
+      setNotice({ tone: "success", text: "Test has been published." });
       setRetry((value) => value + 1);
     } catch (reason) {
-      setNotice(
-        reason instanceof Error
-          ? reason.message
-          : "Đề chưa đáp ứng điều kiện xuất bản.",
-      );
+      setNotice({
+        tone: "error",
+        text:
+          reason instanceof Error
+            ? reason.message
+            : "Test does not meet publishing requirements yet.",
+      });
     } finally {
       setPublishing(false);
     }
@@ -337,14 +365,14 @@ export function ReadingExamWorkspace({
         className="rounded-2xl border border-[var(--admin-danger)]/20 bg-[var(--admin-danger-soft)] p-6 text-[var(--admin-danger)]"
         role="alert"
       >
-        <p className="font-bold">Không thể mở bản nháp Reading</p>
+        <p className="font-bold">Unable to open Reading draft</p>
         <p className="mt-1 text-sm">{error}</p>
         <button
           className="mt-4 rounded-lg border border-current px-3 py-2 text-sm font-bold"
           onClick={() => setRetry((value) => value + 1)}
           type="button"
         >
-          Thử lại
+          Try again
         </button>
       </div>
     );
@@ -385,7 +413,7 @@ export function ReadingExamWorkspace({
         href="/admin/exams"
       >
         <ExamIcon className="size-4" name="arrow-left" />
-        Quay lại kho đề
+        Back to test bank
       </Link>
       <header className="mt-4 border-b border-[var(--admin-border)] bg-white px-5 py-4 lg:flex lg:items-center lg:justify-between lg:gap-6">
         <div>
@@ -396,15 +424,15 @@ export function ReadingExamWorkspace({
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-bold ${isPublished ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
             >
-              {isPublished ? "Đã xuất bản" : "Bản nháp"}
+              {isPublished ? "Published" : "Draft"}
             </span>
           </div>
           <h1 className="mt-2 text-2xl font-bold text-[var(--admin-ink)]">
             {revision.code}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-muted)]">
-            {revision.title} · Revision {revision.versionNumber} · quản lý 200
-            câu và media của đề L&R.
+            {revision.title} · Revision {revision.versionNumber} · manage 200
+            questions and media for the L&R test.
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2 lg:mt-0">
@@ -414,7 +442,7 @@ export function ReadingExamWorkspace({
             onClick={() => void saveQuestion()}
             type="button"
           >
-            {saving ? "Đang lưu..." : "Lưu câu hỏi"}
+            {saving ? "Saving..." : "Save question"}
           </button>
           <button
             className="admin-primary-action h-10 rounded-lg px-4 text-sm font-bold"
@@ -423,11 +451,11 @@ export function ReadingExamWorkspace({
             title={
               mediaReady
                 ? undefined
-                : "Tải đầy đủ audio Listening và ảnh bắt buộc trước khi xuất bản đề L&R."
+                : "Upload all Listening audio and required images before publishing the L&R test."
             }
             type="button"
           >
-            {publishing ? "Đang xuất bản..." : "Xuất bản đề"}
+            {publishing ? "Publishing..." : "Publish test"}
           </button>
         </div>
       </header>
@@ -441,11 +469,11 @@ export function ReadingExamWorkspace({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold tracking-[0.12em] text-[var(--admin-brand-red)]">
-                  TIẾN ĐỘ BIÊN SOẠN
+                  AUTHORING PROGRESS
                 </p>
                 <p className="mt-1 text-sm text-[var(--admin-muted)]">
-                  {completeCount}/{totalQuestions} câu có nội dung và đáp án đầy
-                  đủ.
+                  {completeCount}/{totalQuestions} questions have complete
+                  content and answers.
                 </p>
               </div>
               <strong className="text-xl text-[var(--admin-ink)]">
@@ -464,8 +492,8 @@ export function ReadingExamWorkspace({
               />
             </div>
             <p className="mt-3 rounded-lg bg-[var(--admin-warning-soft)] px-3 py-2 text-xs leading-5 text-[var(--admin-warning)]">
-              Xuất bản chỉ khả dụng khi toàn bộ câu hỏi, barem và media bắt buộc
-              của đề L&R hợp lệ.
+              Publishing is only available when all questions, score profile,
+              and required media for the L&R test are valid.
             </p>
             {listeningBlocks.length > 0 ? (
               <div className="mt-4 space-y-2">
@@ -474,7 +502,7 @@ export function ReadingExamWorkspace({
                     Listening Media
                   </p>
                   <p className="text-xs font-semibold text-[var(--admin-muted)]">
-                    Tổng thời lượng Listening:{" "}
+                    Total Listening duration:{" "}
                     {formatPhase(totalListeningSeconds)}
                   </p>
                 </div>
@@ -484,14 +512,14 @@ export function ReadingExamWorkspace({
                     key={block.key}
                   >
                     <span className="text-sm text-[var(--admin-ink-soft)]">
-                      Part {block.part} · câu {block.questions[0]?.number}–
-                      {block.questions.at(-1)?.number}
+                      Part {block.part} · questions {block.questions[0]?.number}
+                      –{block.questions.at(-1)?.number}
                       {block.audioAssetId
-                        ? ` · Đã có MP3${block.audioDurationMs !== null ? ` (${formatClock(block.audioDurationMs / 1000)})` : ""}`
-                        : " · Chưa có MP3"}
+                        ? ` · MP3 uploaded${block.audioDurationMs !== null ? ` (${formatClock(block.audioDurationMs / 1000)})` : ""}`
+                        : " · No MP3 yet"}
                     </span>
                     <label className="cursor-pointer rounded-lg border border-[var(--admin-border)] px-3 py-2 text-xs font-bold disabled:opacity-50">
-                      {block.audioAssetId ? "Thay audio" : "Tải audio"}
+                      {block.audioAssetId ? "Replace audio" : "Upload audio"}
                       <input
                         accept="audio/mpeg,audio/wav,.mp3,.wav"
                         className="sr-only"
@@ -510,9 +538,9 @@ export function ReadingExamWorkspace({
           {notice && (
             <output
               aria-live="polite"
-              className={`block rounded-xl p-3 text-sm ${notice.startsWith("Đã") ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]"}`}
+              className={`block rounded-xl p-3 text-sm ${notice.tone === "success" ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]"}`}
             >
-              {notice}
+              {notice.text}
             </output>
           )}
           {selected && draft ? (
@@ -535,7 +563,7 @@ export function ReadingExamWorkspace({
             />
           ) : (
             <div className="rounded-lg border border-dashed border-[var(--admin-border)] p-10 text-center text-sm text-[var(--admin-muted)]">
-              Revision chưa có câu hỏi để chỉnh sửa.
+              This revision has no questions to edit yet.
             </div>
           )}
         </main>
@@ -621,20 +649,20 @@ function QuestionEditor({
           <div>
             <p className="text-[11px] font-bold tracking-[0.12em] text-[var(--admin-brand-red)]">{`PART ${block.part} · ${block.type}`}</p>
             <h2 className="mt-1 text-xl font-bold text-[var(--admin-ink)]">
-              Câu {question.number}
+              Question {question.number}
             </h2>
             <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Block {block.key} · câu đầu {block.firstQuestionNumber}
+              Block {block.key} · first question {block.firstQuestionNumber}
             </p>
           </div>
           {hasQuestionContent(question) ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-[var(--admin-success-soft)] px-2.5 py-1 text-xs font-bold text-[var(--admin-success)]">
               <ExamIcon className="size-3.5" name="check" />
-              Đã hoàn thiện
+              Complete
             </span>
           ) : (
             <span className="rounded-full bg-[var(--admin-warning-soft)] px-2.5 py-1 text-xs font-bold text-[var(--admin-warning)]">
-              Cần hoàn thiện
+              Incomplete
             </span>
           )}
         </div>
@@ -644,10 +672,10 @@ function QuestionEditor({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold text-[var(--admin-ink)]">
-                Nội dung chung của cụm câu hỏi
+                Shared context for question group
               </p>
               <p className="mt-1 text-xs text-[var(--admin-muted)]">
-                Áp dụng cho Part 6/7; sửa tại đây sẽ cập nhật cả block.
+                Applies to Part 6/7; editing here updates the entire block.
               </p>
             </div>
             <button
@@ -656,7 +684,7 @@ function QuestionEditor({
               onClick={onSaveContexts}
               type="button"
             >
-              Lưu nội dung chung
+              Save shared context
             </button>
           </div>
           <div className="mt-3 space-y-3">
@@ -669,8 +697,8 @@ function QuestionEditor({
                   key={context.ordinal}
                 >
                   {context.type === "Text"
-                    ? `Đoạn văn ${context.ordinal}`
-                    : `Ảnh ngữ cảnh ${context.ordinal}`}
+                    ? `Passage ${context.ordinal}`
+                    : `Context image ${context.ordinal}`}
                   <textarea
                     className="mt-1.5 w-full rounded-lg border border-[var(--admin-border)] bg-white p-3 font-medium leading-6 outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
                     disabled={disabled || context.type !== "Text"}
@@ -692,11 +720,11 @@ function QuestionEditor({
                       <span>
                         {context.imageAssetId
                           ? `Asset ${context.imageAssetId}`
-                          : "Cần tải ảnh trước khi xuất bản"}
+                          : "Image upload required before publishing"}
                       </span>
                       <input
                         accept="image/png,image/jpeg,image/webp"
-                        aria-label={`Tải ảnh ngữ cảnh ${context.ordinal}`}
+                        aria-label={`Upload context image ${context.ordinal}`}
                         disabled={disabled}
                         onChange={(event) =>
                           onContextImage(block.key, context.ordinal, event)
@@ -712,8 +740,8 @@ function QuestionEditor({
         </section>
       )}
       <div className="grid gap-4 p-5 lg:grid-cols-2">
-        {field("code", "Mã câu hỏi")}
-        {field("stem", "Nội dung câu hỏi", true)}
+        {field("code", "Question code")}
+        {field("stem", "Question stem", true)}
         <div className="lg:col-span-2 grid gap-3 md:grid-cols-2">
           {(["optionA", "optionB", "optionC", "optionD"] as const).map(
             (name, index) => (
@@ -722,9 +750,9 @@ function QuestionEditor({
                 key={name}
               >
                 <span className="flex items-center justify-between">
-                  <span>Đáp án {"ABCD"[index]}</span>
+                  <span>Option {"ABCD"[index]}</span>
                   <input
-                    aria-label={`Chọn đáp án ${"ABCD"[index]} là đáp án đúng`}
+                    aria-label={`Select Option ${"ABCD"[index]} as correct answer`}
                     checked={draft.correctKey === "ABCD"[index]}
                     disabled={disabled}
                     name={`correct-${question.number}`}
@@ -740,7 +768,7 @@ function QuestionEditor({
                   />
                 </span>
                 <input
-                  aria-label={`Nội dung đáp án ${"ABCD"[index]}`}
+                  aria-label={`Option ${"ABCD"[index]} text`}
                   className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 font-medium outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
                   disabled={disabled}
                   onChange={(event) =>
@@ -752,25 +780,25 @@ function QuestionEditor({
             ),
           )}
         </div>
-        {field("translation", "Dịch nghĩa", true)}
-        {field("explanation", "Giải thích đáp án", true)}
+        {field("translation", "Translation", true)}
+        {field("explanation", "Answer explanation", true)}
         <div className="lg:col-span-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-[var(--admin-brand-orange)]/50 bg-[var(--admin-nav-active)]/40 p-4 text-sm font-bold text-[var(--admin-ink)]">
           <span className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-lg bg-white text-[var(--admin-brand-red)]">
               <ExamIcon className="size-5" name="image" />
             </span>
             <span>
-              <span className="block">Ảnh minh họa</span>
+              <span className="block">Illustration image</span>
               <small className="mt-0.5 block font-medium text-[var(--admin-muted)]">
                 {draft.imageAssetId
                   ? `Asset ${draft.imageAssetId}`
-                  : "PNG/JPEG/WebP tối đa 5 MiB"}
+                  : "PNG/JPEG/WebP max 5 MiB"}
               </small>
             </span>
           </span>
           <input
             accept="image/png,image/jpeg,image/webp"
-            aria-label="Tải ảnh minh họa"
+            aria-label="Upload illustration image"
             className="max-w-[220px] text-xs font-medium"
             disabled={disabled}
             onChange={onImage}
@@ -785,7 +813,7 @@ function QuestionEditor({
               }
               type="checkbox"
             />
-            Bắt buộc ảnh trước khi xuất bản
+            Require image before publishing
           </label>
         </div>
       </div>
@@ -806,7 +834,9 @@ function QuestionMatrix({
     <aside className="h-full border-l border-[var(--admin-border)] bg-white p-4 xl:sticky xl:top-[55px]">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold text-[var(--admin-ink)]">Ma trận 200 câu</h2>
+          <h2 className="font-bold text-[var(--admin-ink)]">
+            200-Question Matrix
+          </h2>
           <p className="mt-1 text-xs text-[var(--admin-muted)]">
             Listening 1–100 · Reading 101–200
           </p>
@@ -829,7 +859,7 @@ function QuestionMatrix({
             <div className="grid grid-cols-8 gap-1">
               {block.questions.map((question) => (
                 <button
-                  aria-label={`Mở câu ${question.number}`}
+                  aria-label={`Open question ${question.number}`}
                   className={`grid aspect-square place-items-center rounded-md text-[11px] font-bold transition focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)] ${question.number === selectedNumber ? "admin-brand-gradient-fill text-white shadow-sm" : hasQuestionContent(question) ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)] hover:brightness-95" : "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)] hover:bg-[var(--admin-nav-active)]"}`}
                   key={question.number}
                   onClick={() => onSelect(question.number)}

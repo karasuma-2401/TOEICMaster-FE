@@ -95,7 +95,7 @@ describe("PracticeRecorder", () => {
       />,
     );
     expect(screen.getByText("think")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Ghi âm" }));
+    await userEvent.click(screen.getByRole("button", { name: "Record" }));
     expect(recorder.start).toHaveBeenCalled();
   });
 
@@ -108,8 +108,8 @@ describe("PracticeRecorder", () => {
         example={sound.examples[0]}
       />,
     );
-    expect(screen.getByText("Đang ghi âm 1.2s / 5s")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Dừng" }));
+    expect(screen.getByText("Recording 1.2s / 5s")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Stop" }));
     expect(recorder.stop).toHaveBeenCalled();
   });
 
@@ -136,18 +136,20 @@ describe("PracticeRecorder", () => {
       "think",
       expect.any(AbortSignal),
     );
-    expect(await screen.findByText("Cần luyện thêm")).toBeInTheDocument();
+    expect(await screen.findByText("Needs more practice")).toBeInTheDocument();
     expect(screen.getAllByText("54%").length).toBeGreaterThan(0);
-    expect(screen.getByText("Phát âm chuẩn /θ/")).toBeInTheDocument();
+    expect(screen.getByText("Sound /θ/ accuracy")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Nghe lại bản thu" }),
+      screen.getByRole("button", { name: "Play back recording" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("θ: 54 điểm, âm đang luyện"),
+      screen.getByLabelText("θ: 54 points, target sound"),
     ).toBeInTheDocument();
     expect(screen.getByText(sound.confusions!.s)).toBeInTheDocument();
     expect(onAssessed).toHaveBeenCalledWith("th-voiceless");
-    expect(screen.getByRole("button", { name: "Thu lại" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Record again" }),
+    ).toBeInTheDocument();
   });
 
   it("does not send a silent take", async () => {
@@ -161,7 +163,9 @@ describe("PracticeRecorder", () => {
     await deliver({ ...take, peakLevel: 0.01 });
     expect(assessPronunciation).not.toHaveBeenCalled();
     expect(
-      screen.getByText("Không nghe thấy giọng, hãy thử lại gần micro hơn."),
+      screen.getByText(
+        "No voice detected. Please try again closer to the microphone.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -169,7 +173,7 @@ describe("PracticeRecorder", () => {
     vi.mocked(assessPronunciation).mockRejectedValue(
       new PronunciationApiError(
         "UNAUTHORIZED",
-        "Đăng nhập để được chấm phát âm.",
+        "Sign in to get your pronunciation scored.",
         401,
       ),
     );
@@ -188,7 +192,7 @@ describe("PracticeRecorder", () => {
         example={sound.examples[0]}
       />,
     );
-    const link = await screen.findByRole("link", { name: "Đăng nhập" });
+    const link = await screen.findByRole("link", { name: "Sign in" });
     expect(link).toHaveAttribute(
       "href",
       "/login?next=%2Fpronunciation%3Fsound%3Dth-voiceless",
@@ -201,7 +205,7 @@ describe("PracticeRecorder", () => {
       .mockRejectedValueOnce(
         new PronunciationApiError(
           "UNAVAILABLE",
-          "Chưa chấm được lúc này.",
+          "Unable to score right now.",
           503,
         ),
       )
@@ -222,10 +226,10 @@ describe("PracticeRecorder", () => {
       />,
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Chưa chấm được lúc này.",
+      "Unable to score right now.",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
-    expect(await screen.findByText("Cần luyện thêm")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Needs more practice")).toBeInTheDocument();
   });
 
   it("shows microphone permission help", () => {
@@ -237,6 +241,8 @@ describe("PracticeRecorder", () => {
         example={sound.examples[0]}
       />,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent("quyền Micro");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Microphone permission",
+    );
   });
 });

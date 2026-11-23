@@ -33,9 +33,9 @@ function TargetGauge({ score }: { score: number | null }) {
       </svg>
       <div className="absolute inset-x-0 bottom-0 text-center">
         <p className="text-[32px] font-bold leading-none text-[#df5a28]">
-          {score ?? "—"} / {MAX_SCORE}
+          {score ?? "-"} / {MAX_SCORE}
         </p>
-        <p className="mt-1.5 text-sm text-[#6b655f]">điểm mục tiêu</p>
+        <p className="mt-1.5 text-sm text-[#6b655f]">target score</p>
       </div>
     </div>
   );
@@ -69,19 +69,19 @@ export function ProfileGoalCard({
         toUpdateRequest({ ...profile, targetScore: value }),
       );
       onSaved?.(updated);
-      toast.success("Đã lưu mục tiêu.");
+      toast.success("Target score saved.");
       window.dispatchEvent(
         new CustomEvent("profile:updated", { detail: updated }),
       );
     } catch (reason) {
       if (reason instanceof ApiError && reason.status === 429) {
         setNotice(
-          `Thao tác quá nhanh, thử lại sau ${reason.retryAfter ?? 0} giây.`,
+          `Too many attempts. Please try again in ${reason.retryAfter ?? 0} seconds.`,
         );
       } else if (reason instanceof ApiError && reason.status === 401) {
         router.replace("/login?next=%2Fprofile");
       } else {
-        toast.error("Không thể lưu mục tiêu. Vui lòng thử lại.");
+        toast.error("Unable to save target score. Please try again.");
       }
     } finally {
       setPending(false);
@@ -90,9 +90,9 @@ export function ProfileGoalCard({
 
   return (
     <section className={profileCard}>
-      <h3 className="text-xl font-semibold text-[#3d3935]">Mục tiêu điểm số</h3>
+      <h3 className="text-xl font-semibold text-[#3d3935]">Score Goal</h3>
       <label className={`mt-5 ${profileLabel}`} htmlFor={`${id}-targetScore`}>
-        Điểm kỳ vọng
+        Target score
       </label>
       <select
         className={`${profileInput} cursor-pointer`}
@@ -100,7 +100,7 @@ export function ProfileGoalCard({
         onChange={(event) => setValue(event.target.value)}
         value={value}
       >
-        <option value="">Chưa đặt mục tiêu</option>
+        <option value="">No goal set</option>
         {scores.map((item) => (
           <option key={item} value={item}>
             {item}+
@@ -112,8 +112,8 @@ export function ProfileGoalCard({
 
       <p className="mt-6 text-[15px] leading-6 text-[#4a4541]">
         {score === null
-          ? "Chọn điểm kỳ vọng để cá nhân hóa hành trình luyện tập của bạn."
-          : `Bạn đang hướng tới ${score}/${MAX_SCORE} điểm. Duy trì luyện tập mỗi ngày để sớm chạm mốc ${score}!`}
+          ? "Choose a target score to personalize your practice journey."
+          : `You are aiming for ${score}/${MAX_SCORE} points. Keep practicing every day to reach ${score} soon!`}
       </p>
 
       <button
@@ -122,7 +122,7 @@ export function ProfileGoalCard({
         onClick={() => void save()}
         type="button"
       >
-        {pending ? "Đang lưu..." : "Lưu mục tiêu"}
+        {pending ? "Saving..." : "Save goal"}
       </button>
 
       {notice && (

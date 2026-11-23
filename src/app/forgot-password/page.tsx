@@ -3,8 +3,8 @@ import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { ForgotPasswordPanel } from "@/features/auth/components/forgot-password-panel";
 
 export const metadata: Metadata = {
-  title: "Quên mật khẩu | TOEICMaster",
-  description: "Khôi phục mật khẩu tài khoản TOEICMaster.",
+  title: "Forgot Password | TOEICMaster",
+  description: "Reset your TOEICMaster account password.",
 };
 
 export default function ForgotPasswordPage() {

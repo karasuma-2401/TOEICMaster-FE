@@ -16,8 +16,8 @@ export const forwardPronunciationAssessment = createBffProxy({
   bodyMode: "multipart",
   maxBodyBytes: maxAssessmentBytes,
   timeoutMs,
-  missingBaseUrlMessage: "Chưa chấm được phát âm lúc này.",
-  unreachableMessage: "Chưa chấm được phát âm lúc này.",
-  timeoutMessage: "Hệ thống chấm phản hồi quá lâu.",
-  oversizeMessage: "Bản thu vượt quá giới hạn.",
+  missingBaseUrlMessage: "Unable to score pronunciation right now.",
+  unreachableMessage: "Unable to score pronunciation right now.",
+  timeoutMessage: "The scoring service took too long to respond.",
+  oversizeMessage: "Recording exceeds the size limit.",
 });

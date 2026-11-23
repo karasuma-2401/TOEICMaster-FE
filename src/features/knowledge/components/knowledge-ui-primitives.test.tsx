@@ -107,7 +107,9 @@ describe("KnowledgeConfirmDialog", () => {
     expect(dialog).toHaveClass("open:flex");
 
     await user.click(
-      within(dialog as HTMLDialogElement).getByRole("button", { name: "Hủy" }),
+      within(dialog as HTMLDialogElement).getByRole("button", {
+        name: "Cancel",
+      }),
     );
     expect(dialog).not.toHaveAttribute("open");
     expect(dialog).toHaveClass("hidden");
@@ -126,9 +128,9 @@ describe("KnowledgeConfirmDialog", () => {
     await user.keyboard("{Enter}");
 
     const dialog = screen.getByRole("dialog", { name: "Confirm deletion" });
-    const cancel = within(dialog).getByRole("button", { name: "Hủy" });
+    const cancel = within(dialog).getByRole("button", { name: "Cancel" });
     const confirm = within(dialog).getByRole("button", {
-      name: "Xác nhận xóa",
+      name: "Confirm delete",
     });
     expect(showModal).toHaveBeenCalledTimes(1);
     expect(cancel).toHaveFocus();
@@ -160,7 +162,7 @@ describe("KnowledgeConfirmDialog", () => {
     await user.click(
       within(
         screen.getByRole("dialog", { name: "Confirm deletion" }),
-      ).getByRole("button", { name: "Hủy" }),
+      ).getByRole("button", { name: "Cancel" }),
     );
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(trigger).toHaveFocus();
@@ -181,9 +183,9 @@ describe("KnowledgeConfirmDialog", () => {
     await user.click(screen.getByRole("button", { name: "Open confirmation" }));
 
     const dialog = screen.getByRole("dialog", { name: "Confirm deletion" });
-    const cancel = within(dialog).getByRole("button", { name: "Hủy" });
+    const cancel = within(dialog).getByRole("button", { name: "Cancel" });
     const confirm = within(dialog).getByRole("button", {
-      name: "Đang xử lý...",
+      name: "Processing...",
     });
     expect(cancel).toBeDisabled();
     expect(confirm).toBeDisabled();
@@ -210,6 +212,8 @@ describe("KnowledgeConfirmDialog", () => {
 
     const dialog = screen.getByRole("dialog", { name: "Confirm deletion" });
     expect(dialog).toHaveAttribute("open");
-    expect(within(dialog).getByRole("button", { name: "Hủy" })).toHaveFocus();
+    expect(
+      within(dialog).getByRole("button", { name: "Cancel" }),
+    ).toHaveFocus();
   });
 });

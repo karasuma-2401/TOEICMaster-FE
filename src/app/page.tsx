@@ -31,14 +31,14 @@ const navigation = [
   { label: "Listening & Reading", href: "/listening-reading" },
   { label: "Speaking", href: "/speaking" },
   { label: "Writing", href: "/writing" },
-  { label: "Phát âm", href: "/pronunciation" },
-  { label: "Lịch sử", href: "/history" },
+  { label: "Pronunciation", href: "/pronunciation" },
+  { label: "History", href: "/history" },
 ];
 
 const promises = [
-  "Đề theo format ETS",
-  "AI chấm theo tiêu chí",
-  "Bắt đầu miễn phí",
+  "ETS-format tests",
+  "Rubric-based AI scoring",
+  "Free to start",
 ];
 
 const milestoneLinks = navigation.slice(0, 3);
@@ -51,9 +51,9 @@ const exams = [
     icons: [HeadphonesIcon, BookOpenIcon],
     banner: "bg-(--sp-lr-bg) text-(--sp-lr)",
     accent: "text-(--sp-lr)",
-    facts: "200 câu · 120 phút · 10–990",
+    facts: "200 questions · 120 min · 10-990",
     description:
-      "Trắc nghiệm Nghe & Đọc với Master Audio liên tục và ma trận 200 câu.",
+      "Listening & Reading multiple-choice test with continuous Master Audio and a 200-question matrix.",
   },
   {
     badge: "Speaking",
@@ -62,9 +62,9 @@ const exams = [
     icons: [MicIcon],
     banner: "bg-(--sp-speak-bg) text-(--sp-speak)",
     accent: "text-(--sp-speak)",
-    facts: "11 câu · ~20 phút · 0–200",
+    facts: "11 questions · ~20 min · 0-200",
     description:
-      "Thu âm trực tiếp với hai pha Chuẩn bị / Nói. Đánh giá theo 5 tiêu chí.",
+      "Live recording with Prepare and Speak phases. Evaluated across 5 criteria.",
   },
   {
     badge: "Writing",
@@ -73,16 +73,28 @@ const exams = [
     icons: [PencilIcon],
     banner: "bg-(--sp-write-bg) text-(--sp-write)",
     accent: "text-(--sp-write)",
-    facts: "8 câu · 60 phút · 0–200",
+    facts: "8 questions · 60 min · 0-200",
     description:
-      "Viết câu theo tranh, phản hồi email và viết luận. Chặn dán nội dung bên ngoài.",
+      "Write sentences from pictures, reply to emails, and write essays. External pasting is disabled.",
   },
 ];
 
 const steps = [
-  ["01", "Luyện từng Part", "Nắm chắc từng dạng câu hỏi trước khi làm đề."],
-  ["02", "Thi thử có tính giờ", "Làm full test trong điều kiện như thi thật."],
-  ["03", "Xem lại và cải thiện", "Đọc nhận xét, sửa điểm yếu rồi làm lại."],
+  [
+    "01",
+    "Practice by Part",
+    "Master each question type before taking a full test.",
+  ],
+  [
+    "02",
+    "Timed Mock Tests",
+    "Take full-length tests under realistic exam conditions.",
+  ],
+  [
+    "03",
+    "Review and Improve",
+    "Read detailed feedback, fix weak areas, and try again.",
+  ],
 ];
 
 const card = "rounded-[20px] border border-(--sp-line)/70 bg-white";
@@ -124,21 +136,22 @@ export default async function Home(props: {
         <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           <div className="min-w-0">
             <p className="w-fit rounded-lg bg-(--sp-orange-soft) px-3 py-1.5 text-xs font-medium uppercase text-(--sp-brand)">
-              4 kỹ năng · 3 bài thi độc lập
+              4 skills · 3 standalone exams
             </p>
             <h1 className="mt-5 text-[32px] font-bold leading-10 md:text-[44px] md:leading-[52px]">
-              Hệ Thống Luyện Thi TOEIC Chuẩn Format ETS
+              ETS-Format TOEIC Exam Preparation Platform
             </h1>
             <p className="mt-4 max-w-2xl text-[17px] leading-6 text-(--sp-ink-2)">
-              Phòng thi ảo theo đúng nhịp đề thật, AI chấm điểm Speaking &amp;
-              Writing chi tiết. Đề L&amp;R 200 câu với Master Audio đã sẵn sàng.
+              A virtual exam room matching the real test pace, with detailed AI
+              scoring for Speaking &amp; Writing. Full 200-question L&amp;R
+              tests with Master Audio are ready.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link className={primaryAction} href="/speaking">
-                Thi thử Speaking · ~20 phút
+                Speaking Mock Test · ~20 min
               </Link>
               <Link className={secondaryAction} href="/speaking/parts/1">
-                Luyện tập theo từng Part
+                Practice by Part
               </Link>
             </div>
             <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-[15px] text-(--sp-ink-2)">
@@ -149,7 +162,7 @@ export default async function Home(props: {
           </div>
 
           <aside
-            aria-label="Mục tiêu tiếp theo"
+            aria-label="Next milestone"
             className="relative min-w-0 rounded-3xl bg-(--sp-cream) p-7 md:p-9"
           >
             <SparklesIcon
@@ -168,21 +181,21 @@ export default async function Home(props: {
               </div>
               <div className="min-w-0">
                 <p className="text-2xl font-semibold leading-8">
-                  Từng bước tiến xa.
+                  Step by step forward.
                 </p>
                 <p className="mt-2 text-[15px] leading-[22px] text-(--sp-ink-2)">
-                  15 dạng bài chuyên sâu.
+                  15 focused question types.
                   <br />
-                  Một mục tiêu trong tầm tay.
+                  One achievable goal.
                 </p>
                 <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--sp-success-bg) px-2.5 py-1.5 text-[13px] text-(--sp-success)">
                   <TrendingUpIcon size={14} />
-                  Học đều đặn, tiến bộ mỗi ngày
+                  Study consistently, improve every day
                 </p>
               </div>
             </div>
             <nav
-              aria-label="Kỹ năng trong lộ trình"
+              aria-label="Skills in your roadmap"
               className="mt-6 flex flex-wrap gap-x-8 gap-y-1"
             >
               {milestoneLinks.map((item) => (
@@ -201,10 +214,10 @@ export default async function Home(props: {
         <section aria-labelledby="home-skills" className="mt-12 scroll-mt-20">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className={sectionTitle} id="home-skills">
-              Ba bài thi độc lập · Chọn mục tiêu của bạn
+              Three Standalone Exams · Choose Your Target
             </h2>
             <a className={sectionLink} href="#home-steps">
-              Khám phá lộ trình →
+              Explore the roadmap →
             </a>
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
@@ -236,7 +249,7 @@ export default async function Home(props: {
                   className={`mt-4 w-fit text-[15px] font-semibold text-(--sp-crimson-link) hover:underline ${focusRing}`}
                   href={exam.href}
                 >
-                  Xem danh sách đề →
+                  Browse tests →
                 </Link>
               </article>
             ))}
@@ -246,10 +259,10 @@ export default async function Home(props: {
         <section aria-labelledby="home-featured" className="mt-12">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className={sectionTitle} id="home-featured">
-              Đề thi nổi bật
+              Featured Tests
             </h2>
             <Link className={sectionLink} href="/speaking">
-              Xem tất cả đề thi →
+              View all tests →
             </Link>
           </div>
           <FeaturedExams />
@@ -259,12 +272,12 @@ export default async function Home(props: {
           limit={6}
           showFilter
           showViewAll
-          title="Lịch sử làm bài gần đây"
+          title="Recent Attempt History"
         />
 
         <section aria-labelledby="home-steps" className="mt-12">
           <h2 className={`${sectionTitle} scroll-mt-20`} id="home-steps">
-            Lộ trình luyện thi
+            Study Roadmap
           </h2>
           <ol className="mt-4 grid gap-4 md:grid-cols-3">
             {steps.map(([number, title, description]) => (
@@ -282,16 +295,16 @@ export default async function Home(props: {
         </section>
 
         <footer className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[13px] text-(--sp-ink-2)">
-          <p>© 2026 TOEICMaster. Học ngoại ngữ, mở ra thế giới.</p>
-          <nav aria-label="Liên kết cuối trang" className="flex gap-6">
+          <p>© 2026 TOEICMaster. Learn languages, open up the world.</p>
+          <nav aria-label="Footer links" className="flex gap-6">
             <Link className={`hover:underline ${focusRing}`} href="/history">
-              Lịch sử học tập
+              Study History
             </Link>
             <Link
               className={`hover:underline ${focusRing}`}
               href="/admin/content/writing"
             >
-              Khu vực quản trị
+              Admin Portal
             </Link>
           </nav>
         </footer>

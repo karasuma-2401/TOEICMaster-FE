@@ -64,7 +64,7 @@ function Slot({
   const size = readingStyle
     ? "h-7 rounded-md text-[11px] font-semibold"
     : "h-6 rounded text-[9.5px]";
-  const label = `Câu ${number}${flagged ? ", đã gắn cờ" : ""}${state === "answered" ? ", đã trả lời" : ""}`;
+  const label = `Question ${number}${flagged ? ", flagged" : ""}${state === "answered" ? ", answered" : ""}`;
 
   return (
     <button
@@ -137,12 +137,12 @@ function ListeningPalette(props: QuestionPaletteProps) {
 
   return (
     <aside
-      aria-label="Ma trận câu hỏi"
+      aria-label="Question palette"
       className="flex w-full flex-col gap-2 overflow-y-auto border border-[#e2e8f0] bg-white px-3 pt-3.5 pb-4 lg:w-[380px] lg:shrink-0"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-[12.5px] font-semibold text-[#0f172a]">
-          Ma trận {LR_TOTAL_QUESTIONS} câu hỏi
+          {LR_TOTAL_QUESTIONS}-Question Palette
         </h2>
         <p className="text-[11.5px] text-[#10b981]">
           {summary.answered} / {LR_TOTAL_QUESTIONS} (
@@ -151,18 +151,20 @@ function ListeningPalette(props: QuestionPaletteProps) {
       </div>
       <ul className="flex flex-wrap gap-2 text-[9.5px]">
         <li className="font-medium text-[#10b981]">
-          ■ Đã làm ({summary.answered})
+          ■ Answered ({summary.answered})
         </li>
         <li className="font-semibold text-[#ea580c]">
-          ■ Đang làm ({currentNumbers.length})
+          ■ Current ({currentNumbers.length})
         </li>
-        <li className="font-semibold text-[#d97106]">⚑ Gắn cờ ({flagCount})</li>
-        <li className="text-[#94a3b8]">□ Chưa làm</li>
+        <li className="font-semibold text-[#d97106]">
+          ⚑ Flagged ({flagCount})
+        </li>
+        <li className="text-[#94a3b8]">□ Unanswered</li>
       </ul>
       <div className="flex flex-col gap-1">
         <p className="text-[10.5px] font-semibold text-[#1d4ed8]">
-          Listening (Câu 1–{LISTENING_LAST}): {summary.listeningAnswered}/
-          {LISTENING_LAST} đã làm
+          Listening (Q1–{LISTENING_LAST}): {summary.listeningAnswered}/
+          {LISTENING_LAST} answered
         </p>
         {partsInSection("listening").map((part) => (
           <div className="flex flex-col gap-1" key={part.id}>
@@ -179,7 +181,7 @@ function ListeningPalette(props: QuestionPaletteProps) {
       <hr className="border-[#e2e8f0]" />
       <div className="flex flex-col gap-1">
         <p className="text-[10.5px] font-semibold text-[#047857]">
-          Reading (Câu 101–200): Bắt đầu sau Listening
+          Reading (Q101–200): Starts after Listening
         </p>
         <p className="text-[9.5px] font-medium text-[#67748b]">
           {partsInSection("reading")
@@ -193,7 +195,7 @@ function ListeningPalette(props: QuestionPaletteProps) {
         />
       </div>
       <p className="rounded bg-[#f8fafc] px-2.5 py-1.5 text-[9.5px] text-[#67748b]">
-        Listening tự chạy · Reading tự do điều hướng.
+        Listening plays automatically · Reading allows free navigation.
       </p>
     </aside>
   );
@@ -205,7 +207,7 @@ function ReadingPalette(props: QuestionPaletteProps) {
   const { answers, flags, currentNumbers, isSelectable, onSelect } = props;
   const [tab, setTab] = useState<PaletteTab>("all");
   const tabs: { id: PaletteTab; label: string }[] = [
-    { id: "all", label: "Tất cả" },
+    { id: "all", label: "All" },
     { id: "listening", label: "Listening" },
     { id: "reading", label: "Reading" },
   ];
@@ -214,16 +216,16 @@ function ReadingPalette(props: QuestionPaletteProps) {
 
   return (
     <aside
-      aria-label="Ma trận câu hỏi"
+      aria-label="Question palette"
       className="flex w-full flex-col gap-3 rounded-2xl border border-[#eee9e6] bg-white p-3 lg:w-[380px] lg:shrink-0"
     >
       <h2 className="text-[15px] font-semibold">
-        Ma trận {LR_TOTAL_QUESTIONS} câu
+        {LR_TOTAL_QUESTIONS}-Question Palette
       </h2>
       <p className="text-[11px] text-[#77716e]">
-        🔒 Listening 1–{LISTENING_LAST} đã khóa
+        🔒 Listening 1–{LISTENING_LAST} locked
       </p>
-      <div className="flex gap-2" role="tablist" aria-label="Nhóm câu hỏi">
+      <div className="flex gap-2" role="tablist" aria-label="Question groups">
         {tabs.map((item) => (
           <button
             aria-selected={tab === item.id}

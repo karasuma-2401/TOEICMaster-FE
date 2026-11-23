@@ -17,24 +17,24 @@ function accuracyPercent(correct: number, total: number) {
 function partRating(percent: number) {
   if (percent >= 90) {
     return {
-      label: "Xuất sắc",
+      label: "Excellent",
       tone: "bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]",
     };
   }
   if (percent >= 80) {
     return {
-      label: "Tốt",
+      label: "Good",
       tone: "bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]",
     };
   }
   if (percent >= 65) {
     return {
-      label: "Khá",
+      label: "Fair",
       tone: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]",
     };
   }
   return {
-    label: "Cần rèn thêm",
+    label: "Needs Practice",
     tone: "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]",
   };
 }
@@ -62,7 +62,7 @@ function PartPerformanceRow({
         value={percent}
       />
       <span className="text-[13px] font-semibold tabular-nums text-[#302C2A]">
-        {percent}% ({result.correct}/{result.total} câu)
+        {percent}% ({result.correct}/{result.total} questions)
       </span>
       <span
         className={`inline-flex w-fit items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${rating.tone}`}
@@ -100,23 +100,23 @@ export function LrResultReportView({
         tabIndex={-1}
       >
         <header className="flex flex-col gap-2">
-          <Pill>BÁO CÁO KẾT QUẢ · {report.scale}</Pill>
+          <Pill>SCORE REPORT · {report.scale}</Pill>
           <h1 className="text-[28px] leading-tight font-bold text-[#302C2A]">
             {report.examTitle}
           </h1>
           <p className="text-[13px] text-[#77716e]">
-            {report.examIdentity} · Ngày thi {report.takenAt} · Thời gian làm
-            bài {report.durationLabel}
+            {report.examIdentity} · Test date {report.takenAt} · Duration{" "}
+            {report.durationLabel}
           </p>
         </header>
 
         <section
-          aria-label="Tổng hợp điểm TOEIC L&R"
+          aria-label="TOEIC L&R Score Summary"
           className="grid gap-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-xs sm:p-8 lg:grid-cols-[1.2fr_1fr_1fr]"
         >
           <div className="flex flex-col justify-between gap-3 rounded-2xl border-2 border-[#EA580C] bg-[#FFF7ED] p-6">
             <p className="text-xs font-bold tracking-wide text-[#C2410C]">
-              TỔNG ĐIỂM TOEIC L&amp;R
+              TOTAL TOEIC L&amp;R SCORE
             </p>
             <p className="text-5xl font-bold tabular-nums text-[#EA580C]">
               {report.totalScore}
@@ -134,12 +134,12 @@ export function LrResultReportView({
                 }`}
               >
                 {reached
-                  ? `✓ Đạt mục tiêu đề ra (Mục tiêu ${report.targetScore})`
-                  : `Mục tiêu ${report.targetScore} · Còn ${report.targetScore - report.totalScore} điểm`}
+                  ? `✓ Target achieved (Target ${report.targetScore})`
+                  : `Target ${report.targetScore} · ${report.targetScore - report.totalScore} points to go`}
               </p>
             ) : (
               <p className="text-xs font-medium text-[#9A3412]">
-                Thang điểm quy đổi chuẩn ETS (10-990)
+                Standard ETS converted score scale (10-990)
               </p>
             )}
           </div>
@@ -156,8 +156,8 @@ export function LrResultReportView({
               </span>
             </p>
             <p className="text-[13px] font-medium text-[#2563EB]">
-              {report.listeningRaw.correct} / {report.listeningRaw.total} câu
-              đúng (Độ chính xác {listeningAccuracy}%)
+              {report.listeningRaw.correct} / {report.listeningRaw.total}{" "}
+              correct ({listeningAccuracy}% accuracy)
             </p>
           </div>
 
@@ -173,8 +173,8 @@ export function LrResultReportView({
               </span>
             </p>
             <p className="text-[13px] font-medium text-[#059669]">
-              {report.readingRaw.correct} / {report.readingRaw.total} câu đúng
-              (Độ chính xác {readingAccuracy}%)
+              {report.readingRaw.correct} / {report.readingRaw.total} correct (
+              {readingAccuracy}% accuracy)
             </p>
           </div>
         </section>
@@ -187,13 +187,13 @@ export function LrResultReportView({
             className="text-base font-bold tracking-wide text-[#0F172A]"
             id="part-performance"
           >
-            ĐÁNH GIÁ NĂNG LỰC THEO 7 PARTS (ETS RUBRIC)
+            PART-BY-PART PERFORMANCE (ETS RUBRIC)
           </h2>
 
           {listeningParts.length > 0 ? (
             <div className="flex flex-col gap-2.5">
               <h3 className="text-xs font-bold tracking-wide text-[#1D4ED8]">
-                LISTENING SECTION ({report.listeningRaw.total} CÂU)
+                LISTENING SECTION ({report.listeningRaw.total} QUESTIONS)
               </h3>
               <ul className="flex flex-col gap-2.5">
                 {listeningParts.map((result) => (
@@ -210,7 +210,7 @@ export function LrResultReportView({
           {readingParts.length > 0 ? (
             <div className="flex flex-col gap-2.5">
               <h3 className="text-xs font-bold tracking-wide text-[#047857]">
-                READING SECTION ({report.readingRaw.total} CÂU)
+                READING SECTION ({report.readingRaw.total} QUESTIONS)
               </h3>
               <ul className="flex flex-col gap-2.5">
                 {readingParts.map((result) => (
@@ -227,13 +227,13 @@ export function LrResultReportView({
 
         <div className="flex flex-wrap gap-3">
           <Link className={primaryButton} href={reviewHref}>
-            Xem lại bài làm &amp; giải thích
+            Review Answers &amp; Explanations
           </Link>
           <Link className={secondaryButton} href={examHref}>
-            Làm lại đề này
+            Retake This Exam
           </Link>
           <Link className={secondaryButton} href="/history">
-            Về lịch sử làm bài
+            Back to Attempt History
           </Link>
         </div>
       </main>

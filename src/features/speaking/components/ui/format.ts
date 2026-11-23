@@ -11,19 +11,19 @@ export function formatAttemptNumber(value: number) {
 }
 
 export function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("vi-VN", {
+  return new Date(value).toLocaleDateString("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 }
 
-/** Wall-clock length of an attempt, e.g. `19 phút 42 giây`. */
+/** Wall-clock length of an attempt, e.g. `19 min 42 sec`. */
 export function formatElapsed(startUtc: string, endUtc: string | null) {
-  if (!endUtc) return "—";
+  if (!endUtc) return "-";
   const seconds = Math.max(
     0,
     Math.round((Date.parse(endUtc) - Date.parse(startUtc)) / 1000),
   );
-  return `${Math.floor(seconds / 60)} phút ${seconds % 60} giây`;
+  return `${Math.floor(seconds / 60)} min ${seconds % 60} sec`;
 }

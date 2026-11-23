@@ -79,14 +79,14 @@ function isValidCalendarDate(value: string): boolean {
 
 export function validateDateOfBirth(value: string): string | null {
   if (!dateOfBirthPattern.test(value) || !isValidCalendarDate(value)) {
-    return "Ngày sinh không hợp lệ.";
+    return "Invalid date of birth.";
   }
   if (value < "1900-01-01") {
-    return "Ngày sinh không được trước 01/01/1900.";
+    return "Date of birth cannot be before 01/01/1900.";
   }
   const today = new Date().toISOString().slice(0, 10);
   if (value > today) {
-    return "Ngày sinh không được ở tương lai.";
+    return "Date of birth cannot be in the future.";
   }
   return null;
 }
@@ -96,14 +96,14 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
   const displayName = input.displayName.trim();
 
   if (!displayName) {
-    errors.displayName = "Vui lòng nhập tên hiển thị.";
+    errors.displayName = "Please enter a display name.";
   } else if (displayName.length > 100) {
-    errors.displayName = "Tên hiển thị không được vượt quá 100 ký tự.";
+    errors.displayName = "Display name must not exceed 100 characters.";
   }
 
   const phone = input.phone?.trim() ?? "";
   if (phone && !phonePattern.test(phone)) {
-    errors.phone = "Số điện thoại không hợp lệ.";
+    errors.phone = "Invalid phone number.";
   }
 
   const dateOfBirth = input.dateOfBirth?.trim() ?? "";
@@ -120,13 +120,13 @@ export function validateProfile(input: ProfileInput): ProfileFieldErrors {
   ) {
     const scoreString = String(targetScore).trim();
     if (!/^\d+$/.test(scoreString)) {
-      errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
+      errors.targetScore = "Target TOEIC score must be between 10 and 990.";
     } else {
       const score = Number(scoreString);
       if (score < 10 || score > 990) {
-        errors.targetScore = "Điểm TOEIC mục tiêu phải từ 10 đến 990.";
+        errors.targetScore = "Target TOEIC score must be between 10 and 990.";
       } else if (score % 5 !== 0) {
-        errors.targetScore = "Điểm TOEIC mục tiêu phải là bội số của 5.";
+        errors.targetScore = "Target TOEIC score must be a multiple of 5.";
       }
     }
   }
@@ -149,17 +149,17 @@ export function validateAvatarFile(
     ((extension === ".jpg" || extension === ".jpeg") &&
       file.type !== "image/jpeg")
   ) {
-    return "Chỉ hỗ trợ ảnh định dạng JPG hoặc PNG.";
+    return "Only JPG or PNG images are supported.";
   }
-  if (file.size <= 0) return "Tệp ảnh không hợp lệ.";
-  if (file.size > AVATAR_MAX_BYTES) return "Ảnh không được vượt quá 2MB.";
+  if (file.size <= 0) return "Invalid image file.";
+  if (file.size > AVATAR_MAX_BYTES) return "Image size must not exceed 2MB.";
   return null;
 }
 
 export function validateNewPassword(password: string): string | null {
-  if (!password) return "Vui lòng nhập mật khẩu mới.";
+  if (!password) return "Please enter a new password.";
   if (password.length < 8 || password.length > 128)
-    return "Mật khẩu cần từ 8 đến 128 ký tự.";
+    return "Password must be between 8 and 128 characters.";
   return null;
 }
 
@@ -168,7 +168,7 @@ export function validatePasswordChange(
 ): PasswordChangeFieldErrors {
   const errors: PasswordChangeFieldErrors = {};
   if (!input.currentPassword)
-    errors.currentPassword = "Vui lòng nhập mật khẩu hiện tại.";
+    errors.currentPassword = "Please enter your current password.";
 
   const newPasswordError = validateNewPassword(input.newPassword);
   if (newPasswordError) {
@@ -177,12 +177,13 @@ export function validatePasswordChange(
     input.currentPassword &&
     input.newPassword === input.currentPassword
   ) {
-    errors.newPassword = "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
+    errors.newPassword =
+      "New password must not be the same as your current password.";
   }
 
   if (!input.confirmPassword)
-    errors.confirmPassword = "Vui lòng xác nhận mật khẩu mới.";
+    errors.confirmPassword = "Please confirm your new password.";
   else if (input.confirmPassword !== input.newPassword)
-    errors.confirmPassword = "Mật khẩu xác nhận chưa khớp.";
+    errors.confirmPassword = "Confirmation password does not match.";
   return errors;
 }

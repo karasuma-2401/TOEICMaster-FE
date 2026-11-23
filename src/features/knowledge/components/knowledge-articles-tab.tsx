@@ -86,9 +86,7 @@ export function KnowledgeArticlesTab({
       } catch (err) {
         if (!active || controller.signal.aborted) return;
         toast.error(
-          err instanceof Error
-            ? err.message
-            : "Không thể tải danh sách bài viết.",
+          err instanceof Error ? err.message : "Could not load articles.",
         );
       } finally {
         if (active) setLoading(false);
@@ -112,20 +110,20 @@ export function KnowledgeArticlesTab({
     try {
       if (action === "publish") {
         await publishKnowledgeArticle(article.id, article.version);
-        toast.success("Đã xuất bản bài viết.");
+        toast.success("Article published.");
       } else if (action === "unpublish") {
         await unpublishKnowledgeArticle(article.id, article.version);
-        toast.success("Đã gỡ bài viết về bản nháp.");
+        toast.success("Article unpublished to draft.");
       } else if (action === "archive") {
         await archiveKnowledgeArticle(article.id, article.version);
-        toast.success("Đã chuyển bài viết sang lưu trữ.");
+        toast.success("Article archived.");
       }
       setTick((t) => t + 1);
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể thực hiện thao tác.",
+          : "Could not complete the action.",
       );
     }
   }
@@ -138,14 +136,14 @@ export function KnowledgeArticlesTab({
         confirmDeleteArticle.id,
         confirmDeleteArticle.version,
       );
-      toast.success("Đã xóa bài viết.");
+      toast.success("Article deleted.");
       setConfirmDeleteArticle(null);
       setTick((t) => t + 1);
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể xóa bài viết.",
+          : "Could not delete article.",
       );
     } finally {
       setDeleting(false);
@@ -164,12 +162,12 @@ export function KnowledgeArticlesTab({
             setQuery(e.target.value);
             setPageNumber(1);
           }}
-          placeholder="Tìm theo tiêu đề bài viết..."
+          placeholder="Search by article title..."
           type="search"
           value={query}
         />
         <select
-          aria-label="Lọc theo kỹ năng"
+          aria-label="Filter by skill"
           className={fieldClass}
           onChange={(e) => {
             setSkill(e.target.value);
@@ -177,7 +175,7 @@ export function KnowledgeArticlesTab({
           }}
           value={skill}
         >
-          <option value="">Tất cả kỹ năng</option>
+          <option value="">All skills</option>
           {KNOWLEDGE_SKILLS.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
@@ -185,7 +183,7 @@ export function KnowledgeArticlesTab({
           ))}
         </select>
         <select
-          aria-label="Lọc theo danh mục"
+          aria-label="Filter by category"
           className={fieldClass}
           onChange={(e) => {
             setCategoryId(e.target.value);
@@ -193,7 +191,7 @@ export function KnowledgeArticlesTab({
           }}
           value={categoryId}
         >
-          <option value="">Tất cả danh mục</option>
+          <option value="">All categories</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -201,7 +199,7 @@ export function KnowledgeArticlesTab({
           ))}
         </select>
         <select
-          aria-label="Lọc theo trạng thái"
+          aria-label="Filter by status"
           className={fieldClass}
           onChange={(e) => {
             setStatus(e.target.value);
@@ -209,7 +207,7 @@ export function KnowledgeArticlesTab({
           }}
           value={status}
         >
-          <option value="">Tất cả trạng thái</option>
+          <option value="">All statuses</option>
           {KNOWLEDGE_STATUSES.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
@@ -217,7 +215,7 @@ export function KnowledgeArticlesTab({
           ))}
         </select>
         <select
-          aria-label="Sắp xếp bài viết"
+          aria-label="Sort articles"
           className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
@@ -225,28 +223,28 @@ export function KnowledgeArticlesTab({
           }}
           value={sort}
         >
-          <option value="updatedAt:desc">Mới cập nhật</option>
-          <option value="publishedAt:desc">Mới xuất bản</option>
-          <option value="createdAt:desc">Mới tạo</option>
-          <option value="title:asc">Tiêu đề A → Z</option>
+          <option value="updatedAt:desc">Recently updated</option>
+          <option value="publishedAt:desc">Recently published</option>
+          <option value="createdAt:desc">Recently created</option>
+          <option value="title:asc">Title A → Z</option>
         </select>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-sm">
         {loading ? (
           <p className="py-12 text-center text-sm text-(--admin-muted)">
-            Đang tải danh sách bài viết...
+            Loading articles...
           </p>
         ) : !data || data.items.length === 0 ? (
           <div className="py-14 text-center">
             <p className="text-sm text-(--admin-muted)">
-              Chưa có bài viết nào khớp với bộ lọc hiện tại.
+              No articles match the current filters.
             </p>
             <Link
               className="admin-primary-action mt-3 inline-flex rounded-lg px-4 py-2 text-sm font-bold"
               href="/admin/knowledge/new"
             >
-              + Viết bài kiến thức đầu tiên
+              + Write your first article
             </Link>
           </div>
         ) : (
@@ -254,11 +252,11 @@ export function KnowledgeArticlesTab({
             <table className="w-full text-left text-sm">
               <thead className="border-b border-(--admin-border) bg-(--admin-surface-muted) text-xs font-bold uppercase text-(--admin-muted)">
                 <tr>
-                  <th className="px-4 py-3">Bài viết</th>
-                  <th className="px-4 py-3">Phân loại</th>
-                  <th className="px-4 py-3">Trạng thái</th>
-                  <th className="px-4 py-3">Cập nhật</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
+                  <th className="px-4 py-3">Article</th>
+                  <th className="px-4 py-3">Classification</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Updated</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-(--admin-border)">
@@ -275,7 +273,7 @@ export function KnowledgeArticlesTab({
                           />
                         ) : (
                           <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg border border-(--admin-border) bg-(--admin-surface-muted) text-[10px] text-(--admin-muted)">
-                            Không ảnh
+                            No image
                           </div>
                         )}
                         <div className="min-w-0">
@@ -286,13 +284,13 @@ export function KnowledgeArticlesTab({
                             {article.title}
                           </Link>
                           <p className="truncate text-xs text-(--admin-muted)">
-                            /{article.slug} - {article.estimatedReadMinutes}{" "}
-                            phút đọc
+                            /{article.slug} - {article.estimatedReadMinutes} min
+                            read
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td aria-label="Phân loại" className="px-4 py-3">
+                    <td aria-label="Classification" className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span className="inline-flex w-fit rounded-md bg-(--admin-nav-active) px-2 py-0.5 text-xs font-semibold text-(--admin-brand-red)">
                           {article.skill}
@@ -311,33 +309,33 @@ export function KnowledgeArticlesTab({
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <div className="inline-grid grid-cols-2 gap-1.5">
                         <Link
-                          aria-label="Chỉnh sửa bài viết"
+                          aria-label="Edit article"
                           className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-ink-soft) transition duration-150 hover:border-(--admin-brand-orange) hover:bg-(--admin-row-hover) hover:text-(--admin-brand-red) hover:shadow-xs active:scale-95"
                           href={`/admin/knowledge/${article.id}`}
-                          title="Chỉnh sửa bài viết"
+                          title="Edit article"
                         >
                           <ActionIcon d="M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
                         </Link>
                         {article.status !== "Published" ? (
                           <button
-                            aria-label="Xuất bản bài viết"
+                            aria-label="Publish article"
                             className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-success)/25 bg-(--admin-success-soft) text-(--admin-success) transition duration-150 hover:bg-(--admin-success) hover:text-white hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "publish")
                             }
-                            title="Xuất bản bài viết"
+                            title="Publish article"
                             type="button"
                           >
                             <ActionIcon d="M5 13l4 4L19 7" />
                           </button>
                         ) : (
                           <button
-                            aria-label="Gỡ bài viết về bản nháp"
+                            aria-label="Unpublish article to draft"
                             className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-warning)/25 bg-(--admin-warning-soft) text-(--admin-warning) transition duration-150 hover:bg-(--admin-warning) hover:text-white hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "unpublish")
                             }
-                            title="Gỡ về bản nháp"
+                            title="Unpublish to draft"
                             type="button"
                           >
                             <ActionIcon d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5" />
@@ -345,26 +343,26 @@ export function KnowledgeArticlesTab({
                         )}
                         {article.status !== "Archived" ? (
                           <button
-                            aria-label="Lưu trữ bài viết"
+                            aria-label="Archive article"
                             className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-ink-soft) transition duration-150 hover:border-(--admin-ink-soft)/40 hover:bg-(--admin-surface-muted) hover:text-(--admin-ink) hover:shadow-xs active:scale-95"
                             onClick={() =>
                               void handleAction(article, "archive")
                             }
-                            title="Chuyển vào lưu trữ"
+                            title="Move to archive"
                             type="button"
                           >
                             <ActionIcon d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm1-4h16l1 4H3l1-4Zm6 9h4" />
                           </button>
                         ) : null}
                         <button
-                          aria-label="Xóa bài viết"
+                          aria-label="Delete article"
                           className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-(--admin-border) bg-white text-(--admin-danger) transition duration-150 hover:border-(--admin-danger) hover:bg-(--admin-danger) hover:text-white hover:shadow-xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--admin-border) disabled:hover:bg-white disabled:hover:text-(--admin-danger) disabled:hover:shadow-none"
                           disabled={article.status === "Published"}
                           onClick={() => void handleAction(article, "delete")}
                           title={
                             article.status === "Published"
-                              ? "Cần gỡ bài viết khỏi trạng thái xuất bản trước khi xóa"
-                              : "Xóa bài viết"
+                              ? "Unpublish the article before deleting"
+                              : "Delete article"
                           }
                           type="button"
                         >
@@ -383,7 +381,7 @@ export function KnowledgeArticlesTab({
           <KnowledgePagination
             hasNextPage={data.hasNextPage}
             hasPreviousPage={data.hasPreviousPage}
-            itemLabel="bài viết"
+            itemLabel="articles"
             onPageChange={setPageNumber}
             pageNumber={data.pageNumber}
             totalCount={data.totalCount}
@@ -393,13 +391,13 @@ export function KnowledgeArticlesTab({
       </div>
 
       <KnowledgeConfirmDialog
-        confirmLabel="Xóa bài viết"
-        description={`Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${confirmDeleteArticle?.title ?? ""}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Delete article"
+        description={`Are you sure you want to permanently delete "${confirmDeleteArticle?.title ?? ""}"? This action cannot be undone.`}
         onCancel={() => setConfirmDeleteArticle(null)}
         onConfirm={() => void confirmDelete()}
         open={Boolean(confirmDeleteArticle)}
         pending={deleting}
-        title="Xác nhận xóa bài viết"
+        title="Confirm article deletion"
       />
     </section>
   );

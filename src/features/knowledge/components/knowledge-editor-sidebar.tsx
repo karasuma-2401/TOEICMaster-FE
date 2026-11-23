@@ -57,7 +57,7 @@ export function KnowledgeEditorSidebar({
     const cleaned = raw.trim();
     if (!cleaned) return;
     if (tags.length >= 10) {
-      toast.error("Mỗi bài viết chỉ gắn tối đa 10 thẻ.");
+      toast.error("Each article can have at most 10 tags.");
       return;
     }
     if (tags.some((t) => t.toLowerCase() === cleaned.toLowerCase())) {
@@ -72,7 +72,7 @@ export function KnowledgeEditorSidebar({
     <aside className="space-y-4">
       <div className="space-y-3.5 rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
         <h2 className="text-sm font-bold text-(--admin-ink)">
-          Phân loại & Thiết lập
+          Classification & Settings
         </h2>
 
         <div>
@@ -80,7 +80,7 @@ export function KnowledgeEditorSidebar({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="article-skill"
           >
-            Kỹ năng *
+            Skill *
           </label>
           <select
             className={`${adminInput} h-10 text-sm`}
@@ -101,11 +101,12 @@ export function KnowledgeEditorSidebar({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="article-category"
           >
-            Danh mục *
+            Category *
           </label>
           {categories.length === 0 ? (
             <p className="mt-1.5 rounded-lg bg-(--admin-warning-soft) p-2.5 text-xs text-(--admin-warning)">
-              Chưa có danh mục nào. Hãy quay lại tab Danh mục để tạo trước.
+              No categories yet. Go back to the Categories tab to create one
+              first.
             </p>
           ) : (
             <select
@@ -128,14 +129,14 @@ export function KnowledgeEditorSidebar({
             className="block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="article-slug"
           >
-            Slug URL (để trống để tự sinh)
+            URL Slug (leave blank to auto-generate)
           </label>
           <input
             className={`${adminInput} h-10 text-xs`}
             id="article-slug"
             maxLength={220}
             onChange={(e) => onSlugChange(e.target.value)}
-            placeholder="chien-luoc-lam-bai-reading"
+            placeholder="reading-strategies"
             value={slug}
           />
         </div>
@@ -145,7 +146,7 @@ export function KnowledgeEditorSidebar({
             className="mb-1 block text-xs font-semibold text-(--admin-ink-soft)"
             htmlFor="article-tags"
           >
-            Thẻ (Tags, tối đa 10)
+            Tags (up to 10)
           </label>
           <div className="flex gap-1.5">
             <input
@@ -160,7 +161,7 @@ export function KnowledgeEditorSidebar({
                   addTag(tagInput);
                 }
               }}
-              placeholder="Nhập tag rồi nhấn Enter..."
+              placeholder="Type a tag and press Enter..."
               value={tagInput}
             />
             <button
@@ -168,7 +169,7 @@ export function KnowledgeEditorSidebar({
               onClick={() => addTag(tagInput)}
               type="button"
             >
-              Thêm
+              Add
             </button>
           </div>
           <datalist id="knowledge-tag-suggestions">
@@ -187,7 +188,7 @@ export function KnowledgeEditorSidebar({
                 >
                   #{tag}
                   <button
-                    aria-label={`Gỡ thẻ ${tag}`}
+                    aria-label={`Remove tag ${tag}`}
                     className="ml-0.5 text-[11px] hover:text-(--admin-danger)"
                     onClick={() =>
                       onTagsChange(tags.filter((item) => item !== tag))
@@ -205,15 +206,13 @@ export function KnowledgeEditorSidebar({
 
       <div className="space-y-3 rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-(--admin-ink)">
-            Ảnh bìa bài viết
-          </h2>
+          <h2 className="text-sm font-bold text-(--admin-ink)">Cover image</h2>
           <button
             className="text-xs font-semibold text-(--admin-brand-red) hover:underline"
             onClick={onOpenCoverPicker}
             type="button"
           >
-            {coverImageAssetId ? "Đổi ảnh" : "+ Chọn ảnh"}
+            {coverImageAssetId ? "Change image" : "+ Choose image"}
           </button>
         </div>
         {coverImageAssetId ? (
@@ -228,7 +227,7 @@ export function KnowledgeEditorSidebar({
               className="w-full rounded-lg border border-(--admin-border) bg-white px-3 py-1.5 text-xs outline-none transition focus:border-(--admin-brand-orange) focus:ring-4 focus:ring-orange-100"
               maxLength={300}
               onChange={(e) => onCoverAltChange(e.target.value)}
-              placeholder="Mô tả ảnh bìa (alt text)..."
+              placeholder="Cover image description (alt text)..."
               value={coverImageAlt}
             />
             <button
@@ -236,7 +235,7 @@ export function KnowledgeEditorSidebar({
               onClick={onRemoveCover}
               type="button"
             >
-              Gỡ ảnh bìa
+              Remove cover image
             </button>
           </div>
         ) : (
@@ -245,19 +244,19 @@ export function KnowledgeEditorSidebar({
             onClick={onOpenCoverPicker}
             type="button"
           >
-            Nhấn để tải lên hoặc chọn ảnh bìa từ thư viện
+            Click to upload or choose a cover image from the library
           </button>
         )}
       </div>
 
       <div className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
         <h2 className="text-sm font-bold text-(--admin-ink)">
-          Mục lục tự động ({liveToc.length})
+          Table of contents ({liveToc.length})
         </h2>
         {liveToc.length === 0 ? (
           <p className="mt-2 text-xs text-(--admin-muted)">
-            Dùng nút H2, H3, H4 trên thanh công cụ để tạo cấu trúc mục lục cho
-            bài viết.
+            Use H2, H3, or H4 buttons on the toolbar to build the article table
+            of contents.
           </p>
         ) : (
           <ul className="mt-2.5 space-y-1 text-xs text-(--admin-ink-soft)">

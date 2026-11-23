@@ -2,9 +2,9 @@ import type { AdminUserStatus } from "@/features/admin/users";
 import { AdminBadge, type AdminBadgeTone } from "./content/admin-badges";
 
 const labels: Record<AdminUserStatus, string> = {
-  ACTIVE: "Hoạt động",
-  PENDING: "Chờ xác minh",
-  LOCKED: "Bị khóa",
+  ACTIVE: "Active",
+  PENDING: "Pending verification",
+  LOCKED: "Locked",
 };
 
 const tones: Record<AdminUserStatus, AdminBadgeTone> = {

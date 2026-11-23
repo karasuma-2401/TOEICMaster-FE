@@ -3,11 +3,11 @@ import { mascotGuide } from "./mascot-tips";
 
 describe("mascotGuide", () => {
   it("picks the most specific guide for a page", () => {
-    expect(mascotGuide("/speaking/parts/2")?.title).toBe("Luyện theo Part");
+    expect(mascotGuide("/speaking/parts/2")?.title).toBe("Practice by Part");
     expect(mascotGuide("/speaking/tests/a/practice")?.title).toBe(
-      "Kiểm tra micro",
+      "Check your microphone",
     );
-    expect(mascotGuide("/speaking")?.title).toBe("Trang Speaking");
+    expect(mascotGuide("/speaking")?.title).toBe("Speaking Page");
   });
 
   it("stays out of the way during a timed attempt", () => {

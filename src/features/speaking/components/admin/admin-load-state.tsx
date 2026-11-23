@@ -20,13 +20,13 @@ export function AdminLoadState({
           onClick={onRetry}
           type="button"
         >
-          Thử lại
+          Retry
         </button>
       </div>
     );
   if (!loading) return null;
   return (
-    <output aria-label="Đang tải" className="block space-y-2 p-4">
+    <output aria-label="Loading" className="block space-y-2 p-4">
       {[0, 1, 2].map((row) => (
         <div
           className="h-12 animate-pulse rounded-lg bg-[var(--admin-skeleton)]"

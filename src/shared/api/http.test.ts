@@ -18,13 +18,13 @@ describe("shared/api/http", () => {
   it("parses RFC 9457 ProblemDetails with lowercased fieldErrors and numeric/date Retry-After", () => {
     const err = parseProblemDetails(
       {
-        title: "Dữ liệu không hợp lệ",
-        detail: "Email sai định dạng",
+        title: "Invalid input",
+        detail: "Invalid email format",
         code: "VALIDATION_FAILED",
         traceId: "trace-123",
         errors: {
-          Email: ["Email không hợp lệ"],
-          NewPassword: ["Mật khẩu quá ngắn", "Cần chữ hoa"],
+          Email: ["Invalid email"],
+          NewPassword: ["Password is too short", "Uppercase letter required"],
         },
       },
       400,
@@ -34,23 +34,28 @@ describe("shared/api/http", () => {
 
     expect(err).toBeInstanceOf(HttpError);
     expect(err.status).toBe(400);
-    expect(err.title).toBe("Dữ liệu không hợp lệ");
-    expect(err.detail).toBe("Email sai định dạng");
+    expect(err.title).toBe("Invalid input");
+    expect(err.detail).toBe("Invalid email format");
     expect(err.code).toBe("VALIDATION_FAILED");
     expect(err.traceId).toBe("trace-123");
     expect(err.retryAfterSeconds).toBe(45);
     expect(err.fieldErrors).toEqual({
-      email: ["Email không hợp lệ"],
-      newPassword: ["Mật khẩu quá ngắn", "Cần chữ hoa"],
+      email: ["Invalid email"],
+      newPassword: ["Password is too short", "Uppercase letter required"],
     });
     expect(err.firstFieldErrors()).toEqual({
-      email: "Email không hợp lệ",
-      newPassword: "Mật khẩu quá ngắn",
+      email: "Invalid email",
+      newPassword: "Password is too short",
     });
 
     const futureDate = new Date(Date.now() + 10_000).toUTCString();
-    const dateErr = parseProblemDetails(null, 429, "Quá nhiều", futureDate);
-    expect(dateErr.message).toBe("Quá nhiều");
+    const dateErr = parseProblemDetails(
+      null,
+      429,
+      "Too many requests",
+      futureDate,
+    );
+    expect(dateErr.message).toBe("Too many requests");
     expect(dateErr.retryAfterSeconds).toBeGreaterThanOrEqual(8);
     expect(dateErr.retryAfterSeconds).toBeLessThanOrEqual(11);
   });
@@ -249,10 +254,10 @@ describe("shared/api/http", () => {
       vi.fn().mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            title: "Yêu cầu không hợp lệ",
+            title: "Invalid request",
             code: "BAD_INPUT",
             traceId: "tr-9",
-            errors: { Title: ["Không được để trống"] },
+            errors: { Title: ["Cannot be empty"] },
           }),
           { status: 422, headers: { "retry-after": "12" } },
         ),
@@ -267,7 +272,7 @@ describe("shared/api/http", () => {
       code: "BAD_INPUT",
       traceId: "tr-9",
       retryAfterSeconds: 12,
-      fieldErrors: { title: ["Không được để trống"] },
+      fieldErrors: { title: ["Cannot be empty"] },
     });
   });
 

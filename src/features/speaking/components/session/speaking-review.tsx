@@ -47,7 +47,7 @@ function RecordingPlayer({ src, label }: { src: string; label: string }) {
   return (
     <div className="mt-3 flex items-center gap-3">
       <button
-        aria-label={playing ? `Dừng ${label}` : `Phát ${label}`}
+        aria-label={playing ? `Pause ${label}` : `Play ${label}`}
         className="sp-focus grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-(--sp-surface) text-(--sp-brand)"
         onClick={() =>
           playing ? audio.current?.pause() : void audio.current?.play()
@@ -68,7 +68,7 @@ function RecordingPlayer({ src, label }: { src: string; label: string }) {
         {formatClock(time)} / {formatClock(duration)}
       </span>
       <button
-        aria-label="Đổi tốc độ phát"
+        aria-label="Change playback speed"
         className="sp-focus cursor-pointer rounded text-xs text-(--sp-ink-2)"
         onClick={changeRate}
         type="button"
@@ -101,13 +101,15 @@ function SampleCard({ text }: { text: string }) {
   return (
     <section className="rounded-2xl bg-(--sp-review-sample-bg) p-5">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold">Audio mẫu</h3>
-        <p className="sp-overline text-(--sp-speak)">Giọng đọc mẫu</p>
+        <h3 className="font-semibold">Sample audio</h3>
+        <p className="sp-overline text-(--sp-speak)">Sample voice</p>
       </div>
       {speech.supported ? (
         <div className="mt-3 flex items-center gap-3">
           <button
-            aria-label={speech.speaking ? "Dừng audio mẫu" : "Phát audio mẫu"}
+            aria-label={
+              speech.speaking ? "Stop sample audio" : "Play sample audio"
+            }
             className="sp-focus grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-(--sp-surface) text-(--sp-speak)"
             onClick={speech.toggle}
             type="button"
@@ -130,12 +132,12 @@ function SampleCard({ text }: { text: string }) {
         </div>
       ) : (
         <p className="mt-2 text-[13px] text-(--sp-ink-2)">
-          Trình duyệt này không hỗ trợ đọc văn bản.
+          This browser does not support text-to-speech.
         </p>
       )}
       <p className="mt-2 text-xs text-(--sp-ink-2)">
-        {speech.speaking ? "Đang phát" : "Chưa phát"} · Giọng đọc tổng hợp của
-        trình duyệt, chỉ để đối chiếu
+        {speech.speaking ? "Playing" : "Not playing"} · Browser synthesized
+        voice, for reference only
       </p>
     </section>
   );
@@ -155,7 +157,7 @@ function Transcript({ item }: { item: SpeakingEvaluationItem }) {
         return issue ? (
           <button
             className="sp-word-issue sp-word-tip sp-focus"
-            data-tip={`${issue.word} · Độ chính xác: ${Math.round(issue.accuracyScore)}/100`}
+            data-tip={`${issue.word} · Accuracy: ${Math.round(issue.accuracyScore)}/100`}
             key={index}
             type="button"
           >
@@ -171,14 +173,14 @@ function Transcript({ item }: { item: SpeakingEvaluationItem }) {
 
 function metrics(item: SpeakingEvaluationItem) {
   const all: [string, string, number | null][] = [
-    ["PHÁT ÂM TỔNG", "Phát âm", item.pronunciationScore],
-    ["ĐỘ CHÍNH XÁC", "Độ chính xác", item.accuracyScore],
-    ["ĐỘ TRÔI CHẢY", "Độ trôi chảy", item.fluencyScore],
-    ["NGỮ ĐIỆU (PROSODY)", "Ngữ điệu", item.prosodyScore],
-    ["ĐỌC ĐỦ ĐOẠN", "Đọc đủ đoạn", item.completenessScore],
-    ["NGỮ PHÁP", "Ngữ pháp", item.grammarScore],
-    ["TỪ VỰNG", "Từ vựng", item.vocabularyScore],
-    ["TRỌNG TÂM", "Trọng tâm", item.relevanceScore],
+    ["OVERALL PRONUNCIATION", "Pronunciation", item.pronunciationScore],
+    ["ACCURACY", "Accuracy", item.accuracyScore],
+    ["FLUENCY", "Fluency", item.fluencyScore],
+    ["PROSODY", "Prosody", item.prosodyScore],
+    ["COMPLETENESS", "Completeness", item.completenessScore],
+    ["GRAMMAR", "Grammar", item.grammarScore],
+    ["VOCABULARY", "Vocabulary", item.vocabularyScore],
+    ["RELEVANCE", "Relevance", item.relevanceScore],
   ];
   return all.flatMap(([label, name, value]) =>
     value === null ? [] : [{ label, name, value: Math.round(value) }],
@@ -206,7 +208,7 @@ export function SpeakingReview({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải lượt làm Speaking.",
+              : "Unable to load Speaking attempt.",
           );
       }
     },
@@ -231,19 +233,19 @@ export function SpeakingReview({
         {attempt && (
           <div>
             <p className="font-semibold">
-              {attempt.testTitle} · Xem lại bài làm
+              {attempt.testTitle} · Review attempt
             </p>
             <p className="text-xs text-(--sp-ink-2)">
-              {formatDate(attempt.createdAtUtc)} · Chỉ đọc
+              {formatDate(attempt.createdAtUtc)} · Read-only
             </p>
           </div>
         )}
         <div className="ml-auto flex flex-wrap gap-2">
           <Link className="sp-btn sp-btn-outline" href="/history">
-            Về lịch sử làm bài
+            Go to attempt history
           </Link>
           <Link className="sp-btn sp-btn-outline" href={base}>
-            ← Về báo cáo kết quả
+            ← Back to score report
           </Link>
         </div>
       </div>
@@ -253,9 +255,9 @@ export function SpeakingReview({
 
   if (error)
     return shell(<SpError message={error} onRetry={() => void load()} />);
-  if (!attempt) return shell(<SpLoading label="Đang tải bài làm…" />);
+  if (!attempt) return shell(<SpLoading label="Loading attempt…" />);
   if (!question)
-    return shell(<SpError message="Không tìm thấy câu hỏi trong lượt làm." />);
+    return shell(<SpError message="Question not found in this attempt." />);
 
   const { evaluation } = attempt;
   const item = evaluation?.items.find((entry) => entry.position === position);
@@ -270,27 +272,27 @@ export function SpeakingReview({
   const attemptLabel =
     attemptNumber === null
       ? null
-      : `Lần thi ${formatAttemptNumber(attemptNumber)}`;
+      : `Attempt ${formatAttemptNumber(attemptNumber)}`;
 
   return shell(
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Xem lại bài thi Speaking</h1>
+          <h1 className="text-2xl font-semibold">Review Speaking Test</h1>
           <p className="text-[13px] text-(--sp-ink-2)">
             {attempt.testTitle}
             {evaluation?.estimatedScore != null &&
-              ` · ${evaluation.estimatedScore}/200 điểm ước tính`}
+              ` · ${evaluation.estimatedScore}/200 estimated score`}
             {attemptLabel && ` · ${attemptLabel}`}
           </p>
         </div>
-        <Chip tone="success">CHỈ ĐỌC · ĐÃ NỘP BÀI</Chip>
+        <Chip tone="success">READ-ONLY · SUBMITTED</Chip>
       </div>
       <div className="mt-5 grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="sp-card p-5">
-          <h2 className="text-lg font-semibold">Danh sách câu hỏi</h2>
+          <h2 className="text-lg font-semibold">Question list</h2>
           <p className="text-xs text-(--sp-ink-2)">
-            {recorded}/{attempt.questions.length} câu đã thu âm
+            {recorded}/{attempt.questions.length} questions recorded
           </p>
           {speakingParts.map((part) => {
             const cells = attempt.questions.filter(
@@ -321,13 +323,13 @@ export function SpeakingReview({
             );
           })}
           <p className="mt-4 text-xs text-(--sp-ink-2)">
-            Ô viền cam: câu đang xem
+            Orange border: current question
             <br />
-            Chế độ xem lại · Không chỉnh sửa
+            Review mode · Read-only
           </p>
           {history.length > 0 && (
             <>
-              <h3 className="mt-5 font-semibold">Lịch sử lần thi</h3>
+              <h3 className="mt-5 font-semibold">Attempt history</h3>
               <ul className="mt-2 space-y-0.5 text-xs text-(--sp-ink-2)">
                 {history
                   .map((entry, index) => ({ entry, order: index + 1 }))
@@ -343,8 +345,8 @@ export function SpeakingReview({
               </ul>
               {attemptNumber !== null && (
                 <p className="mt-3 text-xs text-(--sp-ink-2)">
-                  Đang xem dữ liệu của lần thi{" "}
-                  {formatAttemptNumber(attemptNumber)}.
+                  Viewing data from attempt {formatAttemptNumber(attemptNumber)}
+                  .
                 </p>
               )}
             </>
@@ -357,14 +359,14 @@ export function SpeakingReview({
               Question {question.position} · Part {question.part}: {spec.title}
             </h2>
             <Chip tone="speak">
-              Chuẩn bị {question.preparationSeconds}s · Trả lời{" "}
+              Prep {question.preparationSeconds}s · Response{" "}
               {question.responseSeconds}s
             </Chip>
           </div>
           <div className="grid items-start gap-5 xl:grid-cols-[2fr_3fr]">
             <section className="sp-card p-5">
               <Chip className="mb-3" tone="speak">
-                ĐỀ BÀI · QUESTION {question.position}
+                PROMPT · QUESTION {question.position}
               </Chip>
               <SpeakingPrompt
                 content={question.content}
@@ -375,7 +377,7 @@ export function SpeakingReview({
             <div className="min-w-0 space-y-4">
               <section className="rounded-2xl bg-(--sp-subtle) p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold">Bài thu âm của bạn</h3>
+                  <h3 className="font-semibold">Your recording</h3>
                   {attemptLabel && (
                     <p className="sp-overline text-(--sp-ink-2)">
                       {attemptLabel}
@@ -385,24 +387,24 @@ export function SpeakingReview({
                 {question.recording ? (
                   <RecordingPlayer
                     key={question.position}
-                    label={`bản ghi câu ${question.position}`}
+                    label={`question ${question.position} recording`}
                     src={recordingUrl(attempt.id, question.position)}
                   />
                 ) : (
                   <p className="mt-2 text-[13px] text-(--sp-ink-2)">
-                    Câu này không có bản ghi.
+                    No recording for this question.
                   </p>
                 )}
                 <p className="mt-2 text-xs text-(--sp-ink-2)">
-                  Bản ghi đã nộp trong kỳ thi, không thể thu lại
+                  Submitted test recording, cannot be re-recorded
                 </p>
               </section>
               {sample && (
                 <>
                   <SampleCard text={sample} />
                   <p className="text-xs text-(--sp-ink-2)">
-                    Hai bản âm thanh độc lập · Chọn phát từng bản để nghe đối
-                    chiếu.
+                    Two separate audio tracks · Play each track individually to
+                    compare.
                   </p>
                 </>
               )}
@@ -414,9 +416,9 @@ export function SpeakingReview({
               <section className="sp-card p-5">
                 <div className="flex justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold">Văn bản AI nghe được</h3>
+                    <h3 className="font-semibold">AI transcript</h3>
                     <p className="text-xs text-(--sp-ink-2)">
-                      Azure Speech-to-Text · Từ bài nói của bạn
+                      Azure Speech-to-Text · From your speaking response
                     </p>
                   </div>
                   <Chip tone="speak">SPEECH STT</Chip>
@@ -430,22 +432,24 @@ export function SpeakingReview({
                           aria-hidden="true"
                           className="h-0.5 w-4 rounded bg-(--sp-brand)"
                         />
-                        Gạch chân đỏ cam: từ có vấn đề phát âm · Hover từ để xem
-                        chi tiết
+                        Orange-red underline: pronunciation issue · Hover a word
+                        for details
                       </p>
                     )}
                   </>
                 ) : (
                   <p className="mt-3 text-sm font-semibold text-(--sp-warning)">
                     {item.recognitionStatus === "NO_RECORDING"
-                      ? "Câu này không có bản ghi."
-                      : "Không nhận diện được giọng nói trong bản ghi."}
+                      ? "No recording for this question."
+                      : "No speech detected in the recording."}
                   </p>
                 )}
               </section>
               {(item.suggestedResponse || notes?.modelAnswer) && (
                 <section className="sp-card p-5">
-                  <h3 className="font-semibold">Transcript mẫu đạt điểm cao</h3>
+                  <h3 className="font-semibold">
+                    High-scoring sample transcript
+                  </h3>
                   <p className="mt-3 leading-7" lang="en">
                     {sample}
                   </p>
@@ -459,19 +463,21 @@ export function SpeakingReview({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">
-                    Chỉ số AI · Question {question.position}
+                    AI Metrics · Question {question.position}
                   </h3>
                   <p className="text-xs text-(--sp-ink-2)">
-                    Azure Speech + Gemini · Phân tích bài nói
+                    Azure Speech + Gemini · Speaking analysis
                   </p>
                 </div>
                 <div className="rounded-xl border border-(--sp-brand) px-4 py-2 text-center">
-                  <p className="sp-overline text-(--sp-brand)">ĐIỂM THÔ CÂU</p>
+                  <p className="sp-overline text-(--sp-brand)">
+                    QUESTION RAW SCORE
+                  </p>
                   <p className="text-[28px] font-bold leading-9 text-(--sp-brand)">
                     {item.rawScore} / {item.maxRawScore}
                   </p>
                   <p className="text-[11px] text-(--sp-ink-2)">
-                    Điểm thô · Khác tổng 200
+                    Raw score · Separate from 200-pt total
                   </p>
                 </div>
               </div>
@@ -495,9 +501,10 @@ export function SpeakingReview({
               </div>
               <p className="mt-3 flex items-start gap-2 text-xs text-(--sp-ink-2)">
                 <InfoIcon className="shrink-0 text-(--sp-lr)" size={16} />
-                Điểm thô câu {item.rawScore}/{item.maxRawScore} khác với tổng
-                điểm 200. Azure Speech: phát âm, độ chính xác, trôi chảy, ngữ
-                điệu, đọc đủ đoạn. Gemini: ngữ pháp, từ vựng, trọng tâm.
+                Question raw score {item.rawScore}/{item.maxRawScore} is
+                separate from the 200-point total. Azure Speech: pronunciation,
+                accuracy, fluency, prosody, completeness. Gemini: grammar,
+                vocabulary, relevance.
               </p>
             </section>
           )}
@@ -505,7 +512,7 @@ export function SpeakingReview({
           <div className="grid gap-5 md:grid-cols-2">
             {item?.feedback && (
               <section className="sp-card p-5">
-                <h3 className="font-semibold">✓ Điểm làm tốt</h3>
+                <h3 className="font-semibold">✓ Strengths</h3>
                 <p className="mt-2 text-[13px] text-(--sp-ink-2)">
                   {item.feedback}
                 </p>
@@ -514,7 +521,7 @@ export function SpeakingReview({
             {notes?.rubricNotes && (
               <section className="rounded-2xl border border-(--sp-hero-line) bg-(--sp-cream) p-5">
                 <h3 className="font-semibold">
-                  Cần luyện thêm{weakest && ` · ${weakest.name}`}
+                  Needs practice{weakest && ` · ${weakest.name}`}
                 </h3>
                 <p className="mt-2 text-[13px] text-(--sp-ink-2)">
                   {notes.rubricNotes}
@@ -524,7 +531,7 @@ export function SpeakingReview({
           </div>
           {!item && notes?.modelAnswer && (
             <section className="sp-card p-5">
-              <h3 className="font-semibold">Transcript mẫu đạt điểm cao</h3>
+              <h3 className="font-semibold">High-scoring sample transcript</h3>
               <p className="mt-3 leading-7" lang="en">
                 {notes.modelAnswer}
               </p>

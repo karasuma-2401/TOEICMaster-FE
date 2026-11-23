@@ -49,10 +49,10 @@ export function exerciseDto(part: 1 | 2 | 3 | 4 | 5, overrides: object = {}) {
   return {
     id: ids.exercise(part),
     code: `SP${part}-001`,
-    topic: "Công việc",
+    topic: "Work",
     difficulty: "MEDIUM",
     status: "PUBLISHED",
-    rubricNotes: "Rõ ràng, đúng trọng tâm.",
+    rubricNotes: "Clear and on-topic.",
     modelAnswer: "Sample answer.",
     version: 3,
     updatedAtUtc: "2026-10-20T09:10:00Z",
@@ -81,7 +81,7 @@ export function testSummaryDto(overrides: object = {}) {
     id: ids.test,
     code: "SPK-2026-01",
     title: "TOEIC Speaking Practice Test 01",
-    description: "Đề đủ 11 câu.",
+    description: "Full 11-question test.",
     publishedAtUtc: "2026-10-20T10:00:00Z",
     parts: [
       { part: 1, questionCount: 2, durationSeconds: 180 },
@@ -175,9 +175,9 @@ export function evaluationDto(overrides: object = {}) {
   return {
     status: "COMPLETED",
     estimatedScore: 130,
-    summary: "Bạn trả lời đúng thông tin trong lịch.",
-    strengths: ["Phát âm rõ ràng."],
-    improvements: ["Nói thành câu đầy đủ hơn."],
+    summary: "You answered with accurate information from the schedule.",
+    strengths: ["Clear pronunciation."],
+    improvements: ["Speak in fuller sentences."],
     items: [1, 2, 3].map((position) => ({
       position,
       part: 4,
@@ -193,7 +193,7 @@ export function evaluationDto(overrides: object = {}) {
       relevanceScore: position === 3 ? null : 90,
       rawScore: position === 3 ? 0 : 2,
       maxRawScore: 3,
-      feedback: `Nhận xét câu ${position}.`,
+      feedback: `Feedback for question ${position}.`,
       suggestedResponse:
         position === 3 ? null : "It is held at the Grand Hotel.",
       wordIssues:

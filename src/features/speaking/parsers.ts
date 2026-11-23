@@ -20,7 +20,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function invalid(what: string): never {
-  throw new SpeakingApiError(502, `Phản hồi ${what} không hợp lệ.`);
+  throw new SpeakingApiError(502, `Invalid ${what} response.`);
 }
 
 export const isString = (value: unknown): value is string =>
@@ -121,7 +121,7 @@ export function parseContent(
 }
 
 export function parseExercise(value: unknown): SpeakingExercise {
-  const what = "bài tập Speaking";
+  const what = "Speaking exercise";
   if (
     !isRecord(value) ||
     !isString(value.id) ||
@@ -207,7 +207,7 @@ export function parseTestDetail(value: unknown): {
   test: SpeakingTest;
   exercises: SpeakingExercise[];
 } {
-  const what = "đề Speaking";
+  const what = "Speaking test";
   if (
     !isRecord(value) ||
     !isString(value.id) ||
@@ -277,7 +277,7 @@ export interface SpeakingTestListItem {
 }
 
 export function parseTestListItem(value: unknown): SpeakingTestListItem {
-  const what = "danh sách đề Speaking";
+  const what = "Speaking test list";
   if (
     !isRecord(value) ||
     !isString(value.id) ||

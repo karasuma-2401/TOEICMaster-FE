@@ -89,29 +89,27 @@ export function PronunciationWorkspace({
       <header className="mt-4 flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 pt-2.5">
           <p className="w-fit rounded-md bg-(--sp-orange-soft) px-2.5 py-1 text-xs uppercase text-(--sp-brand) ring-1 ring-inset ring-(--sp-hero-line)">
-            Phát âm · IPA
+            Pronunciation · IPA
           </p>
           <h1 className="mt-3 text-[28px] font-bold leading-9">
-            Bảng phiên âm quốc tế IPA
+            International Phonetic Alphabet (IPA) Chart
           </h1>
           <p className="mt-2 text-[15px] text-(--sp-ink-2)">
-            44 âm tiếng Anh: 12 nguyên âm đơn, 8 nguyên âm đôi và 24 phụ âm.
+            44 English sounds: 12 monophthongs, 8 diphthongs, and 24 consonants.
           </p>
         </div>
         <aside
-          aria-label="Tiến độ luyện tập"
+          aria-label="Practice progress"
           className="w-full rounded-2xl border border-(--sp-line)/70 bg-white px-[18px] py-4 sm:w-60"
         >
-          <p className="text-xs uppercase text-(--sp-ink-2)">Đã luyện</p>
+          <p className="text-xs uppercase text-(--sp-ink-2)">Practiced</p>
           <p
             aria-live="polite"
             className="mt-1 text-[36px] font-bold leading-[44px] text-[#f4511e]"
           >
             {practiced.size} / {ipaSounds.length}
           </p>
-          <p className="mt-1 text-[13px] text-(--sp-ink-2)">
-            âm đã có kết quả chấm
-          </p>
+          <p className="mt-1 text-[13px] text-(--sp-ink-2)">sounds scored</p>
         </aside>
       </header>
 
@@ -119,7 +117,7 @@ export function PronunciationWorkspace({
 
       {Boolean(slug) && !sound && (
         <InlineError>
-          Không tìm thấy âm này. Hãy chọn một âm trong bảng.
+          Sound not found. Please select a sound from the chart.
         </InlineError>
       )}
 

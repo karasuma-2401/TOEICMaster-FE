@@ -54,11 +54,11 @@ export function KnowledgeAdminHub() {
     setMediaUploading(true);
     try {
       await uploadKnowledgeImage(file);
-      toast.success("Đã tải lên hình ảnh mới.");
+      toast.success("New image uploaded.");
       setMediaTick((t) => t + 1);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Không thể tải lên hình ảnh.",
+        err instanceof Error ? err.message : "Could not upload image.",
       );
     } finally {
       setMediaUploading(false);
@@ -77,7 +77,7 @@ export function KnowledgeAdminHub() {
         }}
         type="button"
       >
-        + Tạo danh mục mới
+        + New category
       </button>
     ) : tab === "media" ? (
       <>
@@ -94,12 +94,12 @@ export function KnowledgeAdminHub() {
           onClick={() => mediaUploadRef.current?.click()}
           type="button"
         >
-          {mediaUploading ? "Đang tải lên..." : "+ Tải hình ảnh mới"}
+          {mediaUploading ? "Uploading..." : "+ Upload image"}
         </button>
       </>
     ) : (
       <Link className={primaryActionClass} href="/admin/knowledge/new">
-        + Tạo bài viết mới
+        + New article
       </Link>
     );
 
@@ -107,18 +107,18 @@ export function KnowledgeAdminHub() {
     <div>
       <AdminPageHeader
         actions={headerAction}
-        description="Soạn thảo, phân loại, xem trước và xuất bản bài viết hướng dẫn TOEIC cho học viên."
-        eyebrow="QUẢN TRỊ / KIẾN THỨC"
-        title="Quản trị Kiến thức & Tài liệu mẫu"
+        description="Write, categorize, preview, and publish TOEIC study guide articles for learners."
+        eyebrow="ADMIN / KNOWLEDGE"
+        title="Knowledge & Study Guides"
       />
 
       <AdminUnderlineTabs
         activeId={tab}
-        ariaLabel="Phân mục quản trị kiến thức"
+        ariaLabel="Knowledge admin sections"
         items={[
-          { id: "articles", label: "Bài viết" },
-          { id: "categories", label: `Danh mục (${allCategories.length})` },
-          { id: "media", label: "Thư viện ảnh" },
+          { id: "articles", label: "Articles" },
+          { id: "categories", label: `Categories (${allCategories.length})` },
+          { id: "media", label: "Media Library" },
         ]}
         onSelect={setTab}
       />

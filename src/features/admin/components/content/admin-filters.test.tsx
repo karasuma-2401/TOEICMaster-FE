@@ -10,33 +10,33 @@ function renderSelect(value = "ALL") {
   render(
     <AdminFilterSelect
       allValue="ALL"
-      ariaLabel="Lọc độ khó"
-      label="Độ khó"
+      ariaLabel="Filter difficulty"
+      label="Difficulty"
       onChange={onChange}
       options={[
-        { value: "EASY", label: "Dễ" },
-        { value: "HARD", label: "Khó" },
+        { value: "EASY", label: "Easy" },
+        { value: "HARD", label: "Hard" },
       ]}
       value={value}
     />,
   );
   return {
     onChange,
-    trigger: screen.getByRole("button", { name: /^Lọc độ khó/ }),
+    trigger: screen.getByRole("button", { name: /^Filter difficulty/ }),
   };
 }
 
 describe("AdminFilterSelect", () => {
   it("exposes the current value and picks an option", () => {
     const { onChange, trigger } = renderSelect("EASY");
-    expect(trigger).toHaveAccessibleName("Lọc độ khó: Dễ");
+    expect(trigger).toHaveAccessibleName("Filter difficulty: Easy");
 
     fireEvent.click(trigger);
-    expect(screen.getByRole("button", { name: "Dễ" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Easy" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    fireEvent.click(screen.getByRole("button", { name: "Khó" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hard" }));
 
     expect(onChange).toHaveBeenCalledWith("HARD");
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -45,15 +45,17 @@ describe("AdminFilterSelect", () => {
   it("supports the keyboard and returns focus on Escape", () => {
     const { onChange, trigger } = renderSelect();
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
-    expect(screen.getByRole("list", { name: "Lọc độ khó" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Tất cả" })).toHaveFocus();
+    expect(
+      screen.getByRole("list", { name: "Filter difficulty" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "All" })).toHaveFocus();
 
-    fireEvent.keyDown(screen.getByRole("button", { name: "Tất cả" }), {
+    fireEvent.keyDown(screen.getByRole("button", { name: "All" }), {
       key: "ArrowDown",
     });
-    expect(screen.getByRole("button", { name: "Dễ" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Easy" })).toHaveFocus();
 
-    fireEvent.keyDown(screen.getByRole("button", { name: "Dễ" }), {
+    fireEvent.keyDown(screen.getByRole("button", { name: "Easy" }), {
       key: "Escape",
     });
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -74,19 +76,19 @@ describe("AdminFilterSelect", () => {
 
 describe("AdminSearchField", () => {
   const suggestions = [
-    { value: "SPK-01", label: "Đề luyện nói", hint: "SPK-01" },
+    { value: "SPK-01", label: "Speaking prompt", hint: "SPK-01" },
     { value: "SPK-02", label: "Practice", hint: "SPK-02" },
   ];
 
-  it("turns off browser autofill and matches without diacritics", () => {
+  it("turns off browser autofill and filters suggestions case-insensitively", () => {
     const onChange = vi.fn();
     render(
       <AdminSearchField
-        label="Tìm"
+        label="Search"
         onChange={onChange}
-        placeholder="Tìm"
+        placeholder="Search"
         suggestions={suggestions}
-        value="luyen"
+        value="speak"
       />,
     );
     const input = screen.getByRole("searchbox");
@@ -94,7 +96,7 @@ describe("AdminSearchField", () => {
 
     fireEvent.focus(input);
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: /Đề luyện nói/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Speaking prompt/ }));
 
     expect(onChange).toHaveBeenCalledWith("SPK-01");
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -104,14 +106,14 @@ describe("AdminSearchField", () => {
     const onChange = vi.fn();
     render(
       <AdminSearchField
-        label="Tìm"
+        label="Search"
         onChange={onChange}
-        placeholder="Tìm"
+        placeholder="Search"
         value="abc"
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Xóa nội dung/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Clear search/ }));
 
     expect(onChange).toHaveBeenCalledWith("");
   });

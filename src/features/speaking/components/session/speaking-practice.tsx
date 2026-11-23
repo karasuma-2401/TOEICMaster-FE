@@ -60,7 +60,7 @@ export function SpeakingPracticeEntry({ exerciseId }: { exerciseId: string }) {
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải bài tập Speaking.",
+              : "Unable to load the Speaking exercise.",
           );
       }
     },
@@ -81,7 +81,7 @@ export function SpeakingPracticeEntry({ exerciseId }: { exerciseId: string }) {
         {error ? (
           <SpError message={error} onRetry={() => void load()} />
         ) : (
-          <SpLoading label="Đang tải bài luyện…" />
+          <SpLoading label="Loading practice exercise…" />
         )}
       </SpPage>
     );
@@ -113,7 +113,7 @@ function TakePlayback({
         type="button"
       >
         {playing ? <SquareIcon size={16} /> : <PlayIcon size={16} />}
-        {playing ? "Dừng nghe lại" : "Nghe lại bản thu trước"}
+        {playing ? "Stop playback" : "Play previous recording"}
       </button>
       <p className="flex gap-10 text-xs text-(--sp-ink-2)">
         <span>{formatClock(time)}</span>
@@ -143,7 +143,7 @@ function CompareCard({ passage }: { passage: string }) {
     <section className="sp-card p-5">
       <h2 className="flex items-center gap-3 text-lg font-semibold">
         <HeadphonesIcon className="text-(--sp-brand)" size={24} />
-        Đối chiếu với giọng đọc mẫu
+        Compare with sample voice
       </h2>
       {speech.supported && (
         <button
@@ -152,20 +152,20 @@ function CompareCard({ passage }: { passage: string }) {
           type="button"
         >
           {speech.speaking ? <SquareIcon size={16} /> : <PlayIcon size={16} />}
-          {speech.speaking ? "Dừng giọng đọc mẫu" : "Nghe giọng đọc mẫu"}
+          {speech.speaking ? "Stop sample voice" : "Listen to sample voice"}
         </button>
       )}
       <p className="mt-2 text-xs text-(--sp-ink-2)">
-        American English · Giọng đọc tổng hợp của trình duyệt
+        American English · Browser synthesized voice
       </p>
-      <h3 className="mt-4 font-semibold">Transcript mẫu · Ngắt nghỉ</h3>
+      <h3 className="mt-4 font-semibold">Sample transcript · Pauses</h3>
       <div className="mt-2 space-y-2 text-sm leading-6" lang="en">
         {markPauses(passage).map((sentence, index) => (
           <p key={index}>{sentence}</p>
         ))}
       </div>
       <p className="mt-3 text-xs text-(--sp-ink-2)">
-        / Nghỉ ngắn · // Nghỉ cuối câu
+        / Short pause · // End-of-sentence pause
       </p>
     </section>
   );
@@ -208,7 +208,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Không thể tải nội dung bài luyện.",
+          : "Unable to load practice content.",
       );
     }
   }, [exercise.id, exercise.part]);
@@ -270,7 +270,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
         setSendError(
           cause instanceof Error
             ? cause.message
-            : "Không thể gửi bản thu lúc này.",
+            : "Unable to submit recording right now.",
         );
       setSending(false);
     }
@@ -278,8 +278,8 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
 
   const spec = speakingPartSpecs[exercise.part];
   const crumbs = [
-    { label: "Trang chủ", href: "/" },
-    { label: "Bài tập", href: "/speaking/parts/1" },
+    { label: "Home", href: "/" },
+    { label: "Exercises", href: "/speaking/parts/1" },
     { label: "Speaking", href: `/speaking/parts/${exercise.part}` },
     { label: `Part ${exercise.part}` },
   ];
@@ -292,7 +292,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
           {error ? (
             <SpError message={error} onRetry={() => void load()} />
           ) : (
-            <SpLoading label="Đang tải nội dung bài luyện…" />
+            <SpLoading label="Loading practice content…" />
           )}
         </div>
       </SpPage>
@@ -305,7 +305,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
   const total = String(list.length).padStart(2, "0");
   const meta =
     content.part === 1
-      ? `${countWords(content.passage)} từ · ${difficultyLabels[exercise.difficulty]}`
+      ? `${countWords(content.passage)} words · ${difficultyLabels[exercise.difficulty]}`
       : difficultyLabels[exercise.difficulty];
   const micBlocked =
     recorder.status === "denied" || recorder.status === "unsupported";
@@ -329,7 +329,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
           <section className="sp-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Chip className="uppercase" tone="orange">
-                Bài {ordinal} / {total} · {exercise.topic}
+                Exercise {ordinal} / {total} · {exercise.topic}
               </Chip>
               <Chip tone="success">{meta}</Chip>
             </div>
@@ -346,20 +346,20 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
 
           <section className="sp-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-semibold">Bản thu của bạn</h2>
+              <h2 className="font-semibold">Your recording</h2>
               {recording ? (
                 <Chip tone="danger">
                   <span
                     aria-hidden="true"
                     className="size-2 rounded-full bg-(--sp-rec)"
                   />
-                  Đang thu âm · {formatClock(elapsed)}
+                  Recording · {formatClock(elapsed)}
                 </Chip>
               ) : (
                 <Chip tone={latest ? "success" : "neutral"}>
                   {latest
-                    ? `Đã thu · ${formatClock(latest.durationSeconds)}`
-                    : "Chưa thu âm"}
+                    ? `Recorded · ${formatClock(latest.durationSeconds)}`
+                    : "Not recorded yet"}
                 </Chip>
               )}
             </div>
@@ -376,7 +376,7 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <button
-                  aria-label="Dừng thu âm"
+                  aria-label="Stop recording"
                   className="sp-focus grid size-16 cursor-pointer place-items-center rounded-full bg-(--sp-rec) text-white disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={!recording}
                   onClick={stop}
@@ -384,14 +384,14 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                 >
                   <SquareIcon fill="currentColor" size={24} />
                 </button>
-                <span className="font-semibold">Dừng thu âm</span>
+                <span className="font-semibold">Stop recording</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[13px] text-(--sp-ink-2)">
-                  Trạng thái sẵn sàng:
+                  Ready status:
                 </span>
                 <button
-                  aria-label="Bắt đầu thu âm"
+                  aria-label="Start recording"
                   className="sp-focus grid size-14 cursor-pointer place-items-center rounded-full text-white disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={recording || sending}
                   onClick={() => void begin()}
@@ -400,14 +400,14 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                 >
                   <MicIcon size={24} />
                 </button>
-                <span>Bắt đầu thu âm</span>
+                <span>Start recording</span>
               </div>
             </div>
             {micBlocked && (
               <p className="mt-3 text-[13px] text-(--sp-danger)" role="alert">
                 {recorder.status === "denied"
-                  ? "Micro đang bị chặn. Bấm biểu tượng ổ khóa cạnh thanh URL, cho phép Microphone rồi thử lại."
-                  : "Trình duyệt này không hỗ trợ ghi âm."}
+                  ? "Microphone is blocked. Click the lock icon next to the address bar, allow Microphone access, and try again."
+                  : "This browser does not support audio recording."}
               </p>
             )}
 
@@ -416,15 +416,17 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
               url={latest?.url ?? null}
             />
             <p className="mt-3 text-xs text-(--sp-ink-2)">
-              Luyện tập tự do: bạn có thể thu âm lại không giới hạn. Mỗi bản thu
-              tối đa {limit} giây.
+              Free practice: you can re-record as many times as you like. Each
+              recording is up to {limit} seconds.
             </p>
 
             <div className="mt-4 rounded-2xl border border-(--sp-line) p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <Chip tone="speak">Speaking</Chip>
-                  <h3 className="font-semibold">Gửi bài luyện này chấm AI</h3>
+                  <h3 className="font-semibold">
+                    Send this practice for AI grading
+                  </h3>
                 </div>
                 <button
                   className="sp-btn sp-btn-cta sp-btn-locked"
@@ -433,17 +435,17 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                   type="button"
                 >
                   {sending
-                    ? "Đang gửi bản thu…"
-                    : "Gửi bài luyện này chấm AI →"}
+                    ? "Sending recording…"
+                    : "Send this practice for AI grading →"}
                 </button>
               </div>
               <p className="mt-3 text-sm text-(--sp-ink-2)">
-                Chỉ gửi bản ghi của bài hiện tại để chấm điểm phát âm, trọng âm
-                và ngữ điệu.
+                Only the recording for the current exercise is sent to grade
+                pronunciation, stress, and intonation.
               </p>
               {available === false ? (
                 <p className="mt-3 text-[13px] text-(--sp-ink-2)">
-                  Chấm AI cho Speaking chưa được bật trên máy chủ.
+                  AI grading for Speaking is not enabled on the server.
                 </p>
               ) : (
                 <label className="mt-3 flex items-center gap-3 text-[13px] text-(--sp-ink-2)">
@@ -453,8 +455,8 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                     onChange={(event) => setConsented(event.target.checked)}
                     type="checkbox"
                   />
-                  Tôi đồng ý gửi giọng nói của mình đến dịch vụ chấm AI để nhận
-                  phản hồi.
+                  I agree to send my voice recording to the AI grading service
+                  to receive feedback.
                 </label>
               )}
               {sending && (
@@ -462,8 +464,8 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                   aria-live="polite"
                   className="mt-3 text-[13px] text-(--sp-ink-2)"
                 >
-                  Đang tải bản thu lên, thường mất khoảng 15–20 giây. Vui lòng
-                  giữ trang này mở.
+                  Uploading recording, usually takes about 15-20 seconds. Please
+                  keep this page open.
                 </p>
               )}
               {sendError && (
@@ -484,14 +486,14 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
                       className="shrink-0 text-(--sp-warning)"
                       size={18}
                     />
-                    Khách vãng lai chỉ được chấm 1 lượt/ngày. Đăng nhập để nhận
-                    thêm lượt.
+                    Guests are limited to 1 grading per day. Log in to get more
+                    evaluations.
                   </p>
                   <Link
                     className="sp-btn sp-btn-sm sp-btn-solid"
                     href={`/login?next=${encodeURIComponent(`/speaking/exercises/${exercise.id}/practice`)}`}
                   >
-                    Đăng nhập →
+                    Log in →
                   </Link>
                 </div>
               )}
@@ -506,16 +508,16 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
             <section className="sp-card p-5">
               <h2 className="flex items-center gap-3 text-lg font-semibold">
                 <HeadphonesIcon className="text-(--sp-brand)" size={24} />
-                Câu trả lời mẫu
+                Sample answer
               </h2>
               <p className="mt-3 text-sm text-(--sp-ink-2)">
-                Câu trả lời mẫu và nhận xét sẽ hiện sau khi bài luyện được chấm
-                AI.
+                The sample answer and feedback will appear after your practice
+                is graded by AI.
               </p>
             </section>
           )}
           <section className="rounded-2xl border border-(--sp-hero-line) bg-(--sp-cream) p-5">
-            <h2 className="text-lg font-semibold">Mẹo đạt điểm tối đa</h2>
+            <h2 className="text-lg font-semibold">Tips for a top score</h2>
             <ol className="mt-2 space-y-1 text-sm">
               {practiceTips[exercise.part]?.map((tip, tipIndex) => (
                 <li key={tip}>
@@ -532,14 +534,14 @@ function SpeakingPractice({ exercise }: { exercise: SpeakingExerciseSummary }) {
           className="sp-btn sp-btn-outline"
           href={`/speaking/parts/${exercise.part}`}
         >
-          ← Quay lại danh sách bài tập
+          ← Back to exercise list
         </Link>
         {next && (
           <Link
             className="sp-btn sp-btn-cta"
             href={`/speaking/exercises/${encodeURIComponent(next.id)}/practice`}
           >
-            Bài tiếp theo →
+            Next exercise →
           </Link>
         )}
       </div>

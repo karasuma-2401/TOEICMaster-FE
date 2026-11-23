@@ -53,7 +53,8 @@ export function InformationPrompt({
       </p>
       {visible.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-(--sp-warning-line) bg-(--sp-warning-bg) p-4 text-sm font-semibold text-(--sp-warning)">
-          Đọc kỹ bảng thông tin. Câu hỏi sẽ hiện khi hết thời gian đọc.
+          Read the information carefully. The questions will appear when reading
+          time ends.
         </p>
       ) : (
         visible.map(({ question, index }) => (

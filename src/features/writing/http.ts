@@ -86,14 +86,14 @@ export async function writingRequest(
       try {
         await refreshOnce();
       } catch {
-        throw new WritingApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new WritingApiError(401, "Your session has expired.");
       }
       response = await send();
     }
   } catch (cause) {
     if (cause instanceof WritingApiError) throw cause;
     if (options.signal?.aborted) throw cause;
-    throw new WritingApiError(502, "Không thể kết nối dịch vụ.");
+    throw new WritingApiError(502, "Unable to connect to the service.");
   }
   if (!response.ok) throw await failure(response, options.fallback);
   if (response.status === 204) return null;

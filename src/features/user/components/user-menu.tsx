@@ -81,7 +81,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
           setError(
             reason instanceof Error
               ? reason.message
-              : "Không thể kiểm tra phiên đăng nhập.",
+              : "Unable to verify sign-in session.",
           );
         }
       });
@@ -105,7 +105,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
             setUser(null);
             return;
           }
-          setError("Không thể tải hồ sơ cá nhân.");
+          setError("Unable to load personal profile.");
         });
     };
     window.addEventListener("profile:updated", reload);
@@ -156,7 +156,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
       setIsOpen(false);
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể đăng xuất.",
+        reason instanceof Error ? reason.message : "Unable to sign out.",
       );
     } finally {
       setPending(false);
@@ -165,7 +165,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
 
   if (user === undefined) return null;
 
-  // Khách chưa có hồ sơ nên chỉ thấy lựa chọn đăng nhập/đăng ký.
+  // Guests without a profile only see Sign in / Sign up options.
   if (!user) {
     return (
       <div className="flex flex-col gap-1 md:items-end">
@@ -174,13 +174,13 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
             className="flex h-11 cursor-pointer items-center justify-center rounded-xl border border-[#ece9e5] text-sm font-semibold md:h-auto md:rounded-none md:border-0 text-[#4e4542] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/login"
           >
-            Đăng nhập
+            Sign in
           </Link>
           <Link
             className="flex h-11 cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-3.5 text-sm font-bold md:h-9 md:text-xs text-white shadow-[0_6px_14px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
             href="/register"
           >
-            Đăng ký
+            Sign up
           </Link>
         </div>
         {error && (
@@ -200,7 +200,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
       <button
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        aria-label="Mở menu tài khoản"
+        aria-label="Open account menu"
         className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#ffd49e] bg-gradient-to-br from-[#ffd361] to-[#f17939] text-sm font-bold text-[#841013] shadow-sm transition hover:scale-105 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
         data-testid="user-menu-trigger"
         onClick={() => setIsOpen((open) => !open)}
@@ -209,7 +209,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
       >
         {imageUrl ? (
           <Image
-            alt={`Ảnh đại diện của ${user.displayName}`}
+            alt={`Avatar of ${user.displayName}`}
             className="absolute inset-0 h-full w-full rounded-full object-cover"
             fill
             sizes="40px"
@@ -224,7 +224,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
       {isOpen ? (
         <div className="relative">
           <div
-            aria-label="Menu tài khoản"
+            aria-label="Account menu"
             className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-[#ece9e5] bg-white p-2 shadow-[0_12px_32px_-12px_rgb(62_44_30/35%)]"
             role="menu"
           >
@@ -241,7 +241,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
                 onClick={handleClose}
                 role="menuitem"
               >
-                Hồ sơ cá nhân
+                Personal profile
               </Link>
               <Link
                 className={menuLink}
@@ -249,7 +249,7 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
                 onClick={handleClose}
                 role="menuitem"
               >
-                Lịch sử làm bài
+                Attempt history
               </Link>
               <button
                 className={`${menuLink} text-left disabled:cursor-not-allowed disabled:opacity-60`}
@@ -258,14 +258,14 @@ export function UserMenu({ initialUser, initialOpen = false }: UserMenuProps) {
                 role="menuitem"
                 type="button"
               >
-                {pending ? "Đang đăng xuất…" : "Đăng xuất"}
+                {pending ? "Signing out..." : "Sign out"}
               </button>
             </div>
           </div>
         </div>
       ) : null}
 
-      {pending && <span className="sr-only">Đang đăng xuất...</span>}
+      {pending && <span className="sr-only">Signing out...</span>}
       {error && (
         <p className="text-xs text-red-600" role="alert">
           {error}

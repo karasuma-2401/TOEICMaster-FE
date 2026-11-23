@@ -129,7 +129,7 @@ export function parseReadingExamPage(value: unknown): ReadingExamPage {
     typeof value.hasNextPage !== "boolean" ||
     typeof value.hasPreviousPage !== "boolean"
   )
-    throw new Error("Phản hồi danh sách đề Reading không hợp lệ.");
+    throw new Error("Invalid Reading exam list response.");
   return value as unknown as ReadingExamPage;
 }
 
@@ -199,7 +199,7 @@ export function parseReadingRevision(value: unknown): ReadingRevision {
     !Array.isArray(value.blocks) ||
     !value.blocks.every(isReadingBlock)
   )
-    throw new Error("Phản hồi revision Reading không hợp lệ.");
+    throw new Error("Invalid Reading revision response.");
   return value as unknown as ReadingRevision;
 }
 
@@ -215,12 +215,12 @@ export function parseScoreProfiles(value: unknown): ScoreProfile[] {
         isNonNegativeInteger(item.mappingCount),
     )
   )
-    throw new Error("Phản hồi barem điểm không hợp lệ.");
+    throw new Error("Invalid score profiles response.");
   return value as ScoreProfile[];
 }
 
 export function formatAdminDate(value: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

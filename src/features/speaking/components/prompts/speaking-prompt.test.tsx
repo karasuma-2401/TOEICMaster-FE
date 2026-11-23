@@ -25,14 +25,14 @@ describe("SpeakingPrompt", () => {
     expect(screen.getByText(part4.documentTitle)).toBeInTheDocument();
     expect(screen.queryByText(part4.questions[0])).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Câu hỏi sẽ hiện khi hết thời gian đọc/),
+      screen.getByText(/The questions will appear when reading time ends/),
     ).toBeInTheDocument();
   });
 
   it("shows only the current question during an attempt", () => {
     render(<SpeakingPrompt content={part4} questionIndex={1} />);
 
-    expect(screen.getByText("Câu hỏi 2/3")).toBeInTheDocument();
+    expect(screen.getByText("Question 2/3")).toBeInTheDocument();
     expect(screen.getByText(part4.questions[1])).toBeInTheDocument();
     expect(screen.queryByText(part4.questions[0])).not.toBeInTheDocument();
   });
@@ -46,7 +46,7 @@ describe("SpeakingPrompt", () => {
     );
 
     expect(
-      screen.getByText("Câu hỏi sẽ hiện khi đến lượt."),
+      screen.getByText("The question will appear when it is your turn."),
     ).toBeInTheDocument();
   });
 

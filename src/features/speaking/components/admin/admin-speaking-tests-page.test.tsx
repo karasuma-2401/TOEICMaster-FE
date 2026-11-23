@@ -69,7 +69,7 @@ describe("AdminSpeakingTestsPage", () => {
     render(<AdminSpeakingTestsPage />);
     await screen.findByText("Practice Test 03");
 
-    fireEvent.change(screen.getByLabelText("Lọc trạng thái đề"), {
+    fireEvent.change(screen.getByLabelText("Filter test status"), {
       target: { value: "DRAFT" },
     });
 
@@ -87,18 +87,18 @@ describe("AdminSpeakingTestsPage", () => {
       await screen.findByRole("button", { name: "Practice Test 03" }),
     );
     const workspace = screen.getByRole("dialog", {
-      name: "Soạn đề Speaking trực tiếp",
+      name: "Direct Speaking test authoring",
     });
 
     expect(
       await within(workspace).findByDisplayValue("SPK-2026-03"),
     ).toBeInTheDocument();
     fireEvent.click(
-      within(workspace).getByRole("button", { name: "Xuất bản đề" }),
+      within(workspace).getByRole("button", { name: "Publish test" }),
     );
 
     expect(within(workspace).getByRole("alert")).toHaveTextContent(
-      "Hoàn thành toàn bộ 7 nhóm nội dung / 11 câu trước khi xuất bản.",
+      "Complete all 7 content groups / 11 questions before publishing.",
     );
     expect(updateSpeakingTest).not.toHaveBeenCalled();
     expect(publishSpeakingTest).not.toHaveBeenCalled();

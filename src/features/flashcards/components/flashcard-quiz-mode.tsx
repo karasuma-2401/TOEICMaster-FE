@@ -68,7 +68,7 @@ export function FlashcardQuizMode({
     return (
       <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
         <p className="text-base font-semibold text-[#2b2724]">
-          Bộ thẻ chưa có từ vựng để tạo bài kiểm tra
+          This deck has no cards yet to create a quiz
         </p>
       </div>
     );
@@ -82,11 +82,11 @@ export function FlashcardQuizMode({
           {correctCount} / {questions.length}
         </p>
         <h3 className="mt-2 text-xl font-bold text-[#2b2724]">
-          Độ chính xác {accuracy}%
+          Accuracy {accuracy}%
         </h3>
         <p className="mt-1.5 text-sm text-[#5f5953]">
-          Các câu trả lời đúng đã được đánh dấu “Đã thuộc”, các câu sai được
-          chuyển sang “Cần ôn” để bạn luyện lại.
+          Correct answers have been marked as &ldquo;Mastered&rdquo;, and missed
+          ones were moved to &ldquo;Needs review&rdquo; for further practice.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <button
@@ -95,7 +95,7 @@ export function FlashcardQuizMode({
             type="button"
           >
             <RotateCcw aria-hidden="true" className="size-4" />
-            Làm lượt trắc nghiệm mới
+            Start a new quiz round
           </button>
         </div>
       </div>
@@ -108,9 +108,9 @@ export function FlashcardQuizMode({
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex items-center justify-between text-xs font-semibold text-[#5f5953]">
         <span>
-          Câu {index + 1} / {questions.length}
+          Question {index + 1} / {questions.length}
         </span>
-        <span className="sp-mono">Đúng: {correctCount}</span>
+        <span className="sp-mono">Correct: {correctCount}</span>
       </div>
 
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e9e4df]">
@@ -134,13 +134,13 @@ export function FlashcardQuizMode({
           </div>
           {speechSupported && (
             <button
-              aria-label={`Nghe phát âm ${currentQuestion.card.term}`}
+              aria-label={`Listen to pronunciation of ${currentQuestion.card.term}`}
               className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[#dacfc5] bg-[#faf7f5] px-3 text-xs font-semibold text-[#2b2724] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
               onClick={() => speak(currentQuestion.card.term)}
               type="button"
             >
               <Volume2 aria-hidden="true" className="size-3.5" />
-              Nghe từ
+              Listen
             </button>
           )}
         </div>
@@ -209,7 +209,7 @@ export function FlashcardQuizMode({
             <div className="min-w-0 flex-1 text-sm">
               {currentQuestion.card.exampleEn && (
                 <p className="font-medium text-[#2b2724]">
-                  Ví dụ: {currentQuestion.card.exampleEn}
+                  Example: {currentQuestion.card.exampleEn}
                 </p>
               )}
               {currentQuestion.card.exampleVi && (
@@ -224,8 +224,8 @@ export function FlashcardQuizMode({
               type="button"
             >
               {index + 1 >= questions.length
-                ? "Xem kết quả"
-                : "Câu tiếp theo →"}
+                ? "View results"
+                : "Next question →"}
             </button>
           </div>
         )}
@@ -238,7 +238,7 @@ export function FlashcardQuizMode({
           type="button"
         >
           <RotateCcw aria-hidden="true" className="size-3.5" />
-          Đổi thứ tự câu hỏi
+          Shuffle questions
         </button>
       </div>
     </div>

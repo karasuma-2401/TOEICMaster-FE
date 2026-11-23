@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     typeof body.currentPassword !== "string" ||
     typeof body.newPassword !== "string"
   ) {
-    return problem(400, "Dữ liệu đổi mật khẩu không hợp lệ.");
+    return problem(400, "Invalid password change data.");
   }
   const passwordChange = {
     currentPassword: body.currentPassword,

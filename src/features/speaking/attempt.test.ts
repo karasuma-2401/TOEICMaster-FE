@@ -20,14 +20,14 @@ describe("Speaking attempt", () => {
         testId: null,
         exerciseId: ids.exercise(41),
         testCode: "SP4-001",
-        testTitle: "Luyện Part 4 · Hội nghị",
+        testTitle: "Part 4 Practice · Conference",
       }),
     );
 
     expect(attempt).toMatchObject({
       testId: null,
       exerciseId: ids.exercise(41),
-      testTitle: "Luyện Part 4 · Hội nghị",
+      testTitle: "Part 4 Practice · Conference",
     });
     expect(() =>
       parseAttempt(attemptDto({ testId: null, exerciseId: null })),

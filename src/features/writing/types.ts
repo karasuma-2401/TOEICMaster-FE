@@ -1,6 +1,6 @@
 export type WritingPart = 1 | 2 | 3;
 
-export type WritingDifficulty = "Dễ" | "Trung bình" | "Khó";
+export type WritingDifficulty = "Easy" | "Medium" | "Hard";
 
 export type WritingTestStatus = "Published" | "Draft";
 

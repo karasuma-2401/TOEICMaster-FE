@@ -110,13 +110,13 @@ describe("SpeakingPracticeEntry", () => {
     render(<SpeakingPracticeEntry exerciseId="a" />);
 
     expect(await screen.findByText(passage)).toBeInTheDocument();
-    expect(screen.getByText(/Bài 01 \/ 02/)).toBeInTheDocument();
-    expect(screen.getByText("8 từ · Dễ")).toBeInTheDocument();
+    expect(screen.getByText(/Exercise 01 \/ 02/)).toBeInTheDocument();
+    expect(screen.getByText("8 words · Easy")).toBeInTheDocument();
     expect(
       screen.getByText("Welcome to the tour, / everyone. //"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Bài tiếp theo →" }),
+      screen.getByRole("link", { name: "Next exercise →" }),
     ).toHaveAttribute("href", "/speaking/exercises/b/practice");
     expect(submitSpeakingAttempt).toHaveBeenCalledOnce();
   });
@@ -129,7 +129,7 @@ describe("SpeakingPracticeEntry", () => {
     render(<SpeakingPracticeEntry exerciseId="a" />);
 
     const button = await screen.findByRole("button", {
-      name: "Gửi bài luyện này chấm AI →",
+      name: "Send this practice for AI grading →",
     });
     expect(button).toBeDisabled();
     fireEvent.click(await screen.findByRole("checkbox"));
@@ -148,20 +148,20 @@ describe("SpeakingPracticeEntry", () => {
     vi.mocked(submitPracticeTake).mockRejectedValue(
       new SpeakingApiError(
         409,
-        "Phiên ẩn danh đã dùng lượt chấm AI trong 24 giờ qua.",
+        "Anonymous session has already used the AI evaluation in the past 24 hours.",
       ),
     );
     render(<SpeakingPracticeEntry exerciseId="a" />);
 
     const button = await screen.findByRole("button", {
-      name: "Gửi bài luyện này chấm AI →",
+      name: "Send this practice for AI grading →",
     });
     fireEvent.click(await screen.findByRole("checkbox"));
     await vi.waitFor(() => expect(button).toBeEnabled());
     fireEvent.click(button);
 
     expect(
-      await screen.findByRole("link", { name: "Đăng nhập →" }),
+      await screen.findByRole("link", { name: "Log in →" }),
     ).toHaveAttribute(
       "href",
       "/login?next=%2Fspeaking%2Fexercises%2Fa%2Fpractice",

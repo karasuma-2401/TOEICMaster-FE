@@ -15,18 +15,18 @@ import {
 const rules = [
   {
     index: "01",
-    title: "Listening · Câu 1–100",
-    body: "File âm thanh chạy liên tục. Không thể tạm dừng hay tua lại. Sau khi chuyển sang Reading, không thể sửa đáp án Listening.",
+    title: "Listening · Questions 1–100",
+    body: "The audio plays continuously. You cannot pause or rewind. After moving to Reading, you cannot edit Listening answers.",
   },
   {
     index: "02",
-    title: "Reading · Câu 101–200",
-    body: "Tự do điều hướng giữa các câu hỏi Reading. Có thể gắn cờ để kiểm tra lại trước khi nộp bài.",
+    title: "Reading · Questions 101–200",
+    body: "Navigate freely between Reading questions. You can flag questions to review before submitting.",
   },
   {
     index: "03",
-    title: "Tự động nộp bài",
-    body: "Máy chủ quản lý thời gian làm bài và tự động nộp khi hết hạn.",
+    title: "Auto-Submit",
+    body: "The server manages your exam timer and automatically submits when time expires.",
   },
 ];
 
@@ -47,7 +47,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải thông tin đề thi.",
+              : "Unable to load exam details.",
           );
         }
       })
@@ -66,7 +66,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
       router.push(`/exams/lr/attempts/${attempt.attemptId}/attempt`);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể bắt đầu bài thi.",
+        cause instanceof Error ? cause.message : "Unable to start the exam.",
       );
       setStarting(false);
     }
@@ -77,22 +77,22 @@ export function LrExamInstructions({ examId }: { examId: string }) {
         {
           icon: "list-checks",
           value: String(exam.totalQuestions),
-          label: "câu hỏi",
+          label: "questions",
         },
         {
           icon: "timer",
-          value: `${exam.durationMinutes} phút`,
-          label: "làm bài",
+          value: `${exam.durationMinutes} min`,
+          label: "test duration",
         },
         {
           icon: "headphones",
           value: `${exam.listeningQuestions} + ${exam.readingQuestions}`,
-          label: "Nghe & Đọc",
+          label: "Listening & Reading",
         },
         {
           icon: "trophy",
           value: `${exam.minScaledScore}–${exam.maxScaledScore}`,
-          label: "Thang điểm ETS",
+          label: "ETS Score Scale",
         },
       ] as const)
     : [];
@@ -106,7 +106,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
         tabIndex={-1}
       >
         <p className="text-[13px] text-[#77716e]">
-          Trang chủ / Đề thi thử / {exam?.code ?? "Listening & Reading"}
+          Home / Mock Tests / {exam?.code ?? "Listening & Reading"}
         </p>
         <section
           aria-labelledby="exam-title"
@@ -115,8 +115,8 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           <Pill>LISTENING &amp; READING · FULL TEST</Pill>
           <h1 className="text-[32px] leading-tight font-bold" id="exam-title">
             {loading
-              ? "Đang tải thông tin đề thi…"
-              : (exam?.title ?? "Không thể tải đề thi")}
+              ? "Loading exam details…"
+              : (exam?.title ?? "Unable to load exam")}
           </h1>
 
           {exam ? (
@@ -137,7 +137,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
           ) : null}
 
           <h2 className="text-lg font-semibold">
-            Trước khi bắt đầu, hãy đọc kỹ quy chế
+            Please read the exam rules carefully before starting
           </h2>
           <ol className="grid gap-6 md:grid-cols-3">
             {rules.map((rule) => (
@@ -159,8 +159,8 @@ export function LrExamInstructions({ examId }: { examId: string }) {
               type="checkbox"
             />
             <span>
-              Tôi đã sẵn sàng và đảm bảo đường truyền mạng, tai nghe hoạt động
-              ổn định
+              I am ready and have confirmed a stable internet connection and
+              working headphones
             </span>
           </label>
 
@@ -170,13 +170,13 @@ export function LrExamInstructions({ examId }: { examId: string }) {
               role="alert"
             >
               <p>{error}</p>
-              {/đăng nhập/i.test(error) && (
+              {/sign in|log in|session/i.test(error) && (
                 <div>
                   <Link
                     href={`/login?next=${encodeURIComponent(`/exams/lr/${examId}`)}`}
                     className="inline-flex items-center rounded-md bg-[#ea580c] px-4 py-2 text-xs font-semibold text-white hover:bg-[#c2410c]"
                   >
-                    Đăng nhập để vào thi →
+                    Sign in to start exam →
                   </Link>
                 </div>
               )}
@@ -185,7 +185,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link className={secondaryButton} href="/listening-reading">
-              ← Về danh sách đề
+              ← Back to exam list
             </Link>
             <button
               className={primaryButton}
@@ -194,15 +194,15 @@ export function LrExamInstructions({ examId }: { examId: string }) {
               type="button"
             >
               {starting
-                ? "Đang chuẩn bị bài thi…"
+                ? "Preparing exam…"
                 : exam?.activeAttemptId
-                  ? "TIẾP TỤC BÀI THI"
-                  : "BẮT ĐẦU LÀM BÀI THI L&R"}
+                  ? "RESUME EXAM"
+                  : "START L&R EXAM"}
             </button>
           </div>
         </section>
         <p className="text-center text-[11px] text-[#77716e]">
-          Đáp án được lưu trên máy chủ · Thời gian do máy chủ kiểm soát
+          Answers are saved on the server · Timer is server-controlled
         </p>
       </main>
     </div>

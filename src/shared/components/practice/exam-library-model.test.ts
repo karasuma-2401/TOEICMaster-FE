@@ -11,7 +11,7 @@ const item = (overrides: Partial<ExamLibraryItem>): ExamLibraryItem => ({
   code: "SP-01",
   title: "ETS Speaking · Test 01",
   badge: "5 Parts",
-  meta: "11 câu",
+  meta: "11 questions",
   action: { href: "/x" },
   sortKey: "2026-01-01T00:00:00Z",
   difficulty: null,

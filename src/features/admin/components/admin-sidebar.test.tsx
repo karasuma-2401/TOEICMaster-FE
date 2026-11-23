@@ -27,31 +27,27 @@ describe("AdminSidebar", () => {
 
   it("marks the current admin section and offers the collapse control", () => {
     render(<AdminSidebar {...props} />);
-    expect(screen.getByRole("link", { name: "Người dùng" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Thu gọn thanh điều hướng" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     expect(props.onToggleCollapsed).toHaveBeenCalledOnce();
   });
 
   it("opens Listening and Reading management from the data-bank sidebar item", () => {
     render(<AdminSidebar {...props} />);
 
-    expect(screen.getByRole("link", { name: "Kho dữ liệu" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Data Bank" })).toHaveAttribute(
       "href",
       "/admin/exams",
     );
-    expect(
-      screen.getByRole("button", { name: /Nhật ký hoạt động/ }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Activity Log/ })).toBeDisabled();
   });
 
   it("closes the mobile menu when its backdrop is selected", () => {
     render(<AdminSidebar {...props} isMobileOpen />);
-    fireEvent.click(screen.getByRole("button", { name: "Đóng menu quản trị" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close admin menu" }));
     expect(props.onCloseMobile).toHaveBeenCalledOnce();
   });
 });

@@ -6,12 +6,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TOEICMaster",
-  description: "Phần mềm hỗ trợ học và luyện thi TOEIC",
+  description: "TOEIC learning and exam preparation platform",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a
           className="tm-skip-link"

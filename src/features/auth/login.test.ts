@@ -4,8 +4,8 @@ import { validateLogin, validateRecoveryEmail } from "./login";
 describe("validateLogin", () => {
   it("requires an email and password", () => {
     expect(validateLogin({ email: "not-an-email", password: "" })).toEqual({
-      email: "Email không hợp lệ.",
-      password: "Vui lòng nhập mật khẩu.",
+      email: "Invalid email address.",
+      password: "Please enter your password.",
     });
   });
 
@@ -19,7 +19,7 @@ describe("validateLogin", () => {
 describe("validateRecoveryEmail", () => {
   it("requires a valid email address", () => {
     expect(validateRecoveryEmail("invalid")).toEqual({
-      email: "Email không hợp lệ.",
+      email: "Invalid email address.",
     });
   });
 

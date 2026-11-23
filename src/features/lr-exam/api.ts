@@ -29,13 +29,13 @@ function requiredNumber(value: unknown, message: string): number {
 function nullableString(value: unknown): string | null {
   return value === null || value === undefined
     ? null
-    : requiredString(value, "Phản hồi L&R không hợp lệ.");
+    : requiredString(value, "Invalid L&R response.");
 }
 
 function nullableNumber(value: unknown): number | null {
   return value === null || value === undefined
     ? null
-    : requiredNumber(value, "Phản hồi L&R không hợp lệ.");
+    : requiredNumber(value, "Invalid L&R response.");
 }
 
 async function refreshOnce() {
@@ -78,13 +78,16 @@ export async function lrRequest(
       try {
         await refreshOnce();
       } catch {
-        throw new LrApiError(401, "Phiên đăng nhập đã hết hạn.");
+        throw new LrApiError(
+          401,
+          "Your session has expired. Please sign in again.",
+        );
       }
       response = await send();
     }
   } catch (cause) {
     if (cause instanceof LrApiError || options.signal?.aborted) throw cause;
-    throw new LrApiError(502, "Không thể kết nối dịch vụ.");
+    throw new LrApiError(502, "Unable to connect to the service.");
   }
 
   if (!response.ok) {
@@ -93,14 +96,14 @@ export async function lrRequest(
       isRecord(body) && typeof body.title === "string"
         ? body.title
         : response.status === 409
-          ? "Trạng thái bài thi đã thay đổi. Vui lòng tải lại."
-          : "Không thể xử lý yêu cầu L&R.";
+          ? "Exam status has changed. Please reload."
+          : "Unable to process L&R request.";
     throw new LrApiError(response.status, message);
   }
   if (response.status === 204) return null;
 
   return response.json().catch(() => {
-    throw new LrApiError(502, "Phản hồi từ máy chủ không hợp lệ.");
+    throw new LrApiError(502, "Invalid server response.");
   });
 }
 
@@ -272,7 +275,7 @@ export interface LrAttemptHistoryPagedApi {
 }
 
 function parseAttemptStatus(value: unknown): LrAttemptStatus {
-  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  const message = "Invalid L&R attempt history.";
   if (typeof value === "number") {
     if (value === 1) return "InProgress";
     if (value === 2) return "Completed";
@@ -290,7 +293,7 @@ function parseAttemptStatus(value: unknown): LrAttemptStatus {
 }
 
 function parseAttemptHistoryItem(value: unknown): LrAttemptHistoryItemApi {
-  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  const message = "Invalid L&R attempt history.";
   if (!isRecord(value)) throw new LrApiError(502, message);
   return {
     attemptId: requiredString(value.attemptId, message),
@@ -309,7 +312,7 @@ function parseAttemptHistoryItem(value: unknown): LrAttemptHistoryItemApi {
 }
 
 function parseAttemptHistory(value: unknown): LrAttemptHistoryPagedApi {
-  const message = "Lịch sử làm bài L&R không hợp lệ.";
+  const message = "Invalid L&R attempt history.";
   if (!isRecord(value) || !Array.isArray(value.items)) {
     throw new LrApiError(502, message);
   }
@@ -323,9 +326,9 @@ function parseAttemptHistory(value: unknown): LrAttemptHistoryPagedApi {
 
 function parseCatalogItem(value: unknown): LrExamCatalogItemApi {
   if (!isRecord(value)) {
-    throw new Error("Danh sách đề L&R không hợp lệ.");
+    throw new Error("Invalid L&R exam catalog.");
   }
-  const message = "Danh sách đề L&R không hợp lệ.";
+  const message = "Invalid L&R exam catalog.";
   return {
     examId: requiredString(value.examId, message),
     code: requiredString(value.code, message),
@@ -340,9 +343,9 @@ function parseCatalogItem(value: unknown): LrExamCatalogItemApi {
 
 function parseOverview(value: unknown): LrOverviewApi {
   if (!isRecord(value)) {
-    throw new Error("Thông tin đề thi không hợp lệ.");
+    throw new Error("Invalid exam overview.");
   }
-  const message = "Thông tin đề thi không hợp lệ.";
+  const message = "Invalid exam overview.";
   return {
     examId: requiredString(value.examId, message),
     code: requiredString(value.code, message),
@@ -359,7 +362,7 @@ function parseOverview(value: unknown): LrOverviewApi {
 
 function parseSheet(value: unknown): LrSheetApi {
   if (!isRecord(value) || !Array.isArray(value.blocks)) {
-    throw new Error("Dữ liệu lượt thi không hợp lệ.");
+    throw new Error("Invalid exam attempt data.");
   }
 
   const blocks = value.blocks.map((rawBlock): LrSheetBlockApi => {
@@ -368,46 +371,40 @@ function parseSheet(value: unknown): LrSheetApi {
       !Array.isArray(rawBlock.questions) ||
       !Array.isArray(rawBlock.contextBlocks)
     ) {
-      throw new Error("Dữ liệu nhóm câu hỏi không hợp lệ.");
+      throw new Error("Invalid question group data.");
     }
 
     return {
-      id: requiredString(rawBlock.id, "Dữ liệu nhóm câu hỏi không hợp lệ."),
-      part: requiredNumber(rawBlock.part, "Dữ liệu nhóm câu hỏi không hợp lệ."),
+      id: requiredString(rawBlock.id, "Invalid question group data."),
+      part: requiredNumber(rawBlock.part, "Invalid question group data."),
       firstQuestionNumber: requiredNumber(
         rawBlock.firstQuestionNumber,
-        "Dữ liệu nhóm câu hỏi không hợp lệ.",
+        "Invalid question group data.",
       ),
       audioAssetId: nullableString(rawBlock.audioAssetId),
       audioDurationMs: nullableNumber(rawBlock.audioDurationMs),
       contextBlocks: rawBlock.contextBlocks.map((rawContext) => {
         if (!isRecord(rawContext)) {
-          throw new Error("Dữ liệu ngữ cảnh không hợp lệ.");
+          throw new Error("Invalid context data.");
         }
         return {
-          id: requiredString(rawContext.id, "Dữ liệu ngữ cảnh không hợp lệ."),
-          ordinal: requiredNumber(
-            rawContext.ordinal,
-            "Dữ liệu ngữ cảnh không hợp lệ.",
-          ),
+          id: requiredString(rawContext.id, "Invalid context data."),
+          ordinal: requiredNumber(rawContext.ordinal, "Invalid context data."),
           text: nullableString(rawContext.text),
           imageAssetId: nullableString(rawContext.imageAssetId),
         };
       }),
       questions: rawBlock.questions.map((rawQuestion): LrSheetQuestionApi => {
         if (!isRecord(rawQuestion)) {
-          throw new Error("Dữ liệu câu hỏi không hợp lệ.");
+          throw new Error("Invalid question data.");
         }
         const selected = nullableString(rawQuestion.userSelectedKey);
         if (selected !== null && !["A", "B", "C", "D"].includes(selected)) {
-          throw new Error("Đáp án đã lưu không hợp lệ.");
+          throw new Error("Invalid saved answer.");
         }
         return {
-          id: requiredString(rawQuestion.id, "Dữ liệu câu hỏi không hợp lệ."),
-          number: requiredNumber(
-            rawQuestion.number,
-            "Dữ liệu câu hỏi không hợp lệ.",
-          ),
+          id: requiredString(rawQuestion.id, "Invalid question data."),
+          number: requiredNumber(rawQuestion.number, "Invalid question data."),
           stem: nullableString(rawQuestion.stem),
           optionA: nullableString(rawQuestion.optionA),
           optionB: nullableString(rawQuestion.optionB),
@@ -423,10 +420,10 @@ function parseSheet(value: unknown): LrSheetApi {
 
   const phase = value.phase;
   if (phase !== "listening" && phase !== "reading") {
-    throw new Error("Giai đoạn bài thi không hợp lệ.");
+    throw new Error("Invalid exam phase.");
   }
 
-  const message = "Dữ liệu lượt thi không hợp lệ.";
+  const message = "Invalid exam attempt data.";
   return {
     attemptId: requiredString(value.attemptId, message),
     examId: requiredString(value.examId, message),
@@ -445,9 +442,9 @@ function parseSheet(value: unknown): LrSheetApi {
 
 function parseResult(value: unknown): LrResultApi {
   if (!isRecord(value) || !Array.isArray(value.parts)) {
-    throw new Error("Kết quả bài thi không hợp lệ.");
+    throw new Error("Invalid exam result.");
   }
-  const message = "Kết quả bài thi không hợp lệ.";
+  const message = "Invalid exam result.";
   return {
     attemptId: requiredString(value.attemptId, message),
     examId: requiredString(value.examId, message),
@@ -472,24 +469,24 @@ function parseResult(value: unknown): LrResultApi {
     submittedAtUtc: requiredString(value.submittedAtUtc, message),
     durationSeconds: requiredNumber(value.durationSeconds, message),
     parts: value.parts.map((part) => {
-      if (!isRecord(part)) throw new Error("Điểm theo Part không hợp lệ.");
+      if (!isRecord(part)) throw new Error("Invalid part score data.");
       return {
-        part: requiredNumber(part.part, "Điểm theo Part không hợp lệ."),
+        part: requiredNumber(part.part, "Invalid part score data."),
         totalQuestions: requiredNumber(
           part.totalQuestions,
-          "Điểm theo Part không hợp lệ.",
+          "Invalid part score data.",
         ),
         correctCount: requiredNumber(
           part.correctCount,
-          "Điểm theo Part không hợp lệ.",
+          "Invalid part score data.",
         ),
         incorrectCount: requiredNumber(
           part.incorrectCount,
-          "Điểm theo Part không hợp lệ.",
+          "Invalid part score data.",
         ),
         skippedCount: requiredNumber(
           part.skippedCount,
-          "Điểm theo Part không hợp lệ.",
+          "Invalid part score data.",
         ),
       };
     }),
@@ -502,9 +499,9 @@ function parseReview(value: unknown): LrReviewApi {
     !isRecord(value.counts) ||
     !Array.isArray(value.blocks)
   ) {
-    throw new LrApiError(502, "Dữ liệu xem lại không hợp lệ.");
+    throw new LrApiError(502, "Invalid review data.");
   }
-  const message = "Dữ liệu xem lại không hợp lệ.";
+  const message = "Invalid review data.";
 
   return {
     attemptId: requiredString(value.attemptId, message),
@@ -527,7 +524,7 @@ function parseReview(value: unknown): LrReviewApi {
         !Array.isArray(rawBlock.questions) ||
         !Array.isArray(rawBlock.contextBlocks)
       ) {
-        throw new LrApiError(502, "Dữ liệu nhóm câu hỏi xem lại không hợp lệ.");
+        throw new LrApiError(502, "Invalid review question group data.");
       }
 
       return {
@@ -541,7 +538,7 @@ function parseReview(value: unknown): LrReviewApi {
         audioDurationMs: nullableNumber(rawBlock.audioDurationMs),
         contextBlocks: rawBlock.contextBlocks.map((context) => {
           if (!isRecord(context)) {
-            throw new Error("Dữ liệu ngữ cảnh không hợp lệ.");
+            throw new Error("Invalid context data.");
           }
           return {
             id: requiredString(context.id, message),
@@ -552,7 +549,7 @@ function parseReview(value: unknown): LrReviewApi {
         }),
         questions: rawBlock.questions.map((rawQuestion) => {
           if (!isRecord(rawQuestion)) {
-            throw new Error("Dữ liệu câu hỏi xem lại không hợp lệ.");
+            throw new Error("Invalid review question data.");
           }
           const status = rawQuestion.status;
           if (
@@ -560,7 +557,7 @@ function parseReview(value: unknown): LrReviewApi {
             status !== "wrong" &&
             status !== "skipped"
           ) {
-            throw new Error("Trạng thái câu hỏi không hợp lệ.");
+            throw new Error("Invalid question status.");
           }
           return {
             questionId: requiredString(rawQuestion.questionId, message),
@@ -590,7 +587,7 @@ export async function getLrCatalog(
 ): Promise<LrExamCatalogItemApi[]> {
   const value = await lrRequest("/api/lr/exams/lr", { signal });
   if (!Array.isArray(value)) {
-    throw new Error("Danh sách đề L&R không hợp lệ.");
+    throw new Error("Invalid L&R exam catalog.");
   }
   return value.map(parseCatalogItem);
 }
@@ -704,7 +701,7 @@ export interface LrListeningPlaylistApi {
 }
 
 function parseListeningPlaylist(value: unknown): LrListeningPlaylistApi {
-  const message = "Danh sách audio Listening không hợp lệ.";
+  const message = "Invalid Listening audio playlist.";
   if (!isRecord(value) || !Array.isArray(value.items)) {
     throw new LrApiError(502, message);
   }
@@ -768,21 +765,18 @@ export async function getLrMediaUrl(
   signal?: AbortSignal,
 ): Promise<LrMediaUrlApi> {
   if (!assetId.trim()) {
-    throw new LrApiError(400, "Thiếu mã asset media.");
+    throw new LrApiError(400, "Missing media asset ID.");
   }
   const value = await lrRequest(
     `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/${kind}/${encodeURIComponent(assetId)}`,
     { signal },
   );
   if (!isRecord(value)) {
-    throw new LrApiError(502, "Đường dẫn media không hợp lệ.");
+    throw new LrApiError(502, "Invalid media URL.");
   }
   return {
-    url: requiredString(value.url, "Đường dẫn media không hợp lệ."),
-    expiresAtUtc: requiredString(
-      value.expiresAtUtc,
-      "Đường dẫn media không hợp lệ.",
-    ),
+    url: requiredString(value.url, "Invalid media URL."),
+    expiresAtUtc: requiredString(value.expiresAtUtc, "Invalid media URL."),
   };
 }
 // ==========================================
@@ -812,10 +806,10 @@ export interface LrPracticeItemPageApi {
 
 function parsePracticeItem(value: unknown): LrPracticeItemApi {
   if (!isRecord(value)) {
-    throw new LrApiError(502, "Dữ liệu bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Invalid practice item data.");
   }
 
-  const message = "Dữ liệu bài luyện không hợp lệ.";
+  const message = "Invalid practice item data.";
 
   return {
     id: requiredString(value.id, message),
@@ -838,7 +832,7 @@ export async function getLrPracticeItems(
   signal?: AbortSignal,
 ): Promise<LrPracticeItemPageApi> {
   if (!Number.isInteger(part) || part < 1 || part > 7) {
-    throw new LrApiError(400, "Part không hợp lệ.");
+    throw new LrApiError(400, "Invalid part.");
   }
 
   const query = new URLSearchParams({
@@ -852,10 +846,10 @@ export async function getLrPracticeItems(
   );
 
   if (!isRecord(value) || !Array.isArray(value.items)) {
-    throw new LrApiError(502, "Danh sách bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Invalid practice item list.");
   }
 
-  const message = "Thông tin phân trang không hợp lệ.";
+  const message = "Invalid pagination info.";
 
   return {
     items: value.items.map(parsePracticeItem),
@@ -918,10 +912,10 @@ export interface LrPracticeSubmitResultApi {
 
 function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
   if (!isRecord(value) || !Array.isArray(value.questions)) {
-    throw new LrApiError(502, "Chi tiết bài luyện không hợp lệ.");
+    throw new LrApiError(502, "Invalid practice item details.");
   }
 
-  const message = "Chi tiết bài luyện không hợp lệ.";
+  const message = "Invalid practice item details.";
 
   return {
     id: requiredString(value.id, message),
@@ -935,7 +929,7 @@ function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
     imageUrl: nullableString(value.imageUrl),
     questions: value.questions.map((raw): LrPracticeQuestionApi => {
       if (!isRecord(raw)) {
-        throw new LrApiError(502, "Dữ liệu câu hỏi không hợp lệ.");
+        throw new LrApiError(502, "Invalid question data.");
       }
 
       return {
@@ -954,10 +948,10 @@ function parsePracticeDetail(value: unknown): LrPracticeDetailApi {
 
 function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
   if (!isRecord(value) || !Array.isArray(value.questions)) {
-    throw new LrApiError(502, "Kết quả chấm bài không hợp lệ.");
+    throw new LrApiError(502, "Invalid grading result.");
   }
 
-  const message = "Kết quả chấm bài không hợp lệ.";
+  const message = "Invalid grading result.";
 
   return {
     itemId: requiredString(value.itemId, message),
@@ -966,7 +960,7 @@ function parsePracticeSubmitResult(value: unknown): LrPracticeSubmitResultApi {
     incorrectCount: requiredNumber(value.incorrectCount, message),
     questions: value.questions.map((raw): LrPracticeQuestionResultApi => {
       if (!isRecord(raw)) {
-        throw new LrApiError(502, "Kết quả câu hỏi không hợp lệ.");
+        throw new LrApiError(502, "Invalid question result.");
       }
 
       return {
@@ -1018,7 +1012,7 @@ export interface LrPracticeItemStatisticsApi {
 function parsePracticeStatisticsItem(
   value: unknown,
 ): LrPracticeItemStatisticsApi {
-  const message = "Dữ liệu thống kê không hợp lệ.";
+  const message = "Invalid statistics data.";
   if (!isRecord(value)) {
     throw new LrApiError(502, message);
   }
@@ -1036,7 +1030,7 @@ export async function getLrPracticeStatistics(
   signal?: AbortSignal,
 ): Promise<LrPracticeItemStatisticsApi[]> {
   if (!Number.isInteger(part) || part < 1 || part > 7) {
-    throw new LrApiError(400, "Part không hợp lệ.");
+    throw new LrApiError(400, "Invalid part.");
   }
 
   const value = await lrRequest(
@@ -1045,7 +1039,7 @@ export async function getLrPracticeStatistics(
   );
 
   if (!Array.isArray(value)) {
-    throw new LrApiError(502, "Dữ liệu thống kê không hợp lệ.");
+    throw new LrApiError(502, "Invalid statistics data.");
   }
 
   return value.map(parsePracticeStatisticsItem);

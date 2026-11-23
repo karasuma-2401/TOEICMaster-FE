@@ -31,7 +31,7 @@ export function WritingHistoryPlaceholder() {
         setError(
           cause instanceof Error
             ? cause.message
-            : "Không thể tải lịch sử Writing.",
+            : "Unable to load Writing history.",
         );
     } finally {
       if (!signal?.aborted) setLoading(false);
@@ -48,20 +48,20 @@ export function WritingHistoryPlaceholder() {
   return (
     <PracticePage header={<WritingHeader active="history" />}>
       <PageIntro
-        description="Lịch sử được lưu theo tài khoản đăng nhập hoặc phiên ẩn danh trên trình duyệt hiện tại."
-        eyebrow="LỊCH SỬ WRITING"
-        title="Lượt làm bài của bạn"
+        description="History is saved to your signed-in account or anonymous session in the current browser."
+        eyebrow="WRITING HISTORY"
+        title="Your attempts"
       />
-      {loading && <LoadingPanel label="Đang tải lịch sử…" />}
+      {loading && <LoadingPanel label="Loading history..." />}
       {error && <ErrorPanel message={error} onRetry={() => void load()} />}
       {!loading && !error && attempts.length === 0 && (
         <EmptyPanel
           action={
             <Link className={primaryAction} href="/writing">
-              Khám phá đề Writing
+              Explore Writing tests
             </Link>
           }
-          title="Chưa có lượt làm bài"
+          title="No attempts yet"
         />
       )}
       {!loading && !error && attempts.length > 0 && (
@@ -88,10 +88,11 @@ export function WritingHistoryPlaceholder() {
                     <div className="min-w-0">
                       <p className="truncate font-bold">{attempt.testTitle}</p>
                       <p className="mt-1 text-sm text-slate-500">
-                        {attempt.isPractice ? "Luyện bài tập · " : ""}
+                        {attempt.isPractice ? "Exercise practice · " : ""}
                         {displayMode(attempt.mode)} · {attempt.questionCount}{" "}
-                        câu ·{" "}
-                        {new Date(attempt.createdAtUtc).toLocaleString("vi-VN")}
+                        {attempt.questionCount === 1 ? "question" : "questions"}{" "}
+                        ·{" "}
+                        {new Date(attempt.createdAtUtc).toLocaleString("en-US")}
                       </p>
                     </div>
                   </div>
@@ -102,13 +103,13 @@ export function WritingHistoryPlaceholder() {
                       {submitted
                         ? attempt.evaluationStatus === "COMPLETED" &&
                           (attempt.isPractice || attempt.mode !== "FULL")
-                          ? "Đã chấm AI"
+                          ? "AI graded"
                           : score !== null
-                            ? `AI ước tính ${score}/200`
+                            ? `AI estimate ${score}/200`
                             : attempt.evaluationStatus === "FAILED"
-                              ? "Cần chấm lại"
-                              : "Chờ chấm AI"
-                        : "Đang làm"}
+                              ? "Needs re-evaluation"
+                              : "Awaiting AI grading"
+                        : "In progress"}
                     </span>
                     <Link
                       className={textLink}
@@ -118,7 +119,7 @@ export function WritingHistoryPlaceholder() {
                           : `/writing/attempts/${encodeURIComponent(attempt.id)}`
                       }
                     >
-                      {submitted ? "Xem trạng thái" : "Tiếp tục"}
+                      {submitted ? "View status" : "Continue"}
                     </Link>
                   </div>
                 </li>

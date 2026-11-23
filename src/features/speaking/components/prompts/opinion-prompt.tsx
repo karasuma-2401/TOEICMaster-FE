@@ -8,7 +8,7 @@ export function OpinionPrompt({ content }: { content: OpinionContent }) {
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-(--sp-ink-3)">
           Express an opinion
         </p>
-        <SpeakAloudButton label="Nghe đề" text={content.prompt} />
+        <SpeakAloudButton label="Listen to prompt" text={content.prompt} />
       </div>
       <p
         className="mt-3 max-w-prose text-lg font-semibold leading-8 text-(--sp-ink)"
@@ -17,17 +17,19 @@ export function OpinionPrompt({ content }: { content: OpinionContent }) {
         {content.prompt}
       </p>
       <ol className="mt-5 grid gap-2 text-sm text-(--sp-ink-2) sm:grid-cols-3">
-        {["Nêu quan điểm", "Lý do + ví dụ", "Kết luận"].map((item, index) => (
-          <li
-            className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-(--sp-line)"
-            key={item}
-          >
-            <span className="grid size-5 place-items-center rounded-full bg-(--sp-orange-soft) text-[11px] font-bold text-(--sp-brand)">
-              {index + 1}
-            </span>
-            {item}
-          </li>
-        ))}
+        {["State your opinion", "Reasons + examples", "Conclusion"].map(
+          (item, index) => (
+            <li
+              className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-(--sp-line)"
+              key={item}
+            >
+              <span className="grid size-5 place-items-center rounded-full bg-(--sp-orange-soft) text-[11px] font-bold text-(--sp-brand)">
+                {index + 1}
+              </span>
+              {item}
+            </li>
+          ),
+        )}
       </ol>
     </article>
   );

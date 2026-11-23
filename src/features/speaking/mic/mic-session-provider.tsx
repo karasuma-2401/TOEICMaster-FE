@@ -24,17 +24,17 @@ export type MicrophoneStatus =
   | "unsupported";
 
 export const microphoneMessages: Record<MicrophoneStatus, string> = {
-  idle: "Bấm để bật micro. Đồng hồ của lượt đang làm vẫn tiếp tục chạy.",
-  requesting: "Đang chờ quyền micro…",
-  ready: "Micro đã kết nối.",
-  lost: "Mất kết nối micro. Hãy cắm lại thiết bị và kết nối lại.",
+  idle: "Click to enable your microphone. The attempt timer keeps running.",
+  requesting: "Waiting for microphone permission...",
+  ready: "Microphone connected.",
+  lost: "Microphone connection lost. Please reconnect your device and try again.",
   denied:
-    "Micro đang bị chặn. Mở cài đặt của trang, cho phép Microphone rồi thử lại.",
-  "no-device": "Không tìm thấy micro. Hãy kết nối thiết bị rồi thử lại.",
-  busy: "Không thể mở micro. Hãy đóng ứng dụng đang sử dụng thiết bị rồi thử lại.",
-  insecure: "Ghi âm cần kết nối HTTPS hoặc localhost.",
+    "Microphone access is blocked. Open site settings, allow Microphone, and try again.",
+  "no-device": "No microphone found. Please connect a device and try again.",
+  busy: "Could not open the microphone. Close any other app using the device and try again.",
+  insecure: "Recording requires an HTTPS or localhost connection.",
   unsupported:
-    "Trình duyệt này không hỗ trợ ghi âm. Hãy dùng trình duyệt khác.",
+    "This browser does not support audio recording. Please use a different browser.",
 };
 
 function useMicrophone() {

@@ -35,12 +35,12 @@ import { SpeakingResultReport } from "./speaking-result-report";
 const pollMilliseconds = 5_000;
 
 const tiles = [
-  ["01", "Azure Speech", "Phân tích phát âm, ngữ điệu và trọng âm."],
-  ["02", "Gemini", "Chấm ngữ pháp, từ vựng và tính liên kết."],
+  ["01", "Azure Speech", "Analyzes pronunciation, intonation, and stress."],
+  ["02", "Gemini", "Grades grammar, vocabulary, and cohesion."],
   [
     "03",
-    "Tổng hợp điểm 0–200",
-    "Ước tính theo tiêu chí ETS, với bước 10 điểm.",
+    "Overall Score 0-200",
+    "Estimated using ETS criteria, in 10-point increments.",
   ],
 ];
 
@@ -154,7 +154,7 @@ export function SpeakingEvaluationPanel({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Không thể yêu cầu chấm AI lúc này.",
+            : "Unable to request AI grading right now.",
         );
     } finally {
       setSubmitting(false);
@@ -167,10 +167,10 @@ export function SpeakingEvaluationPanel({
   const saved = attempt.questions.filter((item) => item.recording).length;
   const queued = evaluation?.status === "QUEUED";
   const dataNote = pending
-    ? "Bạn đã đồng ý gửi dữ liệu để AI đánh giá bài nói này."
+    ? "You have agreed to send your data for AI evaluation of this speaking attempt."
     : guestLimited
-      ? "Bài nói này chưa được gửi đến dịch vụ AI."
-      : "Chỉ bắt đầu gửi dữ liệu khi bạn đồng ý chấm AI.";
+      ? "This speaking attempt has not been sent to the AI service."
+      : "Data is only sent once you agree to AI grading.";
   const partCount = new Set(attempt.questions.map((item) => item.part)).size;
   // Guest attempts stay with the guest session and are not moved to an account,
   // so login returns to where the learner can start a new attempt.
@@ -183,10 +183,10 @@ export function SpeakingEvaluationPanel({
     <SpPage narrow>
       <Breadcrumb
         items={[
-          { label: "Trang chủ", href: "/" },
-          { label: "Đề thi thử", href: "/speaking" },
+          { label: "Home", href: "/" },
+          { label: "Practice Tests", href: "/speaking" },
           { label: "Speaking", href: "/speaking" },
-          { label: "Chấm điểm bài thi" },
+          { label: "Test Grading" },
         ]}
       />
       <Chip className="mt-4 uppercase" tone="speak">
@@ -194,7 +194,7 @@ export function SpeakingEvaluationPanel({
       </Chip>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-[28px] font-semibold leading-9">
-          Chấm điểm bài thi Speaking
+          Speaking Test Grading
         </h1>
         <GradingStepper current={pending ? 2 : 1} />
       </div>
@@ -205,7 +205,7 @@ export function SpeakingEvaluationPanel({
           className="sp-card min-w-0 p-7"
         >
           <h2 className="sr-only" id="speaking-ai-evaluation">
-            Chấm điểm bằng AI
+            AI Grading
           </h2>
           {error && (
             <p
@@ -217,7 +217,7 @@ export function SpeakingEvaluationPanel({
           )}
           {failedUploads.length > 0 && (
             <div className="mb-4 rounded-xl bg-(--sp-danger-bg) p-3 text-sm text-(--sp-danger)">
-              <p className="font-semibold">Một số bản ghi chưa tải lên được.</p>
+              <p className="font-semibold">Some recordings failed to upload.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {failedUploads.map((position) => (
                   <button
@@ -226,7 +226,7 @@ export function SpeakingEvaluationPanel({
                     onClick={() => onRetryUpload?.(position)}
                     type="button"
                   >
-                    Thử tải lại câu {position}
+                    Retry uploading question {position}
                   </button>
                 ))}
               </div>
@@ -236,13 +236,13 @@ export function SpeakingEvaluationPanel({
           {pending ? (
             <div aria-live="polite">
               <Heading
-                description="Bạn không cần ghi âm lại. Vui lòng giữ trang này mở trong khi AI đánh giá."
-                overline="ĐÃ NHẬN ĐỒNG Ý · ĐANG XỬ LÝ"
-                title="AI đang nghe và chấm bài nói của bạn (khoảng 20–40 giây)…"
+                description="You do not need to re-record. Please keep this page open while the AI evaluates your responses."
+                overline="CONSENT RECEIVED · PROCESSING"
+                title="AI is listening to and grading your speaking responses (about 20-40 seconds)…"
               />
               <div className="mt-5 rounded-2xl bg-(--sp-subtle) px-8 py-12 lg:pl-[28%]">
                 <p className="sp-overline text-(--sp-ink-2)">
-                  ĐANG PHÂN TÍCH BẢN GHI ÂM
+                  ANALYZING RECORDINGS
                 </p>
                 <p className="mt-2 text-2xl font-semibold">Azure Speech</p>
                 <Waveform
@@ -251,39 +251,42 @@ export function SpeakingEvaluationPanel({
                   className="my-3 text-(--sp-brand)"
                 />
                 <p className="text-[13px] text-(--sp-ink-2)">
-                  Phân tích phát âm, ngữ điệu & trọng âm
+                  Analyzing pronunciation, intonation & stress
                 </p>
               </div>
               <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-lg font-semibold">
-                  {queued ? "Đã xếp hàng chờ chấm" : "Đang chấm phát âm"}
+                  {queued ? "Queued for grading" : "Grading pronunciation"}
                 </p>
                 <p className="text-xs text-(--sp-ink-2)">
-                  Thời gian xử lý thường 15–45 giây
+                  Processing usually takes 15-45 seconds
                 </p>
               </div>
               <div className="mt-2">
-                <ProgressBar label="Tiến độ chấm" value={queued ? 0.1 : 0.4} />
+                <ProgressBar
+                  label="Grading progress"
+                  value={queued ? 0.1 : 0.4}
+                />
               </div>
               <ul className="mt-4 space-y-3">
                 <PipelineRow state={queued ? "active" : "done"}>
-                  Đã tối ưu hóa file âm thanh
+                  Audio files optimized
                 </PipelineRow>
                 <PipelineRow state={queued ? "todo" : "active"}>
-                  Azure Speech đang chấm phát âm…
+                  Azure Speech is grading pronunciation…
                 </PipelineRow>
                 <PipelineRow state="todo">
-                  Gemini chuẩn bị đánh giá ngữ pháp.
+                  Gemini is preparing to evaluate grammar.
                 </PipelineRow>
               </ul>
               {evaluation?.status === "RETRYING" && (
                 <p className="mt-3 text-[13px] text-(--sp-warning)">
-                  Dịch vụ AI đang bận, hệ thống sẽ tự thử lại (lần{" "}
-                  {evaluation.retryCount}).
+                  The AI service is busy; the system will automatically retry
+                  (attempt {evaluation.retryCount}).
                 </p>
               )}
               <p className="mt-4 text-xs text-(--sp-ink-2)">
-                Kết quả sẽ hiển thị sau khi tất cả bước đánh giá hoàn tất.
+                Results will appear once all evaluation steps are complete.
               </p>
             </div>
           ) : (
@@ -291,15 +294,15 @@ export function SpeakingEvaluationPanel({
               <Heading
                 description={
                   guestLimited
-                    ? "Bài nói đã được lưu. Đăng nhập để nhận thêm lượt chấm AI."
-                    : "Nhận phân tích bài nói và gợi ý cải thiện qua 3 bước đánh giá."
+                    ? "Your speaking attempt has been saved. Log in to get more AI evaluations."
+                    : "Get speaking analysis and improvement tips across 3 evaluation steps."
                 }
                 overline={
                   guestLimited
-                    ? "KHÁCH VÃNG LAI · ĐÃ HẾT LƯỢT CHẤM TRONG 24 GIỜ"
-                    : "BÀI NÓI ĐÃ SẴN SÀNG · XÁC NHẬN TRƯỚC KHI CHẤM"
+                    ? "GUEST · 24-HOUR GRADING LIMIT REACHED"
+                    : "SPEAKING ATTEMPT READY · CONFIRM BEFORE GRADING"
                 }
-                title="Gửi bài nói để AI đánh giá & chấm điểm ước tính theo chuẩn ETS"
+                title="Submit your speaking attempt for AI evaluation & ETS-aligned score estimate"
               />
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {tiles.map(([number, title, description]) => (
@@ -330,12 +333,12 @@ export function SpeakingEvaluationPanel({
                       />
                       <div>
                         <p className="font-semibold">
-                          Khách vãng lai chỉ được chấm 1 lượt/ngày. Đăng nhập để
-                          nhận thêm lượt.
+                          Guests are limited to 1 grading per day. Log in to get
+                          more evaluations.
                         </p>
                         <p className="mt-1 text-sm">
-                          Đã dùng 1/1 lượt trong 24 giờ. Chưa gửi bài nói này
-                          đến dịch vụ AI.
+                          Used 1/1 evaluation in the past 24 hours. This
+                          speaking attempt has not been sent to the AI service.
                         </p>
                       </div>
                     </div>
@@ -344,36 +347,36 @@ export function SpeakingEvaluationPanel({
                         className="sp-btn sp-btn-solid"
                         href={`/login?next=${encodeURIComponent(retryPath)}`}
                       >
-                        Đăng nhập để nhận thêm lượt →
+                        Log in for more evaluations →
                       </Link>
                     </div>
                   </div>
                   <p className="mt-4 text-xs text-(--sp-ink-2)">
-                    Bài làm của khách không chuyển sang tài khoản. Sau khi đăng
-                    nhập, bạn làm lại bài để được chấm.
+                    Guest attempts are not transferred to an account. After
+                    logging in, start a new attempt to get graded.
                   </p>
                 </>
               )}
               {available === null && !evaluation && (
                 <p className="text-sm text-(--sp-ink-2)">
-                  Đang kiểm tra dịch vụ chấm AI…
+                  Checking AI grading service…
                 </p>
               )}
               {available === false && !evaluation && (
                 <div className="rounded-xl bg-(--sp-subtle) p-5 text-sm leading-6">
                   <p className="font-semibold">
-                    Chấm AI cho Speaking chưa được bật trên máy chủ
+                    AI grading for Speaking is not enabled on the server
                   </p>
                   <p className="mt-1 text-(--sp-ink-2)">
-                    Quản trị viên cần cấu hình Azure Speech và Gemini để dùng
-                    tính năng này. Bạn vẫn có thể nghe lại bản ghi và tự đánh
-                    giá.
+                    An administrator needs to configure Azure Speech and Gemini
+                    to enable this feature. You can still play back your
+                    recordings and self-evaluate.
                   </p>
                 </div>
               )}
               {evaluation?.status === "FAILED" && (
                 <div className="rounded-[14px] border-[1.5px] border-(--sp-warning-line) bg-(--sp-warning-bg) p-5 text-sm">
-                  <p className="font-semibold">Chưa thể chấm bài lúc này</p>
+                  <p className="font-semibold">Unable to grade right now</p>
                   <p className="mt-1">{evaluation.failureMessage}</p>
                   <button
                     className="sp-btn sp-btn-solid mt-4"
@@ -381,13 +384,13 @@ export function SpeakingEvaluationPanel({
                     onClick={() => void requestEvaluation()}
                     type="button"
                   >
-                    {submitting ? "Đang gửi…" : "Thử chấm lại"}
+                    {submitting ? "Submitting…" : "Retry grading"}
                   </button>
                 </div>
               )}
               {available && !evaluation && !hasRecordings && !guestLimited && (
                 <p className="text-sm font-semibold text-(--sp-warning)">
-                  Lượt này chưa có bản ghi nào nên chưa thể chấm.
+                  This attempt has no recordings yet and cannot be graded.
                 </p>
               )}
               {available && !evaluation && hasRecordings && !guestLimited && (
@@ -399,15 +402,15 @@ export function SpeakingEvaluationPanel({
                       onChange={(event) => setConsented(event.target.checked)}
                       type="checkbox"
                     />
-                    Tôi đồng ý gửi bản ghi âm và văn bản bài nói đến các dịch vụ
-                    AI để chấm điểm ước tính.
+                    I agree to send my audio recordings and spoken transcripts
+                    to AI services for estimated scoring.
                   </label>
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                     <p className="inline-flex items-center gap-2 text-[13px] text-(--sp-ink-2)">
                       <ClockIcon size={16} />
                       {uploading
-                        ? "Đang chờ tải xong bản ghi lên máy chủ…"
-                        : "Thời gian xử lý thường khoảng 15–45 giây"}
+                        ? "Waiting for recordings to finish uploading to the server…"
+                        : "Processing usually takes about 15-45 seconds"}
                     </p>
                     <button
                       className="sp-btn sp-btn-solid"
@@ -416,8 +419,8 @@ export function SpeakingEvaluationPanel({
                       type="button"
                     >
                       {submitting
-                        ? "Đang gửi yêu cầu…"
-                        : "Đồng ý & Bắt đầu chấm AI →"}
+                        ? "Submitting request…"
+                        : "Agree & Start AI Grading →"}
                     </button>
                   </div>
                 </>
@@ -428,22 +431,22 @@ export function SpeakingEvaluationPanel({
 
         <aside className="min-w-0 space-y-4">
           <section className="sp-card p-5">
-            <h2 className="text-lg font-semibold">Bài nói của bạn</h2>
+            <h2 className="text-lg font-semibold">Your speaking attempt</h2>
             <p className="mt-3 font-semibold">{attempt.testTitle}</p>
             <p className="text-xs text-(--sp-ink-2)">
               {formatDate(attempt.createdAtUtc)}
               {attemptNumber !== null &&
-                ` · Lần thi ${formatAttemptNumber(attemptNumber)}`}
+                ` · Attempt ${formatAttemptNumber(attemptNumber)}`}
             </p>
             <dl className="mt-3 space-y-2 text-[13px]">
               <div className="flex justify-between gap-2">
-                <dt className="text-(--sp-ink-2)">Câu trả lời</dt>
+                <dt className="text-(--sp-ink-2)">Responses</dt>
                 <dd>
-                  {saved} / {attempt.questions.length} câu
+                  {saved} / {attempt.questions.length} questions
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-(--sp-ink-2)">Nội dung</dt>
+                <dt className="text-(--sp-ink-2)">Content</dt>
                 <dd>
                   {partCount > 1
                     ? `${partCount} Parts`
@@ -451,7 +454,7 @@ export function SpeakingEvaluationPanel({
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-(--sp-ink-2)">Thời gian làm bài</dt>
+                <dt className="text-(--sp-ink-2)">Duration</dt>
                 <dd>
                   {formatElapsed(attempt.createdAtUtc, attempt.submittedAtUtc)}
                 </dd>
@@ -460,30 +463,30 @@ export function SpeakingEvaluationPanel({
             <hr className="my-3 border-(--sp-line)" />
             <p className="flex items-center gap-1.5 text-[13px]">
               <CheckIcon className="text-(--sp-success)" size={15} />
-              Đã hoàn thành bài ghi âm
+              Recordings completed
             </p>
             {canListen && (
               <Link
                 className="sp-btn sp-btn-sm sp-btn-outline mt-3 w-full"
                 href={reviewHref(attempt.id)}
               >
-                Nghe lại bài làm
+                Review & listen back
               </Link>
             )}
           </section>
           <section className="sp-card p-5">
-            <h2 className="font-semibold">Minh bạch về dữ liệu</h2>
+            <h2 className="font-semibold">Data transparency</h2>
             <p className="mt-2 text-[13px] text-(--sp-ink-2)">
-              Bản ghi âm được gửi đến Azure Speech; văn bản bài nói được Gemini
-              phân tích để tạo đánh giá và điểm ước tính.
+              Audio recordings are sent to Azure Speech; spoken transcripts are
+              analyzed by Gemini to generate feedback and an estimated score.
             </p>
             <p className="mt-2 text-xs text-(--sp-ink-2)">{dataNote}</p>
           </section>
         </aside>
       </div>
       <p className="mt-8 text-center text-[13px] text-(--sp-ink-2)">
-        Điểm AI chỉ mang tính tham khảo theo tiêu chí ETS, không thay thế kết
-        quả thi chính thức.
+        AI scores are for reference only based on ETS criteria and do not
+        replace official test results.
       </p>
     </SpPage>
   );

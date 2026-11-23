@@ -81,10 +81,10 @@ it("numbers the attempt from history and shows the learner's own answer", async 
   render(<WritingAttemptReview attemptId="attempt-2" />);
 
   expect(
-    await screen.findByText(/Writing Test 01 · Lần thi #02 · 150\/200/),
+    await screen.findByText(/Writing Test 01 · Attempt #02 · 150\/200/),
   ).toBeInTheDocument();
   expect(screen.getByText("A short sentence")).toBeInTheDocument();
-  expect(screen.getByText("3 từ · Chỉ đọc")).toBeInTheDocument();
+  expect(screen.getByText("3 words · Read-only")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /#01/ })).toHaveAttribute(
     "href",
     "/writing/attempts/attempt-1/review",
@@ -98,10 +98,10 @@ it("switches question and falls back to AI feedback without a model essay", asyn
   expect(await screen.findByText("Good grammar")).toBeInTheDocument();
   expect(screen.queryByText("High-score Model Essay")).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Câu 2" }));
+  await user.click(screen.getByRole("button", { name: "Question 2" }));
 
   expect(screen.getByText("Prompt two")).toBeInTheDocument();
-  expect(screen.getByText("Không có câu trả lời.")).toBeInTheDocument();
+  expect(screen.getByText("No response submitted.")).toBeInTheDocument();
   expect(screen.queryByText("Good grammar")).not.toBeInTheDocument();
 });
 
@@ -114,11 +114,11 @@ it("shows BOTH the model essay and AI feedback with SentenceDiffView for Part 1 
 
   expect(await screen.findByText("A model sentence")).toBeInTheDocument();
   expect(screen.getByText("High-score Model Essay")).toBeInTheDocument();
-  expect(screen.getByText("Nhận xét của AI")).toBeInTheDocument();
+  expect(screen.getByText("AI Feedback")).toBeInTheDocument();
   expect(screen.getByText("Good grammar")).toBeInTheDocument();
   expect(screen.getByTestId("writing-sentence-diff")).toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Về lịch sử làm bài" }),
+    screen.getByRole("link", { name: "Back to attempt history" }),
   ).toHaveAttribute("href", "/history");
 });
 
@@ -127,7 +127,7 @@ it("still works when the attempt history cannot load", async () => {
   render(<WritingAttemptReview attemptId="attempt-2" />);
 
   expect(await screen.findByText("A short sentence")).toBeInTheDocument();
-  expect(screen.queryByText("Lịch sử lần thi")).not.toBeInTheDocument();
+  expect(screen.queryByText("Attempt history")).not.toBeInTheDocument();
 });
 
 it("does not review an attempt that is still in progress", async () => {
@@ -137,8 +137,10 @@ it("does not review an attempt that is still in progress", async () => {
   });
   render(<WritingAttemptReview attemptId="attempt-2" />);
 
-  expect(await screen.findByText("Bài làm chưa được nộp")).toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Tiếp tục làm bài" }),
+    await screen.findByText("Attempt not submitted yet"),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Continue attempt" }),
   ).toHaveAttribute("href", "/writing/attempts/attempt-2");
 });

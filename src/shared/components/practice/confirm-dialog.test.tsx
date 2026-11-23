@@ -11,23 +11,23 @@ describe("practice/ConfirmDialog", () => {
 
     render(
       <ConfirmDialog
-        cancelLabel="Tiếp tục làm"
-        confirmLabel="Thoát phòng thi"
+        cancelLabel="Keep working"
+        confirmLabel="Leave test"
         id="leave-title"
         onCancel={onCancel}
         onConfirm={onConfirm}
-        title="Rời khỏi phòng thi?"
+        title="Leave the test room?"
       >
-        <p>Tiến độ hiện tại sẽ không được lưu.</p>
+        <p>Your current progress will not be saved.</p>
       </ConfirmDialog>,
     );
 
     expect(document.querySelectorAll("dialog")).toHaveLength(0);
     const dialog = await screen.findByRole("dialog", {
-      name: "Rời khỏi phòng thi?",
+      name: "Leave the test room?",
     });
     expect(dialog).toHaveAccessibleDescription(
-      "Tiến độ hiện tại sẽ không được lưu.",
+      "Your current progress will not be saved.",
     );
 
     const cancelBtn = screen.getByTestId("confirm-dialog-cancel");

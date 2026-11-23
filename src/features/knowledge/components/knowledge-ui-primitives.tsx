@@ -17,9 +17,9 @@ const STATUS_STYLES: Record<KnowledgeArticleStatus, string> = {
 };
 
 const STATUS_LABELS: Record<KnowledgeArticleStatus, string> = {
-  Draft: "Bản nháp",
-  Published: "Đã xuất bản",
-  Archived: "Lưu trữ",
+  Draft: "Draft",
+  Published: "Published",
+  Archived: "Archived",
 };
 
 export function KnowledgeStatusBadge({
@@ -51,8 +51,8 @@ export function KnowledgeConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = "Xác nhận xóa",
-  cancelLabel = "Hủy",
+  confirmLabel = "Confirm delete",
+  cancelLabel = "Cancel",
   pending = false,
   onConfirm,
   onCancel,
@@ -205,7 +205,7 @@ export function KnowledgeConfirmDialog({
             onClick={onConfirm}
             type="button"
           >
-            {pending ? "Đang xử lý..." : confirmLabel}
+            {pending ? "Processing..." : confirmLabel}
           </button>
         </div>
       </div>
@@ -241,7 +241,7 @@ export function KnowledgePagination({
       className={`flex items-center justify-between text-xs text-(--admin-muted) ${className}`}
     >
       <span>
-        Trang {pageNumber} / {totalPages} ({totalCount} {itemLabel})
+        Page {pageNumber} / {totalPages} ({totalCount} {itemLabel})
       </span>
       <div className="flex gap-2">
         <button
@@ -250,7 +250,7 @@ export function KnowledgePagination({
           onClick={() => onPageChange(pageNumber - 1)}
           type="button"
         >
-          Trước
+          Previous
         </button>
         <button
           className={`rounded-md border border-(--admin-border) bg-white px-3 py-1 font-semibold text-(--admin-ink) transition hover:bg-(--admin-surface-muted) disabled:opacity-40 ${adminFocus}`}
@@ -258,7 +258,7 @@ export function KnowledgePagination({
           onClick={() => onPageChange(pageNumber + 1)}
           type="button"
         >
-          Sau
+          Next
         </button>
       </div>
     </div>

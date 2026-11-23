@@ -6,7 +6,7 @@ import { focusRing } from "@/shared/components/practice/styles";
 /** Reads English text aloud with the browser voice; hidden when unsupported. */
 export function SpeakAloudButton({
   text,
-  label = "Nghe câu hỏi",
+  label = "Listen to question",
 }: {
   text: string;
   label?: string;
@@ -42,7 +42,7 @@ export function SpeakAloudButton({
       type="button"
     >
       <span aria-hidden="true">{speaking ? "◼" : "▶"}</span>
-      {speaking ? "Đang phát…" : label}
+      {speaking ? "Playing…" : label}
     </button>
   );
 }

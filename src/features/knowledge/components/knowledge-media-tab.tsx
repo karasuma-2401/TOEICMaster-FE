@@ -57,7 +57,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
       } catch (err) {
         if (!active || controller.signal.aborted) return;
         toast.error(
-          err instanceof Error ? err.message : "Không thể tải thư viện ảnh.",
+          err instanceof Error ? err.message : "Could not load media library.",
         );
       } finally {
         if (active) setLoading(false);
@@ -75,14 +75,14 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
     setDeleting(true);
     try {
       await deleteKnowledgeMedia(confirmDeleteAsset.id);
-      toast.success("Đã xóa hình ảnh.");
+      toast.success("Image deleted.");
       setConfirmDeleteAsset(null);
       setLocalTick((t) => t + 1);
     } catch (err) {
       toast.error(
         err instanceof KnowledgeApiError
           ? err.message
-          : "Không thể xóa hình ảnh.",
+          : "Could not delete image.",
       );
     } finally {
       setDeleting(false);
@@ -101,12 +101,12 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
             setQuery(e.target.value);
             setPageNumber(1);
           }}
-          placeholder="Tìm theo tên file ảnh..."
+          placeholder="Search by image filename..."
           type="search"
           value={query}
         />
         <select
-          aria-label="Lọc ảnh theo trạng thái sử dụng"
+          aria-label="Filter images by usage status"
           className={fieldClass}
           onChange={(e) => {
             setUnusedOnly(e.target.value);
@@ -114,12 +114,12 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
           }}
           value={unusedOnly}
         >
-          <option value="all">Tất cả hình ảnh</option>
-          <option value="used">Đang được dùng trong bài</option>
-          <option value="unused">Chưa được dùng (có thể xóa)</option>
+          <option value="all">All images</option>
+          <option value="used">Used in articles</option>
+          <option value="unused">Unused (deletable)</option>
         </select>
         <select
-          aria-label="Sắp xếp hình ảnh"
+          aria-label="Sort images"
           className={fieldClass}
           onChange={(e) => {
             setSort(e.target.value);
@@ -127,20 +127,20 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
           }}
           value={sort}
         >
-          <option value="createdAt:desc">Mới tải lên</option>
-          <option value="fileName:asc">Tên file A → Z</option>
-          <option value="byteLength:desc">Dung lượng lớn nhất</option>
+          <option value="createdAt:desc">Newest uploads</option>
+          <option value="fileName:asc">Filename A → Z</option>
+          <option value="byteLength:desc">Largest file size</option>
         </select>
       </div>
 
       <div className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm">
         {loading ? (
           <p className="py-12 text-center text-sm text-(--admin-muted)">
-            Đang tải thư viện ảnh...
+            Loading media library...
           </p>
         ) : !data || data.items.length === 0 ? (
           <p className="py-12 text-center text-sm text-(--admin-muted)">
-            Chưa có hình ảnh nào.
+            No images yet.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -170,8 +170,8 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
                       <p className="text-[11px] text-(--admin-muted)">
                         {formatBytes(asset.byteLength)} -{" "}
                         {used
-                          ? `Đang dùng (${asset.usageCount} bài)`
-                          : "Chưa dùng"}
+                          ? `In use (${asset.usageCount} article${asset.usageCount === 1 ? "" : "s"})`
+                          : "Unused"}
                       </p>
                     </div>
                     <button
@@ -180,12 +180,12 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
                       onClick={() => setConfirmDeleteAsset(asset)}
                       title={
                         used
-                          ? "Ảnh đang được sử dụng trong bài viết"
-                          : "Xóa ảnh khỏi thư viện"
+                          ? "Image is currently used in an article"
+                          : "Remove image from library"
                       }
                       type="button"
                     >
-                      {used ? "Đang sử dụng" : "Xóa ảnh"}
+                      {used ? "In use" : "Delete image"}
                     </button>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
             className="mt-5 border-t border-(--admin-border) pt-3"
             hasNextPage={data.hasNextPage}
             hasPreviousPage={data.hasPreviousPage}
-            itemLabel="ảnh"
+            itemLabel="images"
             onPageChange={setPageNumber}
             pageNumber={data.pageNumber}
             totalCount={data.totalCount}
@@ -209,13 +209,13 @@ export function KnowledgeMediaTab({ refreshSignal }: KnowledgeMediaTabProps) {
       </div>
 
       <KnowledgeConfirmDialog
-        confirmLabel="Xóa hình ảnh"
-        description={`Bạn có chắc chắn muốn xóa hình ảnh "${confirmDeleteAsset?.originalFileName ?? ""}" khỏi thư viện?`}
+        confirmLabel="Delete image"
+        description={`Are you sure you want to remove "${confirmDeleteAsset?.originalFileName ?? ""}" from the library?`}
         onCancel={() => setConfirmDeleteAsset(null)}
         onConfirm={() => void confirmDelete()}
         open={Boolean(confirmDeleteAsset)}
         pending={deleting}
-        title="Xác nhận xóa hình ảnh"
+        title="Confirm image deletion"
       />
     </section>
   );

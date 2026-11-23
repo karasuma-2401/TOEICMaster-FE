@@ -6,15 +6,15 @@ export function formatClock(seconds: number) {
     .padStart(2, "0")}:${(safe % 60).toString().padStart(2, "0")}`;
 }
 
-/** Rounds up to whole minutes, e.g. `90` → `2 phút`. */
+/** Rounds up to whole minutes, e.g. `90` -> `2 min`. */
 export function formatMinutes(seconds: number) {
-  return `${Math.ceil(seconds / 60)} phút`;
+  return `${Math.ceil(seconds / 60)} min`;
 }
 
-/** Short label for a phase length, e.g. `45s`, `1 phút`, `1 phút 30s`. */
+/** Short label for a phase length, e.g. `45s`, `1 min`, `1 min 30s`. */
 export function formatPhase(seconds: number) {
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;
-  return rest ? `${minutes} phút ${rest}s` : `${minutes} phút`;
+  return rest ? `${minutes} min ${rest}s` : `${minutes} min`;
 }

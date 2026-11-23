@@ -22,11 +22,11 @@ export function ImageUploadField({
   const upload = async (file: File | undefined) => {
     if (!file) return;
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setError("Chỉ nhận ảnh JPG hoặc PNG.");
+      setError("Only JPG or PNG images are accepted.");
       return;
     }
     if (file.size > maxBytes) {
-      setError("Ảnh không được vượt quá 5MB.");
+      setError("Image must not exceed 5MB.");
       return;
     }
     setUploading(true);
@@ -35,7 +35,7 @@ export function ImageUploadField({
       const { id } = await uploadSpeakingImage(file);
       onUploaded(id, mediaUrl("admin", id));
     } catch (cause) {
-      setError(errorMessage(cause, "Không thể tải ảnh lên."));
+      setError(errorMessage(cause, "Unable to upload image."));
     } finally {
       setUploading(false);
     }
@@ -45,13 +45,13 @@ export function ImageUploadField({
       <label
         className={`block rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-sm font-bold text-[var(--admin-brand-red)] ${disabled ? "cursor-not-allowed opacity-65" : "cursor-pointer"}`}
       >
-        Hình ảnh đề bài *
+        Prompt image *
         <span className="mt-1 block font-normal text-[var(--admin-muted)]">
           {uploading
-            ? "Đang tải ảnh lên…"
+            ? "Uploading image..."
             : imageUrl
-              ? "Đã có ảnh · chọn file khác để thay"
-              : "Chọn ảnh JPG/PNG, tối đa 5MB"}
+              ? "Image uploaded · choose another file to replace"
+              : "Choose JPG/PNG image, max 5MB"}
         </span>
         <input
           accept="image/jpeg,image/png"

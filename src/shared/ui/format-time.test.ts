@@ -8,9 +8,9 @@ describe("format-time", () => {
   });
 
   it("rounds minutes up and labels phases", () => {
-    expect(formatMinutes(90)).toBe("2 phút");
+    expect(formatMinutes(90)).toBe("2 min");
     expect(formatPhase(45)).toBe("45s");
-    expect(formatPhase(60)).toBe("1 phút");
-    expect(formatPhase(90)).toBe("1 phút 30s");
+    expect(formatPhase(60)).toBe("1 min");
+    expect(formatPhase(90)).toBe("1 min 30s");
   });
 });

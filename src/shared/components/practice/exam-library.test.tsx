@@ -9,7 +9,7 @@ const skill: ExamLibrarySkill = {
   id: "speaking",
   name: "Speaking",
   tagline: "Tagline",
-  format: "11 câu · ~20 phút · 0–200 điểm · 5 Parts",
+  format: "11 questions · ~20 min · 0-200 pts · 5 Parts",
   maxScore: 200,
   examHref: "/speaking",
   exerciseHref: "/speaking/parts/1",
@@ -20,7 +20,7 @@ const items: ExamLibraryItem[] = Array.from({ length: 7 }, (_, index) => ({
   code: `SP-${index + 1}`,
   title: `Test ${index + 1}`,
   badge: "5 Parts",
-  meta: "11 câu · ~20 phút · 0–200 điểm",
+  meta: "11 questions · ~20 min · 0-200 pts",
   action: { href: `/speaking/tests/t${index + 1}` },
   sortKey: `2026-01-0${index + 1}T00:00:00Z`,
   difficulty: null,
@@ -33,8 +33,8 @@ const renderLibrary = (
 ) =>
   render(
     <ExamLibrary
-      emptyDescription="Mô tả trống"
-      emptyTitle="Chưa có đề"
+      emptyDescription="Empty description"
+      emptyTitle="No tests yet"
       header={null}
       items={items}
       skill={skill}
@@ -51,34 +51,33 @@ describe("ExamLibrary", () => {
     const card = screen
       .getByRole("heading", { name: "Test 7" })
       .closest("article") as HTMLElement;
-    expect(within(card).getByText("✓ Đã làm")).toBeInTheDocument();
-    expect(within(card).getByText("Bạn đã thi 2 lần")).toBeInTheDocument();
-    expect(within(card).getByText("Tốt nhất: 160 / 200")).toBeInTheDocument();
+    expect(within(card).getByText("✓ Completed")).toBeInTheDocument();
+    expect(within(card).getByText("Attempted 2 times")).toBeInTheDocument();
+    expect(within(card).getByText("Best: 160 / 200")).toBeInTheDocument();
     expect(
-      within(card).getByRole("link", { name: "Vào thi Speaking" }),
+      within(card).getByRole("link", { name: "Start Speaking" }),
     ).toHaveAttribute("href", "/speaking/tests/t7");
   });
 
   it("links between the skill's tests and exercises", () => {
     renderLibrary();
     const nav = screen.getByRole("navigation", {
-      name: "Chọn đề thi hoặc bài tập Speaking",
+      name: "Choose Speaking tests or exercises",
     });
     expect(
-      within(nav).getByRole("link", { name: "Đề thi thử" }),
+      within(nav).getByRole("link", { name: "Mock Tests" }),
     ).toHaveAttribute("aria-current", "page");
-    expect(within(nav).getByRole("link", { name: "Bài tập" })).toHaveAttribute(
-      "href",
-      "/speaking/parts/1",
-    );
+    expect(
+      within(nav).getByRole("link", { name: "Exercises" }),
+    ).toHaveAttribute("href", "/speaking/parts/1");
   });
 
   it("pages six tests at a time", async () => {
     const user = userEvent.setup();
     renderLibrary();
     expect(screen.getAllByRole("article")).toHaveLength(6);
-    expect(screen.getByText(/Hiển thị 1–6 trong 7 đề thi/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Tiếp →" }));
+    expect(screen.getByText(/Showing 1-6 of 7 tests/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next →" }));
     expect(screen.getAllByRole("article")).toHaveLength(1);
     expect(screen.getByRole("heading", { name: "Test 1" })).toBeInTheDocument();
   });
@@ -88,27 +87,25 @@ describe("ExamLibrary", () => {
     renderLibrary();
     await user.click(screen.getByRole("button", { name: "2" }));
     await user.selectOptions(
-      screen.getByRole("combobox", { name: "Trạng thái" }),
+      screen.getByRole("combobox", { name: "Status" }),
       "TODO",
     );
-    expect(screen.getByText("6 đề thi Speaking")).toBeInTheDocument();
+    expect(screen.getByText("6 Speaking tests")).toBeInTheDocument();
     expect(screen.getAllByRole("article")).toHaveLength(6);
   });
 
   it("explains an empty search result", async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await user.type(screen.getByRole("searchbox"), "không có");
-    expect(
-      screen.getByText("Không tìm thấy đề thi phù hợp"),
-    ).toBeInTheDocument();
+    await user.type(screen.getByRole("searchbox"), "not found");
+    expect(screen.getByText("No matching tests found")).toBeInTheDocument();
   });
 
   it("shows the empty state and disables filters without tests", () => {
     renderLibrary({ items: [] });
-    expect(screen.getByText("Chưa có đề")).toBeInTheDocument();
+    expect(screen.getByText("No tests yet")).toBeInTheDocument();
     expect(screen.getByRole("searchbox")).toBeDisabled();
-    expect(screen.getByText("— / 200")).toBeInTheDocument();
+    expect(screen.getByText("- / 200")).toBeInTheDocument();
   });
 
   it("adapts its wording and filters to exercises", async () => {
@@ -127,34 +124,34 @@ describe("ExamLibrary", () => {
       partLinks: [{ href: "/p/1", label: "Part 1", active: true }],
     });
     expect(
-      screen.getByRole("heading", { name: "Bài tập Speaking" }),
+      screen.getByRole("heading", { name: "Speaking Exercises" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Part 1" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    await user.click(screen.getByRole("button", { name: "Làm bài Speaking" }));
+    await user.click(screen.getByRole("button", { name: "Practice Speaking" }));
     expect(onStart).toHaveBeenCalledOnce();
     await user.selectOptions(
-      screen.getByRole("combobox", { name: "Độ khó" }),
+      screen.getByRole("combobox", { name: "Difficulty" }),
       "HARD",
     );
-    expect(screen.getByText("1 bài tập Speaking")).toBeInTheDocument();
+    expect(screen.getByText("1 Speaking exercise")).toBeInTheDocument();
   });
 
   it("hides the difficulty filter when items have no difficulty", () => {
     renderLibrary();
     expect(
-      screen.queryByRole("combobox", { name: "Độ khó" }),
+      screen.queryByRole("combobox", { name: "Difficulty" }),
     ).not.toBeInTheDocument();
   });
 
   it("offers a retry when loading fails", async () => {
     const onRetry = vi.fn();
     const user = userEvent.setup();
-    renderLibrary({ items: [], error: "Lỗi tải", onRetry });
-    await user.click(screen.getByRole("button", { name: "Thử lại" }));
+    renderLibrary({ items: [], error: "Failed to load", onRetry });
+    await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(onRetry).toHaveBeenCalledOnce();
-    expect(screen.queryByText("Chưa có đề")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tests yet")).not.toBeInTheDocument();
   });
 });

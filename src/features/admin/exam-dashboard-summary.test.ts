@@ -29,13 +29,13 @@ const exams: ReadingExamListItem[] = [
 const profiles: ScoreProfile[] = [
   {
     id: "55555555-5555-4555-8555-555555555555",
-    name: "ETS chuẩn",
+    name: "Standard ETS",
     isComplete: true,
     mappingCount: 202,
   },
   {
     id: "66666666-6666-4666-8666-666666666666",
-    name: "Chưa hoàn chỉnh",
+    name: "Incomplete",
     isComplete: false,
     mappingCount: 180,
   },

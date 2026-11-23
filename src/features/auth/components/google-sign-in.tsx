@@ -74,7 +74,7 @@ export function GoogleSignIn({
           setError(
             reason instanceof Error
               ? reason.message
-              : "Không thể đăng nhập bằng Google.",
+              : "Unable to sign in with Google.",
           );
         } finally {
           setPending(false);
@@ -87,21 +87,21 @@ export function GoogleSignIn({
       size: "large",
       text: "continue_with",
       width: 350,
-      locale: "vi",
+      locale: "en",
     });
   }, [clientId, enabled, loaded, returnTo, router]);
 
   if (!enabled)
     return (
       <p className="mt-4 text-center text-xs text-[#938b87]">
-        Vui lòng đồng ý với điều khoản sử dụng để tiếp tục bằng Google.
+        Please agree to the terms of use to continue with Google.
       </p>
     );
 
   if (!clientId)
     return (
       <p className="mt-4 text-center text-xs text-[#938b87]">
-        Đăng nhập bằng Google chưa được cấu hình.
+        Google sign-in is not configured.
       </p>
     );
 
@@ -109,16 +109,16 @@ export function GoogleSignIn({
     <div className="mt-4">
       <Script
         onReady={() => setLoaded(true)}
-        onError={() => setError("Không thể tải đăng nhập Google.")}
+        onError={() => setError("Unable to load Google sign-in.")}
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
       />
       <div
-        aria-label="Đăng nhập bằng Google"
+        aria-label="Sign in with Google"
         className="flex justify-center"
         ref={container}
       />
-      {pending && <p className="mt-2 text-center text-xs">Đang đăng nhập...</p>}
+      {pending && <p className="mt-2 text-center text-xs">Signing in...</p>}
       {error && (
         <p className="mt-2 text-center text-xs text-red-600" role="alert">
           {error}

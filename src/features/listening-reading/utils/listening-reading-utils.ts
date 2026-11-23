@@ -1,14 +1,14 @@
 export const practiceParts = {
   listening: {
-    1: { title: "Mô tả tranh", questions: 6 },
-    2: { title: "Hỏi – đáp", questions: 25 },
-    3: { title: "Đoạn hội thoại", questions: 39 },
-    4: { title: "Bài nói ngắn", questions: 30 },
+    1: { title: "Photographs", questions: 6 },
+    2: { title: "Question - Response", questions: 25 },
+    3: { title: "Short Conversations", questions: 39 },
+    4: { title: "Short Talks", questions: 30 },
   },
   reading: {
-    5: { title: "Hoàn thành câu", questions: 30 },
-    6: { title: "Hoàn thành đoạn văn", questions: 16 },
-    7: { title: "Đọc hiểu", questions: 54 },
+    5: { title: "Incomplete Sentences", questions: 30 },
+    6: { title: "Text Completion", questions: 16 },
+    7: { title: "Reading Comprehension", questions: 54 },
   },
 } as const;
 

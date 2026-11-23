@@ -56,7 +56,7 @@ export interface SpeakingAttempt {
   evaluation: SpeakingEvaluation | null;
 }
 
-const what = "lượt làm Speaking";
+const what = "Speaking attempt";
 const isPhase = (value: unknown): value is SpeakingPhase =>
   value === "READING" || value === "PREPARING" || value === "RESPONDING";
 

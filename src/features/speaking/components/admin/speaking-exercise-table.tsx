@@ -19,7 +19,7 @@ const statusTone: Record<SpeakingExercise["status"], AdminBadgeTone> = {
 const head = "px-4 py-2.5";
 
 const seconds = (values: number[]) =>
-  [...new Set(values)].map((value) => `${value} giây`).join(" / ");
+  [...new Set(values)].map((value) => `${value}s`).join(" / ");
 
 export function SpeakingExerciseTable({
   items,
@@ -35,13 +35,13 @@ export function SpeakingExerciseTable({
       <table className="w-full min-w-[900px] text-left text-sm">
         <thead className="bg-(--sp-subtle)">
           <tr>
-            <th className={head}>Mã</th>
-            <th className={head}>Nội dung</th>
-            <th className={head}>Thời gian</th>
-            <th className={head}>Độ khó</th>
-            <th className={head}>Trạng thái</th>
+            <th className={head}>Code</th>
+            <th className={head}>Content</th>
+            <th className={head}>Timing</th>
+            <th className={head}>Difficulty</th>
+            <th className={head}>Status</th>
             <th className={head}>
-              <span className="sr-only">Thao tác</span>
+              <span className="sr-only">Actions</span>
             </th>
           </tr>
         </thead>
@@ -65,9 +65,9 @@ export function SpeakingExerciseTable({
                   </p>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-[13px] text-(--sp-ink-2)">
-                  Chuẩn bị {seconds(spec.preparationSeconds)}
+                  Prep {seconds(spec.preparationSeconds)}
                   <span className="block text-xs text-(--sp-ink-3)">
-                    Nói {seconds(spec.responseSeconds)}
+                    Speak {seconds(spec.responseSeconds)}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -80,7 +80,7 @@ export function SpeakingExerciseTable({
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">
                   <button
-                    aria-label={`Mở ${exercise.code}`}
+                    aria-label={`Open ${exercise.code}`}
                     className="sp-focus cursor-pointer p-1 text-(--sp-ink-2) hover:text-(--sp-brand)"
                     onClick={() => onEdit(exercise)}
                     type="button"
@@ -89,7 +89,7 @@ export function SpeakingExerciseTable({
                   </button>
                   {exercise.status !== "ARCHIVED" && (
                     <button
-                      aria-label={`Lưu trữ ${exercise.code}`}
+                      aria-label={`Archive ${exercise.code}`}
                       className="sp-focus ml-1 cursor-pointer p-1 text-(--sp-ink-2) hover:text-(--sp-danger)"
                       onClick={() => onArchive(exercise)}
                       type="button"

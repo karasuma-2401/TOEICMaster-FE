@@ -63,7 +63,7 @@ function PasswordToggle({
 }) {
   return (
     <button
-      aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      aria-label={isVisible ? "Hide password" : "Show password"}
       className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
       onClick={onClick}
       type="button"
@@ -139,7 +139,7 @@ export function LoginPanel({
         setPasswordError(reason.fieldErrors.password);
       }
       setNotice(
-        reason instanceof Error ? reason.message : "Không thể đăng nhập.",
+        reason instanceof Error ? reason.message : "Unable to sign in.",
       );
     } finally {
       setPending(false);
@@ -149,16 +149,16 @@ export function LoginPanel({
   return (
     <section aria-labelledby="login-title">
       <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
-        CHÀO MỪNG ĐẾN VỚI TOEICMASTER
+        WELCOME TO TOEICMASTER
       </p>
       <h1
         className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
         id="login-title"
       >
-        Tiếp tục hành trình của bạn
+        Continue your journey
       </h1>
       <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
-        Đăng nhập để tiếp tục học và theo dõi tiến độ mỗi ngày.
+        Sign in to keep learning and track your daily progress.
       </p>
       <AuthTabs current="login" returnTo={returnTo} />
       <form className="mt-6" noValidate onSubmit={submitLogin}>
@@ -185,7 +185,7 @@ export function LoginPanel({
                 setEmailError(undefined);
                 setNotice(undefined);
               }}
-              placeholder="ban@example.com"
+              placeholder="you@example.com"
               type="email"
               value={email}
             />
@@ -205,7 +205,7 @@ export function LoginPanel({
             className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
             htmlFor="password"
           >
-            Mật khẩu
+            Password
           </label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
@@ -223,7 +223,7 @@ export function LoginPanel({
                 setPasswordError(undefined);
                 setNotice(undefined);
               }}
-              placeholder="Nhập mật khẩu"
+              placeholder="Enter your password"
               type={showPassword ? "text" : "password"}
               value={password}
             />
@@ -251,13 +251,13 @@ export function LoginPanel({
               onChange={(event) => setRememberMe(event.target.checked)}
               type="checkbox"
             />
-            Ghi nhớ đăng nhập
+            Remember me
           </label>
           <Link
             className="shrink-0 cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
             href="/forgot-password"
           >
-            Quên mật khẩu?
+            Forgot password?
           </Link>
         </div>
         <button
@@ -265,7 +265,7 @@ export function LoginPanel({
           disabled={pending}
           type="submit"
         >
-          {pending ? "Đang đăng nhập..." : "Đăng nhập"}
+          {pending ? "Signing in..." : "Sign in"}
         </button>
       </form>
       {notice && (
@@ -274,7 +274,7 @@ export function LoginPanel({
         </output>
       )}
       <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
-        hoặc tiếp tục với
+        or continue with
       </div>
       <GoogleSignIn
         clientId={googleClientId}
@@ -282,16 +282,16 @@ export function LoginPanel({
         returnTo={returnTo}
       />
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
-        Chưa có tài khoản?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           href={authUrl("/register", returnTo)}
         >
-          Đăng ký miễn phí
+          Sign up for free
         </Link>
       </p>
       <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
-        © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
+        © 2025 TOEICMaster. Learn languages, open up the world.
       </p>
     </section>
   );

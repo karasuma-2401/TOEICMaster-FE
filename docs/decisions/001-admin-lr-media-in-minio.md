@@ -1,4 +1,4 @@
-# ADR-001: Lưu media Listening & Reading của admin trong MinIO
+# ADR-001: Store Admin Listening & Reading Media in MinIO
 
 ## Status
 
@@ -10,132 +10,108 @@ Accepted
 
 ## Context
 
-Admin cần import câu hỏi Listening từ Excel trước, sau đó tải các tệp MP3
-tương ứng. File Excel chỉ chứa nội dung câu hỏi, đáp án và giải thích; không
-chứa media. Admin cũng cần tải ảnh cho các câu hỏi hoặc ngữ cảnh Reading có
-cấu hình yêu cầu ảnh.
+Admins need to import Listening questions from Excel first, and then upload the corresponding MP3 files.
+The Excel file only contains question content, answer choices, and explanations; it does not contain media.
+Admins also need to upload images for Reading questions or contexts whose configuration requires an image.
 
-Hiện frontend có các đường upload multipart qua BFF Next.js cho ảnh
-(`POST /api/admin/exam-media/images`) và một `master-audio` cho cả revision.
-Hướng mới không dùng `master-audio` làm mô hình media Listening: audio phải
-gắn vào đơn vị nội dung thực tế để biết chính xác phần nào còn thiếu.
+The frontend currently has multipart upload routes through the Next.js BFF for images (`POST /api/admin/exam-media/images`) and a single `master-audio` for the entire revision.
+The new approach does not use `master-audio` as the Listening media model: audio must be attached to the actual content unit so it is clear exactly which part is still missing.
 
-Mục tiêu hiện tại chỉ là màn quản trị Listening & Reading. Không thay đổi
-luồng người học và không migrate dữ liệu/tệp cũ trong phạm vi này.
+The current goal covers only the Listening & Reading admin screen.
+Learner flows are unchanged, and legacy data/files are not migrated within this scope.
 
 ## Decision
 
-### 1. MinIO là object storage; backend giữ quyền và metadata
+### 1. MinIO is the object storage; the backend owns permissions and metadata
 
-Ảnh và MP3 được lưu trong MinIO. Bucket không public. Backend là nơi duy nhất
-được cấp thông tin truy cập MinIO lâu dài, sinh object key, kiểm tra quyền
-admin, loại tệp và giới hạn kích thước.
+Images and MP3s are stored in MinIO.
+The bucket is not public.
+The backend is the only component granted long-lived MinIO credentials, generating object keys, and validating admin permissions, file types, and size limits.
 
-Frontend không nhận credential MinIO và không tự tạo object key. Frontend chỉ
-nhận presigned URL có thời hạn ngắn cùng các header bắt buộc, sau đó tải trực
-tiếp tệp lên MinIO.
+The frontend does not receive MinIO credentials and does not generate object keys.
+The frontend only receives a short-lived presigned URL along with required headers, and then uploads the file directly to MinIO.
 
-Sau khi PUT thành công, frontend gọi endpoint `complete` của backend. Backend
-xác nhận object tồn tại và khớp các thuộc tính đã cấp trước khi tạo/cập nhật
-metadata và gắn asset vào nội dung. Upload URL hết hạn hoặc upload không hoàn
-tất không tạo asset tham chiếu được.
+After the PUT succeeds, the frontend calls the backend `complete` endpoint.
+The backend verifies that the object exists and matches the issued properties before creating/updating metadata and attaching the asset to the content.
+An expired upload URL or an incomplete upload does not create a referenceable asset.
 
-### 2. MP3 Listening gắn theo audio group
+### 2. Listening MP3s are attached per audio group
 
-`AudioGroup` là đơn vị sở hữu MP3, không phải từng câu hỏi:
+`AudioGroup` is the MP3 ownership unit, not individual questions:
 
-- Part 1 và Part 2: mỗi câu có một audio group.
-- Part 3 và Part 4: các câu thuộc cùng hội thoại/bài nói dùng chung một audio
-  group.
+- Part 1 and Part 2: each question has one audio group.
+- Part 3 and Part 4: questions belonging to the same conversation/talk share one audio group.
 
-Mỗi audio group có tối đa một audio asset đang hoạt động. Câu hỏi tham chiếu
-audio group, nhờ đó cùng một MP3 không bị upload hoặc lưu lặp lại cho nhiều
-câu.
+Each audio group has at most one active audio asset.
+Questions reference the audio group so the same MP3 is not uploaded or stored repeatedly across multiple questions.
 
-### 3. Ảnh Reading là asset được gắn có chủ đích
+### 3. Reading images are intentionally attached assets
 
-Ảnh được gắn vào câu hỏi Reading hoặc context block của cụm câu, tùy nơi ảnh
-được cấu hình. Mỗi vị trí có thể khai báo `imageRequired`. Nếu bắt buộc,
-position đó chỉ hoàn tất khi đã có image asset hợp lệ. Alt text vẫn là metadata
-của nội dung Reading, không suy diễn từ tên tệp.
+Images are attached to a Reading question or the context block of a question group, depending on where the image is configured.
+Each position can declare `imageRequired`.
+If required, that position is only complete once it has a valid image asset.
+Alt text remains metadata of the Reading content and is not inferred from the filename.
 
-### 4. Nháp được lưu; xuất bản bị chặn khi thiếu media bắt buộc
+### 4. Drafts can be saved; publishing is blocked when required media is missing
 
-Import và lưu nháp không đòi hỏi MP3/ảnh. Khi mở workspace, admin thấy tổng số
-và danh sách audio group hoặc image position còn thiếu, mỗi mục có liên kết
-đến đúng vị trí để tải tệp. Backend là nguồn quyết định cuối cùng: endpoint
-publish từ chối revision còn media bắt buộc thiếu, kể cả khi frontend đã cũ
-hoặc bị bỏ qua.
+Importing and saving drafts do not require MP3s/images.
+When opening the workspace, admins see the total count and list of missing audio groups or image positions, with each item linking directly to the corresponding position to upload the file.
+The backend is the final source of truth: the publish endpoint rejects revisions with missing required media, even if the frontend is stale or bypassed.
 
-Frontend cũng kiểm tra trước khi gửi publish để hiển thị checklist dễ hiểu,
-nhưng không thay thế kiểm tra ở backend.
+The frontend also checks before submitting publish to display an easy-to-understand checklist, but does not replace backend validation.
 
 ## Proposed contract boundaries
 
-Tên endpoint chính xác sẽ được thống nhất trong API contract backend. Ranh
-giới bắt buộc là:
+Exact endpoint names will be finalized in the backend API contract.
+The required boundaries are:
 
-1. Admin yêu cầu upload intent với media type và owner (audio group hoặc
-   Reading position).
-2. Backend xác thực, tạo object key không đoán được, trả về intent ID,
-   presigned URL, thời hạn, headers và giới hạn được áp dụng.
-3. Trình duyệt upload trực tiếp tới MinIO.
-4. Admin xác nhận hoàn tất với intent ID; backend kiểm tra object rồi gắn
-   `MediaAsset` vào owner trong một thao tác nhất quán.
-5. API revision trả về trạng thái đầy đủ/thiếu media và các định danh cần để
-   hiển thị checklist.
+1. Admin requests an upload intent with the media type and owner (audio group or Reading position).
+2. Backend authenticates, generates an unpredictable object key, and returns the intent ID, presigned URL, expiration, headers, and enforced limits.
+3. Browser uploads directly to MinIO.
+4. Admin confirms completion with the intent ID; backend verifies the object and then attaches the `MediaAsset` to the owner in a consistent operation.
+5. The revision API returns media completeness/missing status and the identifiers needed to render the checklist.
 
-`MediaAsset` nên lưu ít nhất: ID, bucket, object key, media type, content
-type, byte size, ETag/checksum nếu có, trạng thái, thời điểm tạo và owner.
-Không lưu presigned URL dài hạn trong database. URL phát/preview cho admin hay
-người học được backend cấp khi cần theo chính sách truy cập sau này.
+`MediaAsset` should store at least: ID, bucket, object key, media type, content type, byte size, ETag/checksum if available, status, creation timestamp, and owner.
+Do not store long-lived presigned URLs in the database.
+Playback/preview URLs for admins or learners are issued by the backend when needed under future access policies.
 
 ## Alternatives considered
 
-### Frontend gửi multipart qua Next.js/backend
+### Frontend sends multipart through Next.js/backend
 
-- Ưu: ít endpoint và CORS đơn giản hơn.
-- Nhược: MP3 đi qua frontend server/backend, tăng băng thông, bộ nhớ và thời
-  gian xử lý của ứng dụng.
-- Rejected: không phù hợp với tệp audio và yêu cầu giảm tải backend.
+- Pros: fewer endpoints and simpler CORS.
+- Cons: MP3s pass through the frontend server/backend, increasing application bandwidth, memory, and processing time.
+- Rejected: unsuitable for audio files and the requirement to offload the backend.
 
-### Một master MP3 cho toàn bộ revision
+### One master MP3 for the entire revision
 
-- Ưu: giao diện upload đơn giản.
-- Nhược: không mô tả được audio cho Part 1/2 và Part 3/4 theo nhóm; không thể
-  cảnh báo chính xác nhóm nào thiếu.
-- Rejected: không khớp cấu trúc TOEIC và yêu cầu quản trị đã xác nhận.
+- Pros: simpler upload UI.
+- Cons: cannot represent grouped audio for Part 1/2 and Part 3/4; cannot warn accurately about which group is missing.
+- Rejected: does not match the TOEIC structure and confirmed admin requirements.
 
-### Lưu `audioUrl`/`imageUrl` tự do trong Excel hoặc database
+### Store free-form `audioUrl`/`imageUrl` in Excel or the database
 
-- Ưu: triển khai nhanh.
-- Nhược: bỏ qua kiểm soát quyền, validation, vòng đời asset và dễ tạo link
-  chết hoặc object không thuộc hệ thống.
-- Rejected: MinIO asset cần được backend quản lý theo định danh, không bằng URL
-  do admin tự nhập.
+- Pros: quick to implement.
+- Cons: bypasses permission control, validation, and asset lifecycle, and easily creates broken links or objects not belonging to the system.
+- Rejected: MinIO assets must be managed by the backend by identifier, not by admin-entered URLs.
 
-### Chỉ cảnh báo thiếu media, vẫn cho publish
+### Only warn about missing media while still allowing publish
 
-- Ưu: linh hoạt cho admin.
-- Nhược: có thể phát hành đề không làm được cho người học.
-- Rejected: lưu nháp đã đáp ứng tính linh hoạt; publish phải là cổng chất
-  lượng.
+- Pros: flexible for admins.
+- Cons: could release an unplayable exam to learners.
+- Rejected: saving drafts already provides flexibility; publish must serve as a quality gate.
 
 ## Consequences
 
-- Backend cần model audio group/media asset, lifecycle upload intent, validation
-  publish và CORS/presigned policy cho MinIO.
-- Frontend cần thay các upload multipart hiện có bằng client upload theo
-  presigned URL, và thêm checklist/cảnh báo media trong workspace admin.
-- Tài nguyên upload dở dang có thể trở thành orphan object; cần job hoặc quy
-  trình dọn object không có asset/intent đã hết hạn.
-- API contract backend chưa có trong workspace frontend, nên schema/endpoint
-  cụ thể chỉ được chốt khi backend cập nhật contract. Đây không phải migration
-  cho asset hiện hữu.
+- The backend needs audio group/media asset models, an upload intent lifecycle, publish validation, and CORS/presigned policies for MinIO.
+- The frontend needs to replace existing multipart uploads with client uploads via presigned URLs, and add media checklists/warnings in the admin workspace.
+- Incomplete upload resources may become orphan objects; a job or cleanup process is needed for objects without an asset or with expired intents.
+- The backend API contract is not yet in the frontend workspace, so exact schemas/endpoints will only be finalized when the backend updates the contract.
+  This is not a migration for existing assets.
 
 ## Out of scope
 
-- Migration URL/tệp cũ vào MinIO.
-- Màn làm bài, phát audio và hiển thị ảnh cho learner.
-- Bucket public, credential MinIO ở browser, hoặc URL public vĩnh viễn.
-- Upload media cho Speaking/Writing.
+- Migrating legacy URLs/files into MinIO.
+- Learner exam-taking screen, audio playback, and image display.
+- Public buckets, MinIO credentials in the browser, or permanent public URLs.
+- Media upload for Speaking/Writing.

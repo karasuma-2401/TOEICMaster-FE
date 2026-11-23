@@ -26,7 +26,7 @@ export function TakePlayback({
         type="button"
       >
         {playing ? <StopIcon /> : <PlayIcon />}
-        {playing ? "Dừng nghe lại" : "Nghe lại bản thu"}
+        {playing ? "Stop playback" : "Play back recording"}
       </button>
       <p className="flex gap-10 text-xs text-(--sp-ink-2)">
         <span>{formatClock(time)}</span>

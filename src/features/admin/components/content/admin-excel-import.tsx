@@ -28,7 +28,7 @@ export function ExcelFileSlot({
   file,
   maxMb,
   busy = false,
-  busyLabel = "Đang kiểm tra…",
+  busyLabel = "Checking…",
   onSelect,
   onReject,
 }: {
@@ -44,9 +44,9 @@ export function ExcelFileSlot({
   const accept = (candidate: File | undefined) => {
     if (!candidate) return;
     if (!candidate.name.toLowerCase().endsWith(".xlsx"))
-      onReject("Chỉ hỗ trợ file Excel .xlsx.");
+      onReject("Only .xlsx Excel files are supported.");
     else if (candidate.size > maxMb * 1024 * 1024)
-      onReject(`File Excel không được vượt quá ${maxMb} MiB.`);
+      onReject(`Excel file must not exceed ${maxMb} MiB.`);
     else onSelect(candidate);
   };
   const onDrop = (event: DragEvent) => {
@@ -67,22 +67,18 @@ export function ExcelFileSlot({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-medium text-[var(--admin-ink)]">
-          {file ? file.name : "Kéo file vào đây"}
+          {file ? file.name : "Drag and drop a file here"}
         </span>
         <span className="block text-xs text-[var(--admin-muted)]">
-          {busy
-            ? busyLabel
-            : file
-              ? formatSize(file.size)
-              : `Tối đa ${maxMb} MB`}
+          {busy ? busyLabel : file ? formatSize(file.size) : `Max ${maxMb} MB`}
         </span>
       </span>
       <span className="shrink-0 text-[13px] font-medium text-[var(--admin-brand-red)]">
-        {file ? "Đổi file" : "Chọn file"}
+        {file ? "Change file" : "Choose file"}
       </span>
       <input
         accept=".xlsx"
-        aria-label="File Excel (.xlsx)"
+        aria-label="Excel file (.xlsx)"
         className={`absolute inset-0 opacity-0 ${busy ? "cursor-wait" : "cursor-pointer"}`}
         disabled={busy}
         onChange={(event) => {
@@ -124,7 +120,7 @@ export function ImportImageId({
         )}
       </span>
       <label className="shrink-0 cursor-pointer font-medium text-[var(--admin-brand-red)]">
-        Tải ảnh
+        Upload image
         <input
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
@@ -147,7 +143,7 @@ export function ExcelImportDialog({
   ariaLabel = title,
   summary,
   templateHref,
-  closeLabel = "Đóng",
+  closeLabel = "Close",
   submitLabel,
   canSubmit,
   busy,
@@ -237,7 +233,7 @@ export function ExcelImportDialog({
               download
               href={templateHref}
             >
-              Tải file mẫu
+              Download template
             </a>
           ) : (
             <span />
@@ -249,7 +245,7 @@ export function ExcelImportDialog({
               onClick={onClose}
               type="button"
             >
-              Hủy
+              Cancel
             </button>
             <button
               className={`admin-primary-action h-9 cursor-pointer rounded-lg px-3.5 text-[13px] font-medium disabled:cursor-not-allowed ${adminFocus}`}

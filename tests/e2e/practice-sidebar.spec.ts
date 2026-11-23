@@ -213,20 +213,22 @@ test.describe("Practice Sidebar Navigation", () => {
     await expect(sidebar).toHaveAttribute("data-collapsed", "false");
 
     // Verify grouped nav, standalone links, and brand mark inside sidebar
-    const nav = sidebar.getByRole("navigation", { name: "Luyện tập" });
+    const nav = sidebar.getByRole("navigation", { name: "Practice" });
     await expect(nav).toBeVisible();
     await expect(
       sidebar.getByRole("link", { name: /TOEICMaster/i }),
     ).toBeVisible();
-    await expect(nav.getByText("Đề thi", { exact: true })).toBeVisible();
-    await expect(nav.getByText("Bài tập", { exact: true })).toBeVisible();
+    await expect(nav.getByText("Exams", { exact: true })).toBeVisible();
+    await expect(nav.getByText("Exercises", { exact: true })).toBeVisible();
     await expect(
       nav.getByRole("link", { name: "Listening & Reading" }),
     ).toHaveCount(2);
     await expect(nav.getByRole("link", { name: "Speaking" })).toHaveCount(2);
     await expect(nav.getByRole("link", { name: "Writing" })).toHaveCount(2);
-    await expect(nav.getByRole("link", { name: "Phát âm" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Lịch sử" })).toBeVisible();
+    await expect(
+      nav.getByRole("link", { name: "Pronunciation" }),
+    ).toBeVisible();
+    await expect(nav.getByRole("link", { name: "History" })).toBeVisible();
 
     // No active route on "/"
     const activeLinks = nav.locator('[aria-current="page"]');
@@ -234,7 +236,7 @@ test.describe("Practice Sidebar Navigation", () => {
 
     // Desktop mobile-only header controls and duplicate header brand are hidden; account remains visible
     await expect(
-      page.getByRole("button", { name: "Mở menu", exact: true }),
+      page.getByRole("button", { name: "Open menu", exact: true }),
     ).toBeHidden();
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible();
     await expect(
@@ -273,12 +275,12 @@ test.describe("Practice Sidebar Navigation", () => {
     // Collapse via toggle button
     const toggle = page.getByTestId("practice-sidebar-toggle");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await expect(toggle).toHaveAttribute("aria-label", "Thu gọn thanh bên");
+    await expect(toggle).toHaveAttribute("aria-label", "Collapse sidebar");
     await toggle.click();
 
     await expect(sidebar).toHaveAttribute("data-collapsed", "true");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await expect(toggle).toHaveAttribute("aria-label", "Mở rộng thanh bên");
+    await expect(toggle).toHaveAttribute("aria-label", "Expand sidebar");
 
     await expect
       .poll(() =>
@@ -305,12 +307,13 @@ test.describe("Practice Sidebar Navigation", () => {
       await expect(link.locator("svg")).toBeVisible();
       expect((await link.innerText()).trim()).toBe("");
     }
-    await expect(nav.getByRole("link", { name: "Phát âm" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Phát âm" })).toHaveAttribute(
-      "title",
-      "Phát âm",
-    );
-    await expect(nav.getByRole("link", { name: "Lịch sử" })).toBeVisible();
+    await expect(
+      nav.getByRole("link", { name: "Pronunciation" }),
+    ).toBeVisible();
+    await expect(
+      nav.getByRole("link", { name: "Pronunciation" }),
+    ).toHaveAttribute("title", "Pronunciation");
+    await expect(nav.getByRole("link", { name: "History" })).toBeVisible();
 
     await assertCleanDomGeometry(page);
     await captureScreenshot(
@@ -364,14 +367,14 @@ test.describe("Practice Sidebar Navigation", () => {
       const sidebar = page.getByTestId("practice-sidebar");
       await expect(sidebar).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "Mở menu", exact: true }),
+        page.getByRole("button", { name: "Open menu", exact: true }),
       ).toBeHidden();
       await expect(page.getByTestId("user-menu-trigger")).toBeVisible();
       await expect(
         page.locator('a[href="/"]:has-text("TOEICMaster"):visible'),
       ).toHaveCount(1);
 
-      const nav = sidebar.getByRole("navigation", { name: "Luyện tập" });
+      const nav = sidebar.getByRole("navigation", { name: "Practice" });
       const activeLinks = nav.locator('[aria-current="page"]');
       if (check.expectedHref) {
         await expect(activeLinks).toHaveCount(1);
@@ -415,7 +418,7 @@ test.describe("Practice Sidebar Navigation", () => {
     await expect(page.getByTestId("practice-sidebar")).toBeHidden();
 
     const menuButton = page.getByRole("button", {
-      name: "Mở menu",
+      name: "Open menu",
       exact: true,
     });
     await expect(menuButton).toBeVisible();
@@ -423,8 +426,8 @@ test.describe("Practice Sidebar Navigation", () => {
 
     const drawer = page.getByRole("dialog");
     await expect(drawer).toBeVisible();
-    await expect(drawer.getByText("Đề thi", { exact: true })).toBeVisible();
-    await expect(drawer.getByText("Bài tập", { exact: true })).toBeVisible();
+    await expect(drawer.getByText("Exams", { exact: true })).toBeVisible();
+    await expect(drawer.getByText("Exercises", { exact: true })).toBeVisible();
     await expect(drawer.getByTestId("user-menu-trigger")).toBeVisible();
 
     const activeDrawerLink = drawer.locator('[aria-current="page"]');

@@ -7,7 +7,7 @@ import {
   sanitizeEvaluation,
 } from "./learner-writing-helpers";
 
-test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attempts/[id]/result)", () => {
+test.describe("Learner Writing - AI Gemini Evaluation (/writing/attempts/[id]/result)", () => {
   let backend: MockWritingLearnerBackend;
 
   test.beforeEach(async ({ page, context }) => {
@@ -16,10 +16,10 @@ test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attem
     await loginAsUser(context);
   });
 
-  test("TC-EVAL-01: Màn hình hỏi xác nhận (Consent) trước khi gửi bài cho AI", async ({
+  test("TC-EVAL-01: Consent confirmation screen before submitting attempt to AI", async ({
     page,
   }) => {
-    // Chuẩn bị bài nộp ở trạng thái CONSENT_REQUIRED
+    // Prepare submission in CONSENT_REQUIRED state
     const consentAttempt = sanitizeAttempt({
       id: "att-consent-01",
       testCode: "WT-PUB-FULL-01",
@@ -47,50 +47,50 @@ test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attem
 
     await page.goto("/writing/attempts/att-consent-01/result");
 
-    // Hiển thị tiêu đề và thông tin bài nộp
+    // Display heading and submission info
     await expect(
-      page.getByRole("heading", { name: "Đã nộp bài Writing" }),
+      page.getByRole("heading", { name: "Writing Attempt Submitted" }),
     ).toBeVisible();
-    await expect(page.getByText("Chờ xác nhận")).toBeVisible();
+    await expect(page.getByText("Awaiting confirmation")).toBeVisible();
 
-    // Khung xác nhận gửi AI
+    // AI consent confirmation box
     await expect(
-      page.getByRole("heading", { name: "Gửi bài để AI chấm ước tính" }),
+      page.getByRole("heading", { name: "Submit for AI estimated scoring" }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Khi xác nhận, nội dung đề, ảnh đề bài và bài viết của bạn sẽ được gửi đến Gemini",
+        "When you confirm, the prompt, prompt image, and your writing will be sent to Gemini",
       ),
     ).toBeVisible();
 
     const consentCheckbox = page.getByRole("checkbox", {
-      name: "Tôi đồng ý gửi bài làm đến dịch vụ AI để chấm ước tính.",
+      name: "I agree to send my writing to the AI service for estimated scoring.",
     });
-    const submitBtn = page.getByRole("button", { name: "Đồng ý và chấm bài" });
+    const submitBtn = page.getByRole("button", { name: "Agree and grade" });
 
-    // Ban đầu nút submit bị disabled khi chưa check đồng ý
+    // Submit button is disabled until consent checkbox is checked
     await expect(consentCheckbox).not.toBeChecked();
     await expect(submitBtn).toBeDisabled();
 
-    // Check vào checkbox đồng ý
+    // Check consent checkbox
     await consentCheckbox.check();
     await expect(consentCheckbox).toBeChecked();
     await expect(submitBtn).toBeEnabled();
 
-    // Click nút gửi chấm bài
+    // Click grade button
     await submitBtn.click();
 
-    // Trạng thái chuyển sang AI đang chấm bài (QUEUED)
+    // Status transitions to AI grading (QUEUED)
     await expect(
-      page.getByRole("heading", { name: "AI đang chấm bài" }),
+      page.getByRole("heading", { name: "AI is grading your writing" }),
     ).toBeVisible();
     expect(consentAttempt.evaluation?.status).toBe("QUEUED");
   });
 
-  test("TC-EVAL-02: Trạng thái chờ chấm điểm AI và cơ chế tự động Polling mỗi 5s", async ({
+  test("TC-EVAL-02: AI grading pending state and automatic polling every 5s", async ({
     page,
   }) => {
-    // Chuẩn bị bài làm đang QUEUED chờ AI
+    // Prepare attempt in QUEUED state waiting for AI
     const queuedAttempt = sanitizeAttempt({
       id: "att-queued-01",
       testCode: "WT-PUB-FULL-01",
@@ -118,99 +118,99 @@ test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attem
 
     await page.goto("/writing/attempts/att-queued-01/result");
 
-    // Màn hình hiển thị trạng thái chờ chấm điểm với chu kỳ polling 5 giây
+    // Screen displays pending grading status with 5-second polling cycle
     await expect(
-      page.getByRole("heading", { name: "AI đang chấm bài" }),
+      page.getByRole("heading", { name: "AI is grading your writing" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Trạng thái này tự cập nhật mỗi 5 giây."),
+      page.getByText("This status updates automatically every 5 seconds."),
     ).toBeVisible();
 
-    // Giả lập backend hoàn tất chấm điểm sau một lúc
+    // Simulate backend completing evaluation after a moment
     queuedAttempt.evaluation = sanitizeEvaluation({
       id: "eval-queued-01",
       status: "COMPLETED",
       estimatedScore: 185,
       summary:
-        "Bài viết đạt mức điểm rất cao, cấu trúc ngữ pháp phong phú và chính xác.",
-      strengths: ["Sử dụng từ vựng linh hoạt.", "Đúng ngữ pháp hoàn toàn."],
-      improvements: ["Có thể bổ sung mệnh đề quan hệ để câu dài hơn."],
+        "The essay achieved a very high score with rich and accurate grammatical structures.",
+      strengths: ["Flexible vocabulary usage.", "Completely accurate grammar."],
+      improvements: ["Can add relative clauses for longer sentences."],
       feedback: [
         {
           questionPosition: 1,
           criterionScore: 3,
-          feedback: "Đáp ứng chính xác từ khóa và tranh.",
+          feedback: "Accurately uses the keywords and describes the picture.",
           suggestedRevision:
             "The man is sitting and typing at his computer desk.",
         },
       ],
     });
 
-    // Chờ polling 5 giây tự động cập nhật kết quả mà không cần tải lại trang thủ công
+    // Wait for 5-second polling to automatically update results without manual reload
     await expect(
-      page.getByRole("heading", { name: "Kết quả Writing" }),
+      page.getByRole("heading", { name: "Writing Results" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("185")).toBeVisible();
     await expect(page.getByText("/200")).toBeVisible();
   });
 
-  test("TC-EVAL-03: Báo cáo kết quả chấm điểm đầy đủ chi tiết", async ({
-    page,
-  }) => {
-    // Sử dụng bài đã chấm sẵn att-completed-01 (170/200)
+  test("TC-EVAL-03: Detailed evaluation report", async ({ page }) => {
+    // Use pre-graded attempt att-completed-01 (170/200)
     await page.goto("/writing/attempts/att-completed-01/result");
 
-    // 1. Tiêu đề và tổng quan
+    // 1. Heading and overview
     await expect(
-      page.getByRole("heading", { name: "Kết quả Writing" }),
+      page.getByRole("heading", { name: "Writing Results" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Điểm TOEIC Writing ước tính bởi AI"),
+      page.getByText("AI-estimated TOEIC Writing score"),
     ).toBeVisible();
     await expect(page.getByText("170")).toBeVisible();
     await expect(page.getByText("/200")).toBeVisible();
 
-    // 2. Điểm theo Part
+    // 2. Part scores
     await expect(page.getByText("Writing Part 1")).toBeVisible();
-    await expect(page.getByText("Tổng điểm tiêu chí AI")).toBeVisible();
+    await expect(page.getByText("Total AI rubric score")).toBeVisible();
 
-    // 3. Nhận xét tổng quan
+    // 3. Overall feedback
     await expect(
-      page.getByRole("heading", { name: "Nhận xét tổng quan" }),
+      page.getByRole("heading", { name: "Overall feedback" }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Bài viết có ngữ pháp vững vàng, sử dụng từ vựng phong phú và cấu trúc câu mạch lạc.",
+        "The writing demonstrates strong grammar, rich vocabulary, and coherent sentence structure.",
       ),
     ).toBeVisible();
 
-    // 4. Danh sách Điểm làm tốt và Cần cải thiện
+    // 4. Strengths and Areas for improvement lists
     await expect(
-      page.getByRole("heading", { name: "Điểm làm tốt" }),
+      page.getByRole("heading", { name: "Strengths" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Sử dụng đúng thì và hòa hợp chủ vị chính xác."),
+      page.getByText("Accurate verb tenses and subject-verb agreement."),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Cần cải thiện" }),
+      page.getByRole("heading", { name: "Areas for improvement" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Chú ý đa dạng hóa liên từ nối câu."),
+      page.getByText("Use a wider variety of linking words."),
     ).toBeVisible();
 
-    // 5. Gợi ý theo câu và nút toggle xem lại đề + bài làm
+    // 5. Question-by-question feedback and toggle to view prompt + submitted answer
     await expect(
-      page.getByRole("heading", { name: "Gợi ý theo câu" }),
+      page.getByRole("heading", { name: "Question-by-question feedback" }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Câu 1" })).toBeVisible();
-    await expect(page.getByText("Điểm tiêu chí AI: 3")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Question 1" }),
+    ).toBeVisible();
+    await expect(page.getByText("AI rubric score: 3")).toBeVisible();
     await expect(
       page.getByText("The person is typing diligently on the office computer."),
     ).toBeVisible();
 
-    // Mở chi tiết xem lại đề và câu trả lời đã nộp
+    // Expand details to view prompt and submitted answer
     const detailsToggle = page.locator("summary", {
-      hasText: "Xem đề và bài đã nộp",
+      hasText: "View prompt and submitted answer",
     });
     await expect(detailsToggle).toBeVisible();
     await detailsToggle.click();
@@ -220,8 +220,10 @@ test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attem
     ).toBeVisible();
   });
 
-  test('TC-EVAL-04: Xử lý lỗi AI và nút "Thử chấm lại"', async ({ page }) => {
-    // Chuẩn bị bài nộp bị AI lỗi (FAILED)
+  test('TC-EVAL-04: Handles AI failure and "Retry grading" button', async ({
+    page,
+  }) => {
+    // Prepare attempt with failed AI grading (FAILED)
     const failedAttempt = sanitizeAttempt({
       id: "att-failed-01",
       testCode: "WT-PUB-FULL-01",
@@ -244,34 +246,34 @@ test.describe("Learner Writing - Chấm điểm bằng AI Gemini (/writing/attem
         id: "eval-failed-01",
         status: "FAILED",
         failureMessage:
-          "Hệ thống AI đang quá tải hoặc gặp sự cố quota. Vui lòng thử lại sau.",
+          "The AI system is overloaded or hit a quota limit. Please try again later.",
       }),
     });
     backend.attempts.push(failedAttempt);
 
     await page.goto("/writing/attempts/att-failed-01/result");
 
-    // Hiển thị cảnh báo lỗi
+    // Display error alert
     await expect(
-      page.getByRole("heading", { name: "Chưa thể chấm bài lúc này" }),
+      page.getByRole("heading", { name: "Unable to grade right now" }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Hệ thống AI đang quá tải hoặc gặp sự cố quota. Vui lòng thử lại sau.",
+        "The AI system is overloaded or hit a quota limit. Please try again later.",
       ),
     ).toBeVisible();
 
-    // Nút Thử chấm lại
-    const retryBtn = page.getByRole("button", { name: "Thử chấm lại" });
+    // Retry grading button
+    const retryBtn = page.getByRole("button", { name: "Retry grading" });
     await expect(retryBtn).toBeVisible();
     await expect(retryBtn).toBeEnabled();
 
-    // Bấm nút Thử chấm lại
+    // Click Retry grading button
     await retryBtn.click();
 
-    // Hệ thống kích hoạt lại quy trình chấm AI
+    // System retriggers AI grading workflow
     await expect(
-      page.getByRole("heading", { name: "AI đang chấm bài" }),
+      page.getByRole("heading", { name: "AI is grading your writing" }),
     ).toBeVisible();
     expect(failedAttempt.evaluation?.status).toBe("QUEUED");
   });

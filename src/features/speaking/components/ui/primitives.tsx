@@ -40,7 +40,7 @@ export interface Crumb {
 
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   return (
-    <nav aria-label="Đường dẫn" className="text-[13px] text-(--sp-ink-3)">
+    <nav aria-label="Breadcrumb" className="text-[13px] text-(--sp-ink-3)">
       {items.map((item, index) => (
         <Fragment key={item.label}>
           {index > 0 && " / "}
@@ -135,7 +135,7 @@ export function Waveform({
 }
 
 export function GradingStepper({ current }: { current: 1 | 2 | 3 }) {
-  const steps = ["Xác nhận đồng ý", "AI chấm bài", "Xem kết quả"];
+  const steps = ["Confirm consent", "AI grading", "View results"];
   return (
     <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
       {steps.map((label, index) => {
@@ -188,7 +188,7 @@ export function SpError({
           onClick={onRetry}
           type="button"
         >
-          Thử tải lại
+          Retry
         </button>
       )}
     </div>

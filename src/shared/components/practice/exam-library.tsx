@@ -26,36 +26,38 @@ const accents = {
 
 const copy = {
   exam: {
-    noun: "đề thi",
-    crumb: "Đề thi thử",
-    tag: "Bài thi độc lập",
-    heading: "Đề thi",
-    search: "đề",
-    action: "Vào thi",
-    done: (count: number) => `Bạn đã thi ${count} lần`,
-    none: "Chưa thi lần nào",
-    scope: "Trong các lần thi",
-    results: "lần thi",
+    noun: "tests",
+    singular: "test",
+    crumb: "Mock Tests",
+    tag: "Standalone Test",
+    heading: "Tests",
+    search: "test",
+    action: "Start",
+    done: (count: number) =>
+      `Attempted ${count} ${count === 1 ? "time" : "times"}`,
+    none: "Not attempted yet",
+    results: "attempt",
   },
   exercise: {
-    noun: "bài tập",
-    crumb: "Bài tập",
-    tag: "Luyện theo Part",
-    heading: "Bài tập",
-    search: "bài tập",
-    action: "Làm bài",
-    done: (count: number) => `Bạn đã làm ${count} lần`,
-    none: "Chưa làm lần nào",
-    scope: "Trong các lần luyện",
-    results: "lần làm",
+    noun: "exercises",
+    singular: "exercise",
+    crumb: "Exercises",
+    tag: "Practice by Part",
+    heading: "Exercises",
+    search: "exercise",
+    action: "Practice",
+    done: (count: number) =>
+      `Practiced ${count} ${count === 1 ? "time" : "times"}`,
+    none: "Not practiced yet",
+    results: "practice session",
   },
 } as const;
 
 type ExamLibraryKind = keyof typeof copy;
 
 const newestFirst: { value: ExamSort; label: string }[] = [
-  { value: "DESC", label: "Mới nhất" },
-  { value: "ASC", label: "Cũ nhất" },
+  { value: "DESC", label: "Newest" },
+  { value: "ASC", label: "Oldest" },
 ];
 
 const difficulties = Object.entries(difficultyLabels) as [
@@ -144,7 +146,7 @@ function ExamCard({
           {item.badge}
         </span>
         <span className="text-[13px] text-(--sp-ink-2)">
-          {done ? "✓ Đã làm" : "Chưa làm"}
+          {done ? "✓ Completed" : "Not started"}
         </span>
       </div>
       <h3 className="mt-3 text-xl font-semibold leading-7">{item.title}</h3>
@@ -155,8 +157,8 @@ function ExamCard({
         </span>
         <span>
           {item.bestScore !== null
-            ? `Tốt nhất: ${item.bestScore} / ${skill.maxScore}`
-            : "Chưa có kết quả"}
+            ? `Best: ${item.bestScore} / ${skill.maxScore}`
+            : "No results yet"}
         </span>
       </div>
       <div className="mt-3 flex justify-end">
@@ -171,7 +173,7 @@ function ExamCard({
             onClick={item.action.onStart}
             type="button"
           >
-            {item.action.starting ? "Đang bắt đầu…" : label}
+            {item.action.starting ? "Starting..." : label}
           </button>
         )}
       </div>
@@ -191,14 +193,14 @@ function ExamPagination({
   const cell = `min-h-9 min-w-9 rounded-lg border px-3 text-[13px] transition hover:border-(--sp-hero-line) ${focusRing}`;
   const idle = "border-(--sp-line)/70 bg-white text-(--sp-ink-2)";
   return (
-    <nav aria-label="Phân trang" className="flex flex-wrap items-center gap-2">
+    <nav aria-label="Pagination" className="flex flex-wrap items-center gap-2">
       {page > 1 && (
         <button
           className={`${cell} ${idle}`}
           onClick={() => onPage(page - 1)}
           type="button"
         >
-          ← Trước
+          ← Previous
         </button>
       )}
       {Array.from({ length: pages }, (_, index) => index + 1).map((item) => (
@@ -218,7 +220,7 @@ function ExamPagination({
           onClick={() => onPage(page + 1)}
           type="button"
         >
-          Tiếp →
+          Next →
         </button>
       )}
     </nav>
@@ -283,11 +285,11 @@ export function ExamLibrary({
         id="main-content"
         tabIndex={-1}
       >
-        <nav aria-label="Đường dẫn" className="text-[13px] text-(--sp-ink-2)">
+        <nav aria-label="Breadcrumb" className="text-[13px] text-(--sp-ink-2)">
           <ol className="flex flex-wrap gap-1">
             <li>
               <Link className={`hover:underline ${focusRing}`} href="/">
-                Trang chủ
+                Home
               </Link>{" "}
               /
             </li>
@@ -312,19 +314,19 @@ export function ExamLibrary({
               {skill.name} · {text.tag}
             </p>
             <h1 className="mt-3 text-[28px] font-bold leading-9">
-              {text.heading} {skill.name}
+              {skill.name} {text.heading}
             </h1>
             <p className="mt-2 text-[15px] text-(--sp-ink-2)">
               {skill.tagline}
             </p>
             <nav
-              aria-label={`Chọn đề thi hoặc bài tập ${skill.name}`}
+              aria-label={`Choose ${skill.name} tests or exercises`}
               className="mt-3 inline-flex gap-1 rounded-[10px] border border-(--sp-line)/70 bg-white p-1"
             >
               {(
                 [
-                  ["exam", "Đề thi thử", skill.examHref],
-                  ["exercise", "Bài tập", skill.exerciseHref],
+                  ["exam", "Mock Tests", skill.examHref],
+                  ["exercise", "Exercises", skill.exerciseHref],
                 ] as const
               ).map(([value, label, href]) => (
                 <Link
@@ -339,25 +341,23 @@ export function ExamLibrary({
             </nav>
           </div>
           <aside
-            aria-label="Thành tích cao nhất"
+            aria-label="Best score"
             className="w-full rounded-2xl border border-(--sp-line)/70 bg-white px-[18px] py-4 sm:w-60"
           >
-            <p className="text-xs uppercase text-(--sp-ink-2)">
-              Thành tích cao nhất
-            </p>
+            <p className="text-xs uppercase text-(--sp-ink-2)">Best score</p>
             <p className="mt-1 text-[36px] font-bold leading-[44px] text-[#f4511e]">
-              {best ?? "—"} / {skill.maxScore}
+              {best ?? "-"} / {skill.maxScore}
             </p>
             <p className="mt-1 text-[13px] text-(--sp-ink-2)">
               {best === null
-                ? "Chưa có kết quả"
-                : `${text.scope} ${skill.name}`}
+                ? "No results yet"
+                : `Across ${skill.name} ${text.noun}`}
             </p>
           </aside>
         </header>
         {skillLinks && (
           <nav
-            aria-label="Chọn Listening hoặc Reading"
+            aria-label="Choose Listening or Reading"
             className="mt-6 flex gap-2"
           >
             {skillLinks.map((link) => (
@@ -377,7 +377,7 @@ export function ExamLibrary({
           </nav>
         )}
         {partLinks && (
-          <nav aria-label="Chọn Part" className="mt-6 flex flex-wrap gap-2">
+          <nav aria-label="Choose Part" className="mt-6 flex flex-wrap gap-2">
             {partLinks.map((link) => (
               <Link
                 aria-current={link.active ? "page" : undefined}
@@ -395,44 +395,44 @@ export function ExamLibrary({
           className={`${partLinks ? "mt-4" : "mt-6"} flex flex-wrap items-center gap-3`}
         >
           <input
-            aria-label={`Tìm kiếm tên ${text.search} ${skill.name}`}
+            aria-label={`Search ${skill.name} ${text.noun}`}
             className={`${field} w-full px-4 placeholder:text-(--sp-ink-2) sm:w-[460px]`}
             disabled={noTests}
             onChange={(event) => {
               setQuery(event.target.value);
               setPage(1);
             }}
-            placeholder={`Tìm kiếm tên ${text.search} ${skill.name}...`}
+            placeholder={`Search ${skill.name} ${text.noun}...`}
             type="search"
             value={query}
           />
           <SelectField
             disabled={noTests}
-            label="Trạng thái"
+            label="Status"
             onChange={(value) => {
               setStatus(value);
               setPage(1);
             }}
             options={[
-              { value: "ALL", label: "Trạng thái: Tất cả" },
-              { value: "DONE", label: "Trạng thái: Đã làm" },
-              { value: "TODO", label: "Trạng thái: Chưa làm" },
+              { value: "ALL", label: "Status: All" },
+              { value: "DONE", label: "Status: Completed" },
+              { value: "TODO", label: "Status: Not started" },
             ]}
             value={status}
           />
           {hasDifficulty && (
             <SelectField
               disabled={noTests}
-              label="Độ khó"
+              label="Difficulty"
               onChange={(value) => {
                 setDifficulty(value);
                 setPage(1);
               }}
               options={[
-                { value: "ALL" as const, label: "Độ khó: Tất cả" },
+                { value: "ALL" as const, label: "Difficulty: All" },
                 ...difficulties.map(([value, label]) => ({
                   value,
-                  label: `Độ khó: ${label}`,
+                  label: `Difficulty: ${label}`,
                 })),
               ]}
               value={difficulty}
@@ -441,7 +441,7 @@ export function ExamLibrary({
           <div className="sm:ml-auto">
             <SelectField
               disabled={noTests}
-              label="Sắp xếp"
+              label="Sort"
               onChange={(value) => {
                 setSort(value);
                 setPage(1);
@@ -456,14 +456,14 @@ export function ExamLibrary({
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className="text-lg font-semibold" id="exam-library-count">
               {loading
-                ? `${text.heading} ${skill.name}`
-                : `${filtered.length} ${text.noun} ${skill.name}`}
+                ? `${skill.name} ${text.heading}`
+                : `${filtered.length} ${skill.name} ${filtered.length === 1 ? text.singular : text.noun}`}
             </h2>
             <p className="text-[13px] text-(--sp-ink-2)">{skill.format}</p>
           </div>
 
           {loading && (
-            <LoadingPanel label={`Đang tải ${text.noun} ${skill.name}…`} />
+            <LoadingPanel label={`Loading ${skill.name} ${text.noun}...`} />
           )}
           {error && <ErrorPanel message={error} onRetry={onRetry} />}
           {ready && noTests && (
@@ -471,8 +471,8 @@ export function ExamLibrary({
           )}
           {ready && !noTests && filtered.length === 0 && (
             <EmptyPanel
-              description="Thử đổi từ khóa hoặc bộ lọc."
-              title={`Không tìm thấy ${text.noun} phù hợp`}
+              description="Try changing your search keyword or filters."
+              title={`No matching ${text.noun} found`}
             />
           )}
           {!loading && visible.length > 0 && (
@@ -489,8 +489,8 @@ export function ExamLibrary({
         {!loading && filtered.length > 0 && (
           <footer className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13px] text-(--sp-ink-2)">
-              Hiển thị {first}–{last} trong {filtered.length} {text.noun} · Kết
-              quả được lưu riêng theo từng {text.results}
+              Showing {first}-{last} of {filtered.length} {text.noun} · Results
+              are saved separately per {text.results}
             </p>
             {pages > 1 && (
               <ExamPagination onPage={setPage} page={current} pages={pages} />

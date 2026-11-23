@@ -34,12 +34,12 @@ export function VerificationPanel({
   const [pending, setPending] = useState(false);
   const [resending, setResending] = useState(false);
   const eyebrow =
-    purpose === "recovery" ? "KHÔI PHỤC TÀI KHOẢN" : "XÁC MINH TÀI KHOẢN";
+    purpose === "recovery" ? "ACCOUNT RECOVERY" : "VERIFY ACCOUNT";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!/^\d{6}$/.test(code)) {
-      setError("Vui lòng nhập mã gồm 6 chữ số.");
+      setError("Please enter a 6-digit code.");
       setNotice(undefined);
       return;
     }
@@ -60,7 +60,7 @@ export function VerificationPanel({
       setNotice(
         reason instanceof Error
           ? reason.message
-          : "Không thể xác minh email. Vui lòng thử lại.",
+          : "Unable to verify email. Please try again.",
       );
     } finally {
       setPending(false);
@@ -79,14 +79,14 @@ export function VerificationPanel({
       }
       setNotice(
         purpose === "recovery"
-          ? "Nếu email có thể đặt lại mật khẩu, một mã mới sẽ được gửi khi thời gian chờ kết thúc."
-          : "Nếu tài khoản đang chờ xác minh, một mã mới sẽ được gửi khi thời gian chờ kết thúc.",
+          ? "If this email is eligible for a password reset, a new code will be sent once the cooldown ends."
+          : "If this account is pending verification, a new code will be sent once the cooldown ends.",
       );
     } catch (reason) {
       setNotice(
         reason instanceof Error
           ? reason.message
-          : "Không thể gửi lại mã. Vui lòng thử lại.",
+          : "Unable to resend code. Please try again.",
       );
     } finally {
       setResending(false);
@@ -102,10 +102,10 @@ export function VerificationPanel({
         className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
         id="verification-title"
       >
-        Xác minh email
+        Verify email
       </h1>
       <p className="mx-auto mt-3 max-w-[25rem] text-center text-[13px] leading-5 text-[#a89f9b]">
-        Nhập mã gồm 6 chữ số đã được gửi đến{" "}
+        Enter the 6-digit code sent to{" "}
         <strong className="font-bold text-[#665c58]">{email}</strong>.
       </p>
       <form className="mt-8" noValidate onSubmit={submit}>
@@ -113,7 +113,7 @@ export function VerificationPanel({
           className="mb-1.5 block text-center text-[11px] font-bold text-[#4e4542]"
           htmlFor="verificationCode"
         >
-          Mã xác minh
+          Verification code
         </label>
         <input
           aria-describedby={error ? "verificationCode-error" : undefined}
@@ -142,7 +142,7 @@ export function VerificationPanel({
           </p>
         ) : (
           <p className="mt-2 text-center text-[10px] text-[#c0b8b4]">
-            Mã xác minh có hiệu lực trong 10 phút.
+            The verification code is valid for 10 minutes.
           </p>
         )}
         <button
@@ -150,7 +150,7 @@ export function VerificationPanel({
           disabled={pending}
           type="submit"
         >
-          {pending ? "Đang xác minh..." : "Xác minh mã"}
+          {pending ? "Verifying..." : "Verify code"}
         </button>
       </form>
       {notice && (
@@ -159,28 +159,28 @@ export function VerificationPanel({
         </output>
       )}
       <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
-        Không nhận được mã?{" "}
+        Didn&apos;t receive the code?{" "}
         <button
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           disabled={resending}
           onClick={resend}
           type="button"
         >
-          {resending ? "Đang gửi..." : "Gửi lại mã"}
+          {resending ? "Sending..." : "Resend code"}
         </button>
       </p>
       <p className="mt-4 text-center text-[11px] text-[#a8a09c]">
-        Sai địa chỉ email?{" "}
+        Wrong email address?{" "}
         <button
           className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
           onClick={onChangeEmail}
           type="button"
         >
-          Nhập lại email
+          Re-enter email
         </button>
       </p>
       <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
-        © 2025 TOEICMaster. Học ngoại ngữ, mở ra thế giới.
+        © 2025 TOEICMaster. Learn languages, open up the world.
       </p>
     </section>
   );

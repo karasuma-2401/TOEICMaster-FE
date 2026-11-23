@@ -37,9 +37,9 @@ function skillFor(part: SpeakingPart): ExamLibrarySkill {
     name: "Speaking",
     tagline: spec.description,
     format: [
-      ...(spec.readingSeconds ? [`Đọc tài liệu ${spec.readingSeconds}s`] : []),
-      `Chuẩn bị ${unique(spec.preparationSeconds)}`,
-      `Trả lời ${unique(spec.responseSeconds)}`,
+      ...(spec.readingSeconds ? [`Read info ${spec.readingSeconds}s`] : []),
+      `Prep ${unique(spec.preparationSeconds)}`,
+      `Respond ${unique(spec.responseSeconds)}`,
       `Part ${part}`,
     ].join(" · "),
     maxScore: 200,
@@ -72,7 +72,7 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
         setError(
           cause instanceof Error
             ? cause.message
-            : "Không thể tải bài tập Speaking.",
+            : "Could not load Speaking exercises.",
         );
       } finally {
         if (!signal?.aborted) setLoading(false);
@@ -105,7 +105,7 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
       code: exercise.code,
       title: exercise.topic,
       badge: `Part ${part} · ${difficultyLabels[exercise.difficulty]}`,
-      meta: `${exercise.questionCount} câu · ~${formatMinutes(exercise.durationSeconds)} · 0–200 điểm`,
+      meta: `${exercise.questionCount} questions · ~${formatMinutes(exercise.durationSeconds)} · 0-200 pts`,
       action: {
         href: `/speaking/exercises/${encodeURIComponent(exercise.id)}/practice`,
       },
@@ -118,8 +118,8 @@ export function SpeakingPartLibrary({ part }: { part: SpeakingPart }) {
 
   return (
     <ExamLibrary
-      emptyDescription="Admin cần công bố bài tập cho Part này."
-      emptyTitle={`Chưa có bài tập ở Part ${part}`}
+      emptyDescription="An admin needs to publish exercises for this Part."
+      emptyTitle={`No exercises for Part ${part} yet`}
       error={error}
       header={<SpeakingHeader wide />}
       items={items}

@@ -18,7 +18,7 @@ afterEach(cleanup);
 describe("ProfileDialog", () => {
   const sampleUser = {
     id: "user-1",
-    displayName: "Nguyễn Văn A",
+    displayName: "Noah Adams",
     email: "learner@example.com",
     phone: "0912345678",
     dateOfBirth: null,
@@ -27,7 +27,7 @@ describe("ProfileDialog", () => {
     hasPassword: true,
   };
 
-  it("không hiển thị khi isOpen = false", () => {
+  it("does not render when isOpen = false", () => {
     render(
       <ProfileDialog isOpen={false} onClose={vi.fn()} user={sampleUser} />,
     );
@@ -35,30 +35,30 @@ describe("ProfileDialog", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("hiển thị thông tin học viên trên đầu popup và các trường form khi isOpen = true", () => {
+  it("displays learner info at the top of the dialog and form fields when isOpen = true", () => {
     render(<ProfileDialog isOpen={true} onClose={vi.fn()} user={sampleUser} />);
 
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveAttribute("aria-modal", "true");
 
-    expect(screen.getByText("Nguyễn Văn A")).toBeInTheDocument();
+    expect(screen.getByText("Noah Adams")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveValue("learner@example.com");
     expect(screen.getByText("NA")).toBeInTheDocument();
 
-    expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Nguyễn Văn A");
+    expect(screen.getByLabelText("Display name")).toHaveValue("Noah Adams");
   });
 
-  it("gọi onClose khi nhấn nút đóng (X)", async () => {
+  it("calls onClose when clicking the close button (X)", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<ProfileDialog isOpen={true} onClose={onClose} user={sampleUser} />);
 
-    await user.click(screen.getByRole("button", { name: "Đóng" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("gọi onClose khi nhấn phím Escape", async () => {
+  it("calls onClose when pressing Escape", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<ProfileDialog isOpen={true} onClose={onClose} user={sampleUser} />);
@@ -67,36 +67,36 @@ describe("ProfileDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("gọi onClose khi bấm ra ngoài overlay và không đóng khi bấm bên trong popup", async () => {
+  it("calls onClose when clicking the outside overlay and stays open when clicking inside the dialog", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<ProfileDialog isOpen={true} onClose={onClose} user={sampleUser} />);
 
-    // Bấm bên trong dialog
+    // Click inside dialog
     await user.click(screen.getByRole("dialog"));
     expect(onClose).not.toHaveBeenCalled();
 
-    // Bấm vào overlay
+    // Click on overlay
     const overlay = screen.getByRole("presentation");
     await user.click(overlay);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("dùng chung bố cục mới với trang hồ sơ, không còn tab", () => {
+  it("shares the new single-page layout with the profile page and has no tabs", () => {
     render(<ProfileDialog isOpen={true} onClose={vi.fn()} user={sampleUser} />);
 
     expect(
-      screen.getByRole("heading", { name: "Hồ sơ & mục tiêu học tập" }),
+      screen.getByRole("heading", { name: "Profile & Learning Goal" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Tên hiển thị")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mật khẩu hiện tại")).toBeInTheDocument();
-    expect(screen.getByLabelText("Điểm kỳ vọng")).toHaveValue("750");
+    expect(screen.getByLabelText("Display name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Current password")).toBeInTheDocument();
+    expect(screen.getByLabelText("Target score")).toHaveValue("750");
     expect(
-      screen.queryByRole("button", { name: "Bảo mật" }),
+      screen.queryByRole("button", { name: "Security" }),
     ).not.toBeInTheDocument();
   });
 
-  it("gọi onLogout khi nhấn nút Đăng xuất", async () => {
+  it("calls onLogout when clicking the Sign out button", async () => {
     const user = userEvent.setup();
     const onLogout = vi.fn();
     render(
@@ -108,7 +108,7 @@ describe("ProfileDialog", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Đăng xuất" }));
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
     expect(onLogout).toHaveBeenCalledTimes(1);
   });
 });

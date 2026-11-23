@@ -19,15 +19,15 @@ describe("RegisterForm", () => {
     const onRegistrationAccepted = vi.fn();
     render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
-    await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(
-      await screen.findByText("Vui lòng nhập tên hiển thị."),
+      await screen.findByText("Please enter a display name."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Vui lòng nhập email.")).toBeInTheDocument();
-    expect(screen.getByText("Vui lòng nhập mật khẩu.")).toBeInTheDocument();
+    expect(screen.getByText("Please enter your email.")).toBeInTheDocument();
+    expect(screen.getByText("Please enter your password.")).toBeInTheDocument();
     expect(
-      screen.getByText("Vui lòng đồng ý với điều khoản sử dụng."),
+      screen.getByText("Please agree to the terms of use."),
     ).toBeInTheDocument();
     expect(onRegistrationAccepted).not.toHaveBeenCalled();
   });
@@ -41,14 +41,12 @@ describe("RegisterForm", () => {
     const onRegistrationAccepted = vi.fn();
     render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
-    await user.type(screen.getByLabelText("Tên hiển thị"), "Linh");
+    await user.type(screen.getByLabelText("Display name"), "Linh");
     await user.type(screen.getByLabelText("Email"), "  linh@example.com  ");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password");
-    await user.type(screen.getByLabelText("Xác nhận mật khẩu"), "password");
-    await user.click(
-      screen.getByLabelText("Tôi đồng ý với Điều khoản sử dụng"),
-    );
-    await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    await user.type(screen.getByLabelText("Password"), "password");
+    await user.type(screen.getByLabelText("Confirm password"), "password");
+    await user.click(screen.getByLabelText("I agree to the Terms of Use"));
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(onRegistrationAccepted).toHaveBeenCalledWith("linh@example.com");
     expect(fetchMock).toHaveBeenCalledWith(
@@ -62,14 +60,14 @@ describe("RegisterForm", () => {
     const onRegistrationAccepted = vi.fn();
     render(<RegisterForm onRegistrationAccepted={onRegistrationAccepted} />);
 
-    await user.type(screen.getByLabelText("Tên hiển thị"), "Linh");
+    await user.type(screen.getByLabelText("Display name"), "Linh");
     await user.type(screen.getByLabelText("Email"), "linh@example.com");
-    await user.type(screen.getByLabelText("Mật khẩu"), "password");
-    await user.type(screen.getByLabelText("Xác nhận mật khẩu"), "password");
-    await user.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    await user.type(screen.getByLabelText("Password"), "password");
+    await user.type(screen.getByLabelText("Confirm password"), "password");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(
-      await screen.findByText("Vui lòng đồng ý với điều khoản sử dụng."),
+      await screen.findByText("Please agree to the terms of use."),
     ).toBeInTheDocument();
     expect(onRegistrationAccepted).not.toHaveBeenCalled();
   });
@@ -78,7 +76,7 @@ describe("RegisterForm", () => {
     render(<RegisterForm onRegistrationAccepted={vi.fn()} />);
     expect(
       screen.getByText(
-        "Vui lòng đồng ý với điều khoản sử dụng để tiếp tục bằng Google.",
+        "Please agree to the terms of use to continue with Google.",
       ),
     ).toBeInTheDocument();
   });

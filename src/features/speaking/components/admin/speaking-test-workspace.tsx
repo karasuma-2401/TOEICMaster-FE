@@ -54,7 +54,7 @@ function blankQuestion(part: SpeakingPart): SpeakingDraft {
   return {
     ...toSpeakingDraft(undefined, part),
     code: "DIRECT",
-    topic: "Nội dung đề",
+    topic: "Test content",
     difficulty: "MEDIUM",
     status: "DRAFT",
   };
@@ -172,7 +172,7 @@ function saveError(cause: unknown) {
     Object.keys(cause.fieldErrors).length > 0
   )
     return Object.values(cause.fieldErrors).flat();
-  return [errorMessage(cause, "Không thể lưu đề Speaking.")];
+  return [errorMessage(cause, "Unable to save Speaking test.")];
 }
 
 export function SpeakingTestWorkspace({
@@ -212,7 +212,7 @@ export function SpeakingTestWorkspace({
   } | null>(null);
   const [savedSignature, setSavedSignature] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
-  const [errorTitle, setErrorTitle] = useState("Chưa lưu được");
+  const [errorTitle, setErrorTitle] = useState("Unable to save");
   const [conflicted, setConflicted] = useState(false);
   const [latest, setLatest] = useState<SpeakingTest | null>(null);
   const [cloneCode, setCloneCode] = useState("");
@@ -262,7 +262,7 @@ export function SpeakingTestWorkspace({
         );
       } catch (cause) {
         if (!controller.signal.aborted)
-          setLoadError(errorMessage(cause, "Không thể tải đề Speaking."));
+          setLoadError(errorMessage(cause, "Unable to load Speaking test."));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -282,7 +282,7 @@ export function SpeakingTestWorkspace({
   const close = () => {
     if (
       !busy &&
-      (!dirty || window.confirm("Có thay đổi chưa lưu. Bạn muốn đóng builder?"))
+      (!dirty || window.confirm("You have unsaved changes. Close the builder?"))
     )
       onClose();
   };
@@ -330,7 +330,7 @@ export function SpeakingTestWorkspace({
     return {
       id: `part-${part}`,
       done: completed === expected,
-      label: `Part ${part}: hoàn thiện ${completed}/${expected} nhóm nội dung`,
+      label: `Part ${part}: completed ${completed}/${expected} content groups`,
     };
   });
 
@@ -362,9 +362,9 @@ export function SpeakingTestWorkspace({
         };
 
   const persist = async (publish: boolean) => {
-    setErrorTitle(publish ? "Chưa thể công bố" : "Chưa lưu được");
+    setErrorTitle(publish ? "Cannot publish yet" : "Unable to save");
     if (!metadata.code.trim() || !metadata.title.trim()) {
-      setErrors(["Mã đề và tên đề là bắt buộc."]);
+      setErrors(["Test code and title are required."]);
       return;
     }
     if (
@@ -373,7 +373,7 @@ export function SpeakingTestWorkspace({
       completedDirectQuestions.length !== expectedSlots
     ) {
       setErrors([
-        "Hoàn thành toàn bộ 7 nhóm nội dung / 11 câu trước khi xuất bản.",
+        "Complete all 7 content groups / 11 questions before publishing.",
       ]);
       return;
     }
@@ -387,14 +387,12 @@ export function SpeakingTestWorkspace({
       setSavedSignature(
         JSON.stringify([metadata, questions, exerciseIds, contentMode]),
       );
-      setSavedAt(new Date().toLocaleTimeString("vi-VN"));
+      setSavedAt(new Date().toLocaleTimeString("en-US"));
       if (publish)
         current = (await publishSpeakingTest(current.id, current.version)).test;
       setSaved(current);
       onSaved(
-        publish
-          ? `Đã công bố ${current.code}.`
-          : `Đã lưu bản nháp ${current.code}.`,
+        publish ? `Published ${current.code}.` : `Saved draft ${current.code}.`,
       );
     } catch (cause) {
       setErrors(saveError(cause));
@@ -410,7 +408,7 @@ export function SpeakingTestWorkspace({
     if (!saved || !cloneCode.trim() || !cloneTitle.trim() || busy) return;
     setBusy(true);
     setErrors([]);
-    setErrorTitle("Chưa nhân bản được");
+    setErrorTitle("Unable to clone");
     try {
       const detail = await cloneSpeakingTest(
         saved.id,
@@ -438,7 +436,7 @@ export function SpeakingTestWorkspace({
       );
       setCloneCode("");
       setCloneTitle("");
-      onSaved(`Đã nhân bản thành nháp ${detail.test.code}.`);
+      onSaved(`Cloned as draft ${detail.test.code}.`);
     } catch (cause) {
       setErrors(saveError(cause));
     } finally {
@@ -447,11 +445,11 @@ export function SpeakingTestWorkspace({
   };
 
   const remove = async () => {
-    if (!saved || !window.confirm(`Xóa bản nháp ${saved.code}?`)) return;
+    if (!saved || !window.confirm(`Delete draft ${saved.code}?`)) return;
     setBusy(true);
     try {
       await deleteSpeakingTest(saved.id, saved.version);
-      onSaved(`Đã xóa ${saved.code}.`);
+      onSaved(`Deleted ${saved.code}.`);
       onClose();
     } catch (cause) {
       setErrors(saveError(cause));
@@ -469,7 +467,7 @@ export function SpeakingTestWorkspace({
             onClick={close}
             type="button"
           >
-            {readOnly ? "Đóng" : "Đóng builder"}
+            {readOnly ? "Close" : "Close builder"}
           </button>
           {!readOnly && (
             <>
@@ -479,7 +477,7 @@ export function SpeakingTestWorkspace({
                 onClick={() => void persist(false)}
                 type="button"
               >
-                {busy ? "Đang lưu…" : "Lưu bản nháp"}
+                {busy ? "Saving..." : "Save draft"}
               </button>
               {
                 <button
@@ -489,7 +487,7 @@ export function SpeakingTestWorkspace({
                   style={adminGradient}
                   type="button"
                 >
-                  Xuất bản đề
+                  Publish test
                 </button>
               }
             </>
@@ -501,7 +499,7 @@ export function SpeakingTestWorkspace({
               onClick={() => void remove()}
               type="button"
             >
-              Xóa bản nháp
+              Delete draft
             </button>
           )}
         </>
@@ -510,19 +508,19 @@ export function SpeakingTestWorkspace({
         <span
           className={`rounded-full px-2 py-1 text-xs font-bold ${readOnly ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
         >
-          {readOnly ? "Công bố" : saved ? "Bản nháp" : "Chưa lưu"}
+          {readOnly ? "Published" : saved ? "Draft" : "Unsaved"}
         </span>
       }
-      eyebrow={`TEST BUILDER · 11 CÂU · 7 BÀI${savedAt ? ` · Đã lưu ${savedAt}` : ""}`}
-      label="Soạn đề Speaking trực tiếp"
+      eyebrow={`TEST BUILDER · 11 QUESTIONS · 7 EXERCISES${savedAt ? ` · Saved ${savedAt}` : ""}`}
+      label="Direct Speaking test authoring"
       onClose={close}
-      title={metadata.code || "Đề Speaking mới"}
+      title={metadata.code || "New Speaking test"}
     >
       {!loading && !loadError && (
         <div className="mb-5 space-y-3">
           {!saved && (
             <label className="block text-sm font-semibold">
-              Cách tạo đề{" "}
+              Authoring mode{" "}
               <select
                 className="ml-3 rounded-lg border p-2"
                 value={contentMode}
@@ -531,8 +529,8 @@ export function SpeakingTestWorkspace({
                   setContentMode(event.target.value as SpeakingTestContentMode)
                 }
               >
-                <option value="DIRECT">Nhập nội dung trực tiếp</option>
-                <option value="EXERCISE_BANK">Chọn từ ngân hàng bài tập</option>
+                <option value="DIRECT">Enter content directly</option>
+                <option value="EXERCISE_BANK">Select from exercise bank</option>
               </select>
             </label>
           )}
@@ -557,9 +555,9 @@ export function SpeakingTestWorkspace({
                 }}
                 type="button"
               >
-                Tải lại bản mới để so sánh
+                Reload latest version to compare
               </button>
-              <p>Thay đổi đang sửa được giữ nguyên.</p>
+              <p>Your current edits are preserved.</p>
               {latest && (
                 <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl border p-3">
                   {JSON.stringify(latest, null, 2)}
@@ -570,18 +568,18 @@ export function SpeakingTestWorkspace({
           {readOnly && (
             <div className="flex flex-wrap gap-3 rounded-xl border p-3">
               <label>
-                Mã đề mới
+                New test code
                 <input
-                  aria-label="Mã đề nhân bản"
+                  aria-label="Clone test code"
                   className="ml-2 rounded border p-2"
                   value={cloneCode}
                   onChange={(event) => setCloneCode(event.target.value)}
                 />
               </label>
               <label>
-                Tên đề mới
+                New test title
                 <input
-                  aria-label="Tên đề nhân bản"
+                  aria-label="Clone test title"
                   className="ml-2 rounded border p-2"
                   value={cloneTitle}
                   onChange={(event) => setCloneTitle(event.target.value)}
@@ -593,7 +591,7 @@ export function SpeakingTestWorkspace({
                 onClick={() => void clone()}
                 type="button"
               >
-                Nhân bản thành nháp
+                Clone as draft
               </button>
             </div>
           )}
@@ -617,8 +615,8 @@ export function SpeakingTestWorkspace({
             value={metadata}
           />
           <AdminPanel
-            description="Chọn bài cho từng vị trí. Câu 5–7 và 8–10 mỗi nhóm dùng một bài tập."
-            title="Nội dung từ ngân hàng · 11 câu · 7 bài"
+            description="Select an exercise for each slot. Questions 5-7 and 8-10 each use one exercise."
+            title="Exercise bank content · 11 questions · 7 exercises"
           >
             <div className="space-y-4">
               {speakingParts.flatMap((part) =>
@@ -640,7 +638,7 @@ export function SpeakingTestWorkspace({
                         <p className="my-2 text-sm">
                           {exercise
                             ? `${exercise.code} · ${exercise.topic} · ${exercise.status}`
-                            : "Chưa chọn bài"}
+                            : "No exercise selected"}
                         </p>
                         {!readOnly && (
                           <div className="flex gap-2">
@@ -650,7 +648,7 @@ export function SpeakingTestWorkspace({
                               onClick={() => setPicker({ part, index })}
                               type="button"
                             >
-                              Chọn bài cho {slotLabels[part][index]}
+                              Select exercise for {slotLabels[part][index]}
                             </button>
                             <button
                               className={adminSecondary}
@@ -664,7 +662,7 @@ export function SpeakingTestWorkspace({
                               }
                               type="button"
                             >
-                              Gỡ {slotLabels[part][index]}
+                              Remove {slotLabels[part][index]}
                             </button>
                           </div>
                         )}
@@ -692,9 +690,7 @@ export function SpeakingTestWorkspace({
                         )}
                         {exercise && (
                           <details className="mt-3">
-                            <summary>
-                              Xem trước {slotLabels[part][index]}
-                            </summary>
+                            <summary>Preview {slotLabels[part][index]}</summary>
                             <SpeakingPrompt
                               content={exercise}
                               showAllQuestions
@@ -726,8 +722,9 @@ export function SpeakingTestWorkspace({
               items={checklist}
             />
             <p className="rounded-xl border border-[#ffd8cb] bg-[#fff9f6] p-3 text-xs leading-5 text-[var(--admin-muted)]">
-              Nội dung ở đây chỉ thuộc đề này. Bản nháp lưu cả những nhóm đang
-              soạn dở; chỉ khi xuất bản hệ thống mới yêu cầu đủ 7 nhóm / 11 câu.
+              Content authored here belongs only to this test. Drafts save
+              partially completed groups; all 7 groups / 11 questions are only
+              required when publishing.
             </p>
           </aside>
           <div className="space-y-6">
@@ -752,10 +749,10 @@ export function SpeakingTestWorkspace({
                     const complete = isDirectQuestionComplete(draft);
                     const label =
                       part === 3
-                        ? "Nhóm câu 5–7"
+                        ? "Questions 5-7"
                         : part === 4
-                          ? "Nhóm câu 8–10"
-                          : `Câu ${part === 1 ? index + 1 : part === 2 ? index + 3 : 11}`;
+                          ? "Questions 8-10"
+                          : `Question ${part === 1 ? index + 1 : part === 2 ? index + 3 : 11}`;
                     return (
                       <div
                         className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)]"
@@ -769,7 +766,7 @@ export function SpeakingTestWorkspace({
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-bold ${complete ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
                             >
-                              {complete ? "Đã hoàn thiện" : "Đang soạn"}
+                              {complete ? "Complete" : "In progress"}
                             </span>
                           </div>
                           <SpeakingExerciseFields
@@ -785,7 +782,7 @@ export function SpeakingTestWorkspace({
                         </div>
                         <div className="space-y-4 rounded-xl bg-[var(--admin-surface-muted)] p-4">
                           <label className="block text-sm font-semibold">
-                            Tiêu chí chấm
+                            Rubric notes
                             <textarea
                               className={`${adminTextarea} mt-1.5 min-h-28 bg-white`}
                               disabled={Boolean(readOnly)}
@@ -799,7 +796,7 @@ export function SpeakingTestWorkspace({
                             />
                           </label>
                           <label className="block text-sm font-semibold">
-                            Bài mẫu / gợi ý *
+                            Model answer / sample *
                             <textarea
                               className={`${adminTextarea} mt-1.5 min-h-28 bg-white`}
                               disabled={Boolean(readOnly)}

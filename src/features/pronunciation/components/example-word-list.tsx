@@ -36,7 +36,7 @@ export function ExampleWordList({
         return (
           <li className="flex items-center gap-1" key={example.word}>
             <button
-              aria-label={`Luyện từ ${example.word}`}
+              aria-label={`Practice word ${example.word}`}
               aria-pressed={selected}
               className={`${pill} ${focusRing} ${selected ? pillActive : pillIdle}`}
               onClick={() => onSelect(index)}
@@ -51,7 +51,7 @@ export function ExampleWordList({
             </button>
             {speech.supported && (
               <button
-                aria-label={`Nghe từ ${example.word}`}
+                aria-label={`Listen to ${example.word}`}
                 className={`grid size-9 cursor-pointer place-items-center rounded-md text-(--sp-ink-2) transition hover:bg-(--sp-subtle) hover:text-(--sp-ink) ${focusRing}`}
                 onClick={() => speech.speak(example.word)}
                 type="button"

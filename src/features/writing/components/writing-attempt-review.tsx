@@ -36,8 +36,8 @@ const cardHeading = "text-xl font-semibold text-[#3d3935]";
 const mutedNote = "text-[13px] text-[#6b655f]";
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -93,7 +93,7 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
       } catch (cause) {
         if (!signal?.aborted)
           setError(
-            cause instanceof Error ? cause.message : "Không thể tải bài làm.",
+            cause instanceof Error ? cause.message : "Could not load attempt.",
           );
       }
     },
@@ -116,10 +116,10 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
           <ErrorPanel
             message={error}
             onRetry={() => void load()}
-            retryLabel="Thử tải lại"
+            retryLabel="Retry"
           />
         ) : (
-          <LoadingPanel label="Đang tải bài làm…" />
+          <LoadingPanel label="Loading attempt…" />
         )}
       </PracticePage>
     );
@@ -133,11 +133,11 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
               className={primaryAction}
               href={`/writing/attempts/${encodeURIComponent(attemptId)}`}
             >
-              Tiếp tục làm bài
+              Continue attempt
             </Link>
           }
-          description="Bạn có thể xem lại sau khi đã nộp bài."
-          title="Bài làm chưa được nộp"
+          description="You can review your writing after submitting the attempt."
+          title="Attempt not submitted yet"
         />
       </PracticePage>
     );
@@ -168,9 +168,9 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
   );
   const summary = [
     attempt.testTitle,
-    label && `Lần thi ${label}`,
-    score != null && `${score}/200 điểm ước tính`,
-    `Đã nộp ${submitted}`,
+    label && `Attempt ${label}`,
+    score != null && `${score}/200 estimated score`,
+    `Submitted ${submitted}`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -182,11 +182,11 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
           center={
             <div>
               <p className="font-semibold text-[#3d3935]">
-                {attempt.testTitle} · Xem lại bài làm
+                {attempt.testTitle} · Review attempt
               </p>
               <p className="text-xs text-[#6b655f]">
-                {label && `Lần thi ${label} · `}
-                {submitted} · Chỉ đọc
+                {label && `Attempt ${label} · `}
+                {submitted} · Read-only
               </p>
             </div>
           }
@@ -194,15 +194,15 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
       }
     >
       <h1 className="text-[28px] font-semibold leading-9 text-[#3d3935]">
-        Xem lại bài viết &amp; Bài văn mẫu
+        Review Writing &amp; Model Essays
       </h1>
       <p className="mt-2 text-[15px] text-[#6b655f]">{summary}</p>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
         <aside className={`p-5 ${surfaceCard}`}>
-          <h2 className={cardHeading}>Danh sách câu hỏi</h2>
+          <h2 className={cardHeading}>Questions</h2>
           <p className={`mt-3 ${mutedNote}`}>
-            {answeredCount}/{attempt.questions.length} bài viết đã nộp
+            {answeredCount}/{attempt.questions.length} responses submitted
           </p>
           {parts.map(({ part, questions }) => (
             <div className="mt-4" key={part}>
@@ -214,7 +214,7 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                   const selected = item.position === current?.position;
                   return (
                     <button
-                      aria-label={`Câu ${item.position}`}
+                      aria-label={`Question ${item.position}`}
                       aria-pressed={selected}
                       className={`size-11 cursor-pointer rounded-xl text-sm font-semibold transition ${focusRing} ${
                         selected
@@ -235,15 +235,15 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
             </div>
           ))}
           <p className={`mt-4 ${mutedNote}`}>
-            Ô viền cam: câu đang xem
+            Orange border: currently viewing
             <br />
-            Chế độ xem lại · Không chỉnh sửa
+            Review mode · Read-only
           </p>
 
           {attempts.length > 0 && (
             <>
               <h2 className="mt-5 text-base font-semibold text-[#3d3935]">
-                Lịch sử lần thi
+                Attempt history
               </h2>
               <ul className="mt-2 space-y-1 text-[13px] text-[#3d3935]">
                 {attempts
@@ -261,15 +261,15 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                         {attemptLabel(index)} ·{" "}
                         {formatDate(item.submittedAtUtc)} ·{" "}
                         {item.mode === "FULL" && !item.isPractice
-                          ? `${item.estimatedScore ?? "—"}/200`
-                          : `${item.rawScore ?? "—"}/${item.maxRawScore ?? "—"} điểm tiêu chí`}
+                          ? `${item.estimatedScore ?? "-"}/200`
+                          : `${item.rawScore ?? "-"}/${item.maxRawScore ?? "-"} criterion score`}
                       </Link>
                     </li>
                   ))}
               </ul>
               {label && (
                 <p className={`mt-3 ${mutedNote}`}>
-                  Đang xem dữ liệu của lần thi {label}.
+                  Viewing data for attempt {label}.
                 </p>
               )}
             </>
@@ -280,10 +280,10 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
               className={`inline-block ${textLink}`}
               href={`/writing/attempts/${encodeURIComponent(attemptId)}/result`}
             >
-              ← Về trang kết quả
+              ← Back to results
             </Link>
             <Link className={`inline-block ${textLink}`} href="/history">
-              Về lịch sử làm bài
+              Back to attempt history
             </Link>
           </div>
         </aside>
@@ -311,25 +311,27 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
             <div className="grid gap-5 xl:grid-cols-2">
               <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className={cardHeading}>Bài viết của bạn</h2>
+                  <h2 className={cardHeading}>Your response</h2>
                   <p className={greenTag}>
-                    {countWords(current.answer)} từ · Chỉ đọc
+                    {countWords(current.answer)} words · Read-only
                   </p>
                 </div>
                 <p className={`mt-3 ${mutedNote}`}>
-                  Nguyên văn bài nộp cuối cùng · Không tự động sửa nội dung
+                  Exact final submission · Content is not auto-edited
                 </p>
                 <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
-                  {current.answer || "Không có câu trả lời."}
+                  {current.answer || "No response submitted."}
                 </p>
               </section>
 
               {modelAnswer && (
                 <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
                   <h2 className={cardHeading}>High-score Model Essay</h2>
-                  <p className={`mt-3 ${greenTag}`}>BÀI VĂN MẪU · CHUẨN ETS</p>
+                  <p className={`mt-3 ${greenTag}`}>
+                    MODEL ESSAY · ETS STANDARD
+                  </p>
                   <p className={`mt-3 ${mutedNote}`}>
-                    Nội dung tham khảo riêng · Không phải bài viết của học viên
+                    Reference material only · Not the learner&apos;s response
                   </p>
                   <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
                     {modelAnswer}
@@ -340,10 +342,10 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
 
             <section className={`min-w-0 p-5 sm:p-6 ${surfaceCard}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className={cardHeading}>Nhận xét của AI</h2>
+                <h2 className={cardHeading}>AI Feedback</h2>
                 {feedback && (
                   <p className={greenTag}>
-                    Điểm tiêu chí AI: {feedback.criterionScore}
+                    AI criterion score: {feedback.criterionScore}
                   </p>
                 )}
               </div>
@@ -353,7 +355,7 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                     {feedback.feedback}
                   </p>
                   <h3 className="mt-5 font-semibold text-[#3d3935]">
-                    Gợi ý chỉnh sửa
+                    Suggested revision
                   </h3>
                   <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-[#3d3935]">
                     {feedback.suggestedRevision}
@@ -361,8 +363,8 @@ export function WritingAttemptReview({ attemptId }: { attemptId: string }) {
                 </>
               ) : (
                 <p className={`mt-3 ${mutedNote}`}>
-                  Chưa có nhận xét cho câu này. Bạn có thể yêu cầu AI chấm bài ở
-                  trang kết quả.
+                  No feedback for this question yet. You can request AI grading
+                  on the results page.
                 </p>
               )}
             </section>

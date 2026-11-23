@@ -165,7 +165,7 @@ export function LrExamRoom({
         }
       } catch (cause) {
         setActionError(
-          cause instanceof Error ? cause.message : "Không thể nộp bài thi.",
+          cause instanceof Error ? cause.message : "Unable to submit exam.",
         );
         setSubmitting(false);
       }
@@ -183,9 +183,7 @@ export function LrExamRoom({
       setCurrent(101);
     } catch (cause) {
       setActionError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể chuyển sang Reading.",
+        cause instanceof Error ? cause.message : "Unable to switch to Reading.",
       );
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
@@ -264,7 +262,7 @@ export function LrExamRoom({
         <div className="flex flex-col gap-0.5">
           <p className="text-[15px] font-semibold">{exam.identity}</p>
           <p className="text-[11px] text-[#77716e]">
-            Phòng thi chuẩn ETS · Kết nối ổn định
+            ETS Standard Exam Room · Stable Connection
           </p>
         </div>
         <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
@@ -274,7 +272,7 @@ export function LrExamRoom({
         </span>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-4">
           <div
-            aria-label="Thời gian còn lại"
+            aria-label="Remaining time"
             className="flex items-center gap-2.5 rounded-xl bg-[#fff7ed] px-4 py-2 sm:gap-3 sm:px-5 sm:py-2.5"
             role="timer"
           >
@@ -291,7 +289,7 @@ export function LrExamRoom({
               onClick={() => void moveToReading()}
               type="button"
             >
-              Chuyển sang Reading →
+              Move to Reading →
             </button>
           ) : null}
           <button
@@ -299,15 +297,15 @@ export function LrExamRoom({
             onClick={() => setConfirming(true)}
             type="button"
           >
-            {section === "listening" ? "Nộp bài thi" : "Nộp bài"}
+            {section === "listening" ? "Submit Exam" : "Submit"}
           </button>
           <span className="text-[10px] text-[#77716e]" aria-live="polite">
             {saveStatus === "saving"
-              ? "Đang lưu…"
+              ? "Saving…"
               : saveStatus === "saved"
-                ? "Đã lưu"
+                ? "Saved"
                 : saveStatus === "error"
-                  ? "Lưu thất bại"
+                  ? "Save failed"
                   : ""}
           </span>
         </div>
@@ -399,7 +397,7 @@ export function LrExamRoom({
 function EmptyQuestion({ number }: { number: number }) {
   return (
     <output className="rounded-xl border border-dashed border-[#d9d2ce] bg-white p-6 text-[13px] text-[#77716e] block">
-      Chưa có nội dung cho câu {number}.
+      No content available for question {number}.
     </output>
   );
 }
@@ -479,12 +477,12 @@ function ListeningMasterPlayer({
       ? Math.min(100, Math.max(0, (globalElapsedMs / totalDurationMs) * 100))
       : 0;
   const trackLabel = activeTrack
-    ? `Part ${activeTrack.part} · Câu ${activeTrack.first}${activeTrack.last > activeTrack.first ? `–${activeTrack.last}` : ""}`
+    ? `Part ${activeTrack.part} · Question ${activeTrack.first}${activeTrack.last > activeTrack.first ? `–${activeTrack.last}` : ""}`
     : "Listening";
 
   return (
     <section
-      aria-label="Trình phát audio phần Listening"
+      aria-label="Listening audio player"
       className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
       data-testid="lr-master-audio-player"
     >
@@ -517,7 +515,7 @@ function ListeningMasterPlayer({
           onClick={() => void togglePlay()}
           type="button"
         >
-          {isPlaying ? "Đang phát · Khóa tạm dừng" : "Bắt đầu phát Listening"}
+          {isPlaying ? "Playing · Pause Locked" : "Start Listening Audio"}
         </button>
       </div>
       <div
@@ -531,12 +529,12 @@ function ListeningMasterPlayer({
       </div>
       <p className="text-xs text-[#64748b]">
         {isPlaying
-          ? "Audio Listening phát một lần theo quy định ETS: không thể tạm dừng hoặc tua."
-          : "Audio Listening chỉ phát một lần theo quy định ETS: sau khi bắt đầu, bạn không thể tạm dừng hay tua."}
+          ? "Listening audio plays once per ETS rules: pausing and seeking are disabled."
+          : "Listening audio plays only once per ETS rules: once started, you cannot pause or seek."}
       </p>
       {isBuffering ? (
         <output className="block text-xs text-[#64748b]">
-          Đang đệm đoạn audio tiếp theo…
+          Buffering next audio track…
         </output>
       ) : null}
       {error ? (
@@ -583,14 +581,14 @@ function ListeningGroup({
           {question.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
             <img
-              alt={`Hình minh họa câu ${question.number}`}
+              alt={`Illustration for question ${question.number}`}
               className="mb-3 max-h-72 w-auto max-w-full rounded-lg object-contain"
               src={question.imageUrl}
             />
           ) : null}
           <legend className="float-left mb-2.5 flex w-full gap-2 text-[13px]">
             <span className="font-bold text-[#ea580c]">
-              CÂU {question.number}:
+              QUESTION {question.number}:
             </span>
             <span className="font-semibold text-[#0f172a]">
               {question.prompt}
@@ -616,7 +614,7 @@ function ListeningGroup({
           onClick={onToggleFlag}
           type="button"
         >
-          Đánh dấu xem lại (Cụm {group.first}–{group.last})
+          Flag for review (Group {group.first}–{group.last})
         </button>
 
         {nextGroup ? (
@@ -625,7 +623,7 @@ function ListeningGroup({
             onClick={onNextGroup}
             type="button"
           >
-            Cụm tiếp theo ({nextGroup.first}–{nextGroup.last}) →
+            Next group ({nextGroup.first}–{nextGroup.last}) →
           </button>
         ) : null}
       </div>
@@ -639,28 +637,27 @@ function ReadingContext({ group }: { group: LrQuestionGroup }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Pill>READING · PART {group.part}</Pill>
         <p className="text-[13px] text-[#77716e]">
-          Câu {group.first}–{group.last}
+          Questions {group.first}–{group.last}
           {group.description ? ` · ${group.description}` : ""}
         </p>
       </div>
       <section className="flex flex-col gap-3 rounded-2xl border border-[#eee9e6] bg-[#faf8f7] p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Pill>🔒 Master Audio · Đã hoàn tất</Pill>
-          <p className="text-[11px] text-[#77716e]">
-            Không tua • Không tạm dừng
-          </p>
+          <Pill>🔒 Master Audio · Completed</Pill>
+          <p className="text-[11px] text-[#77716e]">No seeking • No pausing</p>
         </div>
-        <p className="text-[13px]">🔒 Listening đã khóa</p>
+        <p className="text-[13px]">🔒 Listening locked</p>
       </section>
       <div className="flex items-start justify-between gap-3">
         <p className="text-[13px] text-[#77716e]">
-          Chọn nội dung để đánh dấu dẫn chứng.
+          Select text to highlight evidence.
         </p>
-        <Pill>▧ Bôi vàng &nbsp; ⤢ Phóng to</Pill>
+        <Pill>▧ Highlight &nbsp; ⤢ Zoom</Pill>
       </div>
       {group.passage ? <PassageCard passage={group.passage} /> : null}
       <p className="text-[11px] text-[#77716e]">
-        🔒 Phần Listening đã kết thúc. Không thể quay lại chỉnh sửa câu 1–100.
+        🔒 Listening section has ended. You cannot return to edit questions
+        1–100.
       </p>
     </>
   );
@@ -687,21 +684,23 @@ function ReadingQuestion({
 }) {
   return (
     <section
-      aria-label={`Câu hỏi ${question.number}`}
+      aria-label={`Question ${question.number}`}
       className="flex flex-1 flex-col gap-4 rounded-2xl bg-white p-4"
     >
       <Pill>QUESTION {question.number}</Pill>
       {question.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions.
         <img
-          alt={`Hình minh họa câu ${question.number}`}
+          alt={`Illustration for question ${question.number}`}
           className="max-h-80 w-auto max-w-full self-start rounded-lg object-contain"
           src={question.imageUrl}
         />
       ) : null}
       <h2 className="text-lg font-semibold">{question.prompt}</h2>
       <fieldset className="flex flex-col gap-3">
-        <legend className="sr-only">Đáp án cho câu {question.number}</legend>
+        <legend className="sr-only">
+          Choices for question {question.number}
+        </legend>
         {question.choices.map((choice) => (
           <Choice
             choice={choice}
@@ -719,7 +718,7 @@ function ReadingQuestion({
         onClick={onToggleFlag}
         type="button"
       >
-        ⚑ Gắn cờ xem lại
+        ⚑ Flag for review
       </button>
       <div className="flex items-center justify-between gap-3">
         <button
@@ -728,7 +727,7 @@ function ReadingQuestion({
           onClick={() => previous !== undefined && onNavigate(previous)}
           type="button"
         >
-          ← Câu trước
+          ← Previous
         </button>
         <button
           className={primaryButton}
@@ -736,11 +735,11 @@ function ReadingQuestion({
           onClick={() => next !== undefined && onNavigate(next)}
           type="button"
         >
-          Câu tiếp →
+          Next →
         </button>
       </div>
       <output className="text-[11px] text-[#77716e] block">
-        Chọn đáp án để tự động lưu.
+        Select an answer to auto-save.
       </output>
     </section>
   );

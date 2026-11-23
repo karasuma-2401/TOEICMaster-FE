@@ -93,7 +93,7 @@ export function HeaderMenu({ children }: { children: ReactNode }) {
       <button
         aria-controls={panelId}
         aria-expanded={open}
-        aria-label="Mở menu"
+        aria-label="Open menu"
         className={`flex h-10 w-10 cursor-pointer items-center justify-center justify-self-end rounded-xl border border-[#ece9e5] text-[#3d3935] transition hover:bg-[#f7f6f4] md:hidden ${focusRing}`}
         onClick={() => setOpen(true)}
         ref={toggleRef}
@@ -137,7 +137,7 @@ export function HeaderMenu({ children }: { children: ReactNode }) {
               Menu
             </p>
             <button
-              aria-label="Đóng menu"
+              aria-label="Close menu"
               className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#6b655f] transition hover:bg-[#f7f6f4] hover:text-[#2f2b28] ${focusRing}`}
               onClick={() => setOpen(false)}
               ref={closeRef}

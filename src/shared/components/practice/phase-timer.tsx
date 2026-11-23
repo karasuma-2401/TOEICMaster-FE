@@ -37,7 +37,7 @@ export function PhaseTimer({
       : null;
   return (
     <div
-      aria-label={`${label}, còn ${formatClock(seconds)}`}
+      aria-label={`${label}, ${formatClock(seconds)} remaining`}
       className={`min-w-32 rounded-2xl px-4 py-2 text-right ring-1 ${style.box}`}
       role="timer"
     >

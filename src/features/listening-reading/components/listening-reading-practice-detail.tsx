@@ -19,13 +19,13 @@ type Props = {
 };
 
 const partTitles: Record<number, string> = {
-  1: "Mô tả tranh",
-  2: "Hỏi – đáp",
-  3: "Đoạn hội thoại",
-  4: "Bài nói ngắn",
-  5: "Hoàn thành câu",
-  6: "Hoàn thành đoạn văn",
-  7: "Đọc hiểu",
+  1: "Photographs",
+  2: "Question - Response",
+  3: "Short Conversations",
+  4: "Short Talks",
+  5: "Incomplete Sentences",
+  6: "Text Completion",
+  7: "Reading Comprehension",
 };
 
 export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
@@ -42,7 +42,9 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
         const data = await getLrPracticeDetail(itemId, signal);
 
         if (data.part !== Number(part)) {
-          throw new Error("Bài luyện không thuộc Part đang chọn.");
+          throw new Error(
+            "Practice item does not belong to the selected Part.",
+          );
         }
 
         if (signal?.aborted) return;
@@ -54,7 +56,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
         setError(
           cause instanceof Error
             ? cause.message
-            : "Không thể tải nội dung bài luyện.",
+            : "Unable to load practice content.",
         );
       } finally {
         if (!signal?.aborted) setLoading(false);
@@ -111,7 +113,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Không thể nộp bài. Vui lòng thử lại.",
+          : "Unable to submit answers. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -133,7 +135,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
             href={`/${skill}/practice/${part}`}
             className="text-sm font-medium text-slate-600 hover:text-blue-600"
           >
-            ← Quay lại danh sách bài luyện
+            ← Back to practice list
           </Link>
           <UserMenu />
         </div>
@@ -142,7 +144,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
       <div className="mx-auto max-w-4xl px-4 py-8">
         {loading && (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-            Đang tải nội dung bài luyện...
+            Loading practice content...
           </div>
         )}
 
@@ -154,7 +156,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
               onClick={handleRetry}
               className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
             >
-              Thử tải lại
+              Retry
             </button>
           </div>
         )}
@@ -174,19 +176,20 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
               </h1>
 
               <p className="mt-2 text-sm text-slate-500">
-                Mã bài: {detail.code} · {totalQuestions} câu hỏi
+                Code: {detail.code} · {totalQuestions}{" "}
+                {totalQuestions === 1 ? "question" : "questions"}
               </p>
 
               {!result && (
                 <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-600">
                   <span>
-                    Đã trả lời:{" "}
+                    Answered:{" "}
                     <strong>
                       {answeredCount}/{totalQuestions}
                     </strong>
                   </span>
                   <span>
-                    Còn lại: <strong>{totalQuestions - answeredCount}</strong>
+                    Remaining: <strong>{totalQuestions - answeredCount}</strong>
                   </span>
                 </div>
               )}
@@ -195,7 +198,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
             {detail.audioUrl && (
               <section className="mb-6 rounded-xl border border-slate-200 bg-white p-6">
                 <h2 className="mb-3 font-semibold text-slate-900">
-                  Audio bài nghe
+                  Listening Audio
                 </h2>
                 <audio
                   controls
@@ -205,18 +208,18 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                   src={detail.audioUrl}
                 >
                   <track kind="captions" />
-                  Trình duyệt không hỗ trợ phát audio.
+                  Your browser does not support audio playback.
                 </audio>
               </section>
             )}
 
             {detail.imageUrl && (
               <section className="mb-6 rounded-xl border border-slate-200 bg-white p-6">
-                <h2 className="mb-3 font-semibold text-slate-900">Hình ảnh</h2>
+                <h2 className="mb-3 font-semibold text-slate-900">Image</h2>
                 {/* eslint-disable-next-line @next/next/no-img-element -- Presigned MinIO/S3 exam media has dynamic origins and unknown intrinsic dimensions. */}
                 <img
                   src={detail.imageUrl}
-                  alt="Hình ảnh bài luyện TOEIC"
+                  alt="TOEIC practice item"
                   className="mx-auto max-h-96 max-w-full rounded-lg object-contain"
                 />
               </section>
@@ -224,7 +227,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
 
             {detail.context && (
               <section className="mb-6 whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-6">
-                <h2 className="mb-3 font-semibold text-slate-900">Nội dung</h2>
+                <h2 className="mb-3 font-semibold text-slate-900">Passage</h2>
                 <p className="leading-7 text-slate-700">{detail.context}</p>
               </section>
             )}
@@ -247,7 +250,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                   >
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <h2 className="font-bold text-slate-900">
-                        Câu {question.ordinal || index + 1}
+                        Question {question.ordinal || index + 1}
                       </h2>
 
                       {questionResult && (
@@ -258,9 +261,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                               : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {questionResult.isCorrect
-                            ? "Chính xác"
-                            : "Chưa chính xác"}
+                          {questionResult.isCorrect ? "Correct" : "Incorrect"}
                         </span>
                       )}
                     </div>
@@ -281,7 +282,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                       detail.questions.length > 1 &&
                       index === 0 && (
                         <p className="mb-3 text-xs text-slate-500">
-                          Xem hình ảnh ở phần đầu bài luyện.
+                          See the image at the top of this practice item.
                         </p>
                       )}
 
@@ -334,7 +335,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
 
                             {result && correct && (
                               <span className="text-xs font-semibold text-green-700">
-                                Đáp án đúng
+                                Correct answer
                               </span>
                             )}
                           </label>
@@ -345,19 +346,19 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                     {questionResult && (
                       <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
                         <p className="text-sm text-slate-700">
-                          <strong>Đáp án của bạn:</strong>{" "}
-                          {questionResult.selectedKey || "Chưa trả lời"}
+                          <strong>Your answer:</strong>{" "}
+                          {questionResult.selectedKey || "Unanswered"}
                         </p>
 
                         <p className="text-sm text-green-700">
-                          <strong>Đáp án đúng:</strong>{" "}
+                          <strong>Correct answer:</strong>{" "}
                           {questionResult.correctKey}
                         </p>
 
                         {questionResult.translation && (
                           <div>
                             <h3 className="text-sm font-semibold text-slate-800">
-                              Bản dịch
+                              Translation
                             </h3>
                             <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                               {questionResult.translation}
@@ -368,7 +369,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                         {questionResult.explanation && (
                           <div>
                             <h3 className="text-sm font-semibold text-slate-800">
-                              Giải thích
+                              Explanation
                             </h3>
                             <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                               {questionResult.explanation}
@@ -388,13 +389,13 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                 className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
               >
                 <p>{error}</p>
-                {/đăng nhập/i.test(error) && (
+                {/sign in|log in|session/i.test(error) && (
                   <div className="mt-3">
                     <Link
                       href={`/login?next=${encodeURIComponent(`/${skill}/practice/${part}/${encodeURIComponent(itemId)}`)}`}
                       className="inline-flex items-center rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
                     >
-                      Đăng nhập ngay →
+                      Sign in now →
                     </Link>
                   </div>
                 )}
@@ -404,26 +405,26 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
             {result && (
               <section className="mt-6 rounded-xl border border-blue-200 bg-white p-6">
                 <h2 className="text-xl font-bold text-slate-900">
-                  Kết quả bài luyện
+                  Practice Result
                 </h2>
 
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="rounded-lg bg-slate-50 p-4">
-                    <p className="text-sm text-slate-500">Tổng số câu</p>
+                    <p className="text-sm text-slate-500">Total Questions</p>
                     <p className="mt-1 text-2xl font-bold text-slate-900">
                       {result.totalQuestions}
                     </p>
                   </div>
 
                   <div className="rounded-lg bg-green-50 p-4">
-                    <p className="text-sm text-green-700">Số câu đúng</p>
+                    <p className="text-sm text-green-700">Correct</p>
                     <p className="mt-1 text-2xl font-bold text-green-700">
                       {result.correctCount}
                     </p>
                   </div>
 
                   <div className="rounded-lg bg-red-50 p-4">
-                    <p className="text-sm text-red-700">Số câu sai</p>
+                    <p className="text-sm text-red-700">Incorrect</p>
                     <p className="mt-1 text-2xl font-bold text-red-700">
                       {result.incorrectCount}
                     </p>
@@ -431,7 +432,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                 </div>
 
                 <p className="mt-4 text-sm text-slate-600">
-                  Tỷ lệ đúng:{" "}
+                  Accuracy:{" "}
                   <strong>
                     {result.totalQuestions > 0
                       ? Math.round(
@@ -452,13 +453,13 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                     }}
                     className="inline-flex rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
                   >
-                    Làm lại bài này
+                    Try Again
                   </button>
                   <Link
                     href={`/${skill}/practice/${part}`}
                     className="inline-flex rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    Quay lại danh sách bài luyện
+                    Back to practice list
                   </Link>
                 </div>
               </section>
@@ -467,11 +468,12 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
             {!result && (
               <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
                 <p className="mb-2 text-sm text-slate-600">
-                  Bạn đã trả lời {answeredCount}/{totalQuestions} câu. Câu chưa
-                  trả lời sẽ được tính là sai khi nộp bài.
+                  You have answered {answeredCount}/{totalQuestions} questions.
+                  Unanswered questions will be marked incorrect upon submission.
                 </p>
                 <p className="mb-4 text-xs text-slate-400">
-                  Lưu ý: Bạn cần đăng nhập để nộp bài và lưu kết quả bài làm.
+                  Note: You need to sign in to submit and save your practice
+                  results.
                 </p>
 
                 <button
@@ -480,7 +482,7 @@ export function ListeningReadingPracticeDetail({ skill, part, itemId }: Props) {
                   disabled={submitting || totalQuestions === 0}
                   className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {submitting ? "Đang chấm bài..." : "Nộp bài"}
+                  {submitting ? "Grading..." : "Submit"}
                 </button>
               </section>
             )}

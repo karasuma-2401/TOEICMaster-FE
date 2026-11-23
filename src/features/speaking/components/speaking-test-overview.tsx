@@ -51,7 +51,7 @@ export function SpeakingTestOverview({
           setError(
             cause instanceof Error
               ? cause.message
-              : "Không thể tải đề Speaking.",
+              : "Could not load the Speaking test.",
           );
       }
     },
@@ -69,17 +69,17 @@ export function SpeakingTestOverview({
   if (!test && !error)
     return (
       <SpPage>
-        <LoadingPanel label="Đang tải đề Speaking…" />
+        <LoadingPanel label="Loading Speaking test..." />
       </SpPage>
     );
   if (!test)
     return (
       <SpPage>
-        <BackLink href="/speaking" label="Quay lại thư viện" />
+        <BackLink href="/speaking" label="Back to library" />
         <ErrorPanel
           message={error}
           onRetry={() => void load()}
-          retryLabel="Thử tải lại"
+          retryLabel="Retry"
         />
       </SpPage>
     );
@@ -96,7 +96,7 @@ export function SpeakingTestOverview({
   );
   return (
     <SpPage>
-      <BackLink href="/speaking" label="Quay lại thư viện Speaking" />
+      <BackLink href="/speaking" label="Back to Speaking library" />
       <div className="mt-6">
         <PracticeColumns
           aside={
@@ -104,17 +104,17 @@ export function SpeakingTestOverview({
               <RuleList
                 id="speaking-rules"
                 rules={[
-                  "Trình duyệt sẽ xin quyền micro trước khi bắt đầu.",
-                  "Mỗi câu có pha chuẩn bị, sau đó tự động ghi âm trong pha trả lời.",
-                  "Hết thời gian, câu hiện tại được khóa và chuyển sang câu kế tiếp.",
-                  "Bản ghi từng câu được tải lên máy chủ để nghe lại; chấm AI chỉ bắt đầu khi bạn đồng ý.",
+                  "Your browser will request microphone permission before starting.",
+                  "Each question has a preparation phase, then automatically records during the response phase.",
+                  "When time expires, the current question is locked and advances to the next one.",
+                  "Each question's recording is uploaded to the server for playback; AI grading only starts when you consent.",
                 ]}
               />
               <Link
                 className={`w-full ${primaryAction}`}
                 href={`/speaking/tests/${encodeURIComponent(test.id)}/practice?mode=${routeFromMode(selectedMode)}`}
               >
-                Bắt đầu làm bài
+                Start Test
               </Link>
             </div>
           }
@@ -124,7 +124,7 @@ export function SpeakingTestOverview({
                 <p className={eyebrow}>
                   {selectedMode === "FULL"
                     ? "FULL SPEAKING TEST"
-                    : "LUYỆN THEO PART"}
+                    : "PART PRACTICE"}
                 </p>
                 <h1 className="mt-3 text-3xl font-bold tracking-tight">
                   {test.title}
@@ -136,12 +136,15 @@ export function SpeakingTestOverview({
                   <StatGrid
                     className="sm:grid-cols-3"
                     items={[
-                      { label: "Cấu trúc", value: `${questionCount} câu` },
                       {
-                        label: "Thời lượng",
+                        label: "Structure",
+                        value: `${questionCount} questions`,
+                      },
+                      {
+                        label: "Duration",
                         value: formatMinutes(totalSeconds),
                       },
-                      { label: "Hình thức", value: "Ghi âm qua micro" },
+                      { label: "Format", value: "Microphone recording" },
                     ]}
                   />
                 </div>
@@ -153,7 +156,7 @@ export function SpeakingTestOverview({
                     key: part.part,
                     badge: part.part,
                     title: `Speaking Part ${part.part} · ${speakingPartSpecs[part.part].subtitle}`,
-                    detail: `${part.questionCount} câu · ${partTimingLabel(part.part)}`,
+                    detail: `${part.questionCount} questions · ${partTimingLabel(part.part)}`,
                   }))}
                 />
               </div>

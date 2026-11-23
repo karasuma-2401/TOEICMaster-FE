@@ -48,9 +48,9 @@ export function ProfileWorkspace({
         id="profile-section"
       >
         <SectionHeading
-          description="Cập nhật thông tin cá nhân và mục tiêu điểm TOEIC của bạn."
+          description="Update your personal information and TOEIC score goal."
           id="profile-section-title"
-          title="Thông tin cá nhân & Mục tiêu"
+          title="Personal Information & Goal"
         />
         <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
           <ProfileDetailsCard
@@ -67,16 +67,16 @@ export function ProfileWorkspace({
       </section>
 
       <section
-        aria-label="Lịch sử các đề thi đã làm"
+        aria-label="Exam attempt history"
         data-testid="profile-section-history"
         id="history-section"
       >
         <AttemptHistorySection
-          description="Mọi lượt thi L&R, Speaking và Writing được lưu tại đây."
+          description="All L&R, Speaking, and Writing attempts are saved here."
           limit={3}
           showFilter
           showSummary
-          title="Lịch sử các đề thi đã làm"
+          title="Exam attempt history"
         />
       </section>
 
@@ -86,14 +86,14 @@ export function ProfileWorkspace({
         id="security-section"
       >
         <SectionHeading
-          description="Quản lý mật khẩu và cách bạn đăng nhập TOEICMaster."
+          description="Manage your password and how you sign in to TOEICMaster."
           id="security-section-title"
-          title="Bảo mật"
+          title="Security"
         />
         <div className={`mt-4 ${profileCard}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-xl font-semibold text-[#3d3935]">
-              Đổi mật khẩu
+              Change password
             </h3>
             <span className="rounded-lg bg-[#f7f6f4] px-2.5 py-1 text-xs font-semibold text-[#6b655f]">
               {profile.hasPassword ? "Email" : "Google"}
@@ -103,9 +103,9 @@ export function ProfileWorkspace({
             <ChangePasswordForm hasPassword={profile.hasPassword} />
           </div>
           <p className="mt-5 border-t border-[#ece9e5] pt-4 text-xs leading-5 text-[#6b655f]">
-            Khi bạn đổi mật khẩu, các phiên đăng nhập khác vẫn giữ hiệu lực cho
-            đến khi hết hạn. Hãy đăng xuất trên thiết bị không dùng nữa để thu
-            hồi quyền truy cập.
+            When you change your password, other active sessions remain valid
+            until they expire. Sign out on devices you no longer use to revoke
+            access.
           </p>
         </div>
       </section>
@@ -116,9 +116,9 @@ export function ProfileWorkspace({
         id="settings-section"
       >
         <SectionHeading
-          description="Chỉ những tuỳ chọn thực sự được ứng dụng sử dụng."
+          description="Only preferences actually used by the application."
           id="settings-section-title"
-          title="Cài đặt"
+          title="Settings"
         />
         <div className="mt-4">
           <ProfileSettingsCard />

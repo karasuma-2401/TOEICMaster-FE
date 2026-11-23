@@ -6,9 +6,9 @@ import { Breadcrumbs } from "@/shared/components/practice/breadcrumbs";
 import { wideContainer } from "@/shared/components/practice/styles";
 
 export const metadata: Metadata = {
-  title: "Luyện phát âm IPA | TOEICMaster",
+  title: "IPA Pronunciation Practice | TOEICMaster",
   description:
-    "Bảng phiên âm quốc tế IPA đủ 44 âm: nghe mẫu, xem cách phát âm và ghi âm để được chấm điểm.",
+    "Full 44-sound International Phonetic Alphabet chart: listen to samples, learn articulation, and record for scoring.",
 };
 
 function first(value: string | string[] | undefined) {
@@ -35,7 +35,7 @@ export default async function PronunciationPage({
         tabIndex={-1}
       >
         <Breadcrumbs
-          items={[{ label: "Trang chủ", href: "/" }, { label: "Phát âm" }]}
+          items={[{ label: "Home", href: "/" }, { label: "Pronunciation" }]}
         />
         <PronunciationWorkspace
           initialGroup={isIpaGroup(group) ? group : null}

@@ -23,7 +23,7 @@ it("shows a Part 1 image and keywords, then an error if the image fails", () => 
   expect(screen.getByText("work")).toBeInTheDocument();
   fireEvent.error(image);
   expect(screen.getByRole("alert")).toHaveTextContent(
-    "Không thể tải ảnh đề bài",
+    "Could not load the prompt image",
   );
 });
 
