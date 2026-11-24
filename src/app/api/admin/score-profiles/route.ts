@@ -8,3 +8,11 @@ export function GET(request: NextRequest) {
     "GET",
   );
 }
+
+export function POST(request: NextRequest) {
+  return forwardAdminExamRequest(
+    request,
+    "/api/v1/admin/score-profiles",
+    "POST",
+  );
+}

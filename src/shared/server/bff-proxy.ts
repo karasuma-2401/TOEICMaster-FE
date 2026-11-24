@@ -100,17 +100,13 @@ export function extractForwardedClientHeaders(
   return result;
 }
 
-/** Streams a multipart request body while enforcing a hard byte limit without full-body over-buffering. */
-export async function readMultipartStream(
+/** Stops reading as soon as the body exceeds its byte limit. */
+export async function readBoundedBody(
   request: Request,
   maxBytes: number,
   oversizeMessage = "Uploaded payload exceeds the size limit.",
 ): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
   const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.startsWith("multipart/form-data")) {
-    return problemJson(400, "Multipart form data is required.");
-  }
-
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(declared) && declared > maxBytes) {
     return problemJson(413, oversizeMessage);
@@ -145,6 +141,16 @@ export async function readMultipartStream(
     offset += chunk.byteLength;
   }
   return { body, contentType };
+}
+
+export async function readMultipartStream(
+  request: Request,
+  maxBytes: number,
+  oversizeMessage?: string,
+) {
+  if (!request.headers.get("content-type")?.startsWith("multipart/form-data"))
+    return problemJson(400, "Multipart form data is required.");
+  return readBoundedBody(request, maxBytes, oversizeMessage);
 }
 
 /** Copies safe headers and response body from upstream while enforcing anti-sniff and cache controls. */
@@ -296,7 +302,13 @@ async function resolveRequestBody(
       };
     }
 
-    const text = await request.text();
+    const limited = await readBoundedBody(
+      request,
+      maxBodyBytes,
+      oversizeMessage,
+    );
+    if (limited instanceof Response) return { ok: false, response: limited };
+    const text = new TextDecoder().decode(limited.body);
     if (!text.trim()) {
       if (bodyMode === "optional-json") {
         return { ok: true };
@@ -319,16 +331,9 @@ async function resolveRequestBody(
   }
 
   // raw mode
-  const rawBuffer = await request.arrayBuffer();
-  if (rawBuffer.byteLength > maxBodyBytes) {
-    return {
-      ok: false,
-      response: problemJson(
-        413,
-        oversizeMessage ?? "Uploaded payload exceeds the size limit.",
-      ),
-    };
-  }
+  const limited = await readBoundedBody(request, maxBodyBytes, oversizeMessage);
+  if (limited instanceof Response) return { ok: false, response: limited };
+  const rawBuffer = limited.body;
   const contentType = request.headers.get("content-type") ?? undefined;
   return {
     ok: true,

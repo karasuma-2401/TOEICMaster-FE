@@ -1,3 +1,4 @@
+import { isGuid } from "@/shared/lib/guards";
 import { AuthError, refreshSession } from "@/features/auth/api";
 import { ApiError } from "@/shared/api/client";
 
@@ -91,15 +92,6 @@ export class LrExerciseBankApiError extends Error {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
-function isGuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value,
-    )
-  );
 }
 
 function isDate(value: unknown): value is string {

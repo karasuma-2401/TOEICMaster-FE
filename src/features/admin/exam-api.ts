@@ -1,3 +1,4 @@
+import { isGuid } from "@/shared/lib/guards";
 import { AuthError, refreshSession } from "@/features/auth/api";
 import { ApiError, getJson } from "@/shared/api/client";
 import {
@@ -70,6 +71,20 @@ function messageFromResponse(response: Response): Promise<string> {
   return response
     .json()
     .then((body: unknown) => {
+      if (
+        body &&
+        typeof body === "object" &&
+        "errors" in body &&
+        body.errors &&
+        typeof body.errors === "object" &&
+        "exam" in body.errors &&
+        Array.isArray(body.errors.exam)
+      ) {
+        const details = body.errors.exam.filter(
+          (value): value is string => typeof value === "string",
+        );
+        if (details.length > 0) return details.join("\n");
+      }
       if (
         body &&
         typeof body === "object" &&
@@ -207,6 +222,56 @@ export async function createReadingExam(
   const value = await request<unknown>("/api/admin/exams", "POST", input);
   if (!isReadingDraft(value))
     throw new AdminExamApiError(502, "Invalid created Reading exam data.");
+  return value;
+}
+
+export interface CreateScoreProfileInput {
+  name: string;
+  conversions: Array<{
+    skill: "Listening" | "Reading";
+    rawCorrectCount: number;
+    scaledScore: number;
+  }>;
+}
+
+export async function createScoreProfile(
+  input: CreateScoreProfileInput,
+): Promise<ScoreProfile> {
+  const value = await request<unknown>(
+    "/api/admin/score-profiles",
+    "POST",
+    input,
+  );
+  try {
+    return parseScoreProfiles([value])[0];
+  } catch {
+    throw new AdminExamApiError(502, "Invalid score profile data.");
+  }
+}
+
+export async function updateReadingScoreProfile(
+  examId: string,
+  revisionId: string,
+  scoreProfileId: string,
+) {
+  await request(
+    `/api/admin/exams/${encodeURIComponent(examId)}/revisions/${encodeURIComponent(revisionId)}/score-profile`,
+    "PUT",
+    { scoreProfileId },
+  );
+}
+
+export async function forkReadingRevision(
+  examId: string,
+  sourceRevisionId: string,
+): Promise<ReadingDraft> {
+  const value = await request<unknown>(
+    `/api/admin/exams/${encodeURIComponent(examId)}/revisions`,
+    "POST",
+    { sourceRevisionId },
+  );
+  if (!isReadingDraft(value))
+    throw new AdminExamApiError(502, "Invalid created revision data.");
   return value;
 }
 
@@ -388,15 +453,6 @@ export async function publishReadingRevision(
   if (!isReadingDraft(value))
     throw new AdminExamApiError(502, "Invalid Reading exam publish response.");
   return value;
-}
-
-function isGuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value,
-    )
-  );
 }
 
 function isReadingDraft(value: unknown): value is ReadingDraft {
