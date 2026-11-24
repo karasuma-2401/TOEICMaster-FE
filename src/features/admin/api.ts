@@ -15,10 +15,57 @@ export class AdminUsersApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly code?: string,
+    public readonly traceId?: string,
+    public readonly fieldErrors?: Record<string, string[]>,
   ) {
     super(message);
     this.name = "AdminUsersApiError";
   }
+}
+
+async function parseAdminProblem(
+  response: Response,
+): Promise<AdminUsersApiError> {
+  const payload = (await response.json().catch(() => null)) as Record<
+    string,
+    unknown
+  > | null;
+  if (!payload || typeof payload !== "object") {
+    return new AdminUsersApiError(
+      response.status,
+      "Unable to connect to the service.",
+    );
+  }
+  const code = typeof payload.code === "string" ? payload.code : undefined;
+  const traceId =
+    typeof payload.traceId === "string" ? payload.traceId : undefined;
+  const fieldErrors =
+    payload.errors &&
+    typeof payload.errors === "object" &&
+    !Array.isArray(payload.errors)
+      ? Object.fromEntries(
+          Object.entries(payload.errors).filter(
+            ([, v]) =>
+              Array.isArray(v) && v.every((item) => typeof item === "string"),
+          ) as Array<[string, string[]]>,
+        )
+      : undefined;
+  const firstField = fieldErrors
+    ? Object.values(fieldErrors)[0]?.[0]
+    : undefined;
+  const message =
+    (typeof payload.detail === "string" && payload.detail.trim()) ||
+    (typeof payload.title === "string" && payload.title.trim()) ||
+    firstField ||
+    "Unable to connect to the service.";
+  return new AdminUsersApiError(
+    response.status,
+    message,
+    code,
+    traceId,
+    fieldErrors,
+  );
 }
 
 async function refreshAdminSession() {
@@ -48,11 +95,7 @@ async function request<T>(
       signal,
       cache: "no-store",
     });
-    if (!response.ok)
-      throw new SharedApiError(
-        response.status,
-        "Unable to connect to the service.",
-      );
+    if (!response.ok) throw await parseAdminProblem(response);
     if (response.status === 204) return undefined;
     if (!response.headers.get("content-type")?.includes("application/json"))
       return undefined;

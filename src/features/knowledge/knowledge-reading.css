@@ -79,7 +79,6 @@
   padding: clamp(1.5rem, 4vw, 3.5rem);
 }
 .knowledge-public-article h1 {
-  font-family: "Segoe UI", "Noto Sans", sans-serif;
   font-size: clamp(2rem, 3vw, 3.1rem);
   line-height: 1.22;
   letter-spacing: -0.015em;
@@ -100,7 +99,6 @@
   padding: 1.6rem;
 }
 .knowledge-related h2 {
-  font-family: "Segoe UI", "Noto Sans", sans-serif;
   font-size: 1.55rem;
   margin: 0.65rem 0 1rem;
 }

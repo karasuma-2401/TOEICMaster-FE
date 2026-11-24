@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { sessionCookie } from "@/features/auth/server/session";
 import { FeaturedExams } from "@/features/home/components/featured-exams";
 import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import {
@@ -101,11 +103,28 @@ const card = "rounded-[20px] border border-(--sp-line)/70 bg-white";
 const sectionLink = `text-[15px] font-medium text-(--sp-brand) hover:underline ${focusRing}`;
 const sectionTitle = "text-2xl font-bold leading-8";
 
+async function readHomeSessionState() {
+  try {
+    const cookieStore = await cookies();
+    const session = sessionCookie({ cookies: cookieStore });
+    const isAuthenticated =
+      Boolean(session) &&
+      Date.parse(session!.refreshTokenExpiresAtUtc) > Date.now();
+    return {
+      isAuthenticated,
+      isAdmin: isAuthenticated && session?.role === "ADMIN",
+    };
+  } catch {
+    return { isAuthenticated: false, isAdmin: false };
+  }
+}
+
 export default async function Home(props: {
   searchParams?: Promise<{ profile?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const openProfile = searchParams?.profile === "1";
+  const { isAuthenticated, isAdmin } = await readHomeSessionState();
 
   return (
     <div className={`sp-theme min-h-dvh bg-white ${speakingFontClasses}`}>
@@ -269,6 +288,7 @@ export default async function Home(props: {
         </section>
 
         <AttemptHistorySection
+          isAuthenticated={isAuthenticated}
           limit={6}
           showFilter
           showViewAll
@@ -300,12 +320,11 @@ export default async function Home(props: {
             <Link className={`hover:underline ${focusRing}`} href="/history">
               Study History
             </Link>
-            <Link
-              className={`hover:underline ${focusRing}`}
-              href="/admin/content/writing"
-            >
-              Admin Portal
-            </Link>
+            {isAdmin ? (
+              <Link className={`hover:underline ${focusRing}`} href="/admin">
+                Admin Portal
+              </Link>
+            ) : null}
           </nav>
         </footer>
         <ConnectionStatus />

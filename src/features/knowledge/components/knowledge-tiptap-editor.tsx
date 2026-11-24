@@ -121,7 +121,7 @@ export function KnowledgeTiptapEditor({
   }
 
   return (
-    <div className="rounded-xl border border-(--admin-border) bg-white">
+    <div className="rounded-xl border border-(--admin-border) bg-white transition focus-within:border-(--admin-brand-orange) focus-within:ring-4 focus-within:ring-orange-100">
       <KnowledgeTiptapToolbar
         editor={editor}
         onDirectImageUpload={(file) => void handleDirectImageUpload(file)}

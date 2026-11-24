@@ -141,6 +141,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
 export function AttemptHistorySection({
   skills,
   limit,
+  isAuthenticated = true,
   showFilter = false,
   showSummary = false,
   showViewAll = false,
@@ -150,6 +151,8 @@ export function AttemptHistorySection({
   skills?: ExamSkillType[];
   /** Initial number of cards; omit to show every attempt. */
   limit?: number;
+  /** Skip history API requests on unauthenticated public shells. */
+  isAuthenticated?: boolean;
   showFilter?: boolean;
   showSummary?: boolean;
   showViewAll?: boolean;
@@ -162,7 +165,7 @@ export function AttemptHistorySection({
   const [unauthenticatedSkills, setUnauthenticatedSkills] = useState<
     ExamSkillType[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | ExamSkillType>("ALL");
   const [visibleCount, setVisibleCount] = useState(
@@ -171,10 +174,19 @@ export function AttemptHistorySection({
   const skillsKey = skills?.join(",") ?? "";
 
   useEffect(() => {
-    const controller = new AbortController();
     const selected = skillsKey
       ? (skillsKey.split(",") as ExamSkillType[])
       : undefined;
+    if (!isAuthenticated) {
+      const task = window.setTimeout(() => {
+        setItems([]);
+        setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
+        setLoading(false);
+      }, 0);
+      return () => window.clearTimeout(task);
+    }
+
+    const controller = new AbortController();
     const task = window.setTimeout(() => {
       setLoading(true);
       setError(null);
@@ -199,7 +211,7 @@ export function AttemptHistorySection({
       window.clearTimeout(task);
       controller.abort();
     };
-  }, [skillsKey]);
+  }, [isAuthenticated, skillsKey]);
 
   const requestedSkills = skills ?? ["lr", "speaking", "writing"];
   const isGuest =

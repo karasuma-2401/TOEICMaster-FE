@@ -84,7 +84,7 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
 const home: MascotGuide = {
   title: "Hi there, I'm Mic!",
   tips: [
-    'Choose the skill you want to practice in the "Three standalone tests" section.',
+    'Choose the skill you want to practice in the "Three Standalone Exams" section.',
     "Click the TOEICMaster logo in the top bar to return to the home page.",
     "Whenever you need help, just click me in the corner of the screen.",
   ],
