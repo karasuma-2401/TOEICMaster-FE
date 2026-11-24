@@ -147,7 +147,7 @@ export interface FetchWithAuthOptions {
 
 function isAbortError(error: unknown, signal?: AbortSignal): boolean {
   if (signal?.aborted) return true;
-  return error instanceof DOMException && error.name === "AbortError";
+  return isRecord(error) && error.name === "AbortError";
 }
 
 /** Executes fetch with automatic single-retry session refresh on 401 and AbortSignal safety. */
@@ -214,6 +214,18 @@ export interface RequestJsonOptions<T> extends FetchWithAuthOptions {
   invalidPayloadMessage?: string;
 }
 
+async function readProblemPayload(
+  response: Response,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch (cause) {
+    if (isAbortError(cause, signal)) throw cause;
+    return null;
+  }
+}
+
 /** Sends an auth-aware request, validates non-OK ProblemDetails, and parses JSON via explicit boundary parser. */
 export async function requestJson<T>(
   path: string,
@@ -223,7 +235,7 @@ export async function requestJson<T>(
   const response = await fetchWithAuthRefresh(path, options);
 
   if (!response.ok) {
-    const raw: unknown = await response.json().catch(() => null);
+    const raw = await readProblemPayload(response, options.signal);
     throw parseProblemDetails(
       raw,
       response.status,
@@ -235,7 +247,8 @@ export async function requestJson<T>(
   let raw: unknown;
   try {
     raw = await response.json();
-  } catch {
+  } catch (cause) {
+    if (isAbortError(cause, options.signal)) throw cause;
     throw new HttpError(
       502,
       options.invalidPayloadMessage ?? "Invalid response payload.",
@@ -245,6 +258,7 @@ export async function requestJson<T>(
   try {
     return options.parse(raw);
   } catch (cause) {
+    if (isAbortError(cause, options.signal)) throw cause;
     if (cause instanceof HttpError) throw cause;
     throw new HttpError(
       502,
@@ -263,7 +277,7 @@ export async function requestVoid(
   const response = await fetchWithAuthRefresh(path, options);
 
   if (!response.ok) {
-    const raw: unknown = await response.json().catch(() => null);
+    const raw = await readProblemPayload(response, options?.signal);
     throw parseProblemDetails(
       raw,
       response.status,

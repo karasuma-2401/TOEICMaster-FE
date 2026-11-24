@@ -47,7 +47,12 @@ export function FormField({
   children,
 }: FormFieldProps) {
   const generatedId = useId();
-  const fieldId = id ?? generatedId;
+  const childId =
+    isValidElement<{ id?: unknown }>(children) &&
+    typeof children.props.id === "string"
+      ? children.props.id
+      : undefined;
+  const fieldId = id || childId || generatedId;
   const hintId = `${fieldId}-hint`;
   const errorId = `${fieldId}-error`;
   const hasError = Boolean(error && error.trim().length > 0);
@@ -64,27 +69,28 @@ export function FormField({
   };
 
   let renderedControl: ReactNode;
-  if (typeof children === "function") {
-    renderedControl = children(controlProps);
-  } else if (isValidElement<Record<string, unknown>>(children)) {
-    const childProps = children.props;
+  const control =
+    typeof children === "function" ? children(controlProps) : children;
+  if (isValidElement<Record<string, unknown>>(control)) {
+    const childProps = control.props;
     const mergedDescribedBy =
       [
-        typeof childProps["aria-describedby"] === "string"
-          ? childProps["aria-describedby"]
-          : null,
-        describedBy ?? null,
+        ...new Set(
+          [
+            typeof childProps["aria-describedby"] === "string"
+              ? childProps["aria-describedby"]
+              : null,
+            describedBy ?? null,
+          ].flatMap((value) => value?.split(/\s+/) ?? []),
+        ),
       ]
         .filter(Boolean)
         .join(" ") || undefined;
 
     renderedControl = cloneElement(
-      children as ReactElement<Record<string, unknown>>,
+      control as ReactElement<Record<string, unknown>>,
       {
-        id:
-          typeof childProps.id === "string" && childProps.id
-            ? childProps.id
-            : fieldId,
+        id: fieldId,
         ...(hasError || childProps["aria-invalid"]
           ? { "aria-invalid": true }
           : {}),
@@ -95,7 +101,7 @@ export function FormField({
       },
     );
   } else {
-    renderedControl = children;
+    renderedControl = control;
   }
 
   return (

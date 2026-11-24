@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { readSession } from "@/features/auth/server/session";
 import { FlashcardsHeader } from "@/features/flashcards/components/flashcards-header";
 import { FlashcardsWorkspace } from "@/features/flashcards/components/flashcards-workspace";
 import { Breadcrumbs } from "@/shared/components/practice/breadcrumbs";
@@ -21,6 +23,10 @@ export default async function FlashcardsPage({
 }) {
   const params = await searchParams;
   const deck = first(params.deck) ?? null;
+  const session = readSession(
+    (await cookies()).get("toeicmaster_session")?.value,
+  );
+  const userId = session?.user.id ?? null;
 
   return (
     <div className="sp-theme min-h-dvh bg-white">
@@ -33,7 +39,11 @@ export default async function FlashcardsPage({
         <Breadcrumbs
           items={[{ label: "Home", href: "/" }, { label: "Flashcards" }]}
         />
-        <FlashcardsWorkspace initialDeckSlug={deck} />
+        <FlashcardsWorkspace
+          key={userId === null ? "guest" : `user:${userId}`}
+          initialDeckSlug={deck}
+          userId={userId}
+        />
       </main>
     </div>
   );
