@@ -91,6 +91,7 @@ When cloned alone, use the running backend's OpenAPI document and the contract i
 | `contract-integrity`          | Drift between backend OpenAPI spec and generated frontend types                     | Run `npm run contract:sync` or `npm run contract:generate`                                                       | `npm run contract:check` (`scripts/sync-openapi-types.mjs check`)                              |
 | `code-formatting`             | Tab characters, inconsistent quotes, trailing spaces, CRLF line endings             | Follow EditorConfig and Prettier specifications                                                                  | `npm run format:check` (`prettier --check .`), `.editorconfig`, `.prettierrc.json`             |
 | `behavior-verification`       | Regressions in unit, HTTP, proxy, UI accessibility, or guardrail logic              | Run automated test suites across Node and jsdom                                                                  | `npm test` (`vitest run`), `vitest.config.ts`                                                  |
+| `production-build`            | Broken production build or standalone package generation failures                   | Resolve Next.js compilation, prerender, or packaging errors                                                      | `npm run build` (`next build && node scripts/prepare-standalone.mjs`), `next.config.ts`        |
 
 ## Standard commands
 

@@ -177,9 +177,33 @@ export async function drive(runId, featureName = "flashcards") {
 
     log("Switching to 'Speed Match' mode");
     await page.getByRole("tab", { name: "Speed Match" }).click();
+    await page.waitForSelector('[role="tab"]:has-text("Speed Match")[aria-selected="true"]');
+    await page.waitForTimeout(300);
 
     log("Verifying match tiles render");
     await page.waitForSelector('button:has-text("Term")');
+
+    log("Performing interactive match action: matching pair and selecting next tile");
+    const termTile = page.locator('button:has-text("Term"):has-text("itinerary")');
+    const meaningTile = page.locator('button:has-text("Meaning"):has-text("lịch trình chi tiết")');
+    if ((await termTile.count()) > 0 && (await meaningTile.count()) > 0) {
+      await termTile.click();
+      await page.waitForTimeout(100);
+      await meaningTile.click();
+      await page.waitForTimeout(200);
+    } else {
+      const firstTile = page.locator('button:has-text("Term")').first();
+      await firstTile.click();
+      await page.waitForTimeout(100);
+    }
+
+    const nextTermTile = page.locator('button:has-text("Term"):not([disabled])').first();
+    if ((await nextTermTile.count()) > 0) {
+      await nextTermTile.click();
+      await page.waitForSelector('button[aria-pressed="true"]');
+    }
+
+    await page.waitForTimeout(400);
 
     log("Capturing UI proof");
     const screenshotPath = path.join(evidenceDir, "flashcards-match-game.png");
@@ -187,13 +211,19 @@ export async function drive(runId, featureName = "flashcards") {
 
     const ariaText = await page.evaluate(() => {
       const h1 = document.querySelector("h1")?.textContent?.trim() || "";
-      const tabs = Array.from(document.querySelectorAll('[role="tab"]'))
-        .map((t) => t.textContent?.trim().replace(/\s+/g, " "));
-      const buttons = Array.from(document.querySelectorAll("button"))
-        .map((b) => b.textContent?.trim().replace(/\s+/g, " "))
-        .filter(Boolean)
-        .slice(0, 15);
-      return `H1: ${h1}\nTabs: ${JSON.stringify(tabs, null, 2)}\nTop Buttons: ${JSON.stringify(buttons, null, 2)}`;
+      const tabs = Array.from(document.querySelectorAll('[role="tab"]')).map((t) => ({
+        label: t.textContent?.trim().replace(/\s+/g, " "),
+        selected: t.getAttribute("aria-selected") === "true",
+      }));
+      const tiles = Array.from(document.querySelectorAll("button[aria-pressed]")).map((b) => ({
+        text: b.textContent?.trim().replace(/\s+/g, " "),
+        pressed: b.getAttribute("aria-pressed") === "true",
+        disabled: b.disabled,
+      }));
+      const stats = Array.from(document.querySelectorAll(".sp-mono"))
+        .map((s) => s.textContent?.trim())
+        .filter(Boolean);
+      return `H1: ${h1}\nTabs: ${JSON.stringify(tabs, null, 2)}\nStats: ${JSON.stringify(stats, null, 2)}\nTiles (${tiles.length}): ${JSON.stringify(tiles.slice(0, 8), null, 2)}`;
     });
 
     fs.writeFileSync(path.join(evidenceDir, "flashcards-aria-summary.txt"), ariaText, "utf8");
@@ -206,7 +236,7 @@ export async function drive(runId, featureName = "flashcards") {
 
     log("Navigating to Login page");
     await page.goto(`${baseUrl}/login`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector('h2:has-text("Welcome back")');
+    await page.waitForSelector('h1:has-text("Continue your journey")');
 
     log("Triggering client-side form validation");
     await page.click('button:has-text("Sign in")');
@@ -281,9 +311,13 @@ export async function cleanup(runId) {
 
   if (!portReleased) {
     try {
-      process.kill(pid, "SIGKILL");
+      process.kill(-pid, "SIGKILL");
     } catch {
-      // Ignore
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        // Ignore
+      }
     }
   }
 

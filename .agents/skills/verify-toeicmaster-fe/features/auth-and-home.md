@@ -33,7 +33,8 @@ Preconditions:
 
 3. Navigate to the login route:
    `await page.goto(`${BASE_URL}/login`, { waitUntil: "domcontentloaded" });`
-   Verify that the login heading `Welcome back` is present.
+   Verify that the login heading `Continue your journey` is present:
+   `await expect(page.locator("#login-title")).toHaveText("Continue your journey");`
 
 4. Submit an empty form to observe client-side validation errors:
    `await page.getByRole("button", { name: "Sign in" }).click();`

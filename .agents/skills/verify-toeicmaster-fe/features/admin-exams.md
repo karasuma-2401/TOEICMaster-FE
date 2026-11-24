@@ -25,18 +25,20 @@ Preconditions:
    `await page.goto(`${BASE_URL}/admin/exams`, { waitUntil: "domcontentloaded" });`
    Verify that the admin shell or data bank container renders.
 
-2. Verify that administrative tables or navigation tabs are present:
+2. Verify that administrative navigation tabs and main area are present:
    `await expect(page.getByRole("main")).toBeVisible();`
+   `await expect(page.locator('nav[aria-label="TOEIC skills"]')).toBeVisible();`
 
-3. When testing with live backend or mock data, inspect the status filter:
-   `const statusSelect = page.locator('select[name="status"]');`
-   `if (await statusSelect.isVisible()) await statusSelect.selectOption("DRAFT");`
+3. When testing the Complete Tests tab with live or mock data, switch tabs and inspect the status filter:
+   `await page.goto(`${BASE_URL}/admin/exams?tab=tests`, { waitUntil: "domcontentloaded" });`
+   `const statusSelect = page.locator("#exam-status-filter");`
+   `if (await statusSelect.isVisible()) await statusSelect.selectOption("Draft");`
 
 4. Capture screenshot and administrative layout state:
-   `await page.screenshot({ path: `${EVIDENCE_DIR}/admin-exams-dashboard.png`, fullPage: true });`
+   `await page.screenshot({ path: `${EVIDENCE_DIR}/admin-exams.png`, fullPage: true });`
 
 ## Gotchas
 
-- Unauthenticated requests or non-admin users attempting to access `/admin/**` routes are rejected with HTTP 403 or redirected to `/login`.
+- Unauthenticated requests or non-admin users attempting to access `/admin/**` routes are rejected with HTTP 403 or redirected to `/login` when backend authentication is enforced.
 - When testing the UI without backend seed data, set `ADMIN_PREVIEW=true` or mock `/api/admin/exams` to provide fixture revisions.
 - Exam revision statuses strictly adhere to the contract union: Draft, Published, and Superseded.

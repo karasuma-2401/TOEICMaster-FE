@@ -32,16 +32,23 @@ Preconditions:
    `await expect(page.getByRole("heading", { name: "Office & Business Operations" })).toBeVisible();`
 
 3. Enter the selected deck:
-   `await page.getByRole("button", { name: /Office & Business Operations/ }).click();`
+   `const officeCard = page.locator("article", { hasText: "Office & Business Operations" });`
+   `await officeCard.getByRole("button", { name: /(?:Start|Continue) studying/ }).click();`
    Verify the deck title and mastery stats are displayed.
 
 4. Switch to Speed Match game mode:
-   `await page.getByRole("button", { name: "Speed Match" }).click();`
+   `await page.getByRole("tab", { name: "Speed Match" }).click();`
+   `await page.waitForSelector('[role="tab"]:has-text("Speed Match")[aria-selected="true"]');`
    Verify matching board tiles are rendered with Term and Meaning cards.
 
-5. Match a pair of cards:
-   `const termButton = page.getByRole("button", { name: /^Term/ }).first();`
+5. Match a pair of cards and trigger selection:
+   `const termButton = page.locator('button:has-text("Term"):has-text("itinerary")');`
+   `const meaningButton = page.locator('button:has-text("Meaning"):has-text("lịch trình chi tiết")');`
    `await termButton.click();`
+   `await meaningButton.click();`
+   `const nextTile = page.locator('button:has-text("Term"):not([disabled])').first();`
+   `await nextTile.click();`
+   `await page.waitForSelector('button[aria-pressed="true"]');`
 
 6. Capture screenshot and ARIA snapshot:
    `await page.screenshot({ path: `${EVIDENCE_DIR}/flashcards-match-game.png`, fullPage: true });`

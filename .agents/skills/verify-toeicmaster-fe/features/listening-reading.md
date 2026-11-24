@@ -30,14 +30,14 @@ Preconditions:
    `await expect(page.getByRole("link", { name: "Home" })).toBeVisible();`
 
 3. When connected to a live or mocked backend, select a test:
-   `const examCard = page.locator('[data-testid="lr-exam-card"]').first();`
-   `if (await examCard.isVisible()) await examCard.click();`
+   `const examCard = page.locator("main article").first();`
+   `if (await examCard.isVisible()) await examCard.getByRole("link", { name: /Start/i }).click();`
 
 4. Capture screenshot and library state:
-   `await page.screenshot({ path: `${EVIDENCE_DIR}/listening-reading-library.png`, fullPage: true });`
+   `await page.screenshot({ path: `${EVIDENCE_DIR}/listening-reading.png`, fullPage: true });`
 
 ## Gotchas
 
 - When the backend service is offline, the library shows a connection status banner and provides a retry button.
 - Master Audio playback requires user interaction or browser media permissions in non-headless mode.
-- In-flight listening progress is cached in session storage under `toeicmaster.lr.player.<attemptId>`.
+- In-flight listening progress is cached in session storage under `lr-listening-progress:${attemptId}`.
