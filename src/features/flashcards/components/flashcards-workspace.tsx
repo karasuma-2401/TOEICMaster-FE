@@ -75,19 +75,17 @@ type SyncMode = "loading" | "synced" | "local";
 
 export function FlashcardsWorkspace({
   initialDeckSlug,
-  userId = null,
+  userId,
 }: {
   initialDeckSlug: string | null;
-  userId?: string | null;
+  userId: string | null;
 }) {
   const [store, setStore] = useState<FlashcardStoreState>(
     EMPTY_FLASHCARD_STORE,
   );
+  const storeRef = useRef(store);
   const progressRef = useRef(store.progress);
-
-  useEffect(() => {
-    progressRef.current = store.progress;
-  }, [store.progress]);
+  const progressRequestsRef = useRef(new Map<string, symbol>());
 
   const [serverDecks, setServerDecks] = useState<FlashcardDeck[] | null>(null);
   const [matchRecords, setMatchRecords] = useState<Record<string, MatchRecord>>(
@@ -111,33 +109,46 @@ export function FlashcardsWorkspace({
   const [deleting, setDeleting] = useState(false);
   const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
 
+  const persistStore = useCallback(
+    (updater: (prev: FlashcardStoreState) => FlashcardStoreState) => {
+      const next = updater(storeRef.current);
+      storeRef.current = next;
+      progressRef.current = next.progress;
+      setStore(next);
+      writeFlashcardStore(next, userId);
+    },
+    [userId],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
+    const progressRequests = progressRequestsRef.current;
+    progressRequests.clear();
     void (async () => {
       await Promise.resolve();
       if (controller.signal.aborted) return;
       const localState = readFlashcardStore(userId);
-      setStore(localState);
+      persistStore(() => localState);
+      setServerDecks(null);
+      setMatchRecords({});
+      setSyncMode("loading");
       setHydrated(true);
       try {
         const remote = await getFlashcardWorkspace(controller.signal);
         if (controller.signal.aborted) return;
-        if (remote.decks.length > 0) {
-          setServerDecks(remote.decks);
-        }
-        if (Object.keys(remote.matchRecords).length > 0) {
-          setMatchRecords(remote.matchRecords);
-        }
-        if (Object.keys(remote.progress).length > 0) {
-          setStore((prev) => {
-            const next = {
-              ...prev,
-              progress: { ...prev.progress, ...remote.progress },
-            };
-            writeFlashcardStore(next, userId);
-            return next;
-          });
-        }
+        setServerDecks(remote.decks);
+        setMatchRecords(remote.matchRecords);
+        persistStore((prev) => {
+          const progress =
+            userId === null
+              ? { ...prev.progress, ...remote.progress }
+              : { ...remote.progress };
+          for (const cardId of progressRequests.keys()) {
+            const current = prev.progress[cardId];
+            if (current) progress[cardId] = current;
+          }
+          return { ...prev, progress };
+        });
         setSyncMode("synced");
       } catch {
         if (!controller.signal.aborted) {
@@ -148,8 +159,9 @@ export function FlashcardsWorkspace({
 
     return () => {
       controller.abort();
+      progressRequests.clear();
     };
-  }, [userId]);
+  }, [persistStore, userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -161,17 +173,6 @@ export function FlashcardsWorkspace({
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
-
-  const persistStore = useCallback(
-    (updater: (prev: FlashcardStoreState) => FlashcardStoreState) => {
-      setStore((prev) => {
-        const next = updater(prev);
-        writeFlashcardStore(next, userId);
-        return next;
-      });
-    },
-    [userId],
-  );
 
   const allDecks = useMemo(() => {
     if (serverDecks && serverDecks.length > 0) {
@@ -220,6 +221,7 @@ export function FlashcardsWorkspace({
   const syncDeckUrl = useCallback((slug: string | null) => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
+    if (url.searchParams.get("deck") === slug) return;
     if (slug) {
       url.searchParams.set("deck", slug);
     } else {
@@ -242,6 +244,24 @@ export function FlashcardsWorkspace({
     syncDeckUrl(null);
   }, [syncDeckUrl]);
 
+  const saveCardProgress = useCallback(
+    (cardId: string, status: CardMastery, starred: boolean) => {
+      if (!isServerGuid(cardId) || !userId) return;
+      const request = Symbol();
+      progressRequestsRef.current.set(cardId, request);
+      void upsertFlashcardProgressApi(cardId, status, starred)
+        .then((saved) => {
+          if (progressRequestsRef.current.get(cardId) !== request) return;
+          persistStore((prev) => ({
+            ...prev,
+            progress: { ...prev.progress, [cardId]: saved },
+          }));
+        })
+        .catch(() => {});
+    },
+    [persistStore, userId],
+  );
+
   const handleRateCard = useCallback(
     (cardId: string, status: CardMastery) => {
       const currentStarred = progressRef.current[cardId]?.starred ?? false;
@@ -261,20 +281,9 @@ export function FlashcardsWorkspace({
         };
       });
 
-      if (isServerGuid(cardId) && userId) {
-        void upsertFlashcardProgressApi(cardId, status, currentStarred)
-          .then((saved) => {
-            persistStore((prev) => ({
-              ...prev,
-              progress: { ...prev.progress, [cardId]: saved },
-            }));
-          })
-          .catch(() => {
-            // Keep optimistic localStorage state for offline sessions.
-          });
-      }
+      saveCardProgress(cardId, status, currentStarred);
     },
-    [persistStore, userId],
+    [persistStore, saveCardProgress],
   );
 
   const handleToggleStar = useCallback(
@@ -298,20 +307,9 @@ export function FlashcardsWorkspace({
         };
       });
 
-      if (isServerGuid(cardId) && userId) {
-        void upsertFlashcardProgressApi(cardId, currentStatus, nextStarred)
-          .then((saved) => {
-            persistStore((prev) => ({
-              ...prev,
-              progress: { ...prev.progress, [cardId]: saved },
-            }));
-          })
-          .catch(() => {
-            // Keep optimistic localStorage state for offline sessions.
-          });
-      }
+      saveCardProgress(cardId, currentStatus, nextStarred);
     },
-    [persistStore, userId],
+    [persistStore, saveCardProgress],
   );
 
   const handleCreateDeck = useCallback(
@@ -461,6 +459,9 @@ export function FlashcardsWorkspace({
 
   const handleResetDeckProgress = useCallback(
     (deck: FlashcardDeck) => {
+      for (const card of deck.cards) {
+        progressRequestsRef.current.delete(card.id);
+      }
       persistStore((prev) => {
         const nextProgress = { ...prev.progress };
         for (const card of deck.cards) {
@@ -616,13 +617,13 @@ export function FlashcardsWorkspace({
           <FlashcardMatchGame
             cards={activeDeck.cards}
             deckId={activeDeck.id}
+            userId={userId}
             key={`${activeDeck.id}-match`}
             onCompleteRun={(elapsedMs, maxCombo) =>
               handleRecordMatchRun(activeDeck.id, elapsedMs, maxCombo)
             }
             onRateCard={handleRateCard}
             serverBestMs={matchRecords[activeDeck.id]?.bestTimeMs ?? null}
-            userId={userId}
           />
         )}
 

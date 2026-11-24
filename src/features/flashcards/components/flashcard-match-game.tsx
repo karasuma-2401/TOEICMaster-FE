@@ -18,7 +18,11 @@ import {
   primaryAction,
   secondaryAction,
 } from "@/shared/components/practice/styles";
-import { getMatchBestStorageKey, shuffleCards } from "../storage";
+import {
+  readFlashcardBestTime,
+  shuffleCards,
+  writeFlashcardBestTime,
+} from "../storage";
 import type { CardMastery, FlashcardItem } from "../types";
 
 interface MatchTile {
@@ -36,52 +40,17 @@ function formatElapsed(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function readBestTime(
-  deckId: string,
-  pairCount: number,
-  userId?: string | null,
-): number | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(
-      getMatchBestStorageKey(deckId, pairCount, userId),
-    );
-    if (!raw) return null;
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeBestTime(
-  deckId: string,
-  pairCount: number,
-  ms: number,
-  userId?: string | null,
-): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(
-      getMatchBestStorageKey(deckId, pairCount, userId),
-      String(ms),
-    );
-  } catch {
-    // Ignore storage errors.
-  }
-}
-
 export function FlashcardMatchGame({
   deckId,
+  userId,
   cards,
-  userId = null,
   serverBestMs = null,
   onRateCard,
   onCompleteRun,
 }: {
   deckId: string;
+  userId: string | null;
   cards: readonly FlashcardItem[];
-  userId?: string | null;
   serverBestMs?: number | null;
   onRateCard: (cardId: string, status: CardMastery) => void;
   onCompleteRun?: (elapsedMs: number, maxCombo: number) => void;
@@ -119,11 +88,11 @@ export function FlashcardMatchGame({
     cards.length < MAX_PAIRS_PER_ROUND || pairCount === MAX_PAIRS_PER_ROUND;
 
   const [localBestMs, setLocalBestMs] = useState<number | null>(() =>
-    readBestTime(deckId, pairCount, userId),
+    readFlashcardBestTime(deckId, pairCount, userId),
   );
 
   useEffect(() => {
-    setLocalBestMs(readBestTime(deckId, pairCount, userId));
+    setLocalBestMs(readFlashcardBestTime(deckId, pairCount, userId));
   }, [deckId, pairCount, userId]);
 
   const effectiveServerBest = isStandardRecordBoard ? serverBestMs : null;
@@ -204,7 +173,7 @@ export function FlashcardMatchGame({
   }, [isCompleted]);
 
   const togglePause = () => {
-    if (startedAt === null && accumulatedMs === 0) return;
+    if (!paused && startedAt === null && accumulatedMs === 0) return;
     if (isCompleted) return;
     if (!paused) {
       const now = Date.now();
@@ -329,7 +298,7 @@ export function FlashcardMatchGame({
         if (beatRecord) {
           setLocalBestMs(finalMs);
           setIsNewRecord(true);
-          writeBestTime(deckId, pairCount, finalMs, userId);
+          writeFlashcardBestTime(deckId, pairCount, finalMs, userId);
         }
         setAnnouncement(
           `Board cleared in ${formatElapsed(finalMs)}${beatRecord ? ". New personal record!" : "."}`,
@@ -383,7 +352,7 @@ export function FlashcardMatchGame({
     );
   }
 
-  const hasStarted = startedAt !== null || accumulatedMs > 0;
+  const hasStarted = startedAt !== null || paused || accumulatedMs > 0;
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">

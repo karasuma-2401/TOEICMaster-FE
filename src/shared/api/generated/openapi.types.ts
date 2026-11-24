@@ -1652,6 +1652,17 @@ export interface paths {
                         "text/plain": components["schemas"]["LrExerciseImportResultDto"];
                     };
                 };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -3507,7 +3518,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ImportWritingItemsResponse"];
+                        "text/json": components["schemas"]["ImportWritingItemsResponse"];
+                        "text/plain": components["schemas"]["ImportWritingItemsResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
                 };
             };
         };
@@ -3560,6 +3586,17 @@ export interface paths {
                         "application/json": components["schemas"]["WritingExerciseImportPreviewDto"];
                         "text/json": components["schemas"]["WritingExerciseImportPreviewDto"];
                         "text/plain": components["schemas"]["WritingExerciseImportPreviewDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -3646,6 +3683,17 @@ export interface paths {
                         "application/json": components["schemas"]["WritingMediaAssetDto"];
                         "text/json": components["schemas"]["WritingMediaAssetDto"];
                         "text/plain": components["schemas"]["WritingMediaAssetDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -3981,8 +4029,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description Created */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3990,6 +4038,17 @@ export interface paths {
                         "application/json": components["schemas"]["WritingTestDto"];
                         "text/json": components["schemas"]["WritingTestDto"];
                         "text/plain": components["schemas"]["WritingTestDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -4074,6 +4133,17 @@ export interface paths {
                         "application/json": components["schemas"]["WritingTestImportPreviewDto"];
                         "text/json": components["schemas"]["WritingTestImportPreviewDto"];
                         "text/plain": components["schemas"]["WritingTestImportPreviewDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -7009,6 +7079,17 @@ export interface paths {
                         "text/plain": components["schemas"]["ProfileDto"];
                     };
                 };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
             };
         };
         post?: never;
@@ -8131,6 +8212,17 @@ export interface paths {
                         "application/json": components["schemas"]["ProfileDto"];
                         "text/json": components["schemas"]["ProfileDto"];
                         "text/plain": components["schemas"]["ProfileDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -9323,6 +9415,10 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        ImportWritingItemsResponse: {
+            /** Format: int32 */
+            importedCount: number;
+        };
         JsonElement: unknown;
         KnowledgeArticleDetailDto: {
             /** Format: uuid */

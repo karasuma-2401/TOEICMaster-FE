@@ -218,10 +218,11 @@ export function LrExamRoom({
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
 
-  const remaining = useCountdown(
-    initialRemainingSeconds,
-    () => void submit(true),
-  );
+  const remaining = useCountdown(initialRemainingSeconds, () => {
+    setConfirming(false);
+    setAbandoning(false);
+    void submit(true);
+  });
 
   const section = phase;
   const group = findGroup(groups, current);

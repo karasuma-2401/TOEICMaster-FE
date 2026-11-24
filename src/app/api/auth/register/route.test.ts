@@ -19,6 +19,25 @@ function registrationRequest(body: unknown) {
 }
 
 describe("registration proxy", () => {
+  it("forwards client IP headers through the shared BFF boundary", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const request = registrationRequest({
+      displayName: "Learner",
+      email: "learner@example.com",
+      password: "password123",
+    });
+    request.headers.set("X-Real-IP", "198.51.100.10");
+    request.headers.set("X-Forwarded-Proto", "https");
+
+    expect((await POST(request)).status).toBe(202);
+    const headers = fetchMock.mock.calls[0]![1].headers as Headers;
+    expect(headers.get("X-Forwarded-For")).toBe("198.51.100.10");
+    expect(headers.get("X-Forwarded-Proto")).toBe("https");
+  });
+
   it("validates browser input before contacting the backend", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -138,5 +157,79 @@ describe("registration proxy", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("42");
+  });
+  it("passes through 504 upstream timeout as 504", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        return Promise.reject(new DOMException("Timeout", "TimeoutError"));
+      }),
+    );
+
+    const response = await POST(
+      registrationRequest({
+        displayName: "Linh",
+        email: "linh@example.com",
+        password: "password",
+      }),
+    );
+
+    expect(response.status).toBe(504);
+  });
+
+  it("preserves 403 on cross-origin POST requests", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const request = new NextRequest("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "https://evil.example",
+      },
+      body: JSON.stringify({
+        displayName: "Linh",
+        email: "linh@example.com",
+        password: "password",
+      }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("content-type")).toBe(
+      "application/problem+json",
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toMatchObject({
+      title: "Invalid request.",
+      status: 403,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves 503 when API_BASE_URL is unavailable", async () => {
+    vi.stubEnv("API_BASE_URL", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      registrationRequest({
+        displayName: "Linh",
+        email: "linh@example.com",
+        password: "password",
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("content-type")).toBe(
+      "application/problem+json",
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toMatchObject({
+      title: "The service is temporarily unavailable.",
+      status: 503,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

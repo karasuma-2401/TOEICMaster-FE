@@ -26,6 +26,8 @@ interface DraftCard {
   exampleVi: string;
 }
 
+const MAX_CARDS_PER_DECK = 200;
+
 function createEmptyDraft(index: number): DraftCard {
   return {
     key: `draft-${Date.now()}-${index}`,
@@ -89,7 +91,11 @@ export function DeckCreateDialog({
   };
 
   const addCardRow = () => {
-    setDraftCards((prev) => [...prev, createEmptyDraft(prev.length + 1)]);
+    setDraftCards((prev) =>
+      prev.length >= MAX_CARDS_PER_DECK
+        ? prev
+        : [...prev, createEmptyDraft(prev.length + 1)],
+    );
   };
 
   const removeCardRow = (key: string) => {
@@ -240,7 +246,15 @@ export function DeckCreateDialog({
                     Cards ({draftCards.length})
                   </span>
                   <button
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--tm-brand)] transition hover:bg-[var(--tm-brand-soft)] ${focusRing}`}
+                    aria-describedby={
+                      draftCards.length >= MAX_CARDS_PER_DECK
+                        ? "create-deck-card-limit"
+                        : undefined
+                    }
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--tm-brand)] transition hover:bg-[var(--tm-brand-soft)] disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+                    disabled={
+                      submitting || draftCards.length >= MAX_CARDS_PER_DECK
+                    }
                     onClick={addCardRow}
                     type="button"
                   >
@@ -248,6 +262,16 @@ export function DeckCreateDialog({
                     Add card
                   </button>
                 </div>
+
+                {draftCards.length >= MAX_CARDS_PER_DECK && (
+                  <output
+                    className="block text-sm text-[var(--tm-ink-muted)]"
+                    id="create-deck-card-limit"
+                  >
+                    Maximum of 200 cards per deck reached. Remove a card to add
+                    another.
+                  </output>
+                )}
 
                 <div className="space-y-3">
                   {draftCards.map((card, index) => {
@@ -290,6 +314,7 @@ export function DeckCreateDialog({
                             }
                             aria-label={`Card ${index + 1} term`}
                             className="min-h-10"
+                            maxLength={120}
                             onChange={(e) => {
                               updateCard(card.key, "term", e.target.value);
                               if (cardsError) setCardsError(null);
@@ -312,6 +337,7 @@ export function DeckCreateDialog({
                             }
                             aria-label={`Card ${index + 1} meaning`}
                             className="min-h-10"
+                            maxLength={300}
                             onChange={(e) => {
                               updateCard(card.key, "meaningVi", e.target.value);
                               if (cardsError) setCardsError(null);
@@ -324,6 +350,7 @@ export function DeckCreateDialog({
                           <FormInput
                             aria-label={`Card ${index + 1} pronunciation`}
                             className="min-h-10"
+                            maxLength={120}
                             onChange={(e) =>
                               updateCard(card.key, "phonetic", e.target.value)
                             }
@@ -352,6 +379,7 @@ export function DeckCreateDialog({
                           <FormInput
                             aria-label={`Card ${index + 1} example sentence`}
                             className="min-h-10 sm:col-span-2"
+                            maxLength={400}
                             onChange={(e) =>
                               updateCard(card.key, "exampleEn", e.target.value)
                             }

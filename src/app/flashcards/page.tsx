@@ -49,7 +49,11 @@ export default async function FlashcardsPage({
         <Breadcrumbs
           items={[{ label: "Home", href: "/" }, { label: "Flashcards" }]}
         />
-        <FlashcardsWorkspace initialDeckSlug={deck} userId={userId} />
+        <FlashcardsWorkspace
+          key={userId === null ? "guest" : `user:${userId}`}
+          initialDeckSlug={deck}
+          userId={userId}
+        />
       </main>
     </div>
   );

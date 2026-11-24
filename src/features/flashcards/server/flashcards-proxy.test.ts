@@ -11,6 +11,37 @@ afterEach(() => {
 });
 
 describe("flashcards server proxy", () => {
+  it.each([
+    ["decks", "00000000-0000-0000-0000-000000000001", "cards"],
+    ["decks", "00000000-0000-0000-0000-000000000001", "match-records"],
+  ])(
+    "recognizes seeded GUID routes before enforcing auth: %s/%s/%s",
+    async (...segments) => {
+      const request = new NextRequest(
+        `http://localhost:3000/api/flashcards/${segments.join("/")}`,
+        { method: "POST", headers: { origin: "http://localhost:3000" } },
+      );
+      const response = await forwardFlashcards(request, segments, "POST");
+      expect(response.status).toBe(401);
+    },
+  );
+
+  it("rejects malformed IDs and extra path segments instead of forwarding them", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    for (const segments of [
+      ["cards", "not-a-guid", "progress"],
+      ["decks", "00000000-0000-0000-0000-000000000001", "cards", "extra"],
+    ]) {
+      const request = new NextRequest(
+        `http://localhost:3000/api/flashcards/${segments.join("/")}`,
+      );
+      expect((await forwardFlashcards(request, segments, "GET")).status).toBe(
+        404,
+      );
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown paths with 404", async () => {
     const request = new NextRequest(
       "http://localhost:3000/api/flashcards/unknown",

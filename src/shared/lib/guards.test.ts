@@ -79,6 +79,20 @@ describe("shared/lib/guards", () => {
     expect(isNullableGuid("bad")).toBe(false);
   });
 
+  it.each([
+    "00000000-0000-0000-0000-000000000000",
+    "00000000-0000-0000-0000-000000000001",
+    "00000000-0000-0000-0000-000000000042",
+  ])(
+    "accepts seeded zero-padded GUID %s in required and nullable fields",
+    (id) => {
+      expect(isGuid(id)).toBe(true);
+      expect(isNullableGuid(id)).toBe(true);
+      expect(isGuid(` ${id}`)).toBe(false);
+      expect(isNullableGuid(`${id} `)).toBe(false);
+    },
+  );
+
   it("validates ISO dates, string arrays, and enum unions", () => {
     expect(isIsoDate("2026-11-22")).toBe(true);
     expect(isIsoDate("2026-11-22T09:30:00Z")).toBe(true);
