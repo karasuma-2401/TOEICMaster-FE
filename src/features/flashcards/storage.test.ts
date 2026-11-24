@@ -3,6 +3,8 @@ import { BUILTIN_FLASHCARD_DECKS } from "./decks-data";
 import {
   buildQuizQuestions,
   filterDeckCards,
+  getFlashcardStorageKey,
+  getMatchBestStorageKey,
   parseFlashcardStore,
   slugifyDeckTitle,
   summarizeDeckProgress,
@@ -136,6 +138,19 @@ describe("flashcards storage & helpers", () => {
   it("slugifies deck titles cleanly", () => {
     expect(slugifyDeckTitle("Contracts & Negotiation Vocabulary!")).toBe(
       "contracts-negotiation-vocabulary",
+    );
+  });
+
+  it("scopes localStorage keys by userId and match pair count", () => {
+    expect(getFlashcardStorageKey(null)).toContain(".guest");
+    expect(getFlashcardStorageKey("user-a")).not.toBe(
+      getFlashcardStorageKey("user-b"),
+    );
+    expect(getMatchBestStorageKey("deck-1", 6, "user-a")).not.toBe(
+      getMatchBestStorageKey("deck-1", 2, "user-a"),
+    );
+    expect(getMatchBestStorageKey("deck-1", 6, "user-a")).not.toBe(
+      getMatchBestStorageKey("deck-1", 6, "user-b"),
     );
   });
 });

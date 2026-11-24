@@ -295,4 +295,44 @@ describe("LR BFF proxy (listening audio & legacy route removal)", () => {
     );
     expect(init.body).toBe(JSON.stringify(payload));
   });
+
+  it("forwards GET exams/{id}/current-attempt and POST exam-attempts/{id}/abandon", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ attemptId: ATTEMPT_ID }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const currentRes = await forwardLr(
+      new NextRequest(
+        `http://localhost:3000/api/lr/exams/${ASSET_ID}/current-attempt`,
+        { headers: { Cookie: authCookie() } },
+      ),
+      ["exams", ASSET_ID, "current-attempt"],
+      "GET",
+    );
+    expect(currentRes.status).toBe(200);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      `http://api:8080/api/v1/exams/${ASSET_ID}/current-attempt`,
+    );
+
+    const abandonRes = await forwardLr(
+      new NextRequest(
+        `http://localhost:3000/api/lr/exam-attempts/${ATTEMPT_ID}/abandon`,
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie(),
+            origin: "http://localhost:3000",
+          },
+        },
+      ),
+      ["exam-attempts", ATTEMPT_ID, "abandon"],
+      "POST",
+    );
+    expect(abandonRes.status).toBe(204);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toBe(
+      `http://api:8080/api/v1/exam-attempts/${ATTEMPT_ID}/abandon`,
+    );
+  });
 });

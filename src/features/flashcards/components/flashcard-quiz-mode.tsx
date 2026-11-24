@@ -35,6 +35,14 @@ export function FlashcardQuizMode({
   const [finished, setFinished] = useState(false);
 
   const currentQuestion = questions[index];
+  const selectedOption = currentQuestion?.options.find(
+    (option) => option.id === selectedId,
+  );
+  const feedbackAnnouncement = selectedOption
+    ? selectedOption.isCorrect
+      ? `Correct! ${currentQuestion.card.term} means ${currentQuestion.card.meaningVi}.`
+      : `Incorrect. ${currentQuestion.card.term} means ${currentQuestion.card.meaningVi}.`
+    : "";
 
   const handleSelect = (optionId: string, isCorrect: boolean) => {
     if (selectedId || !currentQuestion) return;
@@ -66,8 +74,8 @@ export function FlashcardQuizMode({
 
   if (questions.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
-        <p className="text-base font-semibold text-[#2b2724]">
+      <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-6 py-12 text-center">
+        <p className="text-base font-semibold text-[var(--tm-ink)]">
           This deck has no cards yet to create a quiz
         </p>
       </div>
@@ -77,14 +85,14 @@ export function FlashcardQuizMode({
   if (finished) {
     const accuracy = Math.round((correctCount / questions.length) * 100);
     return (
-      <div className="mx-auto max-w-2xl rounded-2xl border border-[#ece9e5] bg-[#fdf7ed] px-6 py-10 text-center">
-        <p className="sp-mono text-4xl font-bold text-[#df5a28]">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-brand-soft)] px-6 py-10 text-center">
+        <p className="sp-mono text-4xl font-bold text-[var(--tm-brand)]">
           {correctCount} / {questions.length}
         </p>
-        <h3 className="mt-2 text-xl font-bold text-[#2b2724]">
+        <h2 className="mt-2 text-xl font-bold text-[var(--tm-ink)]">
           Accuracy {accuracy}%
-        </h3>
-        <p className="mt-1.5 text-sm text-[#5f5953]">
+        </h2>
+        <p className="mt-1.5 text-sm text-[var(--tm-ink-muted)]">
           Correct answers have been marked as &ldquo;Mastered&rdquo;, and missed
           ones were moved to &ldquo;Needs review&rdquo; for further practice.
         </p>
@@ -106,14 +114,18 @@ export function FlashcardQuizMode({
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div className="flex items-center justify-between text-xs font-semibold text-[#5f5953]">
+      <div aria-live="polite" className="sr-only">
+        {feedbackAnnouncement}
+      </div>
+
+      <div className="flex items-center justify-between text-xs font-semibold text-[var(--tm-ink-muted)]">
         <span>
           Question {index + 1} / {questions.length}
         </span>
         <span className="sp-mono">Correct: {correctCount}</span>
       </div>
 
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e9e4df]">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--tm-border)]">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#cc2f20] to-[#e36a22] transition-[width] duration-300"
           style={{
@@ -122,20 +134,20 @@ export function FlashcardQuizMode({
         />
       </div>
 
-      <div className="rounded-[20px] border border-[#dacfc5] bg-white p-6 md:p-8">
+      <div className="rounded-[20px] border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] p-6 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="sp-chip sp-chip-orange">
               {currentQuestion.card.toeicPart}
             </span>
-            <span className="text-xs italic text-[#5f5953]">
+            <span className="text-xs italic text-[var(--tm-ink-muted)]">
               {currentQuestion.card.partOfSpeech}
             </span>
           </div>
           {speechSupported && (
             <button
               aria-label={`Listen to pronunciation of ${currentQuestion.card.term}`}
-              className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[#dacfc5] bg-[#faf7f5] px-3 text-xs font-semibold text-[#2b2724] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
+              className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--tm-border-strong)] bg-[var(--tm-page)] px-3 text-xs font-semibold text-[var(--tm-ink)] transition hover:border-[var(--tm-brand)] hover:text-[var(--tm-brand)] ${focusRing}`}
               onClick={() => speak(currentQuestion.card.term)}
               type="button"
             >
@@ -146,11 +158,11 @@ export function FlashcardQuizMode({
         </div>
 
         <div className="mt-5">
-          <h2 className="text-3xl font-bold tracking-tight text-[#2b2724]">
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--tm-ink)]">
             {currentQuestion.card.term}
           </h2>
           {currentQuestion.card.phonetic && (
-            <p className="sp-mono mt-1 text-sm text-[#5f5953]">
+            <p className="sp-mono mt-1 text-sm text-[var(--tm-ink-muted)]">
               {currentQuestion.card.phonetic}
             </p>
           )}
@@ -161,17 +173,17 @@ export function FlashcardQuizMode({
             const isSelected = selectedId === option.id;
             const answered = selectedId !== null;
             let stateClasses =
-              "border-[#ece9e5] bg-white text-[#2b2724] hover:border-[#df5a28] hover:bg-[#fff8f4]";
+              "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink)] hover:border-[var(--tm-brand)] hover:bg-[var(--tm-brand-soft)]";
             if (answered) {
               if (option.isCorrect) {
                 stateClasses =
-                  "border-[#5e9b70] bg-[#ebf8ed] text-[#3f7a52] font-semibold";
+                  "border-[var(--tm-success)] bg-[var(--tm-success-soft)] text-[var(--tm-success)] font-semibold";
               } else if (isSelected) {
                 stateClasses =
-                  "border-[#d9544f] bg-[#f6e1e1] text-[#bd2a2a] font-semibold";
+                  "border-[var(--tm-danger)] bg-[var(--tm-danger-soft)] text-[var(--tm-danger)] font-semibold";
               } else {
                 stateClasses =
-                  "border-[#ece9e5] bg-[#faf7f5] text-[#948d86] opacity-75";
+                  "border-[var(--tm-border)] bg-[var(--tm-page)] text-[var(--tm-ink-muted)] opacity-80";
               }
             }
 
@@ -186,17 +198,19 @@ export function FlashcardQuizMode({
                 <span className="sp-mono grid size-6 shrink-0 place-items-center rounded-md bg-black/5 text-xs font-bold">
                   {OPTION_LABELS[optionIdx] ?? optionIdx + 1}
                 </span>
-                <span className="flex-1 leading-snug">{option.meaningVi}</span>
+                <span className="flex-1 leading-snug" lang="vi">
+                  {option.meaningVi}
+                </span>
                 {answered && option.isCorrect && (
                   <CheckCircle2
                     aria-hidden="true"
-                    className="size-4 shrink-0 text-[#3f7a52]"
+                    className="size-4 shrink-0 text-[var(--tm-success)]"
                   />
                 )}
                 {answered && isSelected && !option.isCorrect && (
                   <XCircle
                     aria-hidden="true"
-                    className="size-4 shrink-0 text-[#bd2a2a]"
+                    className="size-4 shrink-0 text-[var(--tm-danger)]"
                   />
                 )}
               </button>
@@ -205,15 +219,24 @@ export function FlashcardQuizMode({
         </div>
 
         {selectedId && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[#ece9e5] pt-5">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tm-border)] pt-5">
             <div className="min-w-0 flex-1 text-sm">
+              <p
+                className={`mb-1 text-xs font-bold uppercase tracking-wide ${
+                  selectedOption?.isCorrect
+                    ? "text-[var(--tm-success)]"
+                    : "text-[var(--tm-danger)]"
+                }`}
+              >
+                {selectedOption?.isCorrect ? "Correct answer" : "Incorrect"}
+              </p>
               {currentQuestion.card.exampleEn && (
-                <p className="font-medium text-[#2b2724]">
+                <p className="font-medium text-[var(--tm-ink)]">
                   Example: {currentQuestion.card.exampleEn}
                 </p>
               )}
               {currentQuestion.card.exampleVi && (
-                <p className="mt-0.5 text-[#5f5953]">
+                <p className="mt-0.5 text-[var(--tm-ink-muted)]" lang="vi">
                   {currentQuestion.card.exampleVi}
                 </p>
               )}

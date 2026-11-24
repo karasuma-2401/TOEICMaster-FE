@@ -8,6 +8,11 @@ import {
   primaryAction,
   secondaryAction,
 } from "@/shared/components/practice/styles";
+import {
+  FormField,
+  FormInput,
+  FormSelect,
+} from "@/shared/components/ui/form-field";
 import { slugifyDeckTitle } from "../storage";
 import type { FlashcardDeck, FlashcardItem } from "../types";
 
@@ -40,7 +45,7 @@ export function DeckCreateDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateDeck: (deck: FlashcardDeck) => void;
+  onCreateDeck: (deck: FlashcardDeck) => Promise<void> | void;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -48,17 +53,24 @@ export function DeckCreateDialog({
     createEmptyDraft(1),
     createEmptyDraft(2),
   ]);
-  const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [cardsError, setCardsError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setDraftCards([createEmptyDraft(1), createEmptyDraft(2)]);
-    setError(null);
+    setTitleError(null);
+    setCardsError(null);
+    setSubmitError(null);
+    setSubmitting(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (submitting) return;
       resetForm();
     }
     onOpenChange(nextOpen);
@@ -86,14 +98,9 @@ export function DeckCreateDialog({
     );
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const cleanTitle = title.trim();
-    if (!cleanTitle) {
-      setError("Please enter a deck title.");
-      return;
-    }
-
     const validCards: FlashcardItem[] = draftCards
       .filter((item) => item.term.trim() && item.meaningVi.trim())
       .map((item, idx) => ({
@@ -109,12 +116,24 @@ export function DeckCreateDialog({
         level: "B2",
       }));
 
+    let hasValidationError = false;
+    if (!cleanTitle) {
+      setTitleError("Please enter a deck title.");
+      hasValidationError = true;
+    } else {
+      setTitleError(null);
+    }
+
     if (validCards.length === 0) {
-      setError(
+      setCardsError(
         "At least 1 card with both an English term and a meaning is required.",
       );
-      return;
+      hasValidationError = true;
+    } else {
+      setCardsError(null);
     }
+
+    if (hasValidationError) return;
 
     const deckId = `custom-deck-${Date.now()}`;
     const newDeck: FlashcardDeck = {
@@ -129,8 +148,20 @@ export function DeckCreateDialog({
       cards: validCards,
     };
 
-    onCreateDeck(newDeck);
-    handleOpenChange(false);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await onCreateDeck(newDeck);
+      resetForm();
+      onOpenChange(false);
+    } catch (cause) {
+      setSubmitError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not save the deck. Please try again.",
+      );
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -139,25 +170,26 @@ export function DeckCreateDialog({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]" />
         <Dialog.Content
           aria-describedby="create-deck-description"
-          className="fixed left-1/2 top-1/2 z-50 flex max-h-[88dvh] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-[#ece9e5] bg-white shadow-[0_24px_64px_-12px_rgb(0_0_0/0.25)]"
+          className="fixed left-1/2 top-1/2 z-50 flex max-h-[88dvh] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-surface)] shadow-[0_24px_64px_-12px_rgb(0_0_0/0.25)]"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-[#ece9e5] px-6 py-5">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--tm-border)] px-6 py-5">
             <div>
-              <Dialog.Title className="text-xl font-bold text-[#2b2724]">
+              <Dialog.Title className="text-xl font-bold text-[var(--tm-ink)]">
                 Create New Flashcard Deck
               </Dialog.Title>
               <Dialog.Description
-                className="mt-1 text-sm text-[#5f5953]"
+                className="mt-1 text-sm text-[var(--tm-ink-muted)]"
                 id="create-deck-description"
               >
-                Save your personal vocabulary deck in the browser to study
-                alongside standard TOEIC decks.
+                Save your personal vocabulary deck to study alongside standard
+                TOEIC decks.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
               <button
                 aria-label="Close dialog"
-                className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg text-[#5f5953] transition hover:bg-[#f4f1ee] hover:text-[#2b2724] ${focusRing}`}
+                className={`grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-[var(--tm-ink-muted)] transition hover:bg-[var(--tm-surface-muted)] hover:text-[var(--tm-ink)] ${focusRing}`}
+                disabled={submitting}
                 type="button"
               >
                 <X aria-hidden="true" className="size-4" strokeWidth={2} />
@@ -167,49 +199,48 @@ export function DeckCreateDialog({
 
           <form
             className="flex min-h-0 flex-1 flex-col"
-            onSubmit={handleSubmit}
+            noValidate
+            onSubmit={(event) => void handleSubmit(event)}
           >
             <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block space-y-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-[#2b2724]">
-                    Deck title <span className="text-[#bd2a2a]">*</span>
-                  </span>
-                  <input
-                    className="sp-input"
+                <FormField
+                  className="sm:col-span-2"
+                  error={titleError}
+                  label="Deck title"
+                  required
+                >
+                  <FormInput
                     maxLength={80}
                     onChange={(e) => {
                       setTitle(e.target.value);
-                      if (error) setError(null);
+                      if (titleError) setTitleError(null);
+                      if (submitError) setSubmitError(null);
                     }}
                     placeholder="e.g. Tricky Part 7 vocabulary this week"
                     type="text"
                     value={title}
                   />
-                </label>
+                </FormField>
 
-                <label className="block space-y-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-[#2b2724]">
-                    Short description
-                  </span>
-                  <input
-                    className="sp-input"
+                <FormField className="sm:col-span-2" label="Short description">
+                  <FormInput
                     maxLength={160}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Topic notes or study goal"
                     type="text"
                     value={description}
                   />
-                </label>
+                </FormField>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-[#2b2724]">
+                  <span className="text-sm font-semibold text-[var(--tm-ink)]">
                     Cards ({draftCards.length})
                   </span>
                   <button
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#df5a28] transition hover:bg-[#fbf0e6] ${focusRing}`}
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--tm-brand)] transition hover:bg-[var(--tm-brand-soft)] ${focusRing}`}
                     onClick={addCardRow}
                     type="button"
                   >
@@ -219,109 +250,158 @@ export function DeckCreateDialog({
                 </div>
 
                 <div className="space-y-3">
-                  {draftCards.map((card, index) => (
-                    <div
-                      className="rounded-xl border border-[#ece9e5] bg-[#faf7f5] p-4"
-                      key={card.key}
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="sp-mono text-xs font-semibold text-[#5f5953]">
-                          Card #{index + 1}
-                        </span>
-                        {draftCards.length > 1 && (
-                          <button
-                            aria-label={`Remove card ${index + 1}`}
-                            className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-[#5f5953] transition hover:bg-[#f6e1e1] hover:text-[#bd2a2a] ${focusRing}`}
-                            onClick={() => removeCardRow(card.key)}
-                            type="button"
-                          >
-                            <Trash2 aria-hidden="true" className="size-3.5" />
-                            Remove
-                          </button>
-                        )}
-                      </div>
+                  {draftCards.map((card, index) => {
+                    const showFirstCardError = Boolean(
+                      cardsError && index === 0,
+                    );
+                    return (
+                      <div
+                        className="rounded-xl border border-[var(--tm-border)] bg-[var(--tm-page)] p-4"
+                        key={card.key}
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <span className="sp-mono text-xs font-semibold text-[var(--tm-ink-muted)]">
+                            Card #{index + 1}
+                          </span>
+                          {draftCards.length > 1 && (
+                            <button
+                              aria-label={`Remove card ${index + 1}`}
+                              className={`inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-[var(--tm-ink-muted)] transition hover:bg-[var(--tm-danger-soft)] hover:text-[var(--tm-danger)] ${focusRing}`}
+                              onClick={() => removeCardRow(card.key)}
+                              type="button"
+                            >
+                              <Trash2 aria-hidden="true" className="size-3.5" />
+                              Remove
+                            </button>
+                          )}
+                        </div>
 
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <input
-                          aria-label={`Card ${index + 1} term`}
-                          className="sp-input min-h-10 bg-white"
-                          onChange={(e) => {
-                            updateCard(card.key, "term", e.target.value);
-                            if (error) setError(null);
-                          }}
-                          placeholder="English term (e.g. reimburse) *"
-                          type="text"
-                          value={card.term}
-                        />
-                        <input
-                          aria-label={`Card ${index + 1} meaning`}
-                          className="sp-input min-h-10 bg-white"
-                          onChange={(e) => {
-                            updateCard(card.key, "meaningVi", e.target.value);
-                            if (error) setError(null);
-                          }}
-                          placeholder="Meaning *"
-                          type="text"
-                          value={card.meaningVi}
-                        />
-                        <input
-                          aria-label={`Card ${index + 1} pronunciation`}
-                          className="sp-input min-h-10 bg-white"
-                          onChange={(e) =>
-                            updateCard(card.key, "phonetic", e.target.value)
-                          }
-                          placeholder="IPA pronunciation (optional)"
-                          type="text"
-                          value={card.phonetic}
-                        />
-                        <select
-                          aria-label={`Card ${index + 1} part of speech`}
-                          className="sp-input min-h-10 bg-white"
-                          onChange={(e) =>
-                            updateCard(card.key, "partOfSpeech", e.target.value)
-                          }
-                          value={card.partOfSpeech}
-                        >
-                          <option value="noun">noun</option>
-                          <option value="verb">verb</option>
-                          <option value="adjective">adjective</option>
-                          <option value="adverb">adverb</option>
-                          <option value="phrasal verb">phrasal verb</option>
-                        </select>
-                        <input
-                          aria-label={`Card ${index + 1} example sentence`}
-                          className="sp-input min-h-10 bg-white sm:col-span-2"
-                          onChange={(e) =>
-                            updateCard(card.key, "exampleEn", e.target.value)
-                          }
-                          placeholder="Example sentence (optional)"
-                          type="text"
-                          value={card.exampleEn}
-                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <FormInput
+                            aria-describedby={
+                              showFirstCardError
+                                ? "create-deck-cards-error"
+                                : undefined
+                            }
+                            aria-invalid={
+                              showFirstCardError && !card.term.trim()
+                                ? true
+                                : undefined
+                            }
+                            aria-label={`Card ${index + 1} term`}
+                            className="min-h-10"
+                            onChange={(e) => {
+                              updateCard(card.key, "term", e.target.value);
+                              if (cardsError) setCardsError(null);
+                              if (submitError) setSubmitError(null);
+                            }}
+                            placeholder="English term (e.g. reimburse) *"
+                            type="text"
+                            value={card.term}
+                          />
+                          <FormInput
+                            aria-describedby={
+                              showFirstCardError
+                                ? "create-deck-cards-error"
+                                : undefined
+                            }
+                            aria-invalid={
+                              showFirstCardError && !card.meaningVi.trim()
+                                ? true
+                                : undefined
+                            }
+                            aria-label={`Card ${index + 1} meaning`}
+                            className="min-h-10"
+                            onChange={(e) => {
+                              updateCard(card.key, "meaningVi", e.target.value);
+                              if (cardsError) setCardsError(null);
+                              if (submitError) setSubmitError(null);
+                            }}
+                            placeholder="Meaning *"
+                            type="text"
+                            value={card.meaningVi}
+                          />
+                          <FormInput
+                            aria-label={`Card ${index + 1} pronunciation`}
+                            className="min-h-10"
+                            onChange={(e) =>
+                              updateCard(card.key, "phonetic", e.target.value)
+                            }
+                            placeholder="IPA pronunciation (optional)"
+                            type="text"
+                            value={card.phonetic}
+                          />
+                          <FormSelect
+                            aria-label={`Card ${index + 1} part of speech`}
+                            className="min-h-10"
+                            onChange={(e) =>
+                              updateCard(
+                                card.key,
+                                "partOfSpeech",
+                                e.target.value,
+                              )
+                            }
+                            value={card.partOfSpeech}
+                          >
+                            <option value="noun">noun</option>
+                            <option value="verb">verb</option>
+                            <option value="adjective">adjective</option>
+                            <option value="adverb">adverb</option>
+                            <option value="phrasal verb">phrasal verb</option>
+                          </FormSelect>
+                          <FormInput
+                            aria-label={`Card ${index + 1} example sentence`}
+                            className="min-h-10 sm:col-span-2"
+                            onChange={(e) =>
+                              updateCard(card.key, "exampleEn", e.target.value)
+                            }
+                            placeholder="Example sentence (optional)"
+                            type="text"
+                            value={card.exampleEn}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+
+                {cardsError && (
+                  <p
+                    className="rounded-lg border border-[var(--tm-danger)]/35 bg-[var(--tm-danger-soft)] px-3.5 py-2.5 text-sm font-medium text-[var(--tm-danger)]"
+                    id="create-deck-cards-error"
+                    role="alert"
+                  >
+                    {cardsError}
+                  </p>
+                )}
               </div>
 
-              {error && (
+              {submitError && (
                 <p
-                  className="rounded-lg border border-[#d9544f]/40 bg-[#f6e1e1] px-3.5 py-2.5 text-sm font-medium text-[#bd2a2a]"
+                  className="rounded-lg border border-[var(--tm-danger)]/35 bg-[var(--tm-danger-soft)] px-3.5 py-2.5 text-sm font-medium text-[var(--tm-danger)]"
                   role="alert"
                 >
-                  {error}
+                  {submitError}
                 </p>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-[#ece9e5] px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-[var(--tm-border)] px-6 py-4">
               <Dialog.Close asChild>
-                <button className={secondaryAction} type="button">
+                <button
+                  className={secondaryAction}
+                  disabled={submitting}
+                  type="button"
+                >
                   Cancel
                 </button>
               </Dialog.Close>
-              <button className={primaryAction} type="submit">
-                Save deck
+              <button
+                className={primaryAction}
+                disabled={submitting}
+                type="submit"
+              >
+                {submitting ? "Saving…" : "Save deck"}
               </button>
             </div>
           </form>

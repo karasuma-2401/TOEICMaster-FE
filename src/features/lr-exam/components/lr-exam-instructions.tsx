@@ -105,7 +105,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
         id="main-content"
         tabIndex={-1}
       >
-        <p className="text-[13px] text-[#77716e]">
+        <p className="text-[13px] text-[var(--tm-ink-muted)]">
           Home / Mock Tests / {exam?.code ?? "Listening & Reading"}
         </p>
         <section
@@ -130,7 +130,9 @@ export function LrExamInstructions({ examId }: { examId: string }) {
                   <p className="text-2xl leading-tight font-semibold">
                     {metric.value}
                   </p>
-                  <p className="text-[13px] text-[#77716e]">{metric.label}</p>
+                  <p className="text-[13px] text-[var(--tm-ink-muted)]">
+                    {metric.label}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -144,7 +146,9 @@ export function LrExamInstructions({ examId }: { examId: string }) {
               <li className="flex flex-col gap-2" key={rule.index}>
                 <Pill>{rule.index}</Pill>
                 <h3 className="text-[15px] font-semibold">{rule.title}</h3>
-                <p className="text-[13px] text-[#77716e]">{rule.body}</p>
+                <p className="text-[13px] text-[var(--tm-ink-muted)]">
+                  {rule.body}
+                </p>
               </li>
             ))}
           </ol>
@@ -174,7 +178,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
                 <div>
                   <Link
                     href={`/login?next=${encodeURIComponent(`/exams/lr/${examId}`)}`}
-                    className="inline-flex items-center rounded-md bg-[#ea580c] px-4 py-2 text-xs font-semibold text-white hover:bg-[#c2410c]"
+                    className="inline-flex items-center rounded-md bg-[var(--tm-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--tm-brand-hover)]"
                   >
                     Sign in to start exam →
                   </Link>
@@ -201,7 +205,7 @@ export function LrExamInstructions({ examId }: { examId: string }) {
             </button>
           </div>
         </section>
-        <p className="text-center text-[11px] text-[#77716e]">
+        <p className="text-center text-[11px] text-[var(--tm-ink-muted)]">
           Answers are saved on the server · Timer is server-controlled
         </p>
       </main>

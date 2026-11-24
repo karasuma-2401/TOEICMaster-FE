@@ -11,6 +11,22 @@ import type {
 
 export const FLASHCARD_STORAGE_KEY = "toeicmaster.flashcards.v1";
 
+export function getFlashcardStorageKey(userId?: string | null): string {
+  const scope = userId?.trim();
+  return scope
+    ? `${FLASHCARD_STORAGE_KEY}.u.${scope}`
+    : `${FLASHCARD_STORAGE_KEY}.guest`;
+}
+
+export function getMatchBestStorageKey(
+  deckId: string,
+  pairCount: number,
+  userId?: string | null,
+): string {
+  const scope = userId?.trim() || "guest";
+  return `toeicmaster.fc.match.best.${scope}.${deckId}.p${pairCount}`;
+}
+
 export const EMPTY_FLASHCARD_STORE: FlashcardStoreState = {
   progress: {},
   customDecks: [],
@@ -137,21 +153,26 @@ export function parseFlashcardStore(raw: string | null): FlashcardStoreState {
   }
 }
 
-export function readFlashcardStore(): FlashcardStoreState {
+export function readFlashcardStore(
+  userId?: string | null,
+): FlashcardStoreState {
   if (typeof window === "undefined") return EMPTY_FLASHCARD_STORE;
   try {
-    return parseFlashcardStore(
-      window.localStorage.getItem(FLASHCARD_STORAGE_KEY),
-    );
+    const key = getFlashcardStorageKey(userId);
+    return parseFlashcardStore(window.localStorage.getItem(key));
   } catch {
     return EMPTY_FLASHCARD_STORE;
   }
 }
 
-export function writeFlashcardStore(state: FlashcardStoreState): void {
+export function writeFlashcardStore(
+  state: FlashcardStoreState,
+  userId?: string | null,
+): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(FLASHCARD_STORAGE_KEY, JSON.stringify(state));
+    const key = getFlashcardStorageKey(userId);
+    window.localStorage.setItem(key, JSON.stringify(state));
   } catch {
     // Ignore storage quota or private-mode errors gracefully.
   }

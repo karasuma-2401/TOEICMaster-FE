@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { readSession } from "@/features/auth/server/session";
 import { FlashcardsHeader } from "@/features/flashcards/components/flashcards-header";
 import { FlashcardsWorkspace } from "@/features/flashcards/components/flashcards-workspace";
 import { Breadcrumbs } from "@/shared/components/practice/breadcrumbs";
@@ -14,6 +16,19 @@ function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+async function getAuthenticatedUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const session = readSession(cookieStore.get("toeicmaster_session")?.value);
+    if (session && Date.parse(session.refreshTokenExpiresAtUtc) > Date.now()) {
+      return session.user.id;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export default async function FlashcardsPage({
   searchParams,
 }: {
@@ -21,9 +36,10 @@ export default async function FlashcardsPage({
 }) {
   const params = await searchParams;
   const deck = first(params.deck) ?? null;
+  const userId = await getAuthenticatedUserId();
 
   return (
-    <div className="sp-theme min-h-dvh bg-white">
+    <div className="sp-theme min-h-dvh overflow-x-clip bg-white">
       <FlashcardsHeader />
       <main
         className={`${wideContainer} pb-12 pt-6`}
@@ -33,7 +49,7 @@ export default async function FlashcardsPage({
         <Breadcrumbs
           items={[{ label: "Home", href: "/" }, { label: "Flashcards" }]}
         />
-        <FlashcardsWorkspace initialDeckSlug={deck} />
+        <FlashcardsWorkspace initialDeckSlug={deck} userId={userId} />
       </main>
     </div>
   );

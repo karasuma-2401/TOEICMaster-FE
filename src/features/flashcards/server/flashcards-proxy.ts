@@ -67,19 +67,24 @@ export async function forwardFlashcards(
   const isPublic =
     method === "GET" && (DECKS_ROOT.test(path) || DECK_BY_SLUG.test(path));
   const session = sessionCookie(request);
+  const now = Date.now();
   const hasValidRefresh =
-    session !== null &&
-    Date.parse(session.refreshTokenExpiresAtUtc) > Date.now();
+    session !== null && Date.parse(session.refreshTokenExpiresAtUtc) > now;
+  const hasValidAccess =
+    session !== null && Date.parse(session.accessTokenExpiresAtUtc) > now;
 
   if (!isPublic && !hasValidRefresh) {
     return problem(401, "Please sign in to sync Flashcards.");
   }
 
+  // When an authenticated session exists with an expired access token, return 401
+  // so the client refreshes the token instead of silently downgrading to guest data.
+  if (hasValidRefresh && !hasValidAccess) {
+    return problem(401, "Your session has expired. Please refresh.");
+  }
+
   const headers = new Headers({ Accept: "application/json" });
-  if (
-    hasValidRefresh &&
-    Date.parse(session.accessTokenExpiresAtUtc) > Date.now()
-  ) {
+  if (hasValidRefresh && hasValidAccess) {
     headers.set("Authorization", `Bearer ${session.accessToken}`);
   }
 
