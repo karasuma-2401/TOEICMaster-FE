@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatGuardrailViolation,
   runGuardrails,
+  stripComments,
 } from "./check-guardrails.mjs";
 
 describe("scripts/check-guardrails", () => {
@@ -430,5 +431,65 @@ describe("scripts/check-guardrails", () => {
         },
       }).violations[0]?.rule,
     ).toBe("no-new-legacy-proxy");
+  });
+  it("flags raw bff fetch even after URL strings and comment-like text on the same line", () => {
+    const result = runGuardrails({
+      files: {
+        "src/app/api/bypass/route.ts":
+          'const u = "http://localhost"; fetch(u);',
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/app/api/bypass/route.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("flags raw storage and duplicate GUID regex even when preceded by URL strings or template literals", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/demo/storage.ts":
+          'const endpoint = "http://localhost:3000/api"; localStorage.setItem("key", "val");',
+        "src/features/demo/api.ts":
+          "const base = `https://example.com/api/${1}`; const guidPattern = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-/;",
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-duplicate-guid-regex",
+        file: "src/features/demo/api.ts",
+        count: 1,
+        allowed: 0,
+      },
+      {
+        rule: "no-raw-storage",
+        file: "src/features/demo/storage.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("accurately strips real comments while preserving URLs in strings, template literals, and regexes", () => {
+    const raw = [
+      "// Single line comment with http://example.com",
+      'const u = "http://localhost:5287"; // inline comment',
+      "/* Multiline comment",
+      "   with https://domain.com */",
+      "const tmpl = \`https://api.domain.com/\${id}\`;",
+      "const regex = /https?:\\/\\/[a-z]+/;",
+    ].join("\n");
+    const stripped = stripComments(raw);
+    expect(stripped).toContain('"http://localhost:5287"');
+    expect(stripped).toContain("https://api.domain.com/");
+    expect(stripped).toContain("/https?:\\/\\/[a-z]+/");
+    expect(stripped).not.toContain("Single line comment");
+    expect(stripped).not.toContain("Multiline comment");
+    expect(stripped).not.toContain("inline comment");
   });
 });

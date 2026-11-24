@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rateLimited, sameOrigin } from "@/features/auth/server/backend";
+import { rateLimited } from "@/features/auth/server/backend";
 import { forwardBffRequest } from "@/shared/server/bff-proxy";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +70,6 @@ function upstreamErrors(value: unknown): ProblemErrors | undefined {
 }
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) return error(403, "Invalid request.");
   let value: unknown;
   try {
     value = await request.json();
@@ -108,6 +107,8 @@ export async function POST(request: NextRequest) {
       return error(400, "Invalid registration data.", upstreamErrors(body));
     }
     if (response.status === 429) return rateLimited(response);
+    if (response.status === 504)
+      return error(504, "Upstream request timed out. Please try again later.");
     throw new Error("Unexpected upstream response");
   } catch {
     return error(502, "Service unavailable. Please try again later.");

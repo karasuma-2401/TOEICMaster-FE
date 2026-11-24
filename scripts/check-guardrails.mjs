@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import ts from "typescript";
 
 /**
  * Deterministic Wave 1B anti-slop guardrails with per-file TODO(Wave3) ratchets.
@@ -95,9 +96,46 @@ function toPosix(filePath) {
   return filePath.split(path.sep).join("/");
 }
 
-/** Strips JS/TS line and block comments so comment text does not trigger structural rules. */
+/** Strips JS/TS line and block comments using TypeScript compiler API, preserving string literals, templates, and regexes. */
 export function stripComments(source) {
-  return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/.*$/gm, " ");
+  const sf = ts.createSourceFile(
+    "source.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TSX,
+  );
+  const commentRanges = new Map();
+
+  function addComments(ranges) {
+    if (!ranges) return;
+    for (const r of ranges) {
+      commentRanges.set(`${r.pos}-${r.end}`, r);
+    }
+  }
+
+  function visit(node) {
+    addComments(ts.getLeadingCommentRanges(source, node.getFullStart()));
+    addComments(ts.getTrailingCommentRanges(source, node.getEnd()));
+    for (const child of node.getChildren(sf)) {
+      visit(child);
+    }
+  }
+
+  visit(sf);
+  addComments(ts.getTrailingCommentRanges(source, sf.getEnd()));
+
+  const list = Array.from(commentRanges.values()).sort((a, b) => a.pos - b.pos);
+  let output = "";
+  let lastPos = 0;
+  for (const c of list) {
+    output += source.slice(lastPos, c.pos);
+    const comment = source.slice(c.pos, c.end);
+    output += comment.replace(/[^\r\n]/g, " ");
+    lastPos = c.end;
+  }
+  output += source.slice(lastPos);
+  return output;
 }
 
 function isProductionSourceFile(relPath) {
@@ -138,7 +176,7 @@ export function inspectSourceFile(relPath, raw) {
 
   if (relPath !== "src/shared/lib/guards.ts") {
     const guidMatches = stripped.match(
-      /\[(?:0-9a-f|a-f0-9)\]\{8\}-\[(?:0-9a-f|a-f0-9)\]\{4\}-/gi,
+      /\[(?:0-9a-f|a-f0-9|0-9a-fA-F|a-fA-F0-9|[0-9a-fA-F\-])+\]\{8\}-\[(?:0-9a-f|a-f0-9|0-9a-fA-F|a-fA-F0-9|[0-9a-fA-F\-])+\]\{4\}-/gi,
     );
     if (guidMatches) {
       findings["no-duplicate-guid-regex"] = guidMatches.length;

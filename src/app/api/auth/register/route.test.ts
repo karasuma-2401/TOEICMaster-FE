@@ -158,4 +158,22 @@ describe("registration proxy", () => {
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("42");
   });
+  it("passes through 504 upstream timeout as 504", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        return Promise.reject(new DOMException("Timeout", "TimeoutError"));
+      }),
+    );
+
+    const response = await POST(
+      registrationRequest({
+        displayName: "Linh",
+        email: "linh@example.com",
+        password: "password",
+      }),
+    );
+
+    expect(response.status).toBe(504);
+  });
 });

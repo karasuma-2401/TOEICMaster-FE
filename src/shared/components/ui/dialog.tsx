@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/shared/lib/utils";
@@ -177,9 +183,12 @@ export interface ConfirmDialogProps {
   destructive?: boolean;
 }
 
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 function useFocusRestoration(open: boolean) {
   const openerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (open) {
       const active = document.activeElement;
       openerRef.current =
