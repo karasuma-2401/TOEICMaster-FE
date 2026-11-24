@@ -26,6 +26,7 @@ PORT=3100
 ```
 
 The launch script starts `npx next dev --port $PORT` in the background with isolated output logging and polls `http://localhost:$PORT/api/health` until HTTP 200 is confirmed.
+It sets `ADMIN_PREVIEW=true` (development-mode bypass in `src/proxy.ts` and `src/features/admin/server/admin-preview.ts`) so `/admin/**` routes can be verified without a live backend session.
 
 ## Doctor
 

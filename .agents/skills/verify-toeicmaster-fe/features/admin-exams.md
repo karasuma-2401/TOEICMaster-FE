@@ -18,12 +18,12 @@ The Admin Exam Management console provides staff members and instructors with ad
 ## Driving it with Playwright
 
 Preconditions:
-- The frontend server is launched and listening at `BASE_URL`.
-- The browser session contains an admin authentication cookie or the mock proxy fulfills admin permissions.
+- The frontend server is launched and listening at `BASE_URL` with `ADMIN_PREVIEW=true` (development-mode bypass in `src/proxy.ts` / `src/features/admin/server/admin-preview.ts`) or a valid `ADMIN` session cookie.
+- When the backend is not running, the driver mocks `GET /api/admin/lr-exercise-bank/summary`, `GET /api/admin/exams*`, and `GET /api/admin/score-profiles` via `page.route()`.
 
 1. Navigate to the admin exams view:
    `await page.goto(`${BASE_URL}/admin/exams`, { waitUntil: "domcontentloaded" });`
-   Verify that the admin shell or data bank container renders.
+   Assert `expect(page.url()).not.toContain("/login")` and verify that the Data Bank heading and summary settle.
 
 2. Verify that administrative navigation tabs and main area are present:
    `await expect(page.getByRole("main")).toBeVisible();`
@@ -35,7 +35,7 @@ Preconditions:
    `if (await statusSelect.isVisible()) await statusSelect.selectOption("Draft");`
 
 4. Capture screenshot and administrative layout state:
-   `await page.screenshot({ path: `${EVIDENCE_DIR}/admin-exams.png`, fullPage: true });`
+   `await page.screenshot({ path: `${EVIDENCE_DIR}/admin-exams.png`, fullPage: true, animations: "disabled" });`
 
 ## Gotchas
 

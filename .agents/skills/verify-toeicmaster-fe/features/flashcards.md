@@ -50,8 +50,9 @@ Preconditions:
    `await nextTile.click();`
    `await page.waitForSelector('button[aria-pressed="true"]');`
 
-6. Capture screenshot and ARIA snapshot:
-   `await page.screenshot({ path: `${EVIDENCE_DIR}/flashcards-match-game.png`, fullPage: true });`
+6. Dismiss any auto-opened `GuideMascot` bubble, verify `window.scrollX === 0` and no horizontal overflow, and capture screenshot and ARIA snapshot:
+   `await page.locator('button[aria-label="Close guide"]').click();`
+   `await page.screenshot({ path: `${EVIDENCE_DIR}/flashcards-match-game.png`, fullPage: true, animations: "disabled" });`
 
 ## Gotchas
 

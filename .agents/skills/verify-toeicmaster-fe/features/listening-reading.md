@@ -19,22 +19,22 @@ The Listening and Reading exam section provides access to standardized full-leng
 
 Preconditions:
 - The frontend server is launched and listening at `BASE_URL`.
-- If testing with a mock backend, route `/api/lr/**` to return deterministic exam fixture payloads.
+- When the backend is not running, the driver mocks `GET /api/lr/exams/lr` and `GET /api/lr/exam-attempts/history*` via `page.route()` to return deterministic published test and empty attempt-history payloads so the page settles without loading spinners.
 
 1. Navigate to the Listening & Reading library:
    `await page.goto(`${BASE_URL}/listening-reading`, { waitUntil: "domcontentloaded" });`
-   Verify that the main practice layout and library container are visible.
+   Verify that the main practice layout, `Listening & Reading Tests` heading, rendered test cards, and settled history section are visible.
 
 2. Verify navigation and breadcrumb indicators:
    `await expect(page.getByRole("main")).toBeVisible();`
    `await expect(page.getByRole("link", { name: "Home" })).toBeVisible();`
 
-3. When connected to a live or mocked backend, select a test:
+3. When connected to a live or mocked backend, verify a test card is rendered (and optionally enter it):
    `const examCard = page.locator("main article").first();`
-   `if (await examCard.isVisible()) await examCard.getByRole("link", { name: /Start/i }).click();`
+   `await expect(examCard).toBeVisible();`
 
-4. Capture screenshot and library state:
-   `await page.screenshot({ path: `${EVIDENCE_DIR}/listening-reading.png`, fullPage: true });`
+4. Dismiss `GuideMascot` if open, confirm `window.scrollX === 0`, and capture screenshot and library state:
+   `await page.screenshot({ path: `${EVIDENCE_DIR}/listening-reading.png`, fullPage: true, animations: "disabled" });`
 
 ## Gotchas
 
