@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
         status: 202,
         headers: { "Cache-Control": "no-store" },
       });
+    if (response.status === 403 || response.status === 503) return response;
     if (response.status === 409)
       return error(409, "This email is already in use.");
     if (response.status === 400) {
