@@ -1,6 +1,6 @@
-import { isGuid } from "@/shared/lib/guards";
 import { AuthError, refreshSession } from "@/features/auth/api";
 import { ApiError, getJson } from "@/shared/api/client";
+import { isGuid } from "@/shared/lib/guards";
 import {
   parseReadingExamPage,
   parseReadingRevision,

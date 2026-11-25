@@ -74,8 +74,10 @@ type SyncMode = "loading" | "synced" | "local";
 
 export function FlashcardsWorkspace({
   initialDeckSlug,
+  userId,
 }: {
   initialDeckSlug: string | null;
+  userId: string | null;
 }) {
   const [store, setStore] = useState<FlashcardStoreState>(
     EMPTY_FLASHCARD_STORE,
@@ -98,8 +100,11 @@ export function FlashcardsWorkspace({
   const [addCardDialogOpen, setAddCardDialogOpen] = useState(false);
 
   useEffect(() => {
-    const localState = readFlashcardStore();
+    const localState = readFlashcardStore(userId);
     setStore(localState);
+    setServerDecks(null);
+    setMatchRecords({});
+    setSyncMode("loading");
     setHydrated(true);
 
     let cancelled = false;
@@ -130,17 +135,17 @@ export function FlashcardsWorkspace({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId]);
 
   const persistStore = useCallback(
     (updater: (prev: FlashcardStoreState) => FlashcardStoreState) => {
       setStore((prev) => {
         const next = updater(prev);
-        writeFlashcardStore(next);
+        writeFlashcardStore(next, userId);
         return next;
       });
     },
-    [],
+    [userId],
   );
 
   const allDecks = useMemo(() => {
@@ -568,6 +573,7 @@ export function FlashcardsWorkspace({
           <FlashcardMatchGame
             cards={activeDeck.cards}
             deckId={activeDeck.id}
+            userId={userId}
             key={`${activeDeck.id}-match`}
             onCompleteRun={(elapsedMs, maxCombo) =>
               handleRecordMatchRun(activeDeck.id, elapsedMs, maxCombo)

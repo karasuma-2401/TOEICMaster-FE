@@ -1,12 +1,27 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import ts from "typescript";
 
 /**
  * Deterministic Wave 1B anti-slop guardrails with per-file TODO(Wave3) ratchets.
  * Adding any new violation (or exceeding any baseline count) fails with exit 1.
  */
 export const TODO_WAVE3_BASELINE = {
+  "no-duplicate-guid-regex": {},
+  "no-raw-bff-fetch": {
+    "src/features/flashcards/server/flashcards-proxy.ts": 1,
+    "src/features/lr-exam/server/lr-proxy.ts": 1,
+    "src/features/speaking/server/speaking-proxy.ts": 1,
+    "src/features/writing/server/writing-proxy.ts": 1,
+  },
+  "no-raw-storage": {
+    "src/features/lr-exam/hooks/use-sequential-listening-player.ts": 2,
+    "src/features/pronunciation/practice-progress.ts": 1,
+    "src/features/user/preferences.ts": 1,
+    "src/shared/components/mascot/guide-mascot.tsx": 2,
+    "src/shared/components/practice/practice-sidebar.tsx": 2,
+  },
   "no-raw-dialog-open": {
     "src/features/admin/components/content/admin-excel-import.tsx": 1,
     "src/features/admin/components/content/admin-overlay.tsx": 2,
@@ -81,9 +96,46 @@ function toPosix(filePath) {
   return filePath.split(path.sep).join("/");
 }
 
-/** Strips JS/TS line and block comments so comment text does not trigger structural rules. */
+/** Strips JS/TS line and block comments using TypeScript compiler API, preserving string literals, templates, and regexes. */
 export function stripComments(source) {
-  return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/.*$/gm, " ");
+  const sf = ts.createSourceFile(
+    "source.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TSX,
+  );
+  const commentRanges = new Map();
+
+  function addComments(ranges) {
+    if (!ranges) return;
+    for (const r of ranges) {
+      commentRanges.set(`${r.pos}-${r.end}`, r);
+    }
+  }
+
+  function visit(node) {
+    addComments(ts.getLeadingCommentRanges(source, node.getFullStart()));
+    addComments(ts.getTrailingCommentRanges(source, node.getEnd()));
+    for (const child of node.getChildren(sf)) {
+      visit(child);
+    }
+  }
+
+  visit(sf);
+  addComments(ts.getTrailingCommentRanges(source, sf.getEnd()));
+
+  const list = Array.from(commentRanges.values()).sort((a, b) => a.pos - b.pos);
+  let output = "";
+  let lastPos = 0;
+  for (const c of list) {
+    output += source.slice(lastPos, c.pos);
+    const comment = source.slice(c.pos, c.end);
+    output += comment.replace(/[^\r\n]/g, " ");
+    lastPos = c.end;
+  }
+  output += source.slice(lastPos);
+  return output;
 }
 
 function isProductionSourceFile(relPath) {
@@ -121,6 +173,24 @@ function collectSourceFiles(rootDir) {
 export function inspectSourceFile(relPath, raw) {
   const stripped = stripComments(raw);
   const findings = {};
+
+  if (relPath !== "src/shared/lib/guards.ts") {
+    const guidMatches = stripped.match(
+      /\[(?:0-9a-f|a-f0-9|0-9a-fA-F|a-fA-F0-9|[0-9a-fA-F\-])+\]\{8\}-\[(?:0-9a-f|a-f0-9|0-9a-fA-F|a-fA-F0-9|[0-9a-fA-F\-])+\]\{4\}-/gi,
+    );
+    if (guidMatches) {
+      findings["no-duplicate-guid-regex"] = guidMatches.length;
+    }
+  }
+
+  if (relPath !== "src/shared/lib/storage.ts") {
+    const storageMatches = stripped.match(
+      /\b(?:localStorage|sessionStorage)\b/g,
+    );
+    if (storageMatches) {
+      findings["no-raw-storage"] = storageMatches.length;
+    }
+  }
 
   if (!relPath.startsWith("src/shared/components/ui/")) {
     const dialogMatches = stripped.match(/<dialog\b(?![a-zA-Z0-9_-])/g);
@@ -173,6 +243,17 @@ export function inspectSourceFile(relPath, raw) {
     findings["no-new-legacy-proxy"] = 1;
   }
 
+  if (
+    (relPath.startsWith("src/app/api/") ||
+      /^src\/features\/.+\/server\//.test(relPath)) &&
+    relPath !== "src/features/auth/server/backend.ts"
+  ) {
+    const rawFetchMatches = stripped.match(/\bfetch\s*\(/g);
+    if (rawFetchMatches) {
+      findings["no-raw-bff-fetch"] = rawFetchMatches.length;
+    }
+  }
+
   return findings;
 }
 
@@ -223,14 +304,26 @@ export function runGuardrails({
   };
 }
 
+const RULE_REMEDIATIONS = {
+  "no-duplicate-guid-regex":
+    "Import isGuid or isNullableGuid from @/shared/lib/guards instead of defining a GUID regex.",
+  "no-raw-bff-fetch":
+    "Use createBffProxy or forwardBffRequest from @/shared/server/bff-proxy instead of raw fetch in BFF routes and server proxies.",
+  "no-raw-storage":
+    "Use readScopedStorage or writeScopedStorage from @/shared/lib/storage with an explicit user and namespace scope.",
+};
+
+export function formatGuardrailViolation({ rule, file, count, allowed }) {
+  const remediation = RULE_REMEDIATIONS[rule];
+  return `[${rule}] ${file}: found ${count} (baseline allowlist: ${allowed})${remediation ? ` ${remediation}` : ""}`;
+}
+
 function main() {
   const result = runGuardrails();
   if (!result.ok) {
     console.error("Anti-slop guardrail check failed:");
-    for (const v of result.violations) {
-      console.error(
-        `  [${v.rule}] ${v.file}: found ${v.count} (baseline allowlist: ${v.allowed})`,
-      );
+    for (const violation of result.violations) {
+      console.error(`  ${formatGuardrailViolation(violation)}`);
     }
     process.exitCode = 1;
     return;

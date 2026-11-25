@@ -35,6 +35,38 @@ describe("exam API response parsing", () => {
       parseReadingRevision({ ...revision, examId: "invalid" }),
     ).toThrow();
   });
+  it.each(["Draft", "Published", "Superseded"])(
+    "accepts zero-padded IDs in %s exam lists and revisions",
+    (status) => {
+      const item = {
+        examId: "00000000-0000-0000-0000-000000000001",
+        revisionId: "00000000-0000-0000-0000-000000000002",
+        code: "LR-SEEDED",
+        title: "Seeded exam",
+        versionNumber: 1,
+        status,
+        createdAtUtc: "2026-11-24T00:00:00Z",
+      };
+      expect(
+        parseReadingExamPage({
+          items: [item],
+          pageNumber: 1,
+          pageSize: 20,
+          totalCount: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        }).items[0],
+      ).toEqual(item);
+      expect(
+        parseReadingRevision({
+          ...item,
+          scoreProfileId: "00000000-0000-0000-0000-000000000003",
+          blocks: [],
+        }).status,
+      ).toBe(status);
+    },
+  );
 
   it("accepts the paginated Reading exam response returned by the existing backend", () => {
     expect(

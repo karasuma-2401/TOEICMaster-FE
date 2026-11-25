@@ -190,6 +190,69 @@ describe("shared/api/http", () => {
     });
   });
 
+  it.each([200, 403])(
+    "propagates caller cancellation while reading a streamed JSON response with status %s",
+    async (status) => {
+      const controller = new AbortController();
+      const abortError = new DOMException("Caller cancelled", "AbortError");
+      const response = new Response(
+        new ReadableStream<Uint8Array>({
+          start(bodyController) {
+            bodyController.enqueue(new TextEncoder().encode("{"));
+            controller.signal.addEventListener(
+              "abort",
+              () => bodyController.error(controller.signal.reason),
+              { once: true },
+            );
+          },
+        }),
+        { status },
+      );
+      const jsonSpy = vi.spyOn(response, "json");
+      const parse = vi.fn((raw: unknown) => raw);
+      const refreshFn = vi.fn();
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+      const pending = requestJson("/api/stream", {
+        signal: controller.signal,
+        parse,
+        refreshFn,
+      });
+      const rejection = expect(pending).rejects.toBe(abortError);
+      await vi.waitFor(() => expect(jsonSpy).toHaveBeenCalledOnce());
+      controller.abort(abortError);
+
+      await rejection;
+      expect(parse).not.toHaveBeenCalled();
+      expect(refreshFn).not.toHaveBeenCalled();
+    },
+  );
+
+  it("preserves AbortError from requestVoid error-body parsing", async () => {
+    const abortError = new DOMException("Caller cancelled", "AbortError");
+    const response = new Response(null, { status: 403 });
+    vi.spyOn(response, "json").mockRejectedValue(abortError);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    await expect(requestVoid("/api/action")).rejects.toBe(abortError);
+  });
+
+  it("preserves Error-shaped AbortError from fetch and JSON decoding without a signal", async () => {
+    const abortError = new Error("Caller cancelled");
+    abortError.name = "AbortError";
+    const response = new Response(null, { status: 200 });
+    vi.spyOn(response, "json").mockRejectedValue(abortError);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValueOnce(abortError).mockResolvedValueOnce(response),
+    );
+
+    await expect(fetchWithAuthRefresh("/api/item")).rejects.toBe(abortError);
+    await expect(
+      requestJson("/api/item", { parse: (raw) => raw }),
+    ).rejects.toBe(abortError);
+  });
+
   it("requestVoid handles 204 No Content and empty 200 responses cleanly", async () => {
     vi.stubGlobal(
       "fetch",

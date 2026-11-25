@@ -267,6 +267,19 @@ function resolveAuthHeaders(
   return { ok: true, authorization: `Bearer ${session.accessToken}` };
 }
 
+export function authorizeBffRequest(
+  request: Request,
+  config: Pick<BffProxyRouteConfig, "auth" | "method" | "sameOrigin">,
+): { ok: true; authorization?: string } | { ok: false; response: Response } {
+  const method = (config.method ?? request.method).toUpperCase();
+  const enforceSameOrigin =
+    config.sameOrigin ?? (method !== "GET" && method !== "HEAD");
+  if (enforceSameOrigin && !isSameOrigin(request)) {
+    return { ok: false, response: problemJson(403, "Invalid request.") };
+  }
+  return resolveAuthHeaders(request, config.auth);
+}
+
 async function resolveRequestBody(
   request: Request,
   bodyMode: BffBodyMode,
@@ -348,14 +361,7 @@ export async function forwardBffRequest(
   config: BffProxyRouteConfig,
 ): Promise<Response> {
   const method = (config.method ?? request.method).toUpperCase();
-  const enforceSameOrigin =
-    config.sameOrigin ?? (method !== "GET" && method !== "HEAD");
-
-  if (enforceSameOrigin && !isSameOrigin(request)) {
-    return problemJson(403, "Invalid request.");
-  }
-
-  const authResult = resolveAuthHeaders(request, config.auth);
+  const authResult = authorizeBffRequest(request, config);
   if (!authResult.ok) return authResult.response;
 
   const bodyMode = config.bodyMode ?? "none";

@@ -15,7 +15,11 @@ import {
   primaryAction,
   secondaryAction,
 } from "@/shared/components/practice/styles";
-import { shuffleCards } from "../storage";
+import {
+  readFlashcardBestTime,
+  shuffleCards,
+  writeFlashcardBestTime,
+} from "../storage";
 import type { CardMastery, FlashcardItem } from "../types";
 
 interface MatchTile {
@@ -33,40 +37,16 @@ function formatElapsed(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function readBestTime(deckId: string): number | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(
-      `toeicmaster.fc.match.best.${deckId}`,
-    );
-    if (!raw) return null;
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeBestTime(deckId: string, ms: number): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(
-      `toeicmaster.fc.match.best.${deckId}`,
-      String(ms),
-    );
-  } catch {
-    // Ignore storage errors.
-  }
-}
-
 export function FlashcardMatchGame({
   deckId,
+  userId,
   cards,
   serverBestMs = null,
   onRateCard,
   onCompleteRun,
 }: {
   deckId: string;
+  userId: string | null;
   cards: readonly FlashcardItem[];
   serverBestMs?: number | null;
   onRateCard: (cardId: string, status: CardMastery) => void;
@@ -77,7 +57,7 @@ export function FlashcardMatchGame({
   const [roundIndex, setRoundIndex] = useState(0);
   const [replaySeed, setReplaySeed] = useState(0);
   const [localBestMs, setLocalBestMs] = useState<number | null>(() =>
-    readBestTime(deckId),
+    readFlashcardBestTime(deckId, userId),
   );
   const bestMs =
     serverBestMs !== null && localBestMs !== null
@@ -218,7 +198,7 @@ export function FlashcardMatchGame({
         if (bestMs === null || finalMs < bestMs) {
           setLocalBestMs(finalMs);
           setIsNewRecord(true);
-          writeBestTime(deckId, finalMs);
+          writeFlashcardBestTime(deckId, finalMs, userId);
         }
         onCompleteRun?.(finalMs, finalMaxCombo);
       }

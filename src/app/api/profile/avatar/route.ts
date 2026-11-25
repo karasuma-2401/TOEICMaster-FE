@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { problem } from "@/features/auth/server/backend";
 import { AVATAR_MAX_BYTES } from "@/features/user/profile";
 import { forward } from "@/features/user/server/profile-proxy";
+import { authorizeBffRequest } from "@/shared/server/bff-proxy";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,9 @@ export function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const access = authorizeBffRequest(request, { method: "PUT", auth: "user" });
+  if (!access.ok) return access.response;
+
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (
