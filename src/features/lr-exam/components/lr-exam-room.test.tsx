@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -8,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LrListeningPlaylistApi } from "../api";
+import * as lrApi from "../api";
 import { loadRoomState } from "../loaders";
 
 const push = vi.hoisted(() => vi.fn());
@@ -16,6 +18,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 import { LrExamRoom } from "./lr-exam-room";
 
 beforeEach(() => {
+  push.mockReset();
   sessionStorage.clear();
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() =>
     Promise.resolve(),
@@ -39,6 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   sessionStorage.clear();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -66,6 +70,39 @@ const samplePlaylist: LrListeningPlaylistApi = {
     },
   ],
 };
+
+const submittedResult: lrApi.LrResultApi = {
+  attemptId: "attempt-room-1",
+  examId: "exam-1",
+  examCode: "TEST01",
+  examTitle: "Test exam",
+  listeningRawScore: 0,
+  readingRawScore: 0,
+  listeningScaledScore: 5,
+  readingScaledScore: 5,
+  totalScaledScore: 10,
+  listeningMaxScaledScore: 495,
+  readingMaxScaledScore: 495,
+  maxScaledScore: 990,
+  totalCorrect: 0,
+  totalIncorrect: 0,
+  totalSkipped: 200,
+  isTimeExpired: true,
+  startedAtUtc: "2026-11-25T00:00:00Z",
+  submittedAtUtc: "2026-11-25T02:00:00Z",
+  durationSeconds: 7200,
+  parts: [],
+};
+
+function deferred<Value>() {
+  let resolve!: (value: Value) => void;
+  let reject!: (cause: unknown) => void;
+  const promise = new Promise<Value>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
 
 describe("LrExamRoom", () => {
   it("lets the learner answer and opens submit confirmation", () => {
@@ -144,5 +181,162 @@ describe("LrExamRoom", () => {
     expect(
       screen.queryByTestId("lr-master-audio-player"),
     ).not.toBeInTheDocument();
+  });
+
+  it("opens and cancels abandonment without calling the API or navigating", () => {
+    const abandonApi = vi.spyOn(lrApi, "abandonLrAttempt").mockResolvedValue();
+    render(
+      <LrExamRoom
+        {...loadRoomState("x")}
+        attemptId="attempt-room-1"
+        resultHref="/result"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abandon" }));
+    expect(
+      screen.getByRole("dialog", { name: "Abandon this exam attempt?" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue Exam" })).toHaveFocus();
+    expect(abandonApi).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Continue Exam" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(abandonApi).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("confirms abandonment once and redirects only after the API succeeds", async () => {
+    const pending = deferred<void>();
+    const abandonApi = vi
+      .spyOn(lrApi, "abandonLrAttempt")
+      .mockReturnValue(pending.promise);
+    render(
+      <LrExamRoom
+        {...loadRoomState("x")}
+        attemptId="attempt-room-1"
+        resultHref="/result"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abandon" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abandon Exam" }));
+    expect(abandonApi).toHaveBeenCalledWith("attempt-room-1");
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Abandoning…" }));
+    expect(abandonApi).toHaveBeenCalledTimes(1);
+    await act(async () => pending.resolve());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith("/listening-reading");
+  });
+
+  it("closes the abandon modal on failure and lets the learner retry", async () => {
+    const abandonApi = vi
+      .spyOn(lrApi, "abandonLrAttempt")
+      .mockRejectedValueOnce(new Error("Abandon service unavailable"))
+      .mockResolvedValueOnce();
+    render(
+      <LrExamRoom
+        {...loadRoomState("x")}
+        attemptId="attempt-room-1"
+        resultHref="/result"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abandon" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abandon Exam" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Abandon service unavailable",
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Abandon" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abandon Exam" }));
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/listening-reading"),
+    );
+    expect(abandonApi).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it.each(["none", "submit", "abandon"] as const)(
+    "auto-submits on expiry, closes the %s modal, and exposes Retry Submit after failure",
+    async (modal) => {
+      vi.useFakeTimers();
+      const saveApi = vi
+        .spyOn(lrApi, "saveLrAnswers")
+        .mockResolvedValue(undefined);
+      const abandonApi = vi
+        .spyOn(lrApi, "abandonLrAttempt")
+        .mockResolvedValue();
+      const submitApi = vi
+        .spyOn(lrApi, "submitLrAttempt")
+        .mockRejectedValueOnce(new Error("Submission service unavailable"))
+        .mockResolvedValueOnce(submittedResult);
+      render(
+        <LrExamRoom
+          {...loadRoomState("x")}
+          attemptId="attempt-room-1"
+          initialRemainingSeconds={2}
+          questionIds={{ 32: "question-32" }}
+          resultHref="/result"
+        />,
+      );
+      if (modal !== "none") {
+        fireEvent.click(
+          screen.getByRole("button", {
+            name: modal === "submit" ? "Submit Exam" : "Abandon",
+          }),
+        );
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      }
+      await act(async () => vi.advanceTimersByTimeAsync(2000));
+      expect(submitApi).toHaveBeenCalledWith("attempt-room-1");
+      expect(submitApi).toHaveBeenCalledTimes(1);
+      expect(saveApi).not.toHaveBeenCalled();
+      expect(abandonApi).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalled();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Submission service unavailable",
+      );
+      expect(
+        screen.getByRole("button", { name: "Retry Submit" }),
+      ).toBeEnabled();
+      await act(async () =>
+        fireEvent.click(screen.getByRole("button", { name: "Retry Submit" })),
+      );
+      expect(submitApi).toHaveBeenCalledTimes(2);
+      expect(saveApi).not.toHaveBeenCalled();
+      expect(push).toHaveBeenCalledWith(
+        "/exams/lr/attempts/attempt-room-1/result",
+      );
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    },
+  );
+
+  it("does not duplicate an in-flight manual submission when the timer expires", async () => {
+    vi.useFakeTimers();
+    const pending = deferred<lrApi.LrResultApi>();
+    vi.spyOn(lrApi, "saveLrAnswers").mockResolvedValue(undefined);
+    const submitApi = vi
+      .spyOn(lrApi, "submitLrAttempt")
+      .mockReturnValue(pending.promise);
+    render(
+      <LrExamRoom
+        {...loadRoomState("x")}
+        attemptId="attempt-room-1"
+        initialRemainingSeconds={2}
+        resultHref="/result"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Submit Exam" }));
+    await act(async () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: "Confirm L&R Submission" }),
+      ),
+    );
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(submitApi).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await act(async () => pending.reject(new Error("Submit failed")));
+    expect(screen.getByRole("button", { name: "Retry Submit" })).toBeEnabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("Submit failed");
   });
 });

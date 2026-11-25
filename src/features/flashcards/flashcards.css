@@ -4,9 +4,8 @@
 }
 
 .fc-card {
-  position: relative;
+  display: grid;
   width: 100%;
-  min-height: 360px;
   transform-style: preserve-3d;
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -16,9 +15,10 @@
 }
 
 .fc-face {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   display: flex;
+  min-height: 360px;
+  min-width: 0;
   flex-direction: column;
   justify-content: space-between;
   backface-visibility: hidden;
@@ -29,14 +29,31 @@
   transform: rotateY(180deg);
 }
 
-@media (max-width: 639px) {
-  .fc-card {
-    min-height: 390px;
+@keyframes fc-shake {
+  0%,
+  100% {
+    transform: translateX(0);
   }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.fc-mismatch-shake {
+  animation: fc-shake 360ms ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fc-card {
     transition: none;
+  }
+
+  .fc-mismatch-shake {
+    animation: none;
   }
 }

@@ -27,8 +27,8 @@ const statusLabel = {
 
 const slotTone = {
   correct: "border-[#10b981] bg-[#ecfdf5] text-[#047857]",
-  wrong: "border-[#dc2626] bg-[#fee2e2] text-[#dc2626]",
-  skipped: "border-[#d97706] bg-[#fef3c7] text-[#d97706]",
+  wrong: "border-[#dc2626] bg-[#fee2e2] text-[var(--tm-danger)]",
+  skipped: "border-[#d97706] bg-[#fef3c7] text-[var(--tm-warning)]",
 } as const;
 
 export function LrReview({
@@ -116,9 +116,9 @@ export function LrReview({
     <div className="flex min-h-screen flex-col bg-[#faf7f5] text-[#4c4542]">
       <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-3 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
         <ExamBrand />
-        <p className="text-[15px] font-semibold">
+        <h1 className="text-[15px] font-semibold text-[var(--tm-ink)]">
           Review Answers · {exam.identity}
-        </p>
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
           <Link className={secondaryButton} href="/history">
             Back to Attempt History
@@ -146,7 +146,7 @@ export function LrReview({
                 className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
                   filter === tab.id
                     ? "border-[#EA580C] bg-[#fff7ed] text-[#ff5a1f]"
-                    : "border-[#E2E8F0] bg-white text-[#77716e]"
+                    : "border-[#E2E8F0] bg-white text-[var(--tm-ink-muted)]"
                 } ${focusRing}`}
                 key={tab.id}
                 onClick={() => selectFilter(tab.id)}
@@ -168,7 +168,7 @@ export function LrReview({
               status={statuses[current] ?? "skipped"}
             />
           ) : (
-            <output className="rounded-xl border border-dashed border-[#d9d2ce] bg-white p-6 text-[13px] text-[#77716e] block">
+            <output className="rounded-xl border border-dashed border-[#d9d2ce] bg-white p-6 text-[13px] text-[var(--tm-ink-muted)] block">
               No detailed explanation available for question {current}.
             </output>
           )}
@@ -202,8 +202,12 @@ export function LrReview({
           </h2>
           <ul className="flex flex-wrap gap-3 text-[11px]">
             <li className="text-[#047857]">■ Correct ({counts.correct})</li>
-            <li className="text-[#dc2626]">■ Incorrect ({counts.wrong})</li>
-            <li className="text-[#d97706]">■ Skipped ({counts.skipped})</li>
+            <li className="text-[var(--tm-danger)]">
+              ■ Incorrect ({counts.wrong})
+            </li>
+            <li className="text-[var(--tm-warning)]">
+              ■ Skipped ({counts.skipped})
+            </li>
             <li className="text-[#d97106]">⚑ Flagged</li>
           </ul>
           <div className="flex flex-wrap gap-1">
@@ -225,7 +229,7 @@ export function LrReview({
               );
             })}
           </div>
-          <p className="text-[11px] text-[#77716e]">
+          <p className="text-[11px] text-[var(--tm-ink-muted)]">
             Listening 1–{LISTENING_LAST} · Reading {LISTENING_LAST + 1}–
             {LR_TOTAL_QUESTIONS}.
           </p>
@@ -273,7 +277,9 @@ function ReviewDetail({
             className="flex flex-col gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4"
           >
             {group.audio.note ? (
-              <p className="text-[11px] text-[#77716e]">{group.audio.note}</p>
+              <p className="text-[11px] text-[var(--tm-ink-muted)]">
+                {group.audio.note}
+              </p>
             ) : null}
             <p className="text-xs font-semibold text-[#475569]">
               {formatClock(group.audio.currentSeconds ?? 0)} /{" "}
@@ -288,7 +294,7 @@ function ReviewDetail({
               {group.translation.quote}
             </blockquote>
             <p>{group.translation.body}</p>
-            <p className="text-[11px] text-[#77716e]">
+            <p className="text-[11px] text-[var(--tm-ink-muted)]">
               {group.translation.note}
             </p>
           </section>
@@ -339,7 +345,7 @@ function ReviewDetail({
                     Correct answer
                   </span>
                 ) : isSelected ? (
-                  <span className="ml-auto text-[11px] font-semibold text-[#dc2626]">
+                  <span className="ml-auto text-[11px] font-semibold text-[var(--tm-danger)]">
                     Your choice
                   </span>
                 ) : null}

@@ -221,8 +221,8 @@ export function FlashcardStudyStage({
                 aria-pressed={active}
                 className={`min-h-9 cursor-pointer rounded-full border px-3.5 text-xs font-semibold transition ${focusRing} ${
                   active
-                    ? "border-[#df5a28] bg-[#fff1ea] text-[#df5a28]"
-                    : "border-[#ece9e5] bg-white text-[#5f5953] hover:border-[#dacfc5] hover:text-[#2b2724]"
+                    ? "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)]"
+                    : "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)] hover:border-[var(--tm-border-strong)] hover:text-[var(--tm-ink)]"
                 }`}
                 key={option.key}
                 onClick={() => handleFilterChange(option.key)}
@@ -239,8 +239,8 @@ export function FlashcardStudyStage({
             aria-pressed={isShuffled}
             className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition ${focusRing} ${
               isShuffled
-                ? "border-[#df5a28] bg-[#fff1ea] text-[#df5a28]"
-                : "border-[#ece9e5] bg-white text-[#5f5953] hover:border-[#dacfc5] hover:text-[#2b2724]"
+                ? "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)]"
+                : "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)] hover:border-[var(--tm-border-strong)] hover:text-[var(--tm-ink)]"
             }`}
             onClick={handleToggleShuffle}
             type="button"
@@ -248,7 +248,7 @@ export function FlashcardStudyStage({
             <Shuffle aria-hidden="true" className="size-3.5" />
             {isShuffled ? "Shuffled" : "Shuffle"}
           </button>
-          <span className="sp-mono rounded-lg bg-[#f4f1ee] px-3 py-2 text-xs font-semibold text-[#5f5953]">
+          <span className="sp-mono rounded-lg bg-[var(--tm-surface-muted)] px-3 py-2 text-xs font-semibold text-[var(--tm-ink-muted)]">
             {studyCards.length === 0
               ? "0 / 0"
               : `${safeIndex + 1} / ${studyCards.length}`}
@@ -257,11 +257,11 @@ export function FlashcardStudyStage({
       </div>
 
       {studyCards.length === 0 ? (
-        <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
-          <p className="text-base font-semibold text-[#2b2724]">
+        <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-6 py-12 text-center">
+          <p className="text-base font-semibold text-[var(--tm-ink)]">
             No cards match this filter
           </p>
-          <p className="mt-1.5 text-sm text-[#5f5953]">
+          <p className="mt-1.5 text-sm text-[var(--tm-ink-muted)]">
             Switch back to &ldquo;All&rdquo; to continue reviewing every word in
             this deck.
           </p>
@@ -274,38 +274,38 @@ export function FlashcardStudyStage({
           </button>
         </div>
       ) : sessionDone ? (
-        <div className="rounded-2xl border border-[#ece9e5] bg-[#fdf7ed] px-6 py-10 text-center">
-          <div className="mx-auto grid size-12 place-items-center rounded-full bg-[#ebf8ed] text-[#3f7a52]">
+        <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-brand-soft)] px-6 py-10 text-center">
+          <div className="mx-auto grid size-12 place-items-center rounded-full bg-[var(--tm-success-soft)] text-[var(--tm-success)]">
             <CheckCircle2 aria-hidden="true" className="size-6" />
           </div>
-          <h3 className="mt-4 text-xl font-bold text-[#2b2724]">
+          <h2 className="mt-4 text-xl font-bold text-[var(--tm-ink)]">
             Review session complete!
-          </h3>
-          <p className="mt-1.5 text-sm text-[#5f5953]">
+          </h2>
+          <p className="mt-1.5 text-sm text-[var(--tm-ink-muted)]">
             You just reviewed {studyCards.length} cards in this session.
           </p>
           <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-3">
-            <div className="rounded-xl border border-[#9fcbac] bg-[#ebf8ed] p-3">
-              <p className="sp-mono text-2xl font-bold text-[#3f7a52]">
+            <div className="rounded-xl border border-[var(--tm-success)]/30 bg-[var(--tm-success-soft)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-success)]">
                 {sessionStats.mastered}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#3f7a52]">
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-success)]">
                 Mastered
               </p>
             </div>
-            <div className="rounded-xl border border-[#d9a43a]/50 bg-[#fbf3c8] p-3">
-              <p className="sp-mono text-2xl font-bold text-[#a16207]">
+            <div className="rounded-xl border border-[var(--tm-warning)]/30 bg-[var(--tm-warning-soft)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-warning)]">
                 {sessionStats.review}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#a16207]">
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-warning)]">
                 Needs review
               </p>
             </div>
-            <div className="rounded-xl border border-[#d9544f]/40 bg-[#f6e1e1] p-3">
-              <p className="sp-mono text-2xl font-bold text-[#bd2a2a]">
+            <div className="rounded-xl border border-[var(--tm-danger)]/30 bg-[var(--tm-danger-soft)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-danger)]">
                 {sessionStats.learning}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#bd2a2a]">
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-danger)]">
                 Still learning
               </p>
             </div>
@@ -330,7 +330,7 @@ export function FlashcardStudyStage({
         </div>
       ) : activeCard ? (
         <div className="mx-auto max-w-3xl space-y-5">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e9e4df]">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--tm-border)]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#cc2f20] to-[#e36a22] transition-[width] duration-300"
               style={{
@@ -345,7 +345,11 @@ export function FlashcardStudyStage({
               data-flipped={flipped ? "true" : "false"}
             >
               {/* Front face */}
-              <div className="fc-face rounded-[20px] border border-[#dacfc5] bg-white p-6 shadow-[0_12px_32px_-16px_rgb(62_44_30/0.16)] md:p-8">
+              <div
+                aria-hidden={flipped}
+                className="fc-face rounded-[20px] border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] p-6 shadow-[0_12px_32px_-16px_rgb(62_44_30/0.16)] md:p-8"
+                inert={flipped || undefined}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
@@ -376,8 +380,8 @@ export function FlashcardStudyStage({
                     aria-pressed={isCardStarred(progress, activeCard.id)}
                     className={`grid size-9 cursor-pointer place-items-center rounded-lg border transition ${focusRing} ${
                       isCardStarred(progress, activeCard.id)
-                        ? "border-[#d9a43a] bg-[#fbf3c8] text-[#a16207]"
-                        : "border-[#ece9e5] bg-white text-[#948d86] hover:border-[#dacfc5] hover:text-[#2b2724]"
+                        ? "border-[var(--tm-warning)]/50 bg-[var(--tm-warning-soft)] text-[var(--tm-warning)]"
+                        : "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)] hover:border-[var(--tm-border-strong)] hover:text-[var(--tm-ink)]"
                     }`}
                     onClick={() => onToggleStar(activeCard.id)}
                     type="button"
@@ -397,18 +401,18 @@ export function FlashcardStudyStage({
                 <div className="my-auto flex flex-col items-center py-6 text-center">
                   <button
                     aria-label={`Flip card to see meaning of ${activeCard.term}`}
-                    className={`flex w-full cursor-pointer flex-col items-center rounded-xl py-3 text-center transition hover:bg-[#faf7f5]/80 ${focusRing}`}
+                    className={`flex w-full cursor-pointer flex-col items-center rounded-xl py-3 text-center transition hover:bg-[var(--tm-page)]/80 ${focusRing}`}
                     onClick={() => setFlipped(true)}
                     type="button"
                   >
-                    <span className="text-sm font-medium italic text-[#5f5953]">
+                    <span className="text-sm font-medium italic text-[var(--tm-ink-muted)]">
                       {activeCard.partOfSpeech}
                     </span>
-                    <span className="mt-2 text-3xl font-bold tracking-tight text-[#2b2724] sm:text-4xl">
+                    <span className="mt-2 text-3xl font-bold tracking-tight text-[var(--tm-ink)] sm:text-4xl">
                       {activeCard.term}
                     </span>
                     {activeCard.phonetic && (
-                      <span className="sp-mono mt-2.5 text-base text-[#5f5953]">
+                      <span className="sp-mono mt-2.5 text-base text-[var(--tm-ink-muted)]">
                         {activeCard.phonetic}
                       </span>
                     )}
@@ -417,7 +421,7 @@ export function FlashcardStudyStage({
                   {speechSupported && (
                     <button
                       aria-label={`Listen to pronunciation of ${activeCard.term}`}
-                      className={`mt-4 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-[#dacfc5] bg-[#faf7f5] px-4 text-sm font-semibold text-[#2b2724] transition hover:border-[#df5a28] hover:bg-[#fff1ea] hover:text-[#df5a28] ${focusRing}`}
+                      className={`mt-4 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-[var(--tm-border-strong)] bg-[var(--tm-page)] px-4 text-sm font-semibold text-[var(--tm-ink)] transition hover:border-[var(--tm-brand)] hover:bg-[var(--tm-brand-soft)] hover:text-[var(--tm-brand)] ${focusRing}`}
                       onClick={() => speak(activeCard.term)}
                       type="button"
                     >
@@ -427,10 +431,10 @@ export function FlashcardStudyStage({
                   )}
                 </div>
 
-                <div className="flex items-center justify-between border-t border-[#ece9e5] pt-4 text-xs text-[#948d86]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--tm-border)] pt-4 text-xs text-[var(--tm-ink-muted)]">
                   <span>Click the card or press Space to see the meaning</span>
                   <button
-                    className={`cursor-pointer font-semibold text-[#df5a28] hover:underline ${focusRing}`}
+                    className={`cursor-pointer font-semibold text-[var(--tm-brand)] hover:underline ${focusRing}`}
                     onClick={() => setFlipped(true)}
                     type="button"
                   >
@@ -440,18 +444,22 @@ export function FlashcardStudyStage({
               </div>
 
               {/* Back face */}
-              <div className="fc-face fc-face-back rounded-[20px] border border-[#e9c6a4] bg-[#fdf7ed] p-6 shadow-[0_12px_32px_-16px_rgb(204_47_32/0.16)] md:p-8">
+              <div
+                aria-hidden={!flipped}
+                className="fc-face fc-face-back rounded-[20px] border border-[#e9c6a4] bg-[var(--tm-brand-soft)] p-6 shadow-[0_12px_32px_-16px_rgb(204_47_32/0.16)] md:p-8"
+                inert={!flipped || undefined}
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-[#2b2724]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-base font-bold text-[var(--tm-ink)]">
                       {activeCard.term}
                     </span>
-                    <span className="text-xs italic text-[#5f5953]">
+                    <span className="text-xs italic text-[var(--tm-ink-muted)]">
                       ({activeCard.partOfSpeech})
                     </span>
                   </div>
                   <button
-                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold text-[#5f5953] transition hover:bg-white/80 hover:text-[#2b2724] ${focusRing}`}
+                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold text-[var(--tm-ink-muted)] transition hover:bg-[var(--tm-surface)]/80 hover:text-[var(--tm-ink)] ${focusRing}`}
                     onClick={() => setFlipped(false)}
                     type="button"
                   >
@@ -461,24 +469,27 @@ export function FlashcardStudyStage({
 
                 <div className="my-auto space-y-5 py-5">
                   <div>
-                    <p className="text-xs font-semibold text-[#948d86]">
+                    <p className="text-xs font-semibold text-[var(--tm-ink-muted)]">
                       TOEIC context meaning
                     </p>
-                    <p className="mt-1 text-2xl font-bold leading-snug text-[#2b2724]">
+                    <p
+                      className="mt-1 text-2xl font-bold leading-snug text-[var(--tm-ink)]"
+                      lang="vi"
+                    >
                       {activeCard.meaningVi}
                     </p>
                   </div>
 
                   {activeCard.exampleEn && (
-                    <div className="rounded-xl border border-[#e9c6a4]/70 bg-white p-4">
+                    <div className="rounded-xl border border-[#e9c6a4]/70 bg-[var(--tm-surface)] p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-[15px] font-medium leading-relaxed text-[#2b2724]">
+                        <p className="text-[15px] font-medium leading-relaxed text-[var(--tm-ink)]">
                           “{activeCard.exampleEn}”
                         </p>
                         {speechSupported && (
                           <button
                             aria-label="Listen to example sentence"
-                            className={`grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#ece9e5] text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
+                            className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg border border-[var(--tm-border)] text-[var(--tm-ink-muted)] transition hover:border-[var(--tm-brand)] hover:text-[var(--tm-brand)] ${focusRing}`}
                             onClick={() => speak(activeCard.exampleEn)}
                             type="button"
                           >
@@ -487,7 +498,10 @@ export function FlashcardStudyStage({
                         )}
                       </div>
                       {activeCard.exampleVi && (
-                        <p className="mt-2 text-sm text-[#5f5953]">
+                        <p
+                          className="mt-2 text-sm text-[var(--tm-ink-muted)]"
+                          lang="vi"
+                        >
                           {activeCard.exampleVi}
                         </p>
                       )}
@@ -496,13 +510,13 @@ export function FlashcardStudyStage({
 
                   {activeCard.collocations.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-[#948d86]">
+                      <p className="text-xs font-semibold text-[var(--tm-ink-muted)]">
                         Common exam collocations
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {activeCard.collocations.map((collocation) => (
                           <span
-                            className="rounded-lg border border-[#dacfc5] bg-white px-2.5 py-1 text-xs font-medium text-[#2b2724]"
+                            className="rounded-lg border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-2.5 py-1 text-xs font-medium text-[var(--tm-ink)]"
                             key={collocation}
                           >
                             {collocation}
@@ -513,7 +527,7 @@ export function FlashcardStudyStage({
                   )}
                 </div>
 
-                <div className="border-t border-[#e9c6a4]/70 pt-3 text-xs text-[#5f5953]">
+                <div className="border-t border-[#e9c6a4]/70 pt-3 text-xs text-[var(--tm-ink-muted)]">
                   Rate your recall below (keys 1, 2, 3) to advance
                 </div>
               </div>
@@ -534,40 +548,40 @@ export function FlashcardStudyStage({
 
             <div className="grid grid-cols-3 gap-2">
               <button
-                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[#d9544f]/40 bg-[#f6e1e1] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
+                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[var(--tm-danger)]/35 bg-[var(--tm-danger-soft)] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
                 onClick={() => handleRate("learning")}
                 type="button"
               >
-                <span className="text-sm font-bold text-[#bd2a2a]">
+                <span className="text-sm font-bold text-[var(--tm-danger)]">
                   Still learning
                 </span>
-                <span className="sp-mono text-[11px] text-[#bd2a2a]/80">
+                <span className="sp-mono text-[11px] text-[var(--tm-danger)]">
                   Key 1
                 </span>
               </button>
 
               <button
-                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[#d9a43a]/50 bg-[#fbf3c8] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
+                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[var(--tm-warning)]/35 bg-[var(--tm-warning-soft)] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
                 onClick={() => handleRate("review")}
                 type="button"
               >
-                <span className="text-sm font-bold text-[#a16207]">
+                <span className="text-sm font-bold text-[var(--tm-warning)]">
                   Needs review
                 </span>
-                <span className="sp-mono text-[11px] text-[#a16207]/80">
+                <span className="sp-mono text-[11px] text-[var(--tm-warning)]">
                   Key 2
                 </span>
               </button>
 
               <button
-                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[#5e9b70]/50 bg-[#ebf8ed] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
+                className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-[var(--tm-success)]/35 bg-[var(--tm-success-soft)] px-2 py-1.5 text-center transition hover:brightness-95 ${focusRing}`}
                 onClick={() => handleRate("mastered")}
                 type="button"
               >
-                <span className="text-sm font-bold text-[#3f7a52]">
+                <span className="text-sm font-bold text-[var(--tm-success)]">
                   Mastered
                 </span>
-                <span className="sp-mono text-[11px] text-[#3f7a52]/80">
+                <span className="sp-mono text-[11px] text-[var(--tm-success)]">
                   Key 3
                 </span>
               </button>

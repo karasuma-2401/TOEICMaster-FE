@@ -2,13 +2,16 @@
 
 import {
   Flame,
+  Pause,
+  Play,
   RotateCcw,
   Timer,
   Trophy,
   Volume2,
   VolumeX,
+  XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useWordSpeech } from "@/features/pronunciation/hooks/use-word-speech";
 import {
   focusRing,
@@ -56,23 +59,47 @@ export function FlashcardMatchGame({
   const [audioOnMatch, setAudioOnMatch] = useState(true);
   const [roundIndex, setRoundIndex] = useState(0);
   const [replaySeed, setReplaySeed] = useState(0);
-  const [localBestMs, setLocalBestMs] = useState<number | null>(() =>
-    readFlashcardBestTime(deckId, userId),
-  );
-  const bestMs =
-    serverBestMs !== null && localBestMs !== null
-      ? Math.min(serverBestMs, localBestMs)
-      : (serverBestMs ?? localBestMs);
 
   const totalRounds = Math.max(
     1,
     Math.ceil(cards.length / MAX_PAIRS_PER_ROUND),
   );
 
+  // Pad trailing rounds to a full 6-pair board when the deck has >= 6 cards
+  // so every round competes on an equal pair count (HIGH-07).
   const roundCards = useMemo(() => {
     const start = (roundIndex % totalRounds) * MAX_PAIRS_PER_ROUND;
-    return cards.slice(start, start + MAX_PAIRS_PER_ROUND);
+    const primary = cards.slice(start, start + MAX_PAIRS_PER_ROUND);
+    if (
+      primary.length >= MAX_PAIRS_PER_ROUND ||
+      cards.length < MAX_PAIRS_PER_ROUND
+    ) {
+      return primary;
+    }
+    const existingIds = new Set(primary.map((c) => c.id));
+    const filler = cards
+      .filter((c) => !existingIds.has(c.id))
+      .slice(0, MAX_PAIRS_PER_ROUND - primary.length);
+    return [...primary, ...filler];
   }, [cards, roundIndex, totalRounds]);
+
+  const pairCount = roundCards.length;
+  const isStandardRecordBoard =
+    cards.length < MAX_PAIRS_PER_ROUND || pairCount === MAX_PAIRS_PER_ROUND;
+
+  const [localBestMs, setLocalBestMs] = useState<number | null>(() =>
+    readFlashcardBestTime(deckId, pairCount, userId),
+  );
+
+  useEffect(() => {
+    setLocalBestMs(readFlashcardBestTime(deckId, pairCount, userId));
+  }, [deckId, pairCount, userId]);
+
+  const effectiveServerBest = isStandardRecordBoard ? serverBestMs : null;
+  const bestMs =
+    effectiveServerBest !== null && localBestMs !== null
+      ? Math.min(effectiveServerBest, localBestMs)
+      : (effectiveServerBest ?? localBestMs);
 
   const tiles = useMemo<MatchTile[]>(() => {
     const pairs: MatchTile[] = roundCards.flatMap((card) => [
@@ -108,21 +135,67 @@ export function FlashcardMatchGame({
   const [maxCombo, setMaxCombo] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [accumulatedMs, setAccumulatedMs] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
+
+  const tileRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const completionHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const mismatchTimerRef = useRef<number | null>(null);
 
   const isCompleted =
     roundCards.length > 0 && matchedCardIds.size === roundCards.length;
 
   useEffect(() => {
-    if (startedAt === null || isCompleted) return;
+    return () => {
+      if (mismatchTimerRef.current !== null) {
+        window.clearTimeout(mismatchTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (startedAt === null || paused || isCompleted) return;
     const timer = window.setInterval(() => {
-      setElapsedMs(Date.now() - startedAt + mistakes * PENALTY_MS);
+      setElapsedMs(
+        accumulatedMs + (Date.now() - startedAt) + mistakes * PENALTY_MS,
+      );
     }, 100);
     return () => window.clearInterval(timer);
-  }, [startedAt, isCompleted, mistakes]);
+  }, [startedAt, accumulatedMs, paused, isCompleted, mistakes]);
+
+  useEffect(() => {
+    if (isCompleted) {
+      completionHeadingRef.current?.focus();
+    }
+  }, [isCompleted]);
+
+  const togglePause = () => {
+    if (!paused && startedAt === null && accumulatedMs === 0) return;
+    if (isCompleted) return;
+    if (!paused) {
+      const now = Date.now();
+      const nextAccumulated =
+        accumulatedMs + (startedAt !== null ? now - startedAt : 0);
+      setAccumulatedMs(nextAccumulated);
+      setStartedAt(null);
+      setElapsedMs(nextAccumulated + mistakes * PENALTY_MS);
+      setPaused(true);
+      setAnnouncement("Game paused.");
+    } else {
+      setStartedAt(Date.now());
+      setPaused(false);
+      setAnnouncement("Game resumed.");
+    }
+  };
 
   const resetBoard = (nextRoundIndex = roundIndex) => {
+    if (mismatchTimerRef.current !== null) {
+      window.clearTimeout(mismatchTimerRef.current);
+      mismatchTimerRef.current = null;
+    }
     setRoundIndex(nextRoundIndex);
     setReplaySeed((prev) => prev + 1);
     setSelectedUid(null);
@@ -133,12 +206,36 @@ export function FlashcardMatchGame({
     setMaxCombo(0);
     setMistakes(0);
     setStartedAt(null);
+    setAccumulatedMs(0);
+    setPaused(false);
     setElapsedMs(0);
     setIsNewRecord(false);
+    setAnnouncement("Board reset. Select a term and its matching meaning.");
+  };
+
+  const focusNextAvailableTile = (
+    currentUid: string,
+    nextMatched: Set<string>,
+  ) => {
+    const currentIndex = tiles.findIndex((item) => item.uid === currentUid);
+    const orderedCandidates =
+      currentIndex >= 0
+        ? [...tiles.slice(currentIndex + 1), ...tiles.slice(0, currentIndex)]
+        : tiles;
+    const nextTile = orderedCandidates.find(
+      (candidate) => !nextMatched.has(candidate.cardId),
+    );
+    if (nextTile) {
+      window.requestAnimationFrame(() => {
+        tileRefs.current.get(nextTile.uid)?.focus();
+      });
+    }
   };
 
   const handleTileClick = (tile: MatchTile) => {
-    if (matchedCardIds.has(tile.cardId) || wrongPairUids !== null) return;
+    if (paused || matchedCardIds.has(tile.cardId) || wrongPairUids !== null) {
+      return;
+    }
 
     const now = Date.now();
     const activeStart = startedAt ?? now;
@@ -191,16 +288,29 @@ export function FlashcardMatchGame({
       if (nextMatched.size === roundCards.length) {
         const finalMs = Math.max(
           100,
-          now - activeStart + mistakes * PENALTY_MS,
+          accumulatedMs + (now - activeStart) + mistakes * PENALTY_MS,
         );
         setElapsedMs(finalMs);
+        setStartedAt(null);
         const finalMaxCombo = Math.max(maxCombo, nextCombo);
-        if (bestMs === null || finalMs < bestMs) {
+        const beatRecord =
+          isStandardRecordBoard && (bestMs === null || finalMs < bestMs);
+        if (beatRecord) {
           setLocalBestMs(finalMs);
           setIsNewRecord(true);
-          writeFlashcardBestTime(deckId, finalMs, userId);
+          writeFlashcardBestTime(deckId, pairCount, finalMs, userId);
         }
-        onCompleteRun?.(finalMs, finalMaxCombo);
+        setAnnouncement(
+          `Board cleared in ${formatElapsed(finalMs)}${beatRecord ? ". New personal record!" : "."}`,
+        );
+        if (isStandardRecordBoard) {
+          onCompleteRun?.(finalMs, finalMaxCombo);
+        }
+      } else {
+        setAnnouncement(
+          `Matched ${matchedCard?.term ?? "pair"}. ${nextMatched.size} of ${roundCards.length} pairs matched.`,
+        );
+        focusNextAvailableTile(tile.uid, nextMatched);
       }
     } else {
       const nextMistakes = mistakes + 1;
@@ -214,42 +324,58 @@ export function FlashcardMatchGame({
         next.add(tile.cardId);
         return next;
       });
-      setElapsedMs(now - activeStart + nextMistakes * PENALTY_MS);
+      setElapsedMs(
+        accumulatedMs + (now - activeStart) + nextMistakes * PENALTY_MS,
+      );
+      setAnnouncement("Not a match. Plus 2 seconds penalty.");
 
-      window.setTimeout(() => {
+      if (mismatchTimerRef.current !== null) {
+        window.clearTimeout(mismatchTimerRef.current);
+      }
+      mismatchTimerRef.current = window.setTimeout(() => {
         setWrongPairUids(null);
+        mismatchTimerRef.current = null;
       }, 450);
     }
   };
 
   if (cards.length < 2) {
     return (
-      <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
-        <p className="text-base font-semibold text-[#2b2724]">
+      <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-6 py-12 text-center">
+        <p className="text-base font-semibold text-[var(--tm-ink)]">
           At least 2 cards are needed to play Speed Match
         </p>
-        <p className="mt-1.5 text-sm text-[#5f5953]">
+        <p className="mt-1.5 text-sm text-[var(--tm-ink-muted)]">
           Add new words to this custom deck to start the matching challenge.
         </p>
       </div>
     );
   }
 
+  const hasStarted = startedAt !== null || paused || accumulatedMs > 0;
+
   return (
     <div className="mx-auto max-w-4xl space-y-5">
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
+
       {/* HUD bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-4 text-sm">
-          <div className="inline-flex items-center gap-1.5 font-semibold text-[#2b2724]">
-            <Timer aria-hidden="true" className="size-4 text-[#df5a28]" />
+          <div className="inline-flex items-center gap-1.5 font-semibold text-[var(--tm-ink)]">
+            <Timer
+              aria-hidden="true"
+              className="size-4 text-[var(--tm-brand)]"
+            />
             <span className="sp-mono text-base">
               {formatElapsed(elapsedMs)}
             </span>
           </div>
-          <div className="h-4 w-px bg-[#dacfc5]" />
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5f5953]">
+          <div className="h-4 w-px bg-[var(--tm-border-strong)]" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--tm-ink-muted)]">
             <span>Matched:</span>
-            <span className="sp-mono text-sm font-bold text-[#3f7a52]">
+            <span className="sp-mono text-sm font-bold text-[var(--tm-success)]">
               {matchedCardIds.size}/{roundCards.length}
             </span>
           </div>
@@ -266,17 +392,40 @@ export function FlashcardMatchGame({
           )}
           {bestMs !== null && (
             <span className="sp-chip sp-chip-neutral">
-              <Trophy aria-hidden="true" className="size-3.5 text-[#a16207]" />
+              <Trophy
+                aria-hidden="true"
+                className="size-3.5 text-[var(--tm-warning)]"
+              />
               Best: <span className="sp-mono">{formatElapsed(bestMs)}</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {totalRounds > 1 && (
-            <span className="sp-mono rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-[#5f5953]">
+            <span className="sp-mono rounded-lg bg-[var(--tm-surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--tm-ink-muted)]">
               Round {(roundIndex % totalRounds) + 1}/{totalRounds}
             </span>
+          )}
+          {hasStarted && !isCompleted && (
+            <button
+              aria-pressed={paused}
+              className={`${secondaryAction} min-h-9 px-3 text-xs`}
+              onClick={togglePause}
+              type="button"
+            >
+              {paused ? (
+                <>
+                  <Play aria-hidden="true" className="size-3.5" />
+                  Resume
+                </>
+              ) : (
+                <>
+                  <Pause aria-hidden="true" className="size-3.5" />
+                  Pause
+                </>
+              )}
+            </button>
           )}
           {speechSupported && (
             <button
@@ -286,7 +435,7 @@ export function FlashcardMatchGame({
                   : "Enable pronunciation on match"
               }
               aria-pressed={audioOnMatch}
-              className={`grid size-9 cursor-pointer place-items-center rounded-lg border border-[#dacfc5] bg-white text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
+              className={`grid size-9 cursor-pointer place-items-center rounded-lg border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)] transition hover:border-[var(--tm-brand)] hover:text-[var(--tm-brand)] ${focusRing}`}
               onClick={() => setAudioOnMatch((prev) => !prev)}
               type="button"
             >
@@ -309,40 +458,46 @@ export function FlashcardMatchGame({
       </div>
 
       {isCompleted ? (
-        <div className="rounded-2xl border border-[#e9c6a4] bg-[#fdf7ed] px-6 py-10 text-center">
-          <div className="mx-auto grid size-14 place-items-center rounded-full bg-[#fff1ea] text-[#df5a28]">
+        <div className="rounded-2xl border border-[#e9c6a4] bg-[var(--tm-brand-soft)] px-6 py-10 text-center">
+          <div className="mx-auto grid size-14 place-items-center rounded-full bg-[var(--tm-surface)] text-[var(--tm-brand)]">
             <Trophy aria-hidden="true" className="size-7" />
           </div>
-          <h3 className="mt-4 text-2xl font-bold text-[#2b2724]">
+          <h2
+            className="mt-4 text-2xl font-bold text-[var(--tm-ink)] outline-none"
+            ref={completionHeadingRef}
+            tabIndex={-1}
+          >
             {isNewRecord
               ? "New record! Board cleared"
               : "Matching round complete!"}
-          </h3>
-          <p className="mt-1 text-sm text-[#5f5953]">
+          </h2>
+          <p className="mt-1 text-sm text-[var(--tm-ink-muted)]">
             Every pair matched on the first try has been marked as
             &ldquo;Mastered&rdquo;.
           </p>
 
           <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-3">
-            <div className="rounded-xl border border-[#e9c6a4] bg-white p-3">
-              <p className="sp-mono text-2xl font-bold text-[#df5a28]">
+            <div className="rounded-xl border border-[#e9c6a4] bg-[var(--tm-surface)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-brand)]">
                 {formatElapsed(elapsedMs)}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#5f5953]">Time</p>
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-ink-muted)]">
+                Time
+              </p>
             </div>
-            <div className="rounded-xl border border-[#e9c6a4] bg-white p-3">
-              <p className="sp-mono text-2xl font-bold text-[#3f7a52]">
+            <div className="rounded-xl border border-[#e9c6a4] bg-[var(--tm-surface)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-success)]">
                 ×{maxCombo}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#5f5953]">
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-ink-muted)]">
                 Best combo
               </p>
             </div>
-            <div className="rounded-xl border border-[#e9c6a4] bg-white p-3">
-              <p className="sp-mono text-2xl font-bold text-[#2b2724]">
+            <div className="rounded-xl border border-[#e9c6a4] bg-[var(--tm-surface)] p-3">
+              <p className="sp-mono text-2xl font-bold text-[var(--tm-ink)]">
                 {mistakes}
               </p>
-              <p className="mt-0.5 text-xs font-medium text-[#5f5953]">
+              <p className="mt-0.5 text-xs font-medium text-[var(--tm-ink-muted)]">
                 Mistakes
               </p>
             </div>
@@ -369,6 +524,21 @@ export function FlashcardMatchGame({
             </button>
           </div>
         </div>
+      ) : paused ? (
+        <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-6 py-12 text-center">
+          <p className="text-lg font-bold text-[var(--tm-ink)]">Game paused</p>
+          <p className="mt-1 text-sm text-[var(--tm-ink-muted)]">
+            Your timer is frozen at {formatElapsed(elapsedMs)}.
+          </p>
+          <button
+            className={`${primaryAction} mt-5`}
+            onClick={togglePause}
+            type="button"
+          >
+            <Play aria-hidden="true" className="size-4" />
+            Resume matching
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {tiles.map((tile) => {
@@ -379,15 +549,16 @@ export function FlashcardMatchGame({
               (wrongPairUids[0] === tile.uid || wrongPairUids[1] === tile.uid);
 
             let cardClass =
-              "border-[#ece9e5] bg-white text-[#2b2724] hover:border-[#e9c6a4] hover:bg-[#fffaf7]";
+              "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink)] hover:border-[#e9c6a4] hover:bg-[var(--tm-brand-soft)]";
             if (matched) {
               cardClass =
-                "border-[#9fcbac] bg-[#ebf8ed] text-[#3f7a52] opacity-45 cursor-default";
+                "border-[var(--tm-success)]/40 bg-[var(--tm-success-soft)] text-[var(--tm-success)] opacity-55 cursor-default";
             } else if (wrong) {
-              cardClass = "border-[#d9544f] bg-[#f6e1e1] text-[#bd2a2a]";
+              cardClass =
+                "fc-mismatch-shake border-[var(--tm-danger)] bg-[var(--tm-danger-soft)] text-[var(--tm-danger)]";
             } else if (selected) {
               cardClass =
-                "border-[#df5a28] bg-[#fff1ea] text-[#df5a28] shadow-[0_6px_16px_-10px_rgb(204_47_32/0.45)]";
+                "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)] shadow-[0_6px_16px_-10px_rgb(204_47_32/0.45)]";
             }
 
             return (
@@ -397,10 +568,22 @@ export function FlashcardMatchGame({
                 disabled={matched}
                 key={tile.uid}
                 onClick={() => handleTileClick(tile)}
+                ref={(node) => {
+                  if (node) {
+                    tileRefs.current.set(tile.uid, node);
+                  } else {
+                    tileRefs.current.delete(tile.uid);
+                  }
+                }}
                 type="button"
               >
-                <span className="mb-1.5 text-[10px] font-bold uppercase tracking-wider opacity-65">
-                  {tile.kind === "term" ? "Term" : "Meaning"}
+                <span className="mb-1.5 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
+                  {wrong && <XCircle aria-hidden="true" className="size-3.5" />}
+                  {wrong
+                    ? "Mismatch"
+                    : tile.kind === "term"
+                      ? "Term"
+                      : "Meaning"}
                 </span>
                 <span
                   className={
@@ -408,11 +591,12 @@ export function FlashcardMatchGame({
                       ? "text-base font-bold leading-snug"
                       : "text-sm font-medium leading-snug"
                   }
+                  lang={tile.kind === "meaning" ? "vi" : undefined}
                 >
                   {tile.text}
                 </span>
                 {tile.subtitle && (
-                  <span className="sp-mono mt-1 text-[11px] opacity-70">
+                  <span className="sp-mono mt-1 text-[11px] opacity-80">
                     {tile.subtitle}
                   </span>
                 )}

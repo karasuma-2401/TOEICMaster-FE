@@ -64,26 +64,26 @@ describe("flashcards storage & helpers", () => {
     values.set("toeicmaster.fc.match.best.deck", "1000");
     for (const userId of [null, "learner-a", "learner-b"]) {
       expect(readFlashcardStore(userId).progress).toEqual({});
-      expect(readFlashcardBestTime("deck", userId)).toBeNull();
+      expect(readFlashcardBestTime("deck", 6, userId)).toBeNull();
     }
     expect(values.size).toBe(2);
   });
 
   it("isolates and validates match best times by learner and deck", () => {
     browserStore();
-    writeFlashcardBestTime("deck-a", 1250, "learner-a");
-    expect(readFlashcardBestTime("deck-a", "learner-a")).toBe(1250);
-    expect(readFlashcardBestTime("deck-b", "learner-a")).toBeNull();
-    expect(readFlashcardBestTime("deck-a", "learner-b")).toBeNull();
-    expect(readFlashcardBestTime("deck-a", null)).toBeNull();
-    writeFlashcardBestTime("deck-a", Number.NaN, "learner-a");
-    expect(readFlashcardBestTime("deck-a", "learner-a")).toBe(1250);
+    writeFlashcardBestTime("deck-a", 6, 1250, "learner-a");
+    expect(readFlashcardBestTime("deck-a", 6, "learner-a")).toBe(1250);
+    expect(readFlashcardBestTime("deck-b", 6, "learner-a")).toBeNull();
+    expect(readFlashcardBestTime("deck-a", 6, "learner-b")).toBeNull();
+    expect(readFlashcardBestTime("deck-a", 6, null)).toBeNull();
+    writeFlashcardBestTime("deck-a", 6, Number.NaN, "learner-a");
+    expect(readFlashcardBestTime("deck-a", 6, "learner-a")).toBe(1250);
     writeScopedStorage(
       { namespace: "flashcards", userId: "learner-a" },
-      "match-best:deck-a",
+      "match-best:deck-a:p6",
       "invalid",
     );
-    expect(readFlashcardBestTime("deck-a", "learner-a")).toBeNull();
+    expect(readFlashcardBestTime("deck-a", 6, "learner-a")).toBeNull();
   });
 
   it("parses empty or malformed JSON safely into empty store", () => {
@@ -211,5 +211,17 @@ describe("flashcards storage & helpers", () => {
     expect(slugifyDeckTitle("Contracts & Negotiation Vocabulary!")).toBe(
       "contracts-negotiation-vocabulary",
     );
+  });
+
+  it("isolates best times by pair count as well as account and guest scope", () => {
+    browserStore();
+    writeFlashcardBestTime("deck-1", 6, 1500, "user-a");
+    writeFlashcardBestTime("deck-1", 2, 500, "user-a");
+    writeFlashcardBestTime("deck-1", 6, 2000, "user-b");
+    writeFlashcardBestTime("deck-1", 6, 3000, null);
+    expect(readFlashcardBestTime("deck-1", 6, "user-a")).toBe(1500);
+    expect(readFlashcardBestTime("deck-1", 2, "user-a")).toBe(500);
+    expect(readFlashcardBestTime("deck-1", 6, "user-b")).toBe(2000);
+    expect(readFlashcardBestTime("deck-1", 6, null)).toBe(3000);
   });
 });
