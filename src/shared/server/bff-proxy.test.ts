@@ -474,4 +474,56 @@ describe("shared/server/bff-proxy", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     },
   );
+
+  it("rejects declared Content-Length exceeding maxBodyBytes with 413 before calling fetch", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    for (const bodyMode of ["json", "optional-json", "raw"] as const) {
+      const res = await forwardBffRequest(
+        makeRequest({
+          headers: {
+            "content-type": "application/json",
+            "content-length": "512",
+          },
+          body: JSON.stringify({ hello: "world" }),
+        }),
+        {
+          upstreamPath: "/api/v1/items",
+          method: "POST",
+          auth: "public",
+          bodyMode,
+          maxBodyBytes: 64,
+        },
+      );
+      expect(res.status).toBe(413);
+      expect(res.headers.get("content-type")).toBe("application/problem+json");
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("ignores all-malformed IP tokens and unsupported protocols in extractForwardedClientHeaders", () => {
+    expect(
+      extractForwardedClientHeaders(
+        makeRequest({
+          headers: {
+            "x-forwarded-for": "not-an-ip, bad_host, 999.999.999.999",
+            "x-forwarded-proto": "ftp",
+          },
+        }),
+      ),
+    ).toEqual({});
+
+    expect(
+      extractForwardedClientHeaders(
+        makeRequest({
+          headers: {
+            "x-forwarded-proto": "HTTP",
+          },
+        }),
+      ),
+    ).toEqual({
+      "X-Forwarded-Proto": "http",
+    });
+  });
 });

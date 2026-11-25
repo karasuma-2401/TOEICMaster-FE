@@ -11,6 +11,7 @@ import {
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getSession } from "@/features/auth/api";
+import { refreshSessionLocked } from "@/shared/api/http";
 import {
   getLrAttemptHistory,
   getLrCatalog,
@@ -350,5 +351,24 @@ describe("ListeningReadingPractice", () => {
     render(<ListeningReadingPractice part="1" skill="listening" />);
     expect(await screen.findByText("Airport check-in")).toBeInTheDocument();
     expect(getLrPracticeStatistics).not.toHaveBeenCalled();
+  });
+
+  it("refreshes once before loading history when session is refresh_required and uses WCAG AA tokens", async () => {
+    vi.mocked(getSession).mockResolvedValue({ status: "refresh_required" });
+    vi.mocked(refreshSessionLocked).mockResolvedValue();
+    vi.mocked(getLrCatalog).mockResolvedValueOnce([sampleExam]);
+
+    const { container } = render(
+      <ListeningReadingLibrary skill="listening-reading" />,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "ETS 2026 Test 01" }),
+    ).toBeInTheDocument();
+    expect(refreshSessionLocked).toHaveBeenCalled();
+    expect(getLrAttemptHistory).toHaveBeenCalledTimes(1);
+    expect(container.innerHTML).not.toContain("text-slate-400");
+    expect(container.innerHTML).not.toContain("text-slate-500");
+    expect(container.innerHTML).not.toContain("bg-blue-600");
   });
 });

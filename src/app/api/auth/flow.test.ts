@@ -316,42 +316,53 @@ describe("auth BFF", () => {
     expect(response.headers.get("retry-after")).toBe("12");
   });
 
-  it("rejects oversized auth JSON payloads with 413 and cancels the stream", async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    const cancel = vi.fn(() => Promise.resolve());
-    const chunk = new Uint8Array(10_000).fill(97);
-    const chunks = [chunk, chunk];
-    const body = new ReadableStream<Uint8Array>(
-      {
-        pull(controller) {
-          const next = chunks.shift();
-          if (next) controller.enqueue(next);
-          else controller.close();
+  it.each([
+    { name: "login", handler: login },
+    { name: "google", handler: google },
+    { name: "forgot-password", handler: forgotPassword },
+    { name: "resend-verification", handler: resendVerification },
+    { name: "reset-password", handler: resetPassword },
+    { name: "verify-email", handler: verifyEmail },
+    { name: "verify-password-reset", handler: verifyPasswordReset },
+  ])(
+    "rejects oversized auth JSON payloads with 413 and cancels the stream on $name",
+    async ({ name, handler }) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const cancel = vi.fn(() => Promise.resolve());
+      const chunk = new Uint8Array(10_000).fill(97);
+      const chunks = [chunk, chunk];
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            const next = chunks.shift();
+            if (next) controller.enqueue(next);
+            else controller.close();
+          },
+          cancel,
         },
-        cancel,
-      },
-      { highWaterMark: 0 },
-    );
+        { highWaterMark: 0 },
+      );
 
-    const response = await login(
-      new NextRequest("http://localhost/api/auth/login", {
-        method: "POST",
-        headers: {
-          Origin: "http://localhost",
-          "Content-Type": "application/json",
-        },
-        body,
-      }),
-    );
+      const response = await handler(
+        new NextRequest(`http://localhost/api/auth/${name}`, {
+          method: "POST",
+          headers: {
+            Origin: "http://localhost",
+            "Content-Type": "application/json",
+          },
+          body,
+        }),
+      );
 
-    expect(response.status).toBe(413);
-    expect(response.headers.get("content-type")).toBe(
-      "application/problem+json",
-    );
-    expect(cancel).toHaveBeenCalledOnce();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(413);
+      expect(response.headers.get("content-type")).toBe(
+        "application/problem+json",
+      );
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("forwards validated X-Forwarded-For and X-Forwarded-Proto across all 9 auth routes", async () => {
     const validSessionCookie = await (async () => {

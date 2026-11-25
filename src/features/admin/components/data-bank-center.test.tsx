@@ -296,6 +296,13 @@ describe("DataBankCenter", () => {
     expect(document.querySelectorAll("dialog")).toHaveLength(0);
     expect(dialog.contains(document.activeElement)).toBe(true);
 
+    const codeInput = screen.getByLabelText(/Test code/i);
+    codeInput.focus();
+    for (let step = 0; step < 8; step++) {
+      await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+
     await user.keyboard("{Escape}");
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

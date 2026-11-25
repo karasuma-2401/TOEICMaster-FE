@@ -180,4 +180,27 @@ describe("PUT /api/profile/avatar", () => {
     expect(formDataSpy).not.toHaveBeenCalled();
     expect(forwardMock).not.toHaveBeenCalled();
   });
+
+  it("rejects declared Content-Length above 2MB + 64KB with 413 before parsing FormData", async () => {
+    const request = withSession(
+      new NextRequest("http://localhost/api/profile/avatar", {
+        method: "PUT",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "multipart/form-data; boundary=test-boundary",
+          "Content-Length": String(2 * 1024 * 1024 + 64 * 1024 + 1),
+        },
+        body: new Uint8Array(16),
+      }),
+    );
+    const formDataSpy = vi.spyOn(request, "formData");
+
+    const response = await PUT(request);
+    expect(response.status).toBe(413);
+    expect(response.headers.get("content-type")).toBe(
+      "application/problem+json",
+    );
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(forwardMock).not.toHaveBeenCalled();
+  });
 });
