@@ -48,6 +48,7 @@ export function WritingAttemptPlaceholder({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
   const [hasPendingSave, setHasPendingSave] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const refreshInFlight = useRef(false);
@@ -416,6 +417,7 @@ export function WritingAttemptPlaceholder({
                   className={primaryAction}
                   disabled={saving || transitioning}
                   onClick={() => (isLast ? setConfirming(true) : void next())}
+                  ref={isLast ? submitButtonRef : undefined}
                   type="button"
                 >
                   {isLast ? "Submit" : "Next · lock this question"}
@@ -431,6 +433,7 @@ export function WritingAttemptPlaceholder({
           id="writing-submit-dialog-title"
           onCancel={closeConfirm}
           onConfirm={() => void submit()}
+          returnFocusRef={submitButtonRef}
           title="Submit Writing attempt?"
         >
           The final question will be locked and your attempt will be queued for

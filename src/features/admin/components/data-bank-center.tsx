@@ -26,6 +26,12 @@ import {
   type LrExercisePage,
   type LrExerciseSummary,
 } from "@/features/admin/lr-exercise-bank-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { ContentTabs } from "./content/content-tabs";
 import { ExamIcon } from "./exam-icon";
 
@@ -1675,38 +1681,29 @@ function Modal({
   title: string;
 }) {
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center p-4">
-      <button
-        aria-label="Close dialog"
-        className="absolute inset-0 bg-stone-950/35 backdrop-blur-[2px]"
-        onClick={onClose}
-        type="button"
-      />
-      <dialog
-        aria-modal="true"
-        className="relative w-full max-w-[720px] rounded-xl border border-[var(--admin-border)] bg-white p-5 shadow-[0_20px_60px_rgb(48_43_41/24%)]"
-        open
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="max-w-[720px] rounded-xl border-[var(--admin-border)] p-5 shadow-[0_20px_60px_rgb(48_43_41/24%)]"
+        data-testid="data-bank-modal"
+        size="lg"
       >
-        <button
-          aria-label="Close"
-          className="absolute right-4 top-4 grid size-7 place-items-center rounded-md text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
-          onClick={onClose}
-          type="button"
-        >
-          <ExamIcon className="size-5" name="close" />
-        </button>
         <span className="grid size-7 place-items-center rounded-md bg-[#ecfdf5] text-[#047857]">
           <ExamIcon className="size-4" name="file" />
         </span>
-        <h2 className="-mt-7 pr-10 pl-10 text-sm font-semibold text-[var(--admin-ink)]">
+        <DialogTitle className="-mt-7 pr-10 pl-10 text-sm font-semibold text-[var(--admin-ink)]">
           {title}
-        </h2>
-        <p className="mt-1 pl-10 text-[11px] leading-5 text-[var(--admin-muted)]">
+        </DialogTitle>
+        <DialogDescription className="mt-1 pl-10 text-[11px] leading-5 text-[var(--admin-muted)]">
           {subtitle}
-        </p>
+        </DialogDescription>
         <div className="mt-5">{children}</div>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 function ModalFooter({

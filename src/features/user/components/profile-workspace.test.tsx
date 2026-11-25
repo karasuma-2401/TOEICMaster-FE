@@ -14,6 +14,16 @@ vi.mock("next/link", () => ({
     </a>
   ),
 }));
+vi.mock("@/features/auth/api", () => ({
+  getSession: vi.fn().mockResolvedValue({
+    status: "authenticated",
+    user: {
+      id: "user-1",
+      displayName: "Noah Adams",
+      email: "learner@example.com",
+    },
+  }),
+}));
 vi.mock("@/features/history/api", () => ({
   fetchUnifiedHistory: vi.fn().mockResolvedValue({
     items: [],

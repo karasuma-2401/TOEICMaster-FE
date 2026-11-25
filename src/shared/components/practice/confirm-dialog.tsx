@@ -1,11 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { ConfirmDialog as SharedConfirmDialog } from "@/shared/components/ui/dialog";
 import { primaryAction, secondaryAction } from "./styles";
 
 /** Modal confirmation; focuses the cancel action and closes on Escape. */
 export function ConfirmDialog({
+  open,
   id,
   title,
   children,
@@ -13,7 +14,9 @@ export function ConfirmDialog({
   confirmLabel,
   onCancel,
   onConfirm,
+  returnFocusRef,
 }: {
+  open?: boolean;
   id: string;
   title: string;
   children: ReactNode;
@@ -21,6 +24,7 @@ export function ConfirmDialog({
   confirmLabel: string;
   onCancel: () => void;
   onConfirm: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }) {
   return (
     <SharedConfirmDialog
@@ -31,6 +35,8 @@ export function ConfirmDialog({
       id={id}
       onCancel={onCancel}
       onConfirm={onConfirm}
+      open={open}
+      returnFocusRef={returnFocusRef}
       title={title}
     >
       {children}

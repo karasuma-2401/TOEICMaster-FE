@@ -15,7 +15,7 @@ function PasswordToggle({
   return (
     <button
       aria-label={isVisible ? "Hide password" : "Show password"}
-      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[var(--tm-ink-subtle)] transition hover:text-[var(--tm-brand)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
       onClick={onClick}
       type="button"
     >
@@ -114,22 +114,22 @@ export function ResetPasswordPanel({
 
   return (
     <section aria-labelledby="reset-password-title">
-      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
+      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[var(--tm-brand)] before:h-px before:w-6 before:bg-[var(--tm-brand)]">
         ACCOUNT RECOVERY
       </p>
       <h1
-        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
+        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[var(--tm-ink)]"
         id="reset-password-title"
       >
         Set a new password
       </h1>
-      <p className="mx-auto mt-3 max-w-[23rem] text-center text-[13px] leading-5 text-[#a89f9b]">
+      <p className="mx-auto mt-3 max-w-[23rem] text-center text-[13px] leading-5 text-[var(--tm-ink-muted)]">
         Choose a new password with at least 8 characters to protect your
         account.
       </p>
       <form className="mt-8" noValidate onSubmit={submit}>
         <label
-          className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
+          className="mb-1.5 block text-[11px] font-bold text-[var(--tm-ink-soft)]"
           htmlFor="newPassword"
         >
           New password
@@ -139,7 +139,7 @@ export function ResetPasswordPanel({
             aria-describedby={passwordError ? "newPassword-error" : undefined}
             aria-invalid={Boolean(passwordError)}
             autoComplete="new-password"
-            className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-4 pr-12 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+            className="h-12 w-full rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-4 pr-12 text-sm text-[var(--tm-ink)] outline-none transition placeholder:text-[var(--tm-ink-subtle)] focus:border-[var(--tm-brand)] focus:ring-2 focus:ring-[var(--tm-brand-soft)] aria-[invalid=true]:border-[var(--tm-danger)]"
             id="newPassword"
             onChange={(event) => {
               setNewPassword(event.target.value);
@@ -155,7 +155,7 @@ export function ResetPasswordPanel({
           />
         </div>
         <label
-          className="mb-1.5 mt-3.5 block text-[11px] font-bold text-[#4e4542]"
+          className="mb-1.5 mt-3.5 block text-[11px] font-bold text-[var(--tm-ink-soft)]"
           htmlFor="confirmNewPassword"
         >
           Confirm new password
@@ -165,7 +165,7 @@ export function ResetPasswordPanel({
             aria-describedby={passwordError ? "newPassword-error" : undefined}
             aria-invalid={Boolean(passwordError)}
             autoComplete="new-password"
-            className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-4 pr-12 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+            className="h-12 w-full rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-4 pr-12 text-sm text-[var(--tm-ink)] outline-none transition placeholder:text-[var(--tm-ink-subtle)] focus:border-[var(--tm-brand)] focus:ring-2 focus:ring-[var(--tm-brand-soft)] aria-[invalid=true]:border-[var(--tm-danger)]"
             id="confirmNewPassword"
             onChange={(event) => {
               setConfirmPassword(event.target.value);
@@ -182,7 +182,7 @@ export function ResetPasswordPanel({
         </div>
         {passwordError && (
           <p
-            className="mt-1.5 text-xs text-red-600"
+            className="mt-1.5 text-xs text-[var(--tm-danger)]"
             id="newPassword-error"
             role="alert"
           >
@@ -190,12 +190,12 @@ export function ResetPasswordPanel({
           </p>
         )}
         {requestError && (
-          <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+          <output className="mt-4 block rounded-xl bg-[var(--tm-warning-soft)] px-4 py-3 text-sm leading-5 text-[var(--tm-warning)]">
             {requestError}
           </output>
         )}
         <button
-          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--tm-brand)] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(201,59,11,0.18)] transition hover:bg-[var(--tm-brand-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           disabled={pending}
           type="submit"
         >
@@ -203,7 +203,7 @@ export function ResetPasswordPanel({
         </button>
       </form>
       <button
-        className="mt-5 block w-full cursor-pointer text-center text-[11px] font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+        className="mt-5 block w-full cursor-pointer text-center text-[11px] font-bold text-[var(--tm-brand)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
         onClick={onRestart}
         type="button"
       >

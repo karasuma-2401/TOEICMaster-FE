@@ -64,7 +64,7 @@ function PasswordToggle({
   return (
     <button
       aria-label={isVisible ? "Hide password" : "Show password"}
-      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[#b6b0ad] transition hover:text-[#ed361c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+      className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-[var(--tm-ink-subtle)] transition hover:text-[var(--tm-brand)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
       onClick={onClick}
       type="button"
     >
@@ -148,36 +148,36 @@ export function LoginPanel({
 
   return (
     <section aria-labelledby="login-title">
-      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
+      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[var(--tm-brand)] before:h-px before:w-6 before:bg-[var(--tm-brand)]">
         WELCOME TO TOEICMASTER
       </p>
       <h1
-        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
+        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[var(--tm-ink)]"
         id="login-title"
       >
         Continue your journey
       </h1>
-      <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
+      <p className="mt-3 text-center text-[13px] text-[var(--tm-ink-muted)]">
         Sign in to keep learning and track your daily progress.
       </p>
       <AuthTabs current="login" returnTo={returnTo} />
       <form className="mt-6" noValidate onSubmit={submitLogin}>
         <div>
           <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
+            className="mb-1.5 block text-[11px] font-bold text-[var(--tm-ink-soft)]"
             htmlFor="email"
           >
             Email
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[var(--tm-ink-subtle)]">
               <EmailIcon />
             </span>
             <input
               aria-describedby={emailError ? "email-error" : undefined}
               aria-invalid={Boolean(emailError)}
               autoComplete="email"
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-4 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+              className="h-12 w-full rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-11 pr-4 text-sm text-[var(--tm-ink)] outline-none transition placeholder:text-[var(--tm-ink-subtle)] focus:border-[var(--tm-brand)] focus:ring-2 focus:ring-[var(--tm-brand-soft)] aria-[invalid=true]:border-[var(--tm-danger)]"
               id="email"
               name="email"
               onChange={(event) => {
@@ -192,7 +192,7 @@ export function LoginPanel({
           </div>
           {emailError && (
             <p
-              className="mt-1.5 text-xs text-red-600"
+              className="mt-1.5 text-xs text-[var(--tm-danger)]"
               id="email-error"
               role="alert"
             >
@@ -202,20 +202,20 @@ export function LoginPanel({
         </div>
         <div className="mt-3.5">
           <label
-            className="mb-1.5 block text-[11px] font-bold text-[#4e4542]"
+            className="mb-1.5 block text-[11px] font-bold text-[var(--tm-ink-soft)]"
             htmlFor="password"
           >
             Password
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[#beb7b3]">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-[var(--tm-ink-subtle)]">
               <PasswordIcon />
             </span>
             <input
               aria-describedby={passwordError ? "password-error" : undefined}
               aria-invalid={Boolean(passwordError)}
               autoComplete="current-password"
-              className="h-12 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-11 pr-12 text-sm text-[#3d3532] outline-none transition placeholder:text-[#c9c1bd] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+              className="h-12 w-full rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-11 pr-12 text-sm text-[var(--tm-ink)] outline-none transition placeholder:text-[var(--tm-ink-subtle)] focus:border-[var(--tm-brand)] focus:ring-2 focus:ring-[var(--tm-brand-soft)] aria-[invalid=true]:border-[var(--tm-danger)]"
               id="password"
               name="password"
               onChange={(event) => {
@@ -234,7 +234,7 @@ export function LoginPanel({
           </div>
           {passwordError && (
             <p
-              className="mt-1.5 text-xs text-red-600"
+              className="mt-1.5 text-xs text-[var(--tm-danger)]"
               id="password-error"
               role="alert"
             >
@@ -243,10 +243,10 @@ export function LoginPanel({
           )}
         </div>
         <div className="mt-3.5 flex items-center justify-between gap-4 text-[11px]">
-          <label className="flex cursor-pointer items-center gap-2 text-[#938b87]">
+          <label className="flex cursor-pointer items-center gap-2 text-[var(--tm-ink-muted)]">
             <input
               checked={rememberMe}
-              className="h-3.5 w-3.5 rounded border-[#bdb4af] accent-[#ed361c] focus:ring-[#ed361c]"
+              className="h-3.5 w-3.5 rounded border-[var(--tm-border-strong)] accent-[var(--tm-brand)] focus:ring-[var(--tm-ring)]"
               name="rememberMe"
               onChange={(event) => setRememberMe(event.target.checked)}
               type="checkbox"
@@ -254,14 +254,14 @@ export function LoginPanel({
             Remember me
           </label>
           <Link
-            className="shrink-0 cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+            className="shrink-0 cursor-pointer font-bold text-[var(--tm-brand)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
             href="/forgot-password"
           >
             Forgot password?
           </Link>
         </div>
         <button
-          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--tm-brand)] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(201,59,11,0.18)] transition hover:bg-[var(--tm-brand-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           disabled={pending}
           type="submit"
         >
@@ -269,11 +269,11 @@ export function LoginPanel({
         </button>
       </form>
       {notice && (
-        <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+        <output className="mt-4 block rounded-xl bg-[var(--tm-warning-soft)] px-4 py-3 text-sm leading-5 text-[var(--tm-warning)]">
           {notice}
         </output>
       )}
-      <div className="mt-5 flex items-center gap-3 text-[10px] text-[#c0b8b4] before:h-px before:flex-1 before:bg-[#eee8e5] after:h-px after:flex-1 after:bg-[#eee8e5]">
+      <div className="mt-5 flex items-center gap-3 text-[10px] text-[var(--tm-ink-subtle)] before:h-px before:flex-1 before:bg-[var(--tm-border)] after:h-px after:flex-1 after:bg-[var(--tm-border)]">
         or continue with
       </div>
       <GoogleSignIn
@@ -281,16 +281,16 @@ export function LoginPanel({
         rememberMe={rememberMe}
         returnTo={returnTo}
       />
-      <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
+      <p className="mt-5 text-center text-[11px] text-[var(--tm-ink-muted)]">
         Don&apos;t have an account?{" "}
         <Link
-          className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+          className="cursor-pointer font-bold text-[var(--tm-brand)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           href={authUrl("/register", returnTo)}
         >
           Sign up for free
         </Link>
       </p>
-      <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
+      <p className="mt-7 text-center text-[9px] text-[var(--tm-ink-subtle)]">
         © 2025 TOEICMaster. Learn languages, open up the world.
       </p>
     </section>

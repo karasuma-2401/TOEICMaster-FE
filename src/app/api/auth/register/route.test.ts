@@ -232,4 +232,40 @@ describe("registration proxy", () => {
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("cancels oversized chunked registration payloads with 413", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const cancel = vi.fn(() => Promise.resolve());
+    const chunk = new Uint8Array(10_000).fill(97);
+    const chunks = [chunk, chunk];
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          const next = chunks.shift();
+          if (next) controller.enqueue(next);
+          else controller.close();
+        },
+        cancel,
+      },
+      { highWaterMark: 0 },
+    );
+
+    const request = new NextRequest("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://localhost",
+      },
+      body,
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(413);
+    expect(response.headers.get("content-type")).toBe(
+      "application/problem+json",
+    );
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
