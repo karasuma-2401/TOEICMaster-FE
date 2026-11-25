@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getSession } from "@/features/auth/api";
 import {
   getLrAttemptHistory,
   getLrCatalog,
@@ -48,6 +49,14 @@ vi.mock("@/features/lr-exam/api", async (importOriginal) => {
   };
 });
 
+vi.mock("@/features/auth/api", () => ({
+  getSession: vi.fn(),
+}));
+
+vi.mock("@/shared/api/http", () => ({
+  refreshSessionLocked: vi.fn(),
+}));
+
 vi.mock("@/features/history/api", () => ({
   fetchUnifiedHistory: vi.fn().mockResolvedValue({
     items: [],
@@ -63,6 +72,10 @@ vi.mock("@/shared/components/practice/skill-header", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getSession).mockResolvedValue({
+    status: "authenticated",
+    user: { id: "u1", displayName: "Learner", email: "learner@example.com" },
+  });
   vi.mocked(getLrAttemptHistory).mockResolvedValue({
     items: [],
     totalCount: 0,
@@ -319,5 +332,23 @@ describe("ListeningReadingPractice", () => {
       "href",
       "/reading/practice/5",
     );
+  });
+
+  it("skips attempt history and practice statistics fetches for guest sessions", async () => {
+    vi.mocked(getSession).mockResolvedValue({ status: "guest" });
+    vi.mocked(getLrCatalog).mockResolvedValueOnce([sampleExam]);
+
+    render(<ListeningReadingLibrary skill="listening-reading" />);
+
+    expect(
+      await screen.findByRole("heading", { name: "ETS 2026 Test 01" }),
+    ).toBeInTheDocument();
+    expect(getLrAttemptHistory).not.toHaveBeenCalled();
+
+    cleanup();
+    vi.mocked(getLrPracticeItems).mockResolvedValueOnce(samplePracticePage);
+    render(<ListeningReadingPractice part="1" skill="listening" />);
+    expect(await screen.findByText("Airport check-in")).toBeInTheDocument();
+    expect(getLrPracticeStatistics).not.toHaveBeenCalled();
   });
 });

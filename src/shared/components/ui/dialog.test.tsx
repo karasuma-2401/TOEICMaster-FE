@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -237,5 +237,90 @@ describe("ui/dialog", () => {
     expect(dialog.querySelector('button[aria-label="Close"]')).toBeNull();
     await user.keyboard("{Escape}");
     expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("restores focus to returnFocusRef across controlled ConfirmDialog open toggles", async () => {
+    const user = userEvent.setup();
+    function ControlledReturnDialog() {
+      const [open, setOpen] = useState(false);
+      const returnFocusRef = useRef<HTMLButtonElement | null>(null);
+      return (
+        <>
+          <button ref={returnFocusRef} type="button">
+            Primary submit
+          </button>
+          <button onClick={() => setOpen(true)} type="button">
+            Trigger from elsewhere
+          </button>
+          <ConfirmDialog
+            cancelLabel="Go back"
+            confirmLabel="Confirm"
+            onCancel={() => setOpen(false)}
+            onConfirm={() => setOpen(false)}
+            open={open}
+            returnFocusRef={returnFocusRef}
+            title="Submit attempt?"
+          />
+        </>
+      );
+    }
+
+    render(<ControlledReturnDialog />);
+    const primaryBtn = screen.getByRole("button", { name: "Primary submit" });
+    await user.click(
+      screen.getByRole("button", { name: "Trigger from elsewhere" }),
+    );
+    await screen.findByRole("dialog", { name: "Submit attempt?" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(primaryBtn).toHaveFocus();
+    });
+  });
+
+  it("restores focus to returnFocusRef on conditionally mounted DialogContent", async () => {
+    const user = userEvent.setup();
+    function ConditionalDialogContent() {
+      const [open, setOpen] = useState(false);
+      const returnFocusRef = useRef<HTMLButtonElement | null>(null);
+      return (
+        <>
+          <button
+            onClick={() => setOpen(true)}
+            ref={returnFocusRef}
+            type="button"
+          >
+            Open conditional modal
+          </button>
+          {open && (
+            <Dialog
+              onOpenChange={(next) => {
+                if (!next) setOpen(false);
+              }}
+              open
+            >
+              <DialogContent
+                aria-describedby={undefined}
+                returnFocusRef={returnFocusRef}
+              >
+                <DialogTitle>Conditional modal</DialogTitle>
+              </DialogContent>
+            </Dialog>
+          )}
+        </>
+      );
+    }
+
+    render(<ConditionalDialogContent />);
+    const opener = screen.getByRole("button", {
+      name: "Open conditional modal",
+    });
+    await user.click(opener);
+    await screen.findByRole("dialog", { name: "Conditional modal" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+    });
   });
 });

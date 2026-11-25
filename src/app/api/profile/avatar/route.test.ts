@@ -142,4 +142,42 @@ describe("PUT /api/profile/avatar", () => {
     expect(init.headers).toBeUndefined();
     expect((init.body as FormData).get("file")).toBeInstanceOf(File);
   });
+
+  it("cancels oversized multipart payloads above 2MB + 64KB with 413 before parsing FormData", async () => {
+    const cancel = vi.fn(() => Promise.resolve());
+    const chunk = new Uint8Array(1024 * 1024);
+    const chunks = [chunk, chunk, chunk];
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          const next = chunks.shift();
+          if (next) controller.enqueue(next);
+          else controller.close();
+        },
+        cancel,
+      },
+      { highWaterMark: 0 },
+    );
+
+    const request = withSession(
+      new NextRequest("http://localhost/api/profile/avatar", {
+        method: "PUT",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "multipart/form-data; boundary=test-boundary",
+        },
+        body,
+      }),
+    );
+    const formDataSpy = vi.spyOn(request, "formData");
+
+    const response = await PUT(request);
+    expect(response.status).toBe(413);
+    expect(response.headers.get("content-type")).toBe(
+      "application/problem+json",
+    );
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(forwardMock).not.toHaveBeenCalled();
+  });
 });

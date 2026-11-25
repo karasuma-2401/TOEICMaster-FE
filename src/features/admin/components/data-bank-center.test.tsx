@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DataBankCenter } from "./data-bank-center";
 
@@ -273,5 +274,32 @@ describe("DataBankCenter", () => {
     expect(
       screen.queryByRole("link", { name: "Tests" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders Data Bank modals via Radix Dialog with accessible title, description, Escape handling, and focus restoration", async () => {
+    const user = userEvent.setup();
+    url = "tab=tests";
+
+    render(<DataBankCenter />);
+    const opener = await screen.findByRole("button", {
+      name: "Create new test",
+    });
+    await user.click(opener);
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "Create new test",
+    });
+    expect(dialog).toHaveAttribute("data-testid", "data-bank-modal");
+    expect(dialog).toHaveAccessibleDescription(
+      "The system creates a draft with exactly 200 slots. You can then enter questions, context, and media in the workspace.",
+    );
+    expect(document.querySelectorAll("dialog")).toHaveLength(0);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+    });
   });
 });

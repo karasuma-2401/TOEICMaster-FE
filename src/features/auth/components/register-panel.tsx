@@ -27,13 +27,13 @@ export function RegisterPanel({
 
   return (
     <>
-      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
+      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[var(--tm-brand)] before:h-px before:w-6 before:bg-[var(--tm-brand)]">
         WELCOME TO TOEICMASTER
       </p>
-      <h1 className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]">
+      <h1 className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[var(--tm-ink)]">
         Start a new journey
       </h1>
-      <p className="mt-3 text-center text-[13px] text-[#a89f9b]">
+      <p className="mt-3 text-center text-[13px] text-[var(--tm-ink-muted)]">
         Create a free account and start mastering TOEIC today.
       </p>
       <AuthTabs current="register" returnTo={returnTo} />

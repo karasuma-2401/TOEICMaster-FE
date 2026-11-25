@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimited } from "@/features/auth/server/backend";
-import { forwardBffRequest } from "@/shared/server/bff-proxy";
+import {
+  authorizeBffRequest,
+  forwardBffRequest,
+  readBoundedJson,
+} from "@/shared/server/bff-proxy";
 
 export const dynamic = "force-dynamic";
 
@@ -69,13 +73,21 @@ function upstreamErrors(value: unknown): ProblemErrors | undefined {
     : undefined;
 }
 
+const REGISTER_MAX_BODY_BYTES = 16 * 1024;
+
 export async function POST(request: NextRequest) {
-  let value: unknown;
-  try {
-    value = await request.json();
-  } catch {
-    return error(400, "Invalid registration data.");
-  }
+  const access = authorizeBffRequest(request, {
+    method: "POST",
+    auth: "public",
+  });
+  if (!access.ok) return access.response;
+
+  const parsed = await readBoundedJson(request, REGISTER_MAX_BODY_BYTES, {
+    oversizeMessage: "Registration payload exceeds the size limit.",
+    invalidMessage: "Invalid registration data.",
+  });
+  if (!parsed.ok) return parsed.response;
+  const value = parsed.data;
 
   const validated = validate(value);
   if (!validated.data)

@@ -94,9 +94,9 @@ function AuthHero() {
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <main className="auth-page min-h-dvh" id="main-content" tabIndex={-1}>
-      <div className="auth-card grid min-h-dvh w-full overflow-hidden bg-white lg:min-h-screen lg:grid-cols-[47.5%_52.5%]">
+      <div className="auth-card grid min-h-dvh w-full overflow-hidden bg-[var(--tm-surface)] lg:min-h-screen lg:grid-cols-[47.5%_52.5%]">
         <AuthHero />
-        <section className="flex min-h-dvh items-center justify-center bg-[#fffdfc] px-7 py-12 sm:px-14 lg:min-h-0 lg:px-[6rem] lg:py-12">
+        <section className="flex min-h-dvh items-center justify-center bg-[var(--tm-surface)] px-7 py-12 sm:px-14 lg:min-h-0 lg:px-[6rem] lg:py-12">
           <div className="w-full max-w-[426px]">{children}</div>
         </section>
       </div>
@@ -114,14 +114,14 @@ export function AuthTabs({
   return (
     <nav
       aria-label="Account"
-      className="mt-7 grid grid-cols-2 rounded-xl bg-[#f5f1ef] p-1 text-sm font-bold"
+      className="mt-7 grid grid-cols-2 rounded-xl bg-[var(--tm-surface-muted)] p-1 text-sm font-bold"
     >
       <Link
         aria-current={current === "login" ? "page" : undefined}
-        className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c] ${
+        className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)] ${
           current === "login"
-            ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
-            : "text-[#b7aeaa] hover:text-[#736a66]"
+            ? "bg-[var(--tm-surface)] text-[var(--tm-brand)] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
+            : "text-[var(--tm-ink-subtle)] hover:text-[var(--tm-ink)]"
         }`}
         href={authUrl("/login", returnTo)}
       >
@@ -129,10 +129,10 @@ export function AuthTabs({
       </Link>
       <Link
         aria-current={current === "register" ? "page" : undefined}
-        className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c] ${
+        className={`flex h-10 cursor-pointer items-center justify-center rounded-[0.6rem] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)] ${
           current === "register"
-            ? "bg-white text-[#ed361c] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
-            : "text-[#b7aeaa] hover:text-[#736a66]"
+            ? "bg-[var(--tm-surface)] text-[var(--tm-brand)] shadow-[0_3px_8px_rgba(67,47,38,0.12)]"
+            : "text-[var(--tm-ink-subtle)] hover:text-[var(--tm-ink)]"
         }`}
         href={authUrl("/register", returnTo)}
       >

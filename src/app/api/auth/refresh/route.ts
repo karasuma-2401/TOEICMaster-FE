@@ -18,9 +18,13 @@ export async function POST(request: NextRequest) {
   if (!current || Date.parse(current.refreshTokenExpiresAtUtc) <= Date.now())
     return problem(401, "Session is invalid or has expired.");
   try {
-    const upstream = await postAuth("refresh", {
-      refreshToken: current.refreshToken,
-    });
+    const upstream = await postAuth(
+      "refresh",
+      {
+        refreshToken: current.refreshToken,
+      },
+      request,
+    );
     if (upstream.status === 401)
       return problem(401, "Session is invalid or has expired.");
     if (upstream.status === 429) return rateLimited(upstream);
