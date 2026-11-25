@@ -188,4 +188,26 @@ describe("AttemptHistorySection", () => {
     expect(refreshSessionLocked).toHaveBeenCalledTimes(1);
     expect(fetchUnifiedHistory).toHaveBeenCalledTimes(1);
   });
+
+  it("titles attempt cards with h3 under the section h2 (no heading-level skip)", async () => {
+    vi.mocked(fetchUnifiedHistory).mockResolvedValueOnce({
+      items: sampleItems,
+      unauthenticatedSkills: [],
+    });
+
+    render(
+      <AttemptHistorySection
+        skills={["lr", "speaking", "writing"]}
+        title="Attempt History"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "ETS 2026 Test 01",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole("heading", { level: 4 })).toHaveLength(0);
+  });
 });

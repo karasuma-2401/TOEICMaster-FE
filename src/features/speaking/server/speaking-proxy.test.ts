@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ids } from "../testing/fixtures";
-import { forwardSpeaking } from "./speaking-proxy";
+import { forwardSpeaking, recordingUploadLimit } from "./speaking-proxy";
+import { jsonBodyLimit } from "./upstream";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -177,5 +178,78 @@ describe("Speaking BFF proxy", () => {
         )
       ).status,
     ).toBe(403);
+  });
+
+  it("forwards the trusted client IP so guests get their own rate-limit bucket", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await forwardSpeaking(
+      new NextRequest("http://localhost:3000/x", {
+        method: "POST",
+        headers: {
+          ...origin,
+          "Content-Type": "application/json",
+          "X-Forwarded-For": "203.0.113.7, 10.0.0.1",
+          "X-Forwarded-Proto": "https",
+        },
+        body: JSON.stringify({ accepted: true }),
+      }),
+      ["attempts", ids.attempt, "evaluation-consent"],
+      "POST",
+    );
+    await forwardSpeaking(
+      new NextRequest("http://localhost:3000/x", {
+        headers: { "X-Forwarded-For": "not-an-ip" },
+      }),
+      ["tests"],
+      "GET",
+    );
+
+    const forwarded = fetchMock.mock.calls[0][1].headers as Headers;
+    expect(forwarded.get("X-Forwarded-For")).toBe("203.0.113.7, 10.0.0.1");
+    expect(forwarded.get("X-Forwarded-Proto")).toBe("https");
+    const spoofed = fetchMock.mock.calls[1][1].headers as Headers;
+    expect(spoofed.get("X-Forwarded-For")).toBeNull();
+  });
+
+  it("stops reading an oversized upload without Content-Length at the cap", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const path = ["attempts", ids.attempt, "recordings", "2"];
+
+    const response = await forwardSpeaking(
+      new NextRequest(`http://localhost:3000/api/speaking/${path.join("/")}`, {
+        method: "PUT",
+        headers: {
+          ...origin,
+          "Content-Type": "multipart/form-data; boundary=x",
+        },
+        body: "x".repeat(recordingUploadLimit + 1),
+      }),
+      path,
+      "PUT",
+    );
+
+    expect(response.status).toBe(413);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversized JSON bodies before the backend", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await forwardSpeaking(
+      new NextRequest("http://localhost:3000/x", {
+        method: "POST",
+        headers: { ...origin, "Content-Type": "application/json" },
+        body: JSON.stringify({ pad: "x".repeat(jsonBodyLimit) }),
+      }),
+      ["attempts"],
+      "POST",
+    );
+
+    expect(response.status).toBe(413);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

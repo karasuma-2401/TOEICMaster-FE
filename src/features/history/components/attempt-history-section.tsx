@@ -83,9 +83,9 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
           {status.label}
         </span>
       </div>
-      <h4 className="mt-3 text-lg leading-6 font-semibold text-[#2F2B28]">
+      <h3 className="mt-3 text-lg leading-6 font-semibold text-[#2F2B28]">
         {item.title}
-      </h4>
+      </h3>
       <p className="mt-1 text-[13px] text-[#6B655F]">
         {item.code ? `${item.code} · ` : ""}
         {item.modeLabel}

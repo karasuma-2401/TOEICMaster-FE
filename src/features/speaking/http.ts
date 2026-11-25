@@ -1,4 +1,5 @@
-import { refreshSession } from "@/features/auth/api";
+import { HttpError, fetchWithAuthRefresh } from "@/shared/api/http";
+import { isRecord } from "@/shared/lib/guards";
 
 /** Error raised for any failed Speaking request, carrying problem-details data. */
 export class SpeakingApiError extends Error {
@@ -7,14 +8,11 @@ export class SpeakingApiError extends Error {
     message: string,
     public readonly fieldErrors: Record<string, string[]> = {},
     public readonly code: string | null = null,
+    public readonly traceId: string | null = null,
   ) {
     super(message);
     this.name = "SpeakingApiError";
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 /** Preserve every validation message, including multiple duplicate-content pairs. */
@@ -43,17 +41,8 @@ async function failure(response: Response, fallback: string) {
     title,
     fieldErrors(body),
     isRecord(body) && typeof body.code === "string" ? body.code : null,
+    isRecord(body) && typeof body.traceId === "string" ? body.traceId : null,
   );
-}
-
-async function refreshOnce() {
-  if (typeof navigator !== "undefined" && navigator.locks) {
-    await navigator.locks.request("toeicmaster-refresh", () =>
-      refreshSession(),
-    );
-    return;
-  }
-  await refreshSession();
 }
 
 export interface RequestOptions {
@@ -61,49 +50,35 @@ export interface RequestOptions {
   json?: unknown;
   form?: FormData;
   signal?: AbortSignal;
-  /** Retry once after refreshing the session on 401 (admin endpoints). */
+  /**
+   * Retry once after refreshing the session on 401. Enabled by default for
+   * every Speaking request (learner and admin); pass `false` to opt out.
+   */
   refresh?: boolean;
   fallback: string;
 }
 
-/** Sends a same-origin BFF request and returns parsed JSON, or `null` for 204. */
+/**
+ * Sends a same-origin BFF request through the shared auth-aware client
+ * (single-flight 401 refresh + retry) and returns parsed JSON, or `null` for 204.
+ */
 export async function speakingRequest(
   path: string,
   options: RequestOptions,
 ): Promise<unknown> {
-  const send = () =>
-    fetch(path, {
-      method: options.method ?? "GET",
-      headers: {
-        Accept: "application/json",
-        ...(options.json !== undefined
-          ? { "Content-Type": "application/json" }
-          : {}),
-      },
-      body:
-        options.form ??
-        (options.json !== undefined ? JSON.stringify(options.json) : undefined),
-      signal: options.signal,
-      cache: "no-store",
-    });
   let response: Response;
   try {
-    response = await send();
-    if (
-      response.status === 401 &&
-      options.refresh &&
-      !options.signal?.aborted
-    ) {
-      try {
-        await refreshOnce();
-      } catch {
-        throw new SpeakingApiError(401, "Your session has expired.");
-      }
-      response = await send();
-    }
+    response = await fetchWithAuthRefresh(path, {
+      method: options.method ?? "GET",
+      ...(options.json !== undefined ? { json: options.json } : {}),
+      ...(options.form ? { form: options.form } : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
+      refreshOn401: options.refresh !== false,
+    });
   } catch (cause) {
-    if (cause instanceof SpeakingApiError) throw cause;
     if (options.signal?.aborted) throw cause;
+    if (cause instanceof HttpError && cause.status === 401)
+      throw new SpeakingApiError(401, "Your session has expired.");
     throw new SpeakingApiError(502, "Could not connect to the service.");
   }
   if (!response.ok) throw await failure(response, options.fallback);

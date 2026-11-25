@@ -104,7 +104,12 @@ export function parseContent(
     case 4:
       if (
         !isString(value.documentTitle) ||
-        !(value.callerIntro === undefined || isString(value.callerIntro))
+        // DIRECT test items serialize an absent intro as `"callerIntro": null`.
+        !(
+          value.callerIntro === undefined ||
+          value.callerIntro === null ||
+          isString(value.callerIntro)
+        )
       )
         invalid(what);
       return {

@@ -9,15 +9,13 @@ import {
   adminSecondary,
   adminTextarea,
 } from "@/features/admin/components/content/admin-styles";
-import {
-  AdminPanel,
-  AdminWorkspace,
-} from "@/features/admin/components/content/admin-workspace";
+import { AdminPanel } from "@/features/admin/components/content/admin-workspace";
 import {
   createSpeakingExercise,
   updateSpeakingExercise,
 } from "@/features/speaking/admin-api";
 import { SpeakingApiError } from "@/features/speaking/http";
+import { SpeakingWorkspaceDialog } from "./speaking-workspace-dialog";
 import {
   fromSpeakingDraft,
   type SpeakingDraft,
@@ -80,7 +78,7 @@ export function SpeakingExerciseEditor({
     }
   };
   return (
-    <AdminWorkspace
+    <SpeakingWorkspaceDialog
       actions={
         <>
           <button className={adminSecondary} onClick={onClose} type="button">
@@ -207,6 +205,6 @@ export function SpeakingExerciseEditor({
           <ExerciseLivePreview draft={draft} />
         </div>
       </div>
-    </AdminWorkspace>
+    </SpeakingWorkspaceDialog>
   );
 }

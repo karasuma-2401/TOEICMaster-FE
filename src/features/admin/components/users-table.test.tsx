@@ -44,4 +44,25 @@ describe("UsersTable", () => {
     expect(onSelectionChange).toHaveBeenCalledWith("usr-1", true);
     expect(onSort).toHaveBeenCalledWith("fullName");
   });
+
+  it("uses 20px checkboxes inside 44px hit targets and an enabled actions menu", () => {
+    render(
+      <UsersTable
+        users={[user]}
+        selectedIds={new Set()}
+        sort="createdAt:desc"
+        onSelectionChange={vi.fn()}
+        onSelectAll={vi.fn()}
+        onSort={vi.fn()}
+      />,
+    );
+    const checkbox = screen.getByRole("checkbox", {
+      name: "Select Nguyen Minh Anh",
+    });
+    expect(checkbox).toHaveClass("size-5");
+    expect(checkbox.closest("label")).toHaveClass("size-11");
+    expect(
+      screen.getByRole("button", { name: "Actions for Nguyen Minh Anh" }),
+    ).toBeEnabled();
+  });
 });

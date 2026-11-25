@@ -17,7 +17,14 @@ export function useSpeakingAttempt(attemptId: string) {
   const [busy, setBusy] = useState(false);
   const [serverOffset, setServerOffset] = useState(0);
   const [now, setNow] = useState(0);
-  const inFlight = useRef(false);
+  /**
+   * One AbortController per mounted `attemptId`. It is aborted on unmount or
+   * when the hook switches to another attempt, which cancels the in-flight
+   * GET and drops any late response so it cannot overwrite the new attempt.
+   */
+  const lifecycle = useRef<AbortController | null>(null);
+  /** The lifecycle whose refresh is currently in flight (single-flight per attempt). */
+  const inFlight = useRef<AbortController | null>(null);
 
   const accept = useCallback((value: SpeakingAttempt) => {
     setServerOffset(Date.parse(value.serverNowUtc) - Date.now());
@@ -27,22 +34,31 @@ export function useSpeakingAttempt(attemptId: string) {
   }, []);
 
   const refresh = useCallback(async () => {
-    if (inFlight.current) return;
-    inFlight.current = true;
+    const life = lifecycle.current;
+    if (!life || life.signal.aborted || inFlight.current === life) return;
+    inFlight.current = life;
     try {
-      accept(await getSpeakingAttempt(attemptId));
+      const value = await getSpeakingAttempt(attemptId, life.signal);
+      if (!life.signal.aborted) accept(value);
     } catch (cause) {
+      if (life.signal.aborted) return;
       setError(
         cause instanceof Error ? cause.message : "Could not load the attempt.",
       );
     } finally {
-      inFlight.current = false;
+      if (inFlight.current === life) inFlight.current = null;
     }
   }, [accept, attemptId]);
 
   useEffect(() => {
+    const life = new AbortController();
+    lifecycle.current = life;
     const task = window.setTimeout(() => void refresh(), 0);
-    return () => window.clearTimeout(task);
+    return () => {
+      window.clearTimeout(task);
+      life.abort();
+      if (lifecycle.current === life) lifecycle.current = null;
+    };
   }, [refresh]);
 
   const phaseEndsAtUtc = attempt?.phaseEndsAtUtc ?? null;
@@ -57,10 +73,14 @@ export function useSpeakingAttempt(attemptId: string) {
   }, [phaseEndsAtUtc, refresh, serverOffset]);
 
   const skipPhase = useCallback(async () => {
+    const life = lifecycle.current;
     setBusy(true);
     try {
-      accept(await nextSpeakingPhase(attemptId));
+      const value = await nextSpeakingPhase(attemptId);
+      if (life?.signal.aborted) return;
+      accept(value);
     } catch (cause) {
+      if (life?.signal.aborted) return;
       setError(
         cause instanceof Error
           ? cause.message

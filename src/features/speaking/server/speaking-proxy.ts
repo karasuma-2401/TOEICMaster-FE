@@ -3,11 +3,10 @@ import { NextRequest } from "next/server";
 import { problem, sameOrigin } from "@/features/auth/server/backend";
 import { sessionCookie } from "@/features/auth/server/session";
 import {
-  backendBase,
-  readForwardBody,
-  relay,
-  type ForwardBody,
-} from "./upstream";
+  extractForwardedClientHeaders,
+  resolveBackendBaseUrl,
+} from "@/shared/server/bff-proxy";
+import { readForwardBody, relay, type ForwardBody } from "./upstream";
 
 const anonymousCookieName = "toeicmaster_speaking_anonymous";
 const anonymousHeaderName = "X-Speaking-Anonymous-Session";
@@ -77,7 +76,16 @@ export async function forwardSpeaking(
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   if (anonymousSession) headers.set(anonymousHeaderName, anonymousSession);
   if (body.contentType) headers.set("Content-Type", body.contentType);
-  const url = new URL(`/api/v1/speaking/${path}`, backendBase());
+  // Forward the validated client IP so guest evaluations get their own
+  // backend rate-limit bucket instead of sharing the BFF egress IP.
+  for (const [key, value] of Object.entries(
+    extractForwardedClientHeaders(request),
+  ))
+    headers.set(key, value);
+  const base = resolveBackendBaseUrl();
+  if (!base)
+    return problem(503, "Service unavailable. Please try again later.");
+  const url = new URL(`/api/v1/speaking/${path}`, base);
   url.search = new URL(request.url).search;
 
   try {
@@ -86,7 +94,10 @@ export async function forwardSpeaking(
       headers,
       body: body.body,
       cache: "no-store",
-      signal: AbortSignal.timeout(route.upload ? 30_000 : 5_000),
+      signal: AbortSignal.any([
+        request.signal,
+        AbortSignal.timeout(route.upload ? 30_000 : 5_000),
+      ]),
     });
     const response = relay(upstream);
     if (anonymousSession)

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { problem } from "@/features/auth/server/backend";
+import {
+  readBoundedJson,
+  readMultipartStream,
+} from "@/shared/server/bff-proxy";
 
 const binaryTypes = /^(image|audio)\//;
 
@@ -26,9 +30,16 @@ export type ForwardBody =
   | { ok: true; body?: BodyInit; contentType?: string }
   | { ok: false; response: NextResponse };
 
+/** Upper bound for Speaking JSON bodies (admin exercise/test drafts included). */
+export const jsonBodyLimit = 1024 * 1024;
+
 /**
  * Reads a JSON object or a size-limited multipart body for forwarding.
  * `multipart` is the byte limit when the route accepts uploads.
+ *
+ * Both paths stream through the shared bounded readers in
+ * `@/shared/server/bff-proxy`, so an oversized body is cancelled as soon as it
+ * crosses the cap instead of being drained into memory first.
  */
 export async function readForwardBody(
   request: NextRequest,
@@ -41,19 +52,20 @@ export async function readForwardBody(
         ok: false,
         response: problem(400, "File must be sent as multipart form data."),
       };
-    const declared = Number(request.headers.get("content-length") ?? "0");
-    if (declared > multipart)
+    const result = await readMultipartStream(
+      request,
+      multipart,
+      "File exceeds the allowed size limit.",
+    );
+    if (result instanceof Response)
       return {
         ok: false,
-        response: problem(413, "File exceeds the allowed size limit."),
+        response:
+          result instanceof NextResponse
+            ? result
+            : problem(result.status, "Invalid request payload."),
       };
-    const body = await request.arrayBuffer();
-    if (body.byteLength > multipart)
-      return {
-        ok: false,
-        response: problem(413, "File exceeds the allowed size limit."),
-      };
-    return { ok: true, body, contentType };
+    return { ok: true, body: result.body, contentType: result.contentType };
   }
   if (!contentType) return { ok: true };
   if (!contentType.startsWith("application/json"))
@@ -61,7 +73,12 @@ export async function readForwardBody(
       ok: false,
       response: problem(400, "Invalid request payload."),
     };
-  const value: unknown = await request.json().catch(() => null);
+  const parsed = await readBoundedJson(request, jsonBodyLimit, {
+    oversizeMessage: "Request payload exceeds the size limit.",
+    invalidMessage: "Invalid request payload.",
+  });
+  if (!parsed.ok) return { ok: false, response: parsed.response };
+  const value = parsed.data;
   if (!value || typeof value !== "object" || Array.isArray(value))
     return {
       ok: false,
@@ -72,15 +89,4 @@ export async function readForwardBody(
     body: JSON.stringify(value),
     contentType: "application/json",
   };
-}
-
-export function backendBase() {
-  const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
-  if (
-    !["http:", "https:"].includes(base.protocol) ||
-    base.username ||
-    base.password
-  )
-    throw new Error("Invalid API_BASE_URL");
-  return base;
 }

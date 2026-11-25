@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminUsersApiError } from "@/features/admin/api";
 import { toast } from "@/shared/ui/toast";
@@ -24,7 +24,9 @@ vi.mock("@/features/admin/api", async (importOriginal) => {
     await importOriginal<typeof import("@/features/admin/api")>();
   return { ...original, getAdminUsers: vi.fn() };
 });
-vi.mock("@/shared/ui/toast", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@/shared/ui/toast", () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
+}));
 
 import { getAdminUsers } from "@/features/admin/api";
 
@@ -102,6 +104,17 @@ describe("UsersPage", () => {
     );
     expect(
       screen.getByRole("button", { name: "Clear filters" }),
+    ).toBeInTheDocument();
+  });
+
+  it("enables + Add user and opens an accessible dialog", async () => {
+    vi.mocked(getAdminUsers).mockResolvedValue(data);
+    render(<UsersPage />);
+    const add = screen.getByRole("button", { name: "+ Add user" });
+    expect(add).toBeEnabled();
+    fireEvent.click(add);
+    expect(
+      await screen.findByRole("dialog", { name: "Add user" }),
     ).toBeInTheDocument();
   });
 });

@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { refreshSession } from "@/features/auth/api";
 import { assessPronunciation, PronunciationApiError } from "./api";
+
+vi.mock("@/features/auth/api", () => ({
+  refreshSession: vi.fn().mockRejectedValue(new Error("no session")),
+}));
 
 const body = {
   recognitionStatus: "Recognized",
@@ -57,6 +62,21 @@ describe("assessPronunciation", () => {
     expect(error).toBeInstanceOf(PronunciationApiError);
     expect(error.code).toBe(code);
     expect(error.message).not.toMatch(/stack|exception/i);
+  });
+
+  it("refreshes the session once on 401 and retries the upload", async () => {
+    vi.mocked(refreshSession).mockResolvedValueOnce(undefined as never);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { status: 401 }))
+      .mockResolvedValueOnce(Response.json(body));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await assessPronunciation(new Blob(["x"]), "think");
+
+    expect(result.pronunciationScore).toBe(80);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(refreshSession).toHaveBeenCalledTimes(1);
   });
 
   it("reads Retry-After on 429", async () => {

@@ -9,8 +9,6 @@ import { readForwardBody, relay, type ForwardBody } from "./upstream";
 
 /** Part 2 image upload limit: 5 MiB file plus multipart overhead. */
 export const imageUploadLimit = 5 * 1024 * 1024 + 64 * 1024;
-/** Excel test import limit: 16 MiB file plus multipart overhead. */
-export const importUploadLimit = 16 * 1024 * 1024 + 64 * 1024;
 
 type Method = "GET" | "POST" | "PUT" | "DELETE";
 const id = "[0-9a-f-]{36}";
@@ -28,11 +26,6 @@ const routes: { pattern: RegExp; methods: Method[]; uploadLimit?: number }[] = [
   },
   { pattern: new RegExp(`^media/${id}$`, "i"), methods: ["GET"] },
   { pattern: /^tests$/, methods: ["GET", "POST"] },
-  {
-    pattern: /^tests\/import$/,
-    methods: ["POST"],
-    uploadLimit: importUploadLimit,
-  },
   {
     pattern: new RegExp(`^tests/${id}$`, "i"),
     methods: ["GET", "PUT", "DELETE"],

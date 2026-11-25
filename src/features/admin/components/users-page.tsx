@@ -14,6 +14,12 @@ import {
   type AdminUserStatus,
   type AdminUsersResponse,
 } from "@/features/admin/users";
+import {
+  ChangeRoleDialog,
+  ConfirmUserActionDialog,
+  CreateUserDialog,
+  type UserMenuAction,
+} from "./users-dialogs";
 import { UsersStats } from "./users-stats";
 import { UsersToolbar } from "./users-toolbar";
 import { UsersTable } from "./users-table";
@@ -102,6 +108,16 @@ export function UsersPage() {
     key: string;
     error: AdminUsersApiError;
   } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [pending, setPending] = useState<{
+    user: AdminUser;
+    action: UserMenuAction;
+  } | null>(null);
+  const finishAction = useCallback((message: string) => {
+    setPending(null);
+    toast.success(message);
+    setRetry((current) => current + 1);
+  }, []);
   const [selection, setSelection] = useState<{
     queryKey: string;
     ids: Set<string>;
@@ -213,14 +229,37 @@ export function UsersPage() {
         </div>
         <button
           className="h-11 rounded-lg px-4 text-sm font-bold text-white shadow-[var(--admin-action-shadow)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--admin-brand-red)]"
-          disabled
+          onClick={() => setCreating(true)}
           style={{ background: "var(--admin-brand-gradient)" }}
-          title="User creation will be available in the next step"
           type="button"
         >
           + Add user
         </button>
       </div>
+      <CreateUserDialog
+        onClose={() => setCreating(false)}
+        onCreated={(user) => {
+          setCreating(false);
+          finishAction(`Created ${user.fullName}.`);
+        }}
+        open={creating}
+      />
+      {pending?.action === "role" && (
+        <ChangeRoleDialog
+          onClose={() => setPending(null)}
+          onDone={finishAction}
+          user={pending.user}
+        />
+      )}
+      {pending && pending.action !== "role" && (
+        <ConfirmUserActionDialog
+          action={pending.action}
+          key={`${pending.user.id}-${pending.action}`}
+          onClose={() => setPending(null)}
+          onDone={finishAction}
+          user={pending.user}
+        />
+      )}
 
       {response && (
         <UsersStats
@@ -353,6 +392,7 @@ export function UsersPage() {
                 })
               }
               onSort={sortBy}
+              onAction={(user, action) => setPending({ user, action })}
             />
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--admin-border)] px-4 py-3 text-xs text-[var(--admin-muted)] sm:px-5">
               <div className="flex items-center gap-2">

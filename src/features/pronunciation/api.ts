@@ -1,3 +1,4 @@
+import { HttpError, fetchWithAuthRefresh } from "@/shared/api/http";
 import {
   InvalidAssessmentError,
   parseAssessment,
@@ -78,14 +79,21 @@ export async function assessPronunciation(
 
   let response: Response;
   try {
-    response = await fetch("/api/pronunciation/assessments", {
+    // Shared client: on 401 it refreshes the session once (cross-tab lock)
+    // and retries, so an expired access token does not surface as "sign in".
+    response = await fetchWithAuthRefresh("/api/pronunciation/assessments", {
       method: "POST",
-      body: form,
-      cache: "no-store",
-      signal,
+      form,
+      ...(signal ? { signal } : {}),
     });
   } catch (error) {
     if (signal?.aborted) throw error;
+    if (error instanceof HttpError && error.status === 401)
+      throw new PronunciationApiError(
+        "UNAUTHORIZED",
+        "Sign in to get your pronunciation scored.",
+        401,
+      );
     throw new PronunciationApiError(
       "NETWORK",
       "Could not connect to the server. Check your network and try again.",

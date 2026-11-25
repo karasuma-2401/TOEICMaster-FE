@@ -73,6 +73,40 @@ describe("Speaking parsers", () => {
     expect(exercises).toEqual([]);
   });
 
+  it('accepts a DIRECT Part 4 item serialized with "callerIntro": null', () => {
+    const { test } = parseTestDetail(
+      testDetailDto({
+        contentMode: "DIRECT",
+        exercises: [],
+        questions: [
+          {
+            part: 4,
+            sequenceNumber: 1,
+            content: {
+              rubricNotes: "Clear",
+              modelAnswer: "Reference answer",
+              documentTitle: "Conference schedule",
+              documentRows: [{ label: "9:00", value: "Opening" }],
+              callerIntro: null,
+              questions: ["Question one?", "Question two?", "Question three?"],
+              passage: null,
+              imageAssetId: null,
+              imageAlt: null,
+              context: null,
+              prompt: null,
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(test.questions[0].content).toMatchObject({
+      part: 4,
+      documentTitle: "Conference schedule",
+      callerIntro: "",
+    });
+  });
+
   it("reads list part counts keyed by Part number", () => {
     expect(parseTestListItem(testListItemDto()).partCounts).toEqual({
       1: 2,

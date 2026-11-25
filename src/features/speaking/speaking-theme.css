@@ -4,11 +4,17 @@
  */
 .sp-theme {
   --sp-amber: #e89c24;
-  --sp-brand: #df5a28;
-  --sp-brand-flat: #e0602a;
+  /*
+   * Brand text/fills reuse the WCAG AA semantic token (#c93b0b: 5.10:1 on
+   * white, 4.55:1 on --sp-orange-soft). The previous literals (#df5a28 3.73:1,
+   * #e0602a 3.57:1) failed AA behind white CTA text.
+   */
+  --sp-brand: var(--tm-brand, #c93b0b);
+  --sp-brand-flat: var(--tm-brand, #c93b0b);
   --sp-crimson: #a21d1e;
   --sp-crimson-link: #aa1620;
-  --sp-gradient: linear-gradient(90deg, #cc2f20 0%, #e36a22 100%);
+  /* Both stops keep white CTA text >= 4.5:1 (#cc2f20 5.26:1, #c9480f 4.75:1). */
+  --sp-gradient: linear-gradient(90deg, #cc2f20 0%, #c9480f 100%);
   --sp-avatar: linear-gradient(135deg, #e89c24, #df5a28);
   --sp-page: #f5f0eb;
   --sp-surface: #fff;

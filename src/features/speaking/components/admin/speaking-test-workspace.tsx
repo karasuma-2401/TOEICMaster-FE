@@ -7,10 +7,7 @@ import {
   adminSecondary,
   adminTextarea,
 } from "@/features/admin/components/content/admin-styles";
-import {
-  AdminPanel,
-  AdminWorkspace,
-} from "@/features/admin/components/content/admin-workspace";
+import { AdminPanel } from "@/features/admin/components/content/admin-workspace";
 import {
   createSpeakingTest,
   cloneSpeakingTest,
@@ -39,6 +36,7 @@ import {
 } from "@/features/speaking/types";
 import { AdminLoadState, errorMessage } from "./admin-load-state";
 import { PublishChecklistPanel } from "./publish-checklist-panel";
+import { SpeakingWorkspaceDialog } from "./speaking-workspace-dialog";
 import { SpeakingExerciseFields } from "./speaking-exercise-fields";
 import { TestInfoPanel } from "./test-info-panel";
 import { ExercisePickerPanel } from "./exercise-picker-panel";
@@ -458,7 +456,7 @@ export function SpeakingTestWorkspace({
   };
 
   return (
-    <AdminWorkspace
+    <SpeakingWorkspaceDialog
       actions={
         <>
           <button
@@ -819,6 +817,6 @@ export function SpeakingTestWorkspace({
           </div>
         </div>
       )}
-    </AdminWorkspace>
+    </SpeakingWorkspaceDialog>
   );
 }

@@ -5,6 +5,7 @@ import {
   type AdminUserSortField,
   type SortDirection,
 } from "@/features/admin/users";
+import { UserActionsMenu, type UserMenuAction } from "./users-dialogs";
 import { UserRoleChip } from "./user-role-chip";
 import { UserStatusChip } from "./user-status-chip";
 
@@ -15,6 +16,7 @@ interface UsersTableProps {
   onSelectionChange: (id: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
   onSort: (field: AdminUserSortField) => void;
+  onAction?: (user: AdminUser, action: UserMenuAction) => void;
 }
 
 const columns: { label: string; field?: AdminUserSortField }[] = [
@@ -32,6 +34,7 @@ export function UsersTable({
   onSelectionChange,
   onSelectAll,
   onSort,
+  onAction,
 }: UsersTableProps) {
   const allSelected =
     users.length > 0 && users.every((user) => selectedIds.has(user.id));
@@ -50,12 +53,12 @@ export function UsersTable({
               className="w-12 px-4 py-3"
               scope="col"
             >
-              <label className="inline-flex cursor-pointer items-center">
+              <label className="-m-3 inline-flex size-11 cursor-pointer items-center justify-center">
                 <span className="sr-only">Select all users on page</span>
                 <input
                   aria-label="Select all users on page"
                   checked={allSelected}
-                  className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+                  className="size-5 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                   onChange={(event) => onSelectAll(event.target.checked)}
                   type="checkbox"
                 />
@@ -105,12 +108,12 @@ export function UsersTable({
               key={user.id}
             >
               <td aria-label={`Select ${user.fullName}`} className="px-4 py-4">
-                <label className="inline-flex cursor-pointer items-center">
+                <label className="-m-3 inline-flex size-11 cursor-pointer items-center justify-center">
                   <span className="sr-only">Select {user.fullName}</span>
                   <input
                     aria-label={`Select ${user.fullName}`}
                     checked={selectedIds.has(user.id)}
-                    className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+                    className="size-5 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                     onChange={(event) =>
                       onSelectionChange(user.id, event.target.checked)
                     }
@@ -149,15 +152,10 @@ export function UsersTable({
                 {formatAdminUserDate(user.createdAt)}
               </td>
               <td className="px-4 py-3 text-right">
-                <button
-                  aria-label={`Actions for ${user.fullName}`}
-                  className="size-9 rounded-lg text-lg text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)] hover:text-[var(--admin-ink)] focus-visible:outline-2 focus-visible:outline-[var(--admin-brand-red)]"
-                  disabled
-                  title="Detailed actions will be available in the next step"
-                  type="button"
-                >
-                  •••
-                </button>
+                <UserActionsMenu
+                  onSelect={(action) => onAction?.(user, action)}
+                  user={user}
+                />
               </td>
             </tr>
           ))}

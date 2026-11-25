@@ -30,8 +30,11 @@ export function SpeakingExerciseTable({
   onEdit: (exercise: SpeakingExercise) => void;
   onArchive: (exercise: SpeakingExercise) => void;
 }) {
+  // `relative` makes this scroll box the containing block of absolutely
+  // positioned descendants (e.g. the sr-only "Actions" header), so they are
+  // clipped here instead of widening the whole page on mobile (HIGH-17).
   return (
-    <div className="overflow-x-auto">
+    <div className="relative min-w-0 overflow-x-auto">
       <table className="w-full min-w-[900px] text-left text-sm">
         <thead className="bg-(--sp-subtle)">
           <tr>
