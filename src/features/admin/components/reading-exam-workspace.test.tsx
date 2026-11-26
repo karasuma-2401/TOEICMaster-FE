@@ -15,6 +15,8 @@ vi.mock("next/link", () => ({
     </a>
   ),
 }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/features/admin/audio-metadata", () => ({
   readAudioDurationMs: vi.fn(),
 }));
@@ -24,6 +26,7 @@ vi.mock("@/features/admin/exam-api", async (importOriginal) => {
   return {
     ...original,
     getReadingRevision: vi.fn(),
+    forkReadingRevision: vi.fn(),
     createMediaUploadIntent: vi.fn(),
     uploadFileToMediaIntent: vi.fn(),
     completeMediaUploadIntent: vi.fn(),
@@ -35,6 +38,7 @@ import {
   completeMediaUploadIntent,
   createMediaUploadIntent,
   getReadingRevision,
+  forkReadingRevision,
   uploadFileToMediaIntent,
 } from "@/features/admin/exam-api";
 import type { ReadingRevision } from "@/features/admin/exam-management";
@@ -131,6 +135,46 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("ReadingExamWorkspace presigned media & durationMs", () => {
+  it("forks a published revision and opens its new draft", async () => {
+    vi.mocked(getReadingRevision).mockResolvedValue({
+      ...makeRevision(),
+      status: "Published",
+    });
+    vi.mocked(forkReadingRevision).mockResolvedValue({
+      examId: EXAM_ID,
+      revisionId: "55555555-5555-4555-8555-555555555555",
+      code: "LR-2026-01",
+      title: "ETS 2026 Test 01",
+      versionNumber: 2,
+      status: "Draft",
+      questionCount: 200,
+    });
+    render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Create new draft" }),
+    );
+    await waitFor(() =>
+      expect(forkReadingRevision).toHaveBeenCalledWith(EXAM_ID, REVISION_ID),
+    );
+    expect(push).toHaveBeenCalledWith(
+      `/admin/exams/reading/${EXAM_ID}/55555555-5555-4555-8555-555555555555`,
+    );
+  });
+
+  it("shows superseded revisions as read only", async () => {
+    vi.mocked(getReadingRevision).mockResolvedValue({
+      ...makeRevision(),
+      status: "Superseded",
+    });
+    render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
+    await screen.findByText("Superseded");
+    expect(
+      screen.getByRole("button", { name: "Save question" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Create new draft" }),
+    ).not.toBeInTheDocument();
+  });
   it("displays per-block and total Listening duration and removes legacy master-audio UI", async () => {
     render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
 

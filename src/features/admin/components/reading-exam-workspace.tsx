@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
 import { readAudioDurationMs } from "@/features/admin/audio-metadata";
 import {
   completeMediaUploadIntent,
   createMediaUploadIntent,
+  forkReadingRevision,
   getReadingRevision,
   publishReadingRevision,
   updateReadingContexts,
@@ -75,6 +77,7 @@ export function ReadingExamWorkspace({
   examId: string;
   revisionId: string;
 }) {
+  const router = useRouter();
   const [revision, setRevision] = useState<ReadingRevision | null>(null);
   const [selectedNumber, setSelectedNumber] = useState(1);
   const [draft, setDraft] = useState<QuestionDraft | null>(null);
@@ -90,6 +93,7 @@ export function ReadingExamWorkspace({
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [forking, setForking] = useState(false);
 
   const requestKey = `${examId}:${revisionId}:${retry}`;
   const loading = completedRequestKey !== requestKey;
@@ -324,6 +328,21 @@ export function ReadingExamWorkspace({
     }
   }
 
+  async function fork() {
+    setForking(true);
+    setNotice(null);
+    try {
+      const draft = await forkReadingRevision(examId, revisionId);
+      router.push(`/admin/exams/reading/${draft.examId}/${draft.revisionId}`);
+    } catch (reason) {
+      setNotice(
+        reason instanceof Error ? reason.message : "Unable to create draft.",
+      );
+    } finally {
+      setForking(false);
+    }
+  }
+
   if (loading)
     return (
       <div
@@ -357,6 +376,7 @@ export function ReadingExamWorkspace({
     0,
   );
   const isPublished = revision.status === "Published";
+  const isReadOnly = revision.status !== "Draft";
   const listeningBlocks = revision.blocks.filter(
     (block) => block.part >= 1 && block.part <= 4,
   );
@@ -396,7 +416,7 @@ export function ReadingExamWorkspace({
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-bold ${isPublished ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
             >
-              {isPublished ? "Published" : "Draft"}
+              {revision.status}
             </span>
           </div>
           <h1 className="mt-2 text-2xl font-bold text-[var(--admin-ink)]">
@@ -408,9 +428,19 @@ export function ReadingExamWorkspace({
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2 lg:mt-0">
+          {isPublished && (
+            <button
+              className="h-10 rounded-lg border border-[var(--admin-border)] bg-white px-4 text-sm font-bold text-[var(--admin-ink-soft)] disabled:opacity-50"
+              disabled={forking}
+              onClick={() => void fork()}
+              type="button"
+            >
+              {forking ? "Creating..." : "Create new draft"}
+            </button>
+          )}
           <button
             className="h-10 rounded-lg border border-[var(--admin-border)] bg-white px-4 text-sm font-bold text-[var(--admin-ink-soft)] disabled:opacity-50"
-            disabled={isPublished || saving}
+            disabled={isReadOnly || saving}
             onClick={() => void saveQuestion()}
             type="button"
           >
@@ -418,7 +448,7 @@ export function ReadingExamWorkspace({
           </button>
           <button
             className="admin-primary-action h-10 rounded-lg px-4 text-sm font-bold"
-            disabled={isPublished || publishing || !mediaReady}
+            disabled={isReadOnly || publishing || !mediaReady}
             onClick={() => void publish()}
             title={
               mediaReady
@@ -495,7 +525,7 @@ export function ReadingExamWorkspace({
                       <input
                         accept="audio/mpeg,audio/wav,.mp3,.wav"
                         className="sr-only"
-                        disabled={isPublished || saving}
+                        disabled={isReadOnly || saving}
                         onChange={(event) =>
                           void chooseAudioGroup(block.key, event)
                         }
@@ -520,7 +550,7 @@ export function ReadingExamWorkspace({
               block={selected.block}
               contextDrafts={contextDrafts}
               draft={draft}
-              disabled={isPublished || saving}
+              disabled={isReadOnly || saving}
               question={selected.question}
               onChange={setDraft}
               onContextChange={(contexts) =>

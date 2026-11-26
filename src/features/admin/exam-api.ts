@@ -211,6 +211,20 @@ export async function createReadingExam(
   return value;
 }
 
+export async function forkReadingRevision(
+  examId: string,
+  sourceRevisionId: string,
+): Promise<ReadingDraft> {
+  const value = await request<unknown>(
+    `/api/admin/exams/${encodeURIComponent(examId)}/revisions`,
+    "POST",
+    { sourceRevisionId },
+  );
+  if (!isReadingDraft(value))
+    throw new AdminExamApiError(502, "Invalid forked Reading revision data.");
+  return value;
+}
+
 export async function importReadingExam(workbook: File): Promise<ReadingDraft> {
   const formData = new FormData();
   formData.set("workbook", workbook);
