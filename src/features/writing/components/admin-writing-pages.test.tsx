@@ -9,10 +9,11 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 import { AdminWritingContentPage } from "./admin-writing-pages";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn() }));
+const mocks = vi.hoisted(() => ({ list: vi.fn(), archive: vi.fn() }));
 vi.mock("@/features/writing/admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/writing/admin-api")>()),
   listWritingExercises: mocks.list,
+  archiveWritingExercise: mocks.archive,
 }));
 vi.mock("@/features/admin/components/content/content-tabs", () => ({
   ContentTabs: () => null,
@@ -68,4 +69,42 @@ it("locks a dedicated workspace to its route Part", async () => {
   expect(
     screen.queryByRole("button", { name: /Part 1/i }),
   ).not.toBeInTheDocument();
+});
+
+it("confirms exercise archiving with an accessible ConfirmDialog instead of window.confirm", async () => {
+  mocks.list.mockResolvedValue({
+    items: [
+      {
+        id: "exercise-1",
+        part: 1,
+        code: "WP1-01",
+        topic: "Office",
+        difficulty: "EASY",
+        status: "PUBLISHED",
+        imageAssetId: "asset-1",
+        imageAlt: "A person at a desk",
+        keywordOne: "person",
+        keywordTwo: "desk",
+        version: 3,
+        updatedAtUtc: "2026-01-01T00:00:00Z",
+      },
+    ],
+    totalCount: 1,
+  });
+  mocks.archive.mockResolvedValue(undefined);
+  render(<AdminWritingContentPage />);
+
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Archive" }, { timeout: 10000 }),
+  );
+  expect(
+    screen.getByRole("dialog", { name: "Archive WP1-01?" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("confirm-dialog-cancel"));
+  expect(mocks.archive).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+  fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
+  await screen.findByText("Exercise archived.");
+  expect(mocks.archive).toHaveBeenCalledWith("exercise-1", 3);
 });

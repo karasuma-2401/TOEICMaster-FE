@@ -14,6 +14,7 @@ export interface BffProxyRouteConfig {
   bodyMode?: BffBodyMode;
   maxBodyBytes?: number;
   timeoutMs?: number;
+  extraHeaders?: Record<string, string>;
   missingBaseUrlMessage?: string;
   unreachableMessage?: string;
   timeoutMessage?: string;
@@ -545,6 +546,11 @@ export async function forwardBffRequest(
     extractForwardedClientHeaders(request),
   )) {
     headers.set(key, value);
+  }
+  if (config.extraHeaders) {
+    for (const [key, value] of Object.entries(config.extraHeaders)) {
+      headers.set(key, value);
+    }
   }
 
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;

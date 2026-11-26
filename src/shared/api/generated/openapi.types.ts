@@ -17,16 +17,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
                     };
                 };
             };
@@ -564,16 +557,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        workbook: string;
                     };
                 };
             };
@@ -1499,16 +1485,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -1627,16 +1606,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -2196,7 +2168,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "multipart/form-data": {
-                        file?: components["schemas"]["IFormFile"];
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -3499,16 +3472,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -3563,16 +3529,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -3660,16 +3619,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -4015,16 +3967,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -4110,16 +4055,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -7054,16 +6992,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
                     };
                 };
             };
@@ -7146,6 +7077,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         post: {
@@ -7181,6 +7123,17 @@ export interface paths {
                         "text/plain": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -7208,11 +7161,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "multipart/form-data": {
-                        file?: components["schemas"]["IFormFile"];
-                    } & {
-                        referenceText?: string;
-                    } & {
+                        /** Format: binary */
+                        file?: string;
                         locale?: string;
+                        referenceText?: string;
                     };
                 };
             };
@@ -7530,6 +7482,17 @@ export interface paths {
                         "text/plain": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -7640,10 +7603,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "multipart/form-data": {
-                        file?: components["schemas"]["IFormFile"];
-                    } & {
                         /** Format: int32 */
-                        durationSeconds?: number;
+                        durationSeconds?: null | number;
+                        /** Format: binary */
+                        file?: string;
                     };
                 };
             };
@@ -7683,6 +7646,17 @@ export interface paths {
                 };
                 /** @description Payload Too Large */
                 413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8189,16 +8163,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        ContentDisposition?: string;
-                        ContentType?: string;
-                        FileName?: string;
-                        Headers?: {
-                            [key: string]: string[];
-                        };
-                        /** Format: int64 */
-                        Length?: number;
-                        Name?: string;
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
                     };
                 };
             };
@@ -8281,6 +8248,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         post: {
@@ -8314,6 +8292,17 @@ export interface paths {
                         "application/json": components["schemas"]["ValidationProblemDetails"];
                         "text/json": components["schemas"]["ValidationProblemDetails"];
                         "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
                     };
                 };
             };

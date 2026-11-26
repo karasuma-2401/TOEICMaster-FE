@@ -226,6 +226,10 @@ it("restores focus to the Submit button when the submit ConfirmDialog is dismiss
   render(<WritingAttemptPlaceholder attemptId="attempt-1" />);
 
   const submitBtn = await screen.findByRole("button", { name: "Submit" });
+  const answer = screen.getByLabelText("Your response");
+  expect(answer).toHaveAccessibleDescription(
+    /pasting and drag-and-drop are disabled/i,
+  );
   await user.click(submitBtn);
 
   await screen.findByRole("dialog", {

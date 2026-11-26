@@ -34,6 +34,13 @@ import {
   type WritingTestDto,
   type WritingTestInput,
 } from "@/features/writing/admin-api";
+import {
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { AdminWritingPrompt } from "./admin-writing-prompt";
 
 type Part = 1 | 2 | 3;
@@ -366,18 +373,24 @@ function TestBuilder({
     }
   };
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
-      <dialog
-        open
-        aria-label="Writing test builder"
-        aria-modal="true"
-        className="relative m-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="flex flex-col p-0"
+        closeLabel="Close"
+        size="xl"
+        variant="drawer"
       >
-        <header className="flex justify-between border-b border-[var(--admin-border)] p-5">
+        <DialogTitle className="sr-only">Writing test builder</DialogTitle>
+        <DialogDescription className="sr-only">
+          Create or edit a standalone Writing test with 8 questions.
+        </DialogDescription>
+        <header className="border-b border-[var(--admin-border)] p-5 pr-14">
           <h2 className="text-xl font-bold">Writing Test Builder · 5/2/1</h2>
-          <button onClick={onClose} type="button" aria-label="Close">
-            ×
-          </button>
         </header>
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
           <label className="block text-sm font-semibold">
@@ -568,8 +581,8 @@ function TestBuilder({
             Save and publish
           </button>
         </footer>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -584,33 +597,33 @@ function TestPreview({
     (a, b) => a.part - b.part || a.sequenceNumber - b.sequenceNumber,
   );
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
-      <dialog
-        open
-        aria-label="Writing test details"
-        aria-modal="true"
-        className="relative m-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl"
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="flex flex-col p-0"
+        closeLabel="Close test details"
+        size="xl"
+        variant="drawer"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--admin-border)] p-6">
-          <div>
-            <p className="text-xs font-bold text-[var(--admin-brand-red)]">
-              {test.code} · {testStatusLabel[test.status]}
-            </p>
-            <h2 className="mt-1 text-xl font-bold">{test.title}</h2>
-            {test.description && (
-              <p className="mt-2 whitespace-pre-line text-sm text-[var(--admin-muted)]">
-                {test.description}
-              </p>
-            )}
-          </div>
-          <button
-            aria-label="Close test details"
-            className="rounded-lg p-2 hover:bg-slate-100"
-            onClick={onClose}
-            type="button"
+        <DialogTitle className="sr-only">Writing test details</DialogTitle>
+        <header className="border-b border-[var(--admin-border)] p-6 pr-14">
+          <p className="text-xs font-bold text-[var(--admin-brand-red)]">
+            {test.code} · {testStatusLabel[test.status]}
+          </p>
+          <h2 className="mt-1 text-xl font-bold">{test.title}</h2>
+          <DialogDescription
+            className={
+              test.description
+                ? "mt-2 whitespace-pre-line text-sm text-[var(--admin-muted)]"
+                : "sr-only"
+            }
           >
-            ×
-          </button>
+            {test.description || `Writing test ${test.code} question preview.`}
+          </DialogDescription>
         </header>
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
           {questions.length === 0 && (
@@ -648,8 +661,8 @@ function TestPreview({
             Close
           </button>
         </footer>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -666,6 +679,13 @@ export function AdminWritingTestsLive() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    test: WritingTestDto;
+    action: "delete" | "archive" | "restore";
+    title: string;
+    confirmation: string;
+    confirmLabel: string;
+  } | null>(null);
   const load = useCallback(
     async (signal?: AbortSignal) => {
       setLoading(true);
@@ -724,7 +744,7 @@ export function AdminWritingTestsLive() {
       setError(cause instanceof Error ? cause.message : "Could not load test.");
     }
   };
-  const changeStatus = async (test: WritingTestDto) => {
+  const requestStatusChange = (test: WritingTestDto) => {
     const action =
       test.status === "DRAFT"
         ? "delete"
@@ -737,7 +757,24 @@ export function AdminWritingTestsLive() {
         : action === "archive"
           ? `Archive test ${test.code}? Learners will not be able to start new attempts; history and in-progress attempts are preserved.`
           : `Restore test ${test.code}? The test will become visible to learners again.`;
-    if (!window.confirm(confirmation)) return;
+    const title =
+      action === "delete"
+        ? `Delete draft test ${test.code}?`
+        : action === "archive"
+          ? `Archive test ${test.code}?`
+          : `Restore test ${test.code}?`;
+    const confirmLabel =
+      action === "delete"
+        ? "Delete"
+        : action === "archive"
+          ? "Archive"
+          : "Restore";
+    setConfirmAction({ test, action, title, confirmation, confirmLabel });
+  };
+  const executeStatusChange = async () => {
+    if (!confirmAction) return;
+    const { test, action } = confirmAction;
+    setConfirmAction(null);
     setPendingId(test.id);
     setError("");
     setNotice("");
@@ -880,7 +917,7 @@ export function AdminWritingTestsLive() {
                   <button
                     className="font-semibold text-red-700 disabled:opacity-40"
                     disabled={pendingId !== null}
-                    onClick={() => void changeStatus(test)}
+                    onClick={() => requestStatusChange(test)}
                     type="button"
                   >
                     {test.status === "DRAFT"
@@ -940,6 +977,17 @@ export function AdminWritingTestsLive() {
             setNotice("Writing test imported as a draft.");
             void load();
           }}
+        />
+      )}
+      {confirmAction && (
+        <ConfirmDialog
+          cancelLabel="Cancel"
+          confirmLabel={confirmAction.confirmLabel}
+          description={confirmAction.confirmation}
+          destructive={confirmAction.action !== "restore"}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={() => void executeStatusChange()}
+          title={confirmAction.title}
         />
       )}
     </div>

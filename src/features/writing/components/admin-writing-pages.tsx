@@ -26,6 +26,13 @@ import {
 import { AdminPartRouteTabs } from "@/features/admin/components/content/admin-part-route-tabs";
 import { ContentTabs } from "@/features/admin/components/content/content-tabs";
 import type { WritingDifficulty, WritingPart } from "@/features/writing/types";
+import {
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { AdminWritingPrompt } from "./admin-writing-prompt";
 
 const parts: WritingPart[] = [1, 2, 3];
@@ -281,28 +288,29 @@ function Drawer({
     </label>
   );
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/40">
-      <dialog
-        aria-label="Writing exercise form"
-        aria-modal="true"
-        className="relative m-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl"
-        open
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="flex flex-col p-0"
+        closeLabel="Close exercise form"
+        size="lg"
+        variant="drawer"
       >
-        <header className="flex justify-between border-b border-[var(--admin-border)] p-6">
+        <DialogTitle className="sr-only">Writing exercise form</DialogTitle>
+        <DialogDescription className="sr-only">
+          Create or edit a Writing Part {draft.part} exercise.
+        </DialogDescription>
+        <header className="flex justify-between border-b border-[var(--admin-border)] p-6 pr-14">
           <div>
             <p className="text-xs font-bold text-[var(--admin-brand-red)]">
               WRITING PART {draft.part}
             </p>
             <h2 className="mt-1 text-xl font-bold">Edit or add exercise</h2>
           </div>
-          <button
-            aria-label="Close exercise form"
-            className="rounded-lg p-2 hover:bg-slate-100"
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
         </header>
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -430,8 +438,8 @@ function Drawer({
             {saving ? "Saving…" : "Save exercise"}
           </button>
         </footer>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -443,23 +451,27 @@ function Preview({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
-      <dialog
-        aria-label="Preview exercise"
-        aria-modal="true"
-        className="relative m-0 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
-        open
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="max-w-xl rounded-2xl p-6"
+        closeLabel="Close preview"
+        size="lg"
+        variant="modal"
       >
-        <div className="flex justify-between">
-          <div>
-            <p className="text-xs font-bold text-[var(--admin-brand-red)]">
-              USER VIEW · PART {question.part}
-            </p>
-            <h2 className="mt-1 text-xl font-bold">{question.code}</h2>
-          </div>
-          <button aria-label="Close preview" onClick={onClose} type="button">
-            ×
-          </button>
+        <DialogTitle className="sr-only">Preview exercise</DialogTitle>
+        <DialogDescription className="sr-only">
+          Preview of Writing Part {question.part} exercise {question.code}.
+        </DialogDescription>
+        <div className="pr-10">
+          <p className="text-xs font-bold text-[var(--admin-brand-red)]">
+            USER VIEW · PART {question.part}
+          </p>
+          <h2 className="mt-1 text-xl font-bold">{question.code}</h2>
         </div>
         <div className="mt-5 rounded-xl bg-[var(--admin-surface-muted)] p-5">
           <AdminWritingPrompt question={question} />
@@ -472,8 +484,8 @@ function Preview({
         >
           Close
         </button>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -524,23 +536,24 @@ function ImportDialog({
     }
   };
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/40 p-4">
-      <dialog
-        aria-label="Import Writing Excel"
-        aria-modal="true"
-        className="relative m-0 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-        open
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="max-w-xl rounded-2xl p-0"
+        closeLabel="Close import"
+        size="lg"
+        variant="modal"
       >
-        <header className="flex justify-between border-b border-[var(--admin-border)] p-6">
-          <div>
-            <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
-            <p className="mt-1 text-sm text-[var(--admin-muted)]">
-              Each Part uses its own Excel structure.
-            </p>
-          </div>
-          <button aria-label="Close import" onClick={onClose} type="button">
-            ×
-          </button>
+        <DialogTitle className="sr-only">Import Writing Excel</DialogTitle>
+        <header className="border-b border-[var(--admin-border)] p-6 pr-14">
+          <h2 className="text-xl font-bold">Import Writing Part {part}</h2>
+          <DialogDescription className="mt-1 text-sm text-[var(--admin-muted)]">
+            Each Part uses its own Excel structure.
+          </DialogDescription>
         </header>
         <div className="p-6">
           <p className="mb-3 text-xs text-[var(--admin-muted)]">
@@ -686,8 +699,8 @@ function ImportDialog({
             Import exercises
           </button>
         </footer>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -708,6 +721,8 @@ export function AdminWritingContentPage({
   const [drawer, setDrawer] = useState<Draft | null>(null);
   const [preview, setPreview] = useState<AdminWritingQuestion | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [archiving, setArchiving] = useState<AdminWritingQuestion | null>(null);
+  const [archiveBusy, setArchiveBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [items, setItems] = useState<AdminWritingQuestion[]>([]);
   const [total, setTotal] = useState(0);
@@ -928,25 +943,7 @@ export function AdminWritingContentPage({
                       <button
                         className="min-h-9 rounded-md px-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-700"
                         onClick={() => {
-                          if (
-                            question.version &&
-                            window.confirm(`Archive ${question.code}?`)
-                          )
-                            void archiveWritingExercise(
-                              question.id,
-                              question.version,
-                            )
-                              .then(() => {
-                                setRevision((v) => v + 1);
-                                setNotice("Exercise archived.");
-                              })
-                              .catch((cause: unknown) =>
-                                setLoadError(
-                                  cause instanceof Error
-                                    ? cause.message
-                                    : "Could not archive exercise.",
-                                ),
-                              );
+                          if (question.version) setArchiving(question);
                         }}
                         type="button"
                       >
@@ -1034,6 +1031,38 @@ export function AdminWritingContentPage({
             setNotice("Exercises imported successfully.");
           }}
           part={filter.part}
+        />
+      )}
+      {archiving && (
+        <ConfirmDialog
+          cancelLabel="Cancel"
+          confirmDisabled={archiveBusy}
+          confirmLabel={archiveBusy ? "Archiving…" : "Archive"}
+          description="This exercise will be moved to Archived status."
+          destructive
+          onCancel={() => {
+            if (!archiveBusy) setArchiving(null);
+          }}
+          onConfirm={() => {
+            if (!archiving.version) return;
+            setArchiveBusy(true);
+            void archiveWritingExercise(archiving.id, archiving.version)
+              .then(() => {
+                setArchiving(null);
+                setRevision((v) => v + 1);
+                setNotice("Exercise archived.");
+              })
+              .catch((cause: unknown) => {
+                setArchiving(null);
+                setLoadError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Could not archive exercise.",
+                );
+              })
+              .finally(() => setArchiveBusy(false));
+          }}
+          title={`Archive ${archiving.code}?`}
         />
       )}
     </div>

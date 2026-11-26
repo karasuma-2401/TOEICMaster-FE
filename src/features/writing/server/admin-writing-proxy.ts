@@ -1,20 +1,13 @@
 import { NextRequest } from "next/server";
-import {
-  backendFetch,
-  problem,
-  sameOrigin,
-} from "@/features/auth/server/backend";
-import { sessionCookie } from "@/features/auth/server/session";
-import {
-  readForwardBody,
-  relay,
-  type ForwardBody,
-} from "@/features/speaking/server/upstream";
+import { problem } from "@/features/auth/server/backend";
+import { forwardBffRequest } from "@/shared/server/bff-proxy";
 
 /** Part 1 image upload limit: 5 MiB file plus multipart overhead. */
 export const imageUploadLimit = 5 * 1024 * 1024 + 64 * 1024;
 /** Excel import limit: 10 MiB file plus multipart overhead. */
 export const importUploadLimit = 10 * 1024 * 1024 + 64 * 1024;
+/** JSON write payload cap for admin Writing endpoints. */
+export const jsonBodyLimit = 1024 * 1024;
 
 type Method = "GET" | "POST" | "PUT" | "DELETE";
 const id = "[0-9a-f-]{36}";
@@ -75,36 +68,24 @@ export async function forwardAdminWriting(
   const route = routes.find((item) => item.pattern.test(path));
   if (!route || !route.methods.includes(method))
     return problem(404, "Writing admin API not found.");
-  if (method !== "GET" && !sameOrigin(request))
-    return problem(403, "Invalid request.");
-
-  const session = sessionCookie(request);
-  if (!session || Date.parse(session.refreshTokenExpiresAtUtc) <= Date.now())
-    return problem(401, "Invalid or expired session.");
-  const role = (session as typeof session & { role?: unknown }).role;
-  if (role !== "ADMIN")
-    return problem(403, "You do not have permission to access this feature.");
-
-  const body: ForwardBody =
-    method === "GET" || method === "DELETE"
-      ? { ok: true }
-      : await readForwardBody(request, route.uploadLimit ?? null);
-  if (!body.ok) return body.response;
 
   const search = new URL(request.url).search;
-  try {
-    const upstream = await backendFetch(
-      `/api/v1/admin/writing/${path}${search}`,
-      session.accessToken,
-      {
-        method,
-        headers: body.contentType ? { "Content-Type": body.contentType } : {},
-        body: body.body,
-        signal: AbortSignal.timeout(route.uploadLimit ? 30_000 : 5_000),
-      },
-    );
-    return relay(upstream);
-  } catch {
-    return problem(502, "Service is unavailable. Please try again later.");
-  }
+  const isMultipart = route.uploadLimit !== undefined;
+  const bodyMode =
+    method === "GET" || method === "DELETE"
+      ? "none"
+      : isMultipart
+        ? "multipart"
+        : "optional-json";
+
+  return forwardBffRequest(request, {
+    upstreamPath: `/api/v1/admin/writing/${path}${search}`,
+    method,
+    auth: "admin",
+    bodyMode,
+    maxBodyBytes: route.uploadLimit ?? jsonBodyLimit,
+    timeoutMs: isMultipart ? 30_000 : 10_000,
+    oversizeMessage: "File exceeds the allowed size limit.",
+    unreachableMessage: "Service is unavailable. Please try again later.",
+  });
 }
