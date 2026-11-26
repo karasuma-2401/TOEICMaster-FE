@@ -161,11 +161,12 @@ export function writeFlashcardStore(
 
 export function readFlashcardBestTime(
   deckId: string,
+  pairCount: number,
   userId: string | null,
 ): number | null {
   const raw = readScopedStorage(
     { namespace: FLASHCARD_NAMESPACE, userId },
-    `match-best:${deckId}`,
+    `match-best:${deckId}:p${pairCount}`,
   );
   if (!raw) return null;
   const parsed = Number(raw);
@@ -174,13 +175,14 @@ export function readFlashcardBestTime(
 
 export function writeFlashcardBestTime(
   deckId: string,
+  pairCount: number,
   milliseconds: number,
   userId: string | null,
 ): void {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) return;
   writeScopedStorage(
     { namespace: FLASHCARD_NAMESPACE, userId },
-    `match-best:${deckId}`,
+    `match-best:${deckId}:p${pairCount}`,
     String(milliseconds),
   );
 }

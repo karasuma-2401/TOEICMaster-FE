@@ -40,6 +40,7 @@ export function GoogleSignIn({
   const [loaded, setLoaded] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
+  const [buttonWidth, setButtonWidth] = useState(350);
   const rememberMeRef = useRef(rememberMe);
   const enabledRef = useRef(enabled);
   useEffect(() => {
@@ -48,6 +49,24 @@ export function GoogleSignIn({
   useEffect(() => {
     enabledRef.current = enabled;
   }, [enabled]);
+
+  useEffect(() => {
+    const element = container.current;
+    if (!element) return;
+    const measure = () => {
+      const measured =
+        element.getBoundingClientRect().width || element.clientWidth;
+      if (measured > 0) {
+        const clamped = Math.min(350, Math.floor(measured));
+        setButtonWidth((prev) => (prev === clamped ? prev : clamped));
+      }
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [enabled, clientId]);
 
   useEffect(() => {
     if (
@@ -86,41 +105,48 @@ export function GoogleSignIn({
       theme: "outline",
       size: "large",
       text: "continue_with",
-      width: 350,
+      width: buttonWidth,
       locale: "en",
     });
-  }, [clientId, enabled, loaded, returnTo, router]);
+  }, [buttonWidth, clientId, enabled, loaded, returnTo, router]);
 
   if (!enabled)
     return (
-      <p className="mt-4 text-center text-xs text-[#938b87]">
+      <p className="mt-4 text-center text-xs text-[var(--tm-ink-subtle)]">
         Please agree to the terms of use to continue with Google.
       </p>
     );
 
   if (!clientId)
     return (
-      <p className="mt-4 text-center text-xs text-[#938b87]">
+      <p className="mt-4 text-center text-xs text-[var(--tm-ink-subtle)]">
         Google sign-in is not configured.
       </p>
     );
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 w-full">
       <Script
         onReady={() => setLoaded(true)}
         onError={() => setError("Unable to load Google sign-in.")}
-        src="https://accounts.google.com/gsi/client"
+        src="https://accounts.google.com/gsi/client?hl=en"
         strategy="afterInteractive"
       />
       <div
         aria-label="Sign in with Google"
-        className="flex justify-center"
+        className="mx-auto flex w-full max-w-[350px] justify-center overflow-hidden"
         ref={container}
       />
-      {pending && <p className="mt-2 text-center text-xs">Signing in...</p>}
+      {pending && (
+        <p className="mt-2 text-center text-xs text-[var(--tm-ink-muted)]">
+          Signing in...
+        </p>
+      )}
       {error && (
-        <p className="mt-2 text-center text-xs text-red-600" role="alert">
+        <p
+          className="mt-2 text-center text-xs text-[var(--tm-danger)]"
+          role="alert"
+        >
           {error}
         </p>
       )}

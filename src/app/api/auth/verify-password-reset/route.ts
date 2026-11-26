@@ -3,7 +3,7 @@ import {
   postAuth,
   problem,
   rateLimited,
-  readBody,
+  readBoundedBody,
   sameOrigin,
   upstreamProblem,
 } from "@/features/auth/server/backend";
@@ -29,8 +29,10 @@ function isVerification(value: unknown): value is {
 
 export async function POST(request: NextRequest) {
   if (!sameOrigin(request)) return problem(403, "Invalid request.");
-  const body = await readBody(request);
-  if (!body) return problem(400, "Invalid verification data.");
+  const bodyResult = await readBoundedBody(request);
+  if (!bodyResult.ok)
+    return bodyResult.response ?? problem(400, "Invalid verification data.");
+  const body = bodyResult.data;
 
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const code = typeof body.code === "string" ? body.code : "";
@@ -43,7 +45,11 @@ export async function POST(request: NextRequest) {
     return problem(400, "Invalid verification data.", errors);
 
   try {
-    const upstream = await postAuth("verify-password-reset", { email, code });
+    const upstream = await postAuth(
+      "verify-password-reset",
+      { email, code },
+      request,
+    );
     if (upstream.status === 200) {
       const result: unknown = await upstream.json().catch(() => null);
       if (!isVerification(result))

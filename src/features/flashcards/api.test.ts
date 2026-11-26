@@ -1,5 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { isServerGuid, parseDeck, parseProgress, parseWorkspace } from "./api";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  FlashcardsApiError,
+  getFlashcardWorkspace,
+  isServerGuid,
+  parseDeck,
+  parseProgress,
+  parseWorkspace,
+} from "./api";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("flashcards api parsers", () => {
   it("validates GUID strings accurately", () => {
@@ -68,5 +79,48 @@ describe("flashcards api parsers", () => {
   it("rejects malformed deck or progress payloads", () => {
     expect(() => parseDeck(null)).toThrow();
     expect(() => parseProgress("bad")).toThrow();
+  });
+});
+
+describe("flashcards API cancellation and errors", () => {
+  it("rethrows the original AbortError when a workspace fetch is cancelled", async () => {
+    const controller = new AbortController();
+    const abortError = new DOMException("Caller cancelled", "AbortError");
+    const fetchMock = vi.fn<typeof fetch>(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(abortError), {
+            once: true,
+          });
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const pending = getFlashcardWorkspace(controller.signal);
+    controller.abort();
+
+    await expect(pending).rejects.toBe(abortError);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/flashcards/decks",
+      expect.objectContaining({ signal: controller.signal }),
+    );
+  });
+
+  it("preserves Error-shaped AbortError without an explicit signal", async () => {
+    const abortError = new Error("Caller cancelled");
+    abortError.name = "AbortError";
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(abortError));
+
+    await expect(getFlashcardWorkspace()).rejects.toBe(abortError);
+  });
+
+  it("still converts network errors to FlashcardsApiError", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Offline")));
+
+    await expect(getFlashcardWorkspace()).rejects.toBeInstanceOf(
+      FlashcardsApiError,
+    );
+    await expect(getFlashcardWorkspace()).rejects.toMatchObject({
+      status: 502,
+    });
   });
 });

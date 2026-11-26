@@ -20,48 +20,51 @@ export function FlashcardWordList({
   const { supported: speechSupported, speak } = useWordSpeech();
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[#ece9e5] bg-white">
+    <div className="overflow-hidden rounded-[20px] border border-[var(--tm-border)] bg-[var(--tm-surface)]">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-[#ece9e5] bg-[#faf7f5] text-xs font-semibold text-[#5f5953]">
+            <tr className="border-b border-[var(--tm-border)] bg-[var(--tm-page)] text-xs font-semibold text-[var(--tm-ink-muted)]">
               <th className="px-5 py-3.5">Term &amp; Pronunciation</th>
               <th className="px-5 py-3.5">Meaning &amp; Example</th>
               <th className="px-5 py-3.5">Status</th>
               <th className="px-4 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#ece9e5]">
+          <tbody className="divide-y divide-[var(--tm-border)]">
             {cards.map((card) => {
               const status = getCardStatus(progress, card.id);
               const starred = isCardStarred(progress, card.id);
               return (
-                <tr className="transition hover:bg-[#fbf9f8]" key={card.id}>
+                <tr
+                  className="transition hover:bg-[var(--tm-page)]"
+                  key={card.id}
+                >
                   <td className="px-5 py-4 align-top">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-[15px] font-bold text-[#2b2724]">
+                      <span className="text-[15px] font-bold text-[var(--tm-ink)]">
                         {card.term}
                       </span>
-                      <span className="text-xs italic text-[#5f5953]">
+                      <span className="text-xs italic text-[var(--tm-ink-muted)]">
                         {card.partOfSpeech}
                       </span>
                     </div>
                     {card.phonetic && (
-                      <p className="sp-mono mt-0.5 text-xs text-[#5f5953]">
+                      <p className="sp-mono mt-0.5 text-xs text-[var(--tm-ink-muted)]">
                         {card.phonetic}
                       </p>
                     )}
-                    <span className="mt-1.5 inline-block rounded bg-[#fbf0e6] px-2 py-0.5 text-[11px] font-semibold text-[#df5a28]">
+                    <span className="mt-1.5 inline-block rounded bg-[var(--tm-brand-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--tm-brand)]">
                       {card.toeicPart} · {card.level}
                     </span>
                   </td>
 
                   <td className="max-w-md px-5 py-4 align-top">
-                    <p className="font-semibold text-[#2b2724]">
+                    <p className="font-semibold text-[var(--tm-ink)]" lang="vi">
                       {card.meaningVi}
                     </p>
                     {card.exampleEn && (
-                      <p className="mt-1 text-xs leading-relaxed text-[#5f5953]">
+                      <p className="mt-1 text-xs leading-relaxed text-[var(--tm-ink-muted)]">
                         {card.exampleEn}
                       </p>
                     )}
@@ -70,7 +73,7 @@ export function FlashcardWordList({
                   <td className="px-5 py-4 align-top">
                     <select
                       aria-label={`Mastery status for ${card.term}`}
-                      className={`min-h-9 cursor-pointer rounded-lg border border-[#dacfc5] bg-white px-2.5 text-xs font-semibold text-[#2b2724] ${focusRing}`}
+                      className={`min-h-9 cursor-pointer rounded-lg border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-2.5 text-xs font-semibold text-[var(--tm-ink)] ${focusRing}`}
                       onChange={(e) =>
                         onRateCard(card.id, e.target.value as CardMastery)
                       }
@@ -88,7 +91,7 @@ export function FlashcardWordList({
                       {speechSupported && (
                         <button
                           aria-label={`Listen to pronunciation of ${card.term}`}
-                          className={`grid size-8 cursor-pointer place-items-center rounded-lg border border-[#ece9e5] text-[#5f5953] transition hover:border-[#df5a28] hover:text-[#df5a28] ${focusRing}`}
+                          className={`grid size-9 cursor-pointer place-items-center rounded-lg border border-[var(--tm-border)] text-[var(--tm-ink-muted)] transition hover:border-[var(--tm-brand)] hover:text-[var(--tm-brand)] ${focusRing}`}
                           onClick={() => speak(card.term)}
                           type="button"
                         >
@@ -100,10 +103,10 @@ export function FlashcardWordList({
                           starred ? `Unstar ${card.term}` : `Star ${card.term}`
                         }
                         aria-pressed={starred}
-                        className={`grid size-8 cursor-pointer place-items-center rounded-lg border transition ${focusRing} ${
+                        className={`grid size-9 cursor-pointer place-items-center rounded-lg border transition ${focusRing} ${
                           starred
-                            ? "border-[#d9a43a] bg-[#fbf3c8] text-[#a16207]"
-                            : "border-[#ece9e5] text-[#948d86] hover:border-[#dacfc5] hover:text-[#2b2724]"
+                            ? "border-[var(--tm-warning)]/50 bg-[var(--tm-warning-soft)] text-[var(--tm-warning)]"
+                            : "border-[var(--tm-border)] text-[var(--tm-ink-muted)] hover:border-[var(--tm-border-strong)] hover:text-[var(--tm-ink)]"
                         }`}
                         onClick={() => onToggleStar(card.id)}
                         type="button"

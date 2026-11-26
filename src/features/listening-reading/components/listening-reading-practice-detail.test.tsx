@@ -97,4 +97,45 @@ describe("ListeningReadingPracticeDetail", () => {
       );
     });
   });
+
+  it("uses WCAG AA --tm-* semantic tokens instead of slate-400/500 or bg-blue-600", async () => {
+    mockedGetDetail.mockResolvedValue({
+      id: "item-1",
+      part: 5,
+      kind: "single",
+      code: "P5-001",
+      topic: "Grammar",
+      difficulty: null,
+      context: null,
+      audioUrl: null,
+      imageUrl: null,
+      questions: [
+        {
+          id: "q-1",
+          ordinal: 1,
+          code: "Q1",
+          prompt: "Sample question",
+          optionA: "Option A",
+          optionB: "Option B",
+          optionC: null,
+          optionD: null,
+        },
+      ],
+    });
+
+    const { container } = render(
+      <ListeningReadingPracticeDetail
+        skill="reading"
+        part="5"
+        itemId="item-1"
+      />,
+    );
+
+    expect(await screen.findByText("Sample question")).toBeInTheDocument();
+    const submitBtn = screen.getByRole("button", { name: "Submit" });
+    expect(submitBtn.className).toContain("bg-[var(--tm-brand)]");
+    expect(container.innerHTML).not.toContain("text-slate-400");
+    expect(container.innerHTML).not.toContain("text-slate-500");
+    expect(container.innerHTML).not.toContain("bg-blue-600");
+  });
 });

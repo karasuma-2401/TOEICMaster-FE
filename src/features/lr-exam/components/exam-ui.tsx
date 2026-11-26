@@ -4,20 +4,20 @@ import type { LrPassage } from "../types";
 import { UserMenu } from "@/features/user/components/user-menu";
 
 export const focusRing =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5a1f]";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]";
 
-export const primaryButton = `inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-5 text-[13px] font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
+export const primaryButton = `inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#c92e1c] to-[#e04810] px-5 text-[13px] font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
 
-export const secondaryButton = `inline-flex h-11 items-center justify-center rounded-xl border border-[#d9d2ce] bg-white px-5 text-[13px] font-semibold text-[#4c4542] transition hover:bg-[#faf7f5] ${focusRing}`;
+export const secondaryButton = `inline-flex h-11 items-center justify-center rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-5 text-[13px] font-semibold text-[var(--tm-ink-soft)] transition hover:bg-[var(--tm-page)] ${focusRing}`;
 
 type PillTone = "brand" | "success" | "danger" | "warning" | "muted";
 
 const pillTones: Record<PillTone, string> = {
-  brand: "bg-[#fff7ed] text-[#ff5a1f]",
-  success: "bg-[#e5f4ec] text-[#398565]",
-  danger: "bg-[#fee2e2] text-[#dc2626]",
-  warning: "bg-[#fef3c7] text-[#d97706]",
-  muted: "bg-[#faf7f5] text-[#77716e]",
+  brand: "bg-[var(--tm-brand-soft)] text-[var(--tm-brand)]",
+  success: "bg-[var(--tm-success-soft)] text-[var(--tm-success)]",
+  danger: "bg-[var(--tm-danger-soft)] text-[var(--tm-danger)]",
+  warning: "bg-[var(--tm-warning-soft)] text-[var(--tm-warning)]",
+  muted: "bg-[var(--tm-page)] text-[var(--tm-ink-muted)]",
 };
 
 export function Pill({
@@ -45,10 +45,12 @@ export function ExamBrand() {
     >
       <span aria-hidden="true" className="flex items-start gap-[3px]">
         <span className="h-7 w-2 rounded-lg bg-[#ff9d00]" />
-        <span className="h-7 w-2 rounded-lg bg-[#ff5a1f]" />
+        <span className="h-7 w-2 rounded-lg bg-[var(--tm-brand-accent)]" />
         <span className="h-7 w-2 rounded-lg bg-[#be1718]" />
       </span>
-      <span className="text-xl font-bold text-[#302c2a]">TOEICMaster</span>
+      <span className="text-xl font-bold text-[var(--tm-ink)]">
+        TOEICMaster
+      </span>
     </Link>
   );
 }
@@ -56,14 +58,22 @@ export function ExamBrand() {
 /** Learner navigation used by the instructions and score report screens. */
 export function LearnerNav() {
   return (
-    <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-8 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-2 sm:px-8">
+    <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-8 gap-y-2 border-b border-[var(--tm-border)] bg-[var(--tm-surface)] px-4 py-2 sm:px-8">
       <ExamBrand />
       <nav
         aria-label="Main navigation"
         className="flex items-center gap-8 text-[13px]"
       >
-        <span className="text-[#4c4542]">Practice by Part</span>
-        <span aria-current="page" className="font-semibold text-[#ff5a1f]">
+        <Link
+          className={`text-[var(--tm-ink-soft)] transition hover:text-[var(--tm-brand)] ${focusRing}`}
+          href="/listening-reading"
+        >
+          Practice by Part
+        </Link>
+        <span
+          aria-current="page"
+          className="font-semibold text-[var(--tm-brand)]"
+        >
           ETS Mock Tests
         </span>
       </nav>
@@ -128,7 +138,7 @@ const iconPaths: Record<IconName, ReactNode> = {
 export function ExamIcon({
   name,
   className = "size-5",
-  color = "#ff5a1f",
+  color = "var(--tm-brand)",
 }: {
   name: IconName;
   className?: string;
@@ -152,11 +162,13 @@ export function ExamIcon({
 
 export function PassageCard({ passage }: { passage: LrPassage }) {
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-[#eee9e6] bg-white p-8">
+    <article className="flex min-w-0 flex-col gap-4 rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-surface)] p-6 sm:p-8">
       <Pill>{passage.label}</Pill>
-      <h2 className="text-lg font-semibold">{passage.title}</h2>
+      <h2 className="text-lg font-semibold text-[var(--tm-ink)]">
+        {passage.title}
+      </h2>
       {passage.meta ? (
-        <p className="text-[11px] whitespace-pre-wrap text-[#77716e]">
+        <p className="text-[11px] whitespace-pre-wrap text-[var(--tm-ink-muted)]">
           {passage.meta}
         </p>
       ) : null}
@@ -178,10 +190,12 @@ export function PassageCard({ passage }: { passage: LrPassage }) {
           </div>
         ) : paragraph.evidence ? (
           <p
-            className="rounded-lg border border-[#ff5a1f] bg-[#fef08a] p-3 text-[15px]"
+            className="rounded-lg border border-[var(--tm-brand)] bg-[#fef08a] p-3 text-[15px] text-[var(--tm-ink)]"
             key={paragraph.text}
           >
-            <mark className="bg-transparent">{paragraph.text}</mark>
+            <mark className="bg-transparent text-[var(--tm-ink)]">
+              {paragraph.text}
+            </mark>
           </p>
         ) : (
           <p className="text-[15px]" key={paragraph.text}>

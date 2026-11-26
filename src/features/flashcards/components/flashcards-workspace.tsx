@@ -16,12 +16,13 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   focusRing,
   primaryAction,
   secondaryAction,
 } from "@/shared/components/practice/styles";
+import { ConfirmDialog } from "@/shared/components/ui/dialog";
 import {
   addFlashcardCardApi,
   createFlashcardDeckApi,
@@ -82,6 +83,10 @@ export function FlashcardsWorkspace({
   const [store, setStore] = useState<FlashcardStoreState>(
     EMPTY_FLASHCARD_STORE,
   );
+  const storeRef = useRef(store);
+  const progressRef = useRef(store.progress);
+  const progressRequestsRef = useRef(new Map<string, symbol>());
+
   const [serverDecks, setServerDecks] = useState<FlashcardDeck[] | null>(null);
   const [matchRecords, setMatchRecords] = useState<Record<string, MatchRecord>>(
     {},
@@ -98,55 +103,76 @@ export function FlashcardsWorkspace({
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [addCardDialogOpen, setAddCardDialogOpen] = useState(false);
+  const [pendingDeleteDeck, setPendingDeleteDeck] =
+    useState<FlashcardDeck | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+  const persistStore = useCallback(
+    (updater: (prev: FlashcardStoreState) => FlashcardStoreState) => {
+      const next = updater(storeRef.current);
+      storeRef.current = next;
+      progressRef.current = next.progress;
+      setStore(next);
+      writeFlashcardStore(next, userId);
+    },
+    [userId],
+  );
 
   useEffect(() => {
-    const localState = readFlashcardStore(userId);
-    setStore(localState);
-    setServerDecks(null);
-    setMatchRecords({});
-    setSyncMode("loading");
-    setHydrated(true);
-
-    let cancelled = false;
+    const controller = new AbortController();
+    const progressRequests = progressRequestsRef.current;
+    progressRequests.clear();
     void (async () => {
+      await Promise.resolve();
+      if (controller.signal.aborted) return;
+      const localState = readFlashcardStore(userId);
+      persistStore(() => localState);
+      setServerDecks(null);
+      setMatchRecords({});
+      setSyncMode("loading");
+      setHydrated(true);
       try {
-        const remote = await getFlashcardWorkspace();
-        if (cancelled) return;
-        if (remote.decks.length > 0) {
-          setServerDecks(remote.decks);
-        }
-        if (Object.keys(remote.matchRecords).length > 0) {
-          setMatchRecords(remote.matchRecords);
-        }
-        if (Object.keys(remote.progress).length > 0) {
-          setStore((prev) => ({
-            ...prev,
-            progress: { ...prev.progress, ...remote.progress },
-          }));
-        }
+        const remote = await getFlashcardWorkspace(controller.signal);
+        if (controller.signal.aborted) return;
+        setServerDecks(remote.decks);
+        setMatchRecords(remote.matchRecords);
+        persistStore((prev) => {
+          const progress =
+            userId === null
+              ? { ...prev.progress, ...remote.progress }
+              : { ...remote.progress };
+          for (const cardId of progressRequests.keys()) {
+            const current = prev.progress[cardId];
+            if (current) progress[cardId] = current;
+          }
+          return { ...prev, progress };
+        });
         setSyncMode("synced");
       } catch {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setSyncMode("local");
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      controller.abort();
+      progressRequests.clear();
     };
-  }, [userId]);
+  }, [persistStore, userId]);
 
-  const persistStore = useCallback(
-    (updater: (prev: FlashcardStoreState) => FlashcardStoreState) => {
-      setStore((prev) => {
-        const next = updater(prev);
-        writeFlashcardStore(next, userId);
-        return next;
-      });
-    },
-    [userId],
-  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setSelectedSlug(params.get("deck"));
+      setStudyMode("flip");
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const allDecks = useMemo(() => {
     if (serverDecks && serverDecks.length > 0) {
@@ -192,31 +218,53 @@ export function FlashcardsWorkspace({
     });
   }, [allDecks, categoryFilter, searchQuery]);
 
-  const syncDeckUrl = (slug: string | null) => {
+  const syncDeckUrl = useCallback((slug: string | null) => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
+    if (url.searchParams.get("deck") === slug) return;
     if (slug) {
       url.searchParams.set("deck", slug);
     } else {
       url.searchParams.delete("deck");
     }
-    window.history.replaceState({}, "", url.toString());
-  };
+    window.history.pushState({ deck: slug }, "", url.toString());
+  }, []);
 
-  const openDeck = (slug: string) => {
-    setSelectedSlug(slug);
-    setStudyMode("flip");
-    syncDeckUrl(slug);
-  };
+  const openDeck = useCallback(
+    (slug: string) => {
+      setSelectedSlug(slug);
+      setStudyMode("flip");
+      syncDeckUrl(slug);
+    },
+    [syncDeckUrl],
+  );
 
-  const closeDeck = () => {
+  const closeDeck = useCallback(() => {
     setSelectedSlug(null);
     syncDeckUrl(null);
-  };
+  }, [syncDeckUrl]);
+
+  const saveCardProgress = useCallback(
+    (cardId: string, status: CardMastery, starred: boolean) => {
+      if (!isServerGuid(cardId) || !userId) return;
+      const request = Symbol();
+      progressRequestsRef.current.set(cardId, request);
+      void upsertFlashcardProgressApi(cardId, status, starred)
+        .then((saved) => {
+          if (progressRequestsRef.current.get(cardId) !== request) return;
+          persistStore((prev) => ({
+            ...prev,
+            progress: { ...prev.progress, [cardId]: saved },
+          }));
+        })
+        .catch(() => {});
+    },
+    [persistStore, userId],
+  );
 
   const handleRateCard = useCallback(
     (cardId: string, status: CardMastery) => {
-      const currentStarred = store.progress[cardId]?.starred ?? false;
+      const currentStarred = progressRef.current[cardId]?.starred ?? false;
       persistStore((prev) => {
         const current = prev.progress[cardId];
         return {
@@ -233,26 +281,15 @@ export function FlashcardsWorkspace({
         };
       });
 
-      if (isServerGuid(cardId)) {
-        void upsertFlashcardProgressApi(cardId, status, currentStarred)
-          .then((saved) => {
-            setStore((prev) => ({
-              ...prev,
-              progress: { ...prev.progress, [cardId]: saved },
-            }));
-          })
-          .catch(() => {
-            // Keep optimistic localStorage state for guests or offline sessions.
-          });
-      }
+      saveCardProgress(cardId, status, currentStarred);
     },
-    [persistStore, store.progress],
+    [persistStore, saveCardProgress],
   );
 
   const handleToggleStar = useCallback(
     (cardId: string) => {
-      const currentStatus = store.progress[cardId]?.status ?? "new";
-      const nextStarred = !(store.progress[cardId]?.starred ?? false);
+      const currentStatus = progressRef.current[cardId]?.status ?? "new";
+      const nextStarred = !(progressRef.current[cardId]?.starred ?? false);
 
       persistStore((prev) => {
         const current = prev.progress[cardId];
@@ -270,54 +307,42 @@ export function FlashcardsWorkspace({
         };
       });
 
-      if (isServerGuid(cardId)) {
-        void upsertFlashcardProgressApi(cardId, currentStatus, nextStarred)
-          .then((saved) => {
-            setStore((prev) => ({
-              ...prev,
-              progress: { ...prev.progress, [cardId]: saved },
-            }));
-          })
-          .catch(() => {
-            // Keep optimistic localStorage state for guests or offline sessions.
-          });
-      }
+      saveCardProgress(cardId, currentStatus, nextStarred);
     },
-    [persistStore, store.progress],
+    [persistStore, saveCardProgress],
   );
 
   const handleCreateDeck = useCallback(
-    (deck: FlashcardDeck) => {
-      void createFlashcardDeckApi({
-        title: deck.title,
-        description: deck.description,
-        cards: deck.cards.map((card) => ({
-          term: card.term,
-          phonetic: card.phonetic,
-          partOfSpeech: card.partOfSpeech,
-          meaningVi: card.meaningVi,
-          exampleEn: card.exampleEn,
-          exampleVi: card.exampleVi,
-          collocations: [...card.collocations],
-          toeicPart: card.toeicPart,
-          level: card.level,
-        })),
-      })
-        .then((created) => {
-          setServerDecks((prev) => (prev ? [created, ...prev] : [created]));
-          setSyncMode("synced");
-          openDeck(created.slug);
-        })
-        .catch(() => {
-          persistStore((prev) => ({
-            ...prev,
-            customDecks: [deck, ...prev.customDecks],
-          }));
-          openDeck(deck.slug);
+    async (deck: FlashcardDeck) => {
+      if (userId) {
+        const created = await createFlashcardDeckApi({
+          title: deck.title,
+          description: deck.description,
+          cards: deck.cards.map((card) => ({
+            term: card.term,
+            phonetic: card.phonetic,
+            partOfSpeech: card.partOfSpeech,
+            meaningVi: card.meaningVi,
+            exampleEn: card.exampleEn,
+            exampleVi: card.exampleVi,
+            collocations: [...card.collocations],
+            toeicPart: card.toeicPart,
+            level: card.level,
+          })),
         });
+        setServerDecks((prev) => (prev ? [created, ...prev] : [created]));
+        setSyncMode("synced");
+        openDeck(created.slug);
+        return;
+      }
+
+      persistStore((prev) => ({
+        ...prev,
+        customDecks: [deck, ...prev.customDecks],
+      }));
+      openDeck(deck.slug);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [persistStore],
+    [openDeck, persistStore, userId],
   );
 
   const handleAddCardToDeck = useCallback(
@@ -335,19 +360,15 @@ export function FlashcardsWorkspace({
       });
 
       if (isServerGuid(deck.id)) {
-        try {
-          const createdCard = await addFlashcardCardApi(deck.id, payload);
-          setServerDecks((prev) =>
-            prev
-              ? prev.map((item) =>
-                  item.id === deck.id ? appendCard(item, createdCard) : item,
-                )
-              : prev,
-          );
-          return;
-        } catch {
-          // Fall back to local persistence if offline or unauthenticated.
-        }
+        const createdCard = await addFlashcardCardApi(deck.id, payload);
+        setServerDecks((prev) =>
+          prev
+            ? prev.map((item) =>
+                item.id === deck.id ? appendCard(item, createdCard) : item,
+              )
+            : prev,
+        );
+        return;
       }
 
       const localCard: FlashcardItem = {
@@ -369,55 +390,78 @@ export function FlashcardsWorkspace({
           item.id === deck.id ? appendCard(item, localCard) : item,
         ),
       }));
-      setServerDecks((prev) =>
-        prev
-          ? prev.map((item) =>
-              item.id === deck.id ? appendCard(item, localCard) : item,
-            )
-          : prev,
-      );
     },
     [persistStore],
   );
 
-  const handleDeleteCustomDeck = useCallback(
-    (deckId: string) => {
+  const requestDeleteCustomDeck = useCallback(
+    (deck: FlashcardDeck, trigger: HTMLButtonElement | null) => {
+      deleteTriggerRef.current = trigger;
+      setDeleteError(null);
+      setPendingDeleteDeck(deck);
+    },
+    [],
+  );
+
+  const cancelDeleteCustomDeck = useCallback(() => {
+    if (deleting) return;
+    setPendingDeleteDeck(null);
+    setDeleteError(null);
+    window.requestAnimationFrame(() => {
+      deleteTriggerRef.current?.focus();
+    });
+  }, [deleting]);
+
+  const confirmDeleteCustomDeck = useCallback(async () => {
+    if (!pendingDeleteDeck || deleting) return;
+    const target = pendingDeleteDeck;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      if (isServerGuid(target.id)) {
+        await deleteFlashcardDeckApi(target.id);
+      }
       persistStore((prev) => ({
         ...prev,
-        customDecks: prev.customDecks.filter((deck) => deck.id !== deckId),
+        customDecks: prev.customDecks.filter((deck) => deck.id !== target.id),
       }));
       setServerDecks((prev) =>
-        prev ? prev.filter((deck) => deck.id !== deckId) : prev,
+        prev ? prev.filter((deck) => deck.id !== target.id) : prev,
       );
-      if (activeDeck?.id === deckId) {
+      if (activeDeck?.id === target.id) {
         closeDeck();
       }
-      if (isServerGuid(deckId)) {
-        void deleteFlashcardDeckApi(deckId).catch(() => {
-          // Already removed locally.
-        });
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeDeck?.id, persistStore],
-  );
+      setPendingDeleteDeck(null);
+    } catch (cause) {
+      setDeleteError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not delete this deck. Please try again.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }, [activeDeck, closeDeck, deleting, pendingDeleteDeck, persistStore]);
 
   const handleRecordMatchRun = useCallback(
     (deckId: string, elapsedMs: number, maxCombo: number) => {
-      if (!isServerGuid(deckId)) return;
+      if (!isServerGuid(deckId) || !userId) return;
       void recordFlashcardMatchApi(deckId, elapsedMs, maxCombo)
         .then((saved) => {
           setMatchRecords((prev) => ({ ...prev, [deckId]: saved }));
         })
         .catch(() => {
-          // Keep localStorage best time fallback for guests or offline sessions.
+          // Keep localStorage best time fallback for offline sessions.
         });
     },
-    [],
+    [userId],
   );
 
   const handleResetDeckProgress = useCallback(
     (deck: FlashcardDeck) => {
+      for (const card of deck.cards) {
+        progressRequestsRef.current.delete(card.id);
+      }
       persistStore((prev) => {
         const nextProgress = { ...prev.progress };
         for (const card of deck.cards) {
@@ -428,23 +472,23 @@ export function FlashcardsWorkspace({
           progress: nextProgress,
         };
       });
-      if (isServerGuid(deck.id)) {
+      if (isServerGuid(deck.id) && userId) {
         void resetFlashcardDeckProgressApi(deck.id).catch(() => {
           // Already reset locally.
         });
       }
     },
-    [persistStore],
+    [persistStore, userId],
   );
 
   if (activeDeck) {
     const deckSummary = summarizeDeckProgress(activeDeck.cards, store.progress);
     return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#ece9e5] pb-5">
+      <div className="min-w-0 space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--tm-border)] pb-5">
           <div className="min-w-0 space-y-2">
             <button
-              className={`inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[#5f5953] transition hover:text-[#df5a28] ${focusRing}`}
+              className={`inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[var(--tm-ink-muted)] transition hover:text-[var(--tm-brand)] ${focusRing}`}
               onClick={closeDeck}
               type="button"
             >
@@ -452,30 +496,30 @@ export function FlashcardsWorkspace({
               All Flashcard Decks
             </button>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl font-bold tracking-tight text-[#2b2724] sm:text-3xl">
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--tm-ink)] sm:text-3xl">
                 {activeDeck.title}
               </h1>
               <span className="sp-chip sp-chip-orange">
                 {FLASHCARD_CATEGORY_LABELS[activeDeck.category]}
               </span>
             </div>
-            <p className="max-w-2xl text-sm text-[#5f5953]">
+            <p className="max-w-2xl text-sm text-[var(--tm-ink-muted)]">
               {activeDeck.description}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-3 rounded-xl border border-[#ece9e5] bg-[#faf7f5] px-4 py-2.5 text-xs">
+            <div className="flex items-center gap-3 rounded-xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-4 py-2.5 text-xs">
               <div>
-                <span className="text-[#5f5953]">Mastered</span>
-                <p className="sp-mono text-base font-bold text-[#3f7a52]">
+                <span className="text-[var(--tm-ink-muted)]">Mastered</span>
+                <p className="sp-mono text-base font-bold text-[var(--tm-success)]">
                   {deckSummary.mastered}/{deckSummary.total}
                 </p>
               </div>
-              <div className="h-7 w-px bg-[#dacfc5]" />
+              <div className="h-7 w-px bg-[var(--tm-border-strong)]" />
               <div>
-                <span className="text-[#5f5953]">Needs review</span>
-                <p className="sp-mono text-base font-bold text-[#a16207]">
+                <span className="text-[var(--tm-ink-muted)]">Needs review</span>
+                <p className="sp-mono text-base font-bold text-[var(--tm-warning)]">
                   {deckSummary.review + deckSummary.learning}
                 </p>
               </div>
@@ -509,7 +553,7 @@ export function FlashcardsWorkspace({
         {/* Mode switcher */}
         <div
           aria-label="Deck study modes"
-          className="inline-flex flex-wrap gap-1 rounded-xl border border-[#ece9e5] bg-[#f4f1ee] p-1"
+          className="inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-[var(--tm-border)] bg-[var(--tm-surface-muted)] p-1"
           role="tablist"
         >
           {(
@@ -531,8 +575,8 @@ export function FlashcardsWorkspace({
                 aria-selected={active}
                 className={`inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-4 text-sm font-semibold transition ${focusRing} ${
                   active
-                    ? "bg-white text-[#df5a28] shadow-xs"
-                    : "text-[#5f5953] hover:text-[#2b2724]"
+                    ? "bg-[var(--tm-surface)] text-[var(--tm-brand)] shadow-xs"
+                    : "text-[var(--tm-ink-muted)] hover:text-[var(--tm-ink)]"
                 }`}
                 key={tab.key}
                 onClick={() => setStudyMode(tab.key)}
@@ -605,12 +649,12 @@ export function FlashcardsWorkspace({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8">
       {/* Header & progress summary */}
-      <section className="flex flex-wrap items-end justify-between gap-6 border-b border-[#ece9e5] pb-7">
-        <div className="max-w-2xl space-y-2.5">
+      <section className="flex flex-wrap items-end justify-between gap-6 border-b border-[var(--tm-border)] pb-7">
+        <div className="min-w-0 max-w-2xl space-y-2.5">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-[#2b2724] sm:text-4xl">
+            <h1 className="text-3xl font-bold tracking-tight text-[var(--tm-ink)] sm:text-4xl">
               TOEIC Vocabulary Flashcards
             </h1>
             {syncMode !== "loading" && (
@@ -635,7 +679,7 @@ export function FlashcardsWorkspace({
               </span>
             )}
           </div>
-          <p className="text-[15px] leading-relaxed text-[#5f5953]">
+          <p className="text-[15px] leading-relaxed text-[var(--tm-ink-muted)]">
             Review essential TOEIC workplace vocabulary by topic with 3D flip
             cards, clear pronunciation, speed matching, and quick reinforcement
             quizzes. Progress syncs automatically when you sign in.
@@ -643,20 +687,24 @@ export function FlashcardsWorkspace({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-4 rounded-2xl border border-[#ece9e5] bg-[#fdf7ed] px-5 py-3">
+          <div className="flex items-center gap-4 rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-brand-soft)] px-5 py-3">
             <div>
-              <p className="text-xs font-medium text-[#5f5953]">Mastered</p>
-              <p className="sp-mono text-xl font-bold text-[#3f7a52]">
+              <p className="text-xs font-medium text-[var(--tm-ink-muted)]">
+                Mastered
+              </p>
+              <p className="sp-mono text-xl font-bold text-[var(--tm-success)]">
                 {hydrated ? overallSummary.mastered : 0}
-                <span className="text-sm font-normal text-[#948d86]">
+                <span className="text-sm font-normal text-[var(--tm-ink-muted)]">
                   /{overallSummary.total}
                 </span>
               </p>
             </div>
             <div className="h-8 w-px bg-[#e9c6a4]" />
             <div>
-              <p className="text-xs font-medium text-[#5f5953]">Needs review</p>
-              <p className="sp-mono text-xl font-bold text-[#a16207]">
+              <p className="text-xs font-medium text-[var(--tm-ink-muted)]">
+                Needs review
+              </p>
+              <p className="sp-mono text-xl font-bold text-[var(--tm-warning)]">
                 {hydrated ? overallSummary.review + overallSummary.learning : 0}
               </p>
             </div>
@@ -674,9 +722,9 @@ export function FlashcardsWorkspace({
       </section>
 
       {/* Search & Category filters */}
-      <section className="space-y-4">
+      <section className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <fieldset className="flex flex-wrap gap-1.5 border-0 p-0">
+          <fieldset className="flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
             <legend className="sr-only">Filter decks by category</legend>
             {CATEGORY_FILTER_ORDER.map((category) => {
               const active = categoryFilter === category;
@@ -689,8 +737,8 @@ export function FlashcardsWorkspace({
                   aria-pressed={active}
                   className={`min-h-9 cursor-pointer rounded-full border px-3.5 text-xs font-semibold transition ${focusRing} ${
                     active
-                      ? "border-[#df5a28] bg-[#fff1ea] text-[#df5a28]"
-                      : "border-[#ece9e5] bg-white text-[#5f5953] hover:border-[#dacfc5] hover:text-[#2b2724]"
+                      ? "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)]"
+                      : "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)] hover:border-[var(--tm-border-strong)] hover:text-[var(--tm-ink)]"
                   }`}
                   key={category}
                   onClick={() => setCategoryFilter(category)}
@@ -702,16 +750,16 @@ export function FlashcardsWorkspace({
             })}
           </fieldset>
 
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full min-w-0 sm:w-72">
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#948d86]"
+              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--tm-ink-muted)]"
             />
             <input
               aria-label="Search decks or vocabulary"
               className="sp-input min-h-10 pl-10"
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search topics or vocabulary..."
+              placeholder="Search topics or vocabulary…"
               type="search"
               value={searchQuery}
             />
@@ -720,13 +768,13 @@ export function FlashcardsWorkspace({
 
         {/* Deck grid */}
         {filteredDecks.length === 0 ? (
-          <div className="rounded-2xl border border-[#ece9e5] bg-[#faf7f5] px-6 py-12 text-center">
-            <p className="text-base font-semibold text-[#2b2724]">
+          <div className="rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-page)] px-6 py-12 text-center">
+            <p className="text-base font-semibold text-[var(--tm-ink)]">
               {categoryFilter === "custom"
                 ? "You haven't created any custom decks yet"
                 : "No matching decks found"}
             </p>
-            <p className="mt-1.5 text-sm text-[#5f5953]">
+            <p className="mt-1.5 text-sm text-[var(--tm-ink-muted)]">
               {categoryFilter === "custom"
                 ? "Create your first deck to save TOEIC words you often forget."
                 : "Try clearing your search query or choosing another category."}
@@ -764,10 +812,10 @@ export function FlashcardsWorkspace({
               );
               return (
                 <article
-                  className="group flex flex-col justify-between rounded-[20px] border border-[#ece9e5] bg-white p-6 transition hover:border-[#e9c6a4] hover:shadow-[0_12px_28px_-18px_rgb(204_47_32/0.25)]"
+                  className="group flex min-w-0 flex-col justify-between rounded-[20px] border border-[var(--tm-border)] bg-[var(--tm-surface)] p-6 transition hover:border-[#e9c6a4] hover:shadow-[0_12px_28px_-18px_rgb(204_47_32/0.25)]"
                   key={deck.id}
                 >
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <span className="sp-chip sp-chip-orange">
                         {FLASHCARD_CATEGORY_LABELS[deck.category]}
@@ -779,24 +827,26 @@ export function FlashcardsWorkspace({
                         {deck.isCustom && (
                           <button
                             aria-label={`Delete deck ${deck.title}`}
-                            className={`grid size-7 cursor-pointer place-items-center rounded-md text-[#948d86] transition hover:bg-[#f6e1e1] hover:text-[#bd2a2a] ${focusRing}`}
-                            onClick={() => handleDeleteCustomDeck(deck.id)}
+                            className={`grid size-10 cursor-pointer place-items-center rounded-lg text-[var(--tm-ink-muted)] transition hover:bg-[var(--tm-danger-soft)] hover:text-[var(--tm-danger)] ${focusRing}`}
+                            onClick={(event) =>
+                              requestDeleteCustomDeck(deck, event.currentTarget)
+                            }
                             type="button"
                           >
-                            <Trash2 aria-hidden="true" className="size-3.5" />
+                            <Trash2 aria-hidden="true" className="size-4" />
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <h2 className="mt-4 text-lg font-bold leading-snug text-[#2b2724] group-hover:text-[#df5a28]">
+                    <h2 className="mt-4 text-lg font-bold leading-snug text-[var(--tm-ink)] group-hover:text-[var(--tm-brand)]">
                       {deck.title}
                     </h2>
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#5f5953]">
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--tm-ink-muted)]">
                       {deck.description}
                     </p>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#5f5953]">
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[var(--tm-ink-muted)]">
                       <span className="inline-flex items-center gap-1.5">
                         <BookOpen aria-hidden="true" className="size-3.5" />
                         {summary.total} cards
@@ -806,7 +856,7 @@ export function FlashcardsWorkspace({
                         {deck.estimatedMinutes} min
                       </span>
                       {summary.mastered > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[#3f7a52]">
+                        <span className="inline-flex items-center gap-1 text-[var(--tm-success)]">
                           <CheckCircle2
                             aria-hidden="true"
                             className="size-3.5"
@@ -817,23 +867,23 @@ export function FlashcardsWorkspace({
                     </div>
                   </div>
 
-                  <div className="mt-5 space-y-3 border-t border-[#ece9e5] pt-4">
+                  <div className="mt-5 space-y-3 border-t border-[var(--tm-border)] pt-4">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-[#5f5953]">
+                      <span className="font-medium text-[var(--tm-ink-muted)]">
                         Mastery progress
                       </span>
-                      <span className="sp-mono font-bold text-[#2b2724]">
+                      <span className="sp-mono font-bold text-[var(--tm-ink)]">
                         {summary.completionPercent}%
                       </span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e9e4df]">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--tm-border)]">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-[#cc2f20] to-[#e36a22] transition-[width] duration-300"
                         style={{ width: `${summary.completionPercent}%` }}
                       />
                     </div>
                     <button
-                      className={`mt-1 inline-flex min-h-10 w-full cursor-pointer items-center justify-center rounded-xl border border-[#dacfc5] bg-[#faf7f5] px-4 text-sm font-bold text-[#2b2724] transition group-hover:border-[#df5a28] group-hover:bg-[#fff1ea] group-hover:text-[#df5a28] ${focusRing}`}
+                      className={`mt-1 inline-flex min-h-10 w-full cursor-pointer items-center justify-center rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-page)] px-4 text-sm font-bold text-[var(--tm-ink)] transition group-hover:border-[var(--tm-brand)] group-hover:bg-[var(--tm-brand-soft)] group-hover:text-[var(--tm-brand)] ${focusRing}`}
                       onClick={() => openDeck(deck.slug)}
                       type="button"
                     >
@@ -854,6 +904,33 @@ export function FlashcardsWorkspace({
         onOpenChange={setCreateDialogOpen}
         open={createDialogOpen}
       />
+
+      <ConfirmDialog
+        cancelLabel="Cancel"
+        confirmLabel={deleting ? "Deleting…" : "Delete deck"}
+        destructive
+        id="delete-flashcard-deck-title"
+        onCancel={cancelDeleteCustomDeck}
+        onConfirm={() => void confirmDeleteCustomDeck()}
+        open={pendingDeleteDeck !== null}
+        title="Delete custom deck?"
+      >
+        <p>
+          Are you sure you want to permanently delete{" "}
+          <strong className="font-semibold text-[var(--tm-ink)]">
+            {pendingDeleteDeck?.title}
+          </strong>
+          ? All cards in this deck will be removed.
+        </p>
+        {deleteError ? (
+          <p
+            className="mt-3 rounded-lg border border-[var(--tm-danger)]/35 bg-[var(--tm-danger-soft)] px-3 py-2 text-xs font-medium text-[var(--tm-danger)]"
+            role="alert"
+          >
+            {deleteError}
+          </p>
+        ) : null}
+      </ConfirmDialog>
     </div>
   );
 }

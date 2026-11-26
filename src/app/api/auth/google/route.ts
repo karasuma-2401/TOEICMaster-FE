@@ -4,7 +4,7 @@ import {
   postAuth,
   problem,
   rateLimited,
-  readBody,
+  readBoundedBody,
   sameOrigin,
   success,
   upstreamProblem,
@@ -13,8 +13,10 @@ import { setSessionCookie } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
   if (!sameOrigin(request)) return problem(403, "Invalid request.");
-  const body = await readBody(request);
-  if (!body) return problem(400, "Invalid Google data.");
+  const bodyResult = await readBoundedBody(request);
+  if (!bodyResult.ok)
+    return bodyResult.response ?? problem(400, "Invalid Google data.");
+  const body = bodyResult.data;
   const credential = typeof body.credential === "string" ? body.credential : "";
   const rememberMe = body.rememberMe === true;
   if (!credential || credential.length > 8192)
@@ -22,7 +24,11 @@ export async function POST(request: NextRequest) {
       Credential: ["Invalid Google credential."],
     });
   try {
-    const upstream = await postAuth("google", { credential, rememberMe });
+    const upstream = await postAuth(
+      "google",
+      { credential, rememberMe },
+      request,
+    );
     if (upstream.status === 400)
       return upstreamProblem(upstream, 400, "Invalid Google data.");
     if (upstream.status === 401)

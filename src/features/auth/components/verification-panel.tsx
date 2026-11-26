@@ -95,22 +95,22 @@ export function VerificationPanel({
 
   return (
     <section aria-labelledby="verification-title">
-      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[#ed361c] before:h-px before:w-6 before:bg-[#ed361c]">
+      <p className="flex items-center justify-center gap-3 text-center text-[10px] font-bold tracking-[0.18em] text-[var(--tm-brand)] before:h-px before:w-6 before:bg-[var(--tm-brand)]">
         {eyebrow}
       </p>
       <h1
-        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[#342d2a]"
+        className="mt-5 text-center text-[2.2rem] font-medium leading-tight tracking-[-0.055em] text-[var(--tm-ink)]"
         id="verification-title"
       >
         Verify email
       </h1>
-      <p className="mx-auto mt-3 max-w-[25rem] text-center text-[13px] leading-5 text-[#a89f9b]">
+      <p className="mx-auto mt-3 max-w-[25rem] text-center text-[13px] leading-5 text-[var(--tm-ink-muted)]">
         Enter the 6-digit code sent to{" "}
-        <strong className="font-bold text-[#665c58]">{email}</strong>.
+        <strong className="font-bold text-[var(--tm-ink)]">{email}</strong>.
       </p>
       <form className="mt-8" noValidate onSubmit={submit}>
         <label
-          className="mb-1.5 block text-center text-[11px] font-bold text-[#4e4542]"
+          className="mb-1.5 block text-center text-[11px] font-bold text-[var(--tm-ink-soft)]"
           htmlFor="verificationCode"
         >
           Verification code
@@ -119,7 +119,7 @@ export function VerificationPanel({
           aria-describedby={error ? "verificationCode-error" : undefined}
           aria-invalid={Boolean(error)}
           autoComplete="one-time-code"
-          className="h-14 w-full rounded-xl border border-[#e7deda] bg-[#fffdfc] px-6 text-center text-xl font-bold tracking-[0.55em] text-[#3d3532] outline-none transition placeholder:text-[#d6cfcc] focus:border-[#ed361c] focus:ring-2 focus:ring-[#ffe2d8] aria-[invalid=true]:border-red-500"
+          className="h-14 w-full rounded-xl border border-[var(--tm-border-strong)] bg-[var(--tm-surface)] px-6 text-center text-xl font-bold tracking-[0.55em] text-[var(--tm-ink)] outline-none transition placeholder:text-[var(--tm-ink-subtle)] focus:border-[var(--tm-brand)] focus:ring-2 focus:ring-[var(--tm-brand-soft)] aria-[invalid=true]:border-[var(--tm-danger)]"
           id="verificationCode"
           inputMode="numeric"
           maxLength={6}
@@ -134,19 +134,19 @@ export function VerificationPanel({
         />
         {error ? (
           <p
-            className="mt-1.5 text-center text-xs text-red-600"
+            className="mt-1.5 text-center text-xs text-[var(--tm-danger)]"
             id="verificationCode-error"
             role="alert"
           >
             {error}
           </p>
         ) : (
-          <p className="mt-2 text-center text-[10px] text-[#c0b8b4]">
+          <p className="mt-2 text-center text-[10px] text-[var(--tm-ink-subtle)]">
             The verification code is valid for 10 minutes.
           </p>
         )}
         <button
-          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#ec251b] to-[#ff6c0d] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(239,63,27,0.18)] transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef3f1b]"
+          className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--tm-brand)] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(201,59,11,0.18)] transition hover:bg-[var(--tm-brand-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           disabled={pending}
           type="submit"
         >
@@ -154,14 +154,14 @@ export function VerificationPanel({
         </button>
       </form>
       {notice && (
-        <output className="mt-4 block rounded-xl bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+        <output className="mt-4 block rounded-xl bg-[var(--tm-warning-soft)] px-4 py-3 text-sm leading-5 text-[var(--tm-warning)]">
           {notice}
         </output>
       )}
-      <p className="mt-5 text-center text-[11px] text-[#a8a09c]">
+      <p className="mt-5 text-center text-[11px] text-[var(--tm-ink-muted)]">
         Didn&apos;t receive the code?{" "}
         <button
-          className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+          className="cursor-pointer font-bold text-[var(--tm-brand)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           disabled={resending}
           onClick={resend}
           type="button"
@@ -169,17 +169,17 @@ export function VerificationPanel({
           {resending ? "Sending..." : "Resend code"}
         </button>
       </p>
-      <p className="mt-4 text-center text-[11px] text-[#a8a09c]">
+      <p className="mt-4 text-center text-[11px] text-[var(--tm-ink-muted)]">
         Wrong email address?{" "}
         <button
-          className="cursor-pointer font-bold text-[#ed361c] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed361c]"
+          className="cursor-pointer font-bold text-[var(--tm-brand)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           onClick={onChangeEmail}
           type="button"
         >
           Re-enter email
         </button>
       </p>
-      <p className="mt-7 text-center text-[9px] text-[#c8c0bc]">
+      <p className="mt-7 text-center text-[9px] text-[var(--tm-ink-subtle)]">
         © 2025 TOEICMaster. Learn languages, open up the world.
       </p>
     </section>

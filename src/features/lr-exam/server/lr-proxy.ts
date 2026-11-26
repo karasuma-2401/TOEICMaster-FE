@@ -5,9 +5,10 @@ import { sessionCookie } from "@/features/auth/server/session";
 const paths = [
   /^exams\/lr$/,
   /^exams\/[0-9a-f-]{36}\/lr-overview$/i,
+  /^exams\/[0-9a-f-]{36}\/current-attempt$/i,
   /^exams\/[0-9a-f-]{36}\/attempts$/i,
   /^exam-attempts\/[0-9a-f-]{36}$/i,
-  /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i,
+  /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit|abandon)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/answers$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/questions\/[0-9a-f-]{36}\/flag$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(result|review|listening-audio-urls)$/i,
@@ -24,6 +25,7 @@ const paths = [
 const getOnlyPaths = [
   /^exams\/lr$/,
   /^exams\/[0-9a-f-]{36}\/lr-overview$/i,
+  /^exams\/[0-9a-f-]{36}\/current-attempt$/i,
   /^exam-attempts\/[0-9a-f-]{36}$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(result|review|listening-audio-urls)$/i,
   /^exam-attempts\/[0-9a-f-]{36}\/(audio|images)\/[0-9a-f-]{36}$/i,
@@ -99,7 +101,9 @@ export async function forwardLr(
 
     const bodyless =
       /^exams\/[0-9a-f-]{36}\/attempts$/i.test(path) ||
-      /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit)$/i.test(path);
+      /^exam-attempts\/[0-9a-f-]{36}\/(start-reading|submit|abandon)$/i.test(
+        path,
+      );
 
     if (raw) {
       if (
@@ -157,7 +161,7 @@ export async function forwardLr(
       responseHeaders.set("Retry-After", retryAfter);
     }
 
-    return new NextResponse(upstream.body, {
+    return new NextResponse(upstream.status === 204 ? null : upstream.body, {
       status: upstream.status,
       headers: responseHeaders,
     });

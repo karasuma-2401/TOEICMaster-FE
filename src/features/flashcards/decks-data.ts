@@ -12,7 +12,7 @@ export const FLASHCARD_CATEGORY_LABELS: Record<FlashcardCategory, string> = {
 
 export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
   {
-    id: "deck-office",
+    id: "10000000-0000-4000-8000-000000000001",
     slug: "office-operations",
     title: "Office & Business Operations",
     description:
@@ -22,7 +22,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 8,
     cards: [
       {
-        id: "off-1",
+        id: "10000001-0000-4000-8000-000000000001",
         term: "itinerary",
         phonetic: "/aɪˈtɪn.ə.rer.i/",
         partOfSpeech: "noun",
@@ -40,7 +40,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "off-2",
+        id: "10000001-0000-4000-8000-000000000002",
         term: "accommodate",
         phonetic: "/əˈkɑː.mə.deɪt/",
         partOfSpeech: "verb",
@@ -57,7 +57,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "off-3",
+        id: "10000001-0000-4000-8000-000000000003",
         term: "agenda",
         phonetic: "/əˈdʒen.də/",
         partOfSpeech: "noun",
@@ -71,7 +71,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "off-4",
+        id: "10000001-0000-4000-8000-000000000004",
         term: "mandatory",
         phonetic: "/ˈmæn.də.tɔːr.i/",
         partOfSpeech: "adjective",
@@ -89,7 +89,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "off-5",
+        id: "10000001-0000-4000-8000-000000000005",
         term: "streamline",
         phonetic: "/ˈstriːm.laɪn/",
         partOfSpeech: "verb",
@@ -107,7 +107,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "off-6",
+        id: "10000001-0000-4000-8000-000000000006",
         term: "correspondence",
         phonetic: "/ˌkɔːr.əˈspɑːn.dəns/",
         partOfSpeech: "noun",
@@ -125,7 +125,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "off-7",
+        id: "10000001-0000-4000-8000-000000000007",
         term: "designate",
         phonetic: "/ˈdez.ɪɡ.neɪt/",
         partOfSpeech: "verb",
@@ -143,7 +143,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "off-8",
+        id: "10000001-0000-4000-8000-000000000008",
         term: "promptly",
         phonetic: "/ˈprɑːmpt.li/",
         partOfSpeech: "adverb",
@@ -162,7 +162,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     ],
   },
   {
-    id: "deck-contracts",
+    id: "10000000-0000-4000-8000-000000000002",
     slug: "contracts-negotiation",
     title: "Contracts & Commercial Negotiation",
     description:
@@ -172,7 +172,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 9,
     cards: [
       {
-        id: "con-1",
+        id: "10000002-0000-4000-8000-000000000001",
         term: "stipulate",
         phonetic: "/ˈstɪp.jə.leɪt/",
         partOfSpeech: "verb",
@@ -190,7 +190,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "con-2",
+        id: "10000002-0000-4000-8000-000000000002",
         term: "abide by",
         phonetic: "/əˈbaɪd baɪ/",
         partOfSpeech: "phrasal verb",
@@ -207,7 +207,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "con-3",
+        id: "10000002-0000-4000-8000-000000000003",
         term: "provision",
         phonetic: "/prəˈvɪʒ.ən/",
         partOfSpeech: "noun",
@@ -225,7 +225,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "con-4",
+        id: "10000002-0000-4000-8000-000000000004",
         term: "renew",
         phonetic: "/rɪˈnuː/",
         partOfSpeech: "verb",
@@ -243,7 +243,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "con-5",
+        id: "10000002-0000-4000-8000-000000000005",
         term: "obligate",
         phonetic: "/ˈɑːb.lɪ.ɡeɪt/",
         partOfSpeech: "verb",
@@ -261,7 +261,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "con-6",
+        id: "10000002-0000-4000-8000-000000000006",
         term: "amendment",
         phonetic: "/əˈmend.mənt/",
         partOfSpeech: "noun",
@@ -279,7 +279,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "con-7",
+        id: "10000002-0000-4000-8000-000000000007",
         term: "consensus",
         phonetic: "/kənˈsen.səs/",
         partOfSpeech: "noun",
@@ -296,7 +296,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "con-8",
+        id: "10000002-0000-4000-8000-000000000008",
         term: "terminate",
         phonetic: "/ˈtɜːr.mɪ.neɪt/",
         partOfSpeech: "verb",
@@ -316,7 +316,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     ],
   },
   {
-    id: "deck-finance",
+    id: "10000000-0000-4000-8000-000000000003",
     slug: "finance-accounting",
     title: "Finance, Invoicing & Budgeting",
     description:
@@ -326,7 +326,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 8,
     cards: [
       {
-        id: "fin-1",
+        id: "10000003-0000-4000-8000-000000000001",
         term: "reimburse",
         phonetic: "/ˌriː.ɪmˈbɜːrs/",
         partOfSpeech: "verb",
@@ -344,7 +344,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "fin-2",
+        id: "10000003-0000-4000-8000-000000000002",
         term: "discrepancy",
         phonetic: "/dɪˈskrep.ən.si/",
         partOfSpeech: "noun",
@@ -362,7 +362,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "fin-3",
+        id: "10000003-0000-4000-8000-000000000003",
         term: "allocate",
         phonetic: "/ˈæl.ə.keɪt/",
         partOfSpeech: "verb",
@@ -380,7 +380,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "fin-4",
+        id: "10000003-0000-4000-8000-000000000004",
         term: "revenue",
         phonetic: "/ˈrev.ə.nuː/",
         partOfSpeech: "noun",
@@ -394,7 +394,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "fin-5",
+        id: "10000003-0000-4000-8000-000000000005",
         term: "overdue",
         phonetic: "/ˌoʊ.vɚˈduː/",
         partOfSpeech: "adjective",
@@ -408,7 +408,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "fin-6",
+        id: "10000003-0000-4000-8000-000000000006",
         term: "expenditure",
         phonetic: "/ɪkˈspen.dɪ.tʃɚ/",
         partOfSpeech: "noun",
@@ -425,7 +425,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "fin-7",
+        id: "10000003-0000-4000-8000-000000000007",
         term: "forecast",
         phonetic: "/ˈfɔːr.kæst/",
         partOfSpeech: "noun / verb",
@@ -443,7 +443,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "fin-8",
+        id: "10000003-0000-4000-8000-000000000008",
         term: "deduct",
         phonetic: "/dɪˈdʌkt/",
         partOfSpeech: "verb",
@@ -461,7 +461,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     ],
   },
   {
-    id: "deck-travel",
+    id: "10000000-0000-4000-8000-000000000004",
     slug: "travel-hospitality",
     title: "Travel, Aviation & Hospitality",
     description:
@@ -471,7 +471,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 7,
     cards: [
       {
-        id: "trv-1",
+        id: "10000004-0000-4000-8000-000000000001",
         term: "complimentary",
         phonetic: "/ˌkɑːm.pləˈmen.t̬ɚ.i/",
         partOfSpeech: "adjective",
@@ -489,7 +489,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "trv-2",
+        id: "10000004-0000-4000-8000-000000000002",
         term: "occupancy",
         phonetic: "/ˈɑːk.jə.pən.si/",
         partOfSpeech: "noun",
@@ -506,7 +506,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "trv-3",
+        id: "10000004-0000-4000-8000-000000000003",
         term: "depart",
         phonetic: "/dɪˈpɑːrt/",
         partOfSpeech: "verb",
@@ -524,7 +524,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "trv-4",
+        id: "10000004-0000-4000-8000-000000000004",
         term: "amenity",
         phonetic: "/əˈmen.ə.t̬i/",
         partOfSpeech: "noun",
@@ -542,7 +542,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "trv-5",
+        id: "10000004-0000-4000-8000-000000000005",
         term: "confirm",
         phonetic: "/kənˈfɜːrm/",
         partOfSpeech: "verb",
@@ -560,7 +560,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "trv-6",
+        id: "10000004-0000-4000-8000-000000000006",
         term: "layover",
         phonetic: "/ˈleɪ.oʊ.vɚ/",
         partOfSpeech: "noun",
@@ -574,7 +574,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "trv-7",
+        id: "10000004-0000-4000-8000-000000000007",
         term: "beverage",
         phonetic: "/ˈbev.ɚ.ɪdʒ/",
         partOfSpeech: "noun",
@@ -592,7 +592,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "trv-8",
+        id: "10000004-0000-4000-8000-000000000008",
         term: "adjacent",
         phonetic: "/əˈdʒeɪ.sənt/",
         partOfSpeech: "adjective",
@@ -608,7 +608,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     ],
   },
   {
-    id: "deck-marketing",
+    id: "10000000-0000-4000-8000-000000000005",
     slug: "marketing-sales",
     title: "Marketing, Product Launches & Sales",
     description:
@@ -618,7 +618,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 8,
     cards: [
       {
-        id: "mkt-1",
+        id: "10000005-0000-4000-8000-000000000001",
         term: "merchandise",
         phonetic: "/ˈmɜːr.tʃən.daɪs/",
         partOfSpeech: "noun",
@@ -634,7 +634,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "mkt-2",
+        id: "10000005-0000-4000-8000-000000000002",
         term: "demographics",
         phonetic: "/ˌdem.əˈɡræf.ɪks/",
         partOfSpeech: "noun",
@@ -651,7 +651,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "mkt-3",
+        id: "10000005-0000-4000-8000-000000000003",
         term: "incentive",
         phonetic: "/ɪnˈsen.tɪv/",
         partOfSpeech: "noun",
@@ -669,7 +669,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "mkt-4",
+        id: "10000005-0000-4000-8000-000000000004",
         term: "launch",
         phonetic: "/lɔːntʃ/",
         partOfSpeech: "verb / noun",
@@ -683,7 +683,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "mkt-5",
+        id: "10000005-0000-4000-8000-000000000005",
         term: "endorse",
         phonetic: "/ɪnˈdɔːrs/",
         partOfSpeech: "verb",
@@ -701,7 +701,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "mkt-6",
+        id: "10000005-0000-4000-8000-000000000006",
         term: "competitive",
         phonetic: "/kəmˈpet̬.ə.t̬ɪv/",
         partOfSpeech: "adjective",
@@ -719,7 +719,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "mkt-7",
+        id: "10000005-0000-4000-8000-000000000007",
         term: "outperform",
         phonetic: "/ˌaʊt.pɚˈfɔːrm/",
         partOfSpeech: "verb",
@@ -737,7 +737,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "mkt-8",
+        id: "10000005-0000-4000-8000-000000000008",
         term: "survey",
         phonetic: "/ˈsɜːr.veɪ/",
         partOfSpeech: "noun / verb",
@@ -757,7 +757,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     ],
   },
   {
-    id: "deck-hr",
+    id: "10000000-0000-4000-8000-000000000006",
     slug: "hr-recruitment",
     title: "HR, Recruitment & Training",
     description:
@@ -767,7 +767,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
     estimatedMinutes: 8,
     cards: [
       {
-        id: "hr-1",
+        id: "10000006-0000-4000-8000-000000000001",
         term: "applicant",
         phonetic: "/ˈæp.lə.kənt/",
         partOfSpeech: "noun",
@@ -785,7 +785,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B1",
       },
       {
-        id: "hr-2",
+        id: "10000006-0000-4000-8000-000000000002",
         term: "credentials",
         phonetic: "/krɪˈden.ʃəlz/",
         partOfSpeech: "noun (plural)",
@@ -803,7 +803,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "hr-3",
+        id: "10000006-0000-4000-8000-000000000003",
         term: "probationary",
         phonetic: "/proʊˈbeɪ.ʃə.ner.i/",
         partOfSpeech: "adjective",
@@ -821,7 +821,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "hr-4",
+        id: "10000006-0000-4000-8000-000000000004",
         term: "proficient",
         phonetic: "/prəˈfɪʃ.ənt/",
         partOfSpeech: "adjective",
@@ -839,7 +839,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "hr-5",
+        id: "10000006-0000-4000-8000-000000000005",
         term: "appraisal",
         phonetic: "/əˈpreɪ.zəl/",
         partOfSpeech: "noun",
@@ -857,7 +857,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "C1",
       },
       {
-        id: "hr-6",
+        id: "10000006-0000-4000-8000-000000000006",
         term: "vacancy",
         phonetic: "/ˈveɪ.kən.si/",
         partOfSpeech: "noun",
@@ -871,7 +871,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "hr-7",
+        id: "10000006-0000-4000-8000-000000000007",
         term: "eligible",
         phonetic: "/ˈel.ə.dʒə.bəl/",
         partOfSpeech: "adjective",
@@ -889,7 +889,7 @@ export const BUILTIN_FLASHCARD_DECKS: readonly FlashcardDeck[] = [
         level: "B2",
       },
       {
-        id: "hr-8",
+        id: "10000006-0000-4000-8000-000000000008",
         term: "mentor",
         phonetic: "/ˈmen.tɔːr/",
         partOfSpeech: "noun / verb",

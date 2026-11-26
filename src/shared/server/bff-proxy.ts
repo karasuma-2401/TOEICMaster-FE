@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { NextResponse } from "next/server";
 import { readSession, type AuthSession } from "@/features/auth/server/session";
 
@@ -69,30 +70,82 @@ export function isSameOrigin(request: Request): boolean {
   }
 }
 
-/** Extracts sanitized X-Forwarded-For (or X-Real-IP fallback) and X-Forwarded-Proto headers for backend rate limiting. */
+function normalizeIpToken(raw: string): string | null {
+  const cleaned = sanitizeHeaderValue(raw);
+  if (!cleaned) return null;
+
+  if (cleaned.startsWith("[")) {
+    const closeIdx = cleaned.indexOf("]");
+    if (closeIdx > 1) {
+      const candidate = cleaned.slice(1, closeIdx);
+      const rest = cleaned.slice(closeIdx + 1);
+      if ((rest === "" || /^:\d+$/.test(rest)) && isIP(candidate) === 6) {
+        return candidate;
+      }
+      return null;
+    }
+  }
+
+  if (isIP(cleaned) !== 0) {
+    return cleaned;
+  }
+
+  const lastColon = cleaned.lastIndexOf(":");
+  if (lastColon > 0 && cleaned.indexOf(":") === lastColon) {
+    const host = cleaned.slice(0, lastColon);
+    const port = cleaned.slice(lastColon + 1);
+    if (/^\d+$/.test(port) && isIP(host) === 4) {
+      return host;
+    }
+  }
+
+  return null;
+}
+
+function parseIpList(raw: string | null): string[] {
+  const cleaned = sanitizeHeaderValue(raw);
+  if (!cleaned) return [];
+  return cleaned
+    .split(",")
+    .map((part) => normalizeIpToken(part))
+    .filter((ip): ip is string => ip !== null);
+}
+
+/** Extracts validated client IP and protocol headers for upstream rate limiting. */
 export function extractForwardedClientHeaders(
   request: Request,
 ): Record<string, string> {
   const result: Record<string, string> = {};
-  const forwardedFor = sanitizeHeaderValue(
-    request.headers.get("x-forwarded-for"),
+
+  const cfConnectingIp = normalizeIpToken(
+    request.headers.get("cf-connecting-ip") ?? "",
   );
-  if (forwardedFor) {
-    const ips = forwardedFor
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean);
-    if (ips.length > 0) {
-      result["X-Forwarded-For"] = ips.join(", ");
-    }
+  if (cfConnectingIp) {
+    result["X-Forwarded-For"] = cfConnectingIp;
   } else {
-    const realIp = sanitizeHeaderValue(request.headers.get("x-real-ip"));
-    if (realIp) {
-      result["X-Forwarded-For"] = realIp;
+    const vercelIps = parseIpList(
+      request.headers.get("x-vercel-forwarded-for"),
+    );
+    if (vercelIps.length > 0) {
+      result["X-Forwarded-For"] = vercelIps[0];
+    } else {
+      const realIp = normalizeIpToken(request.headers.get("x-real-ip") ?? "");
+      if (realIp) {
+        result["X-Forwarded-For"] = realIp;
+      } else {
+        const forwardedIps = parseIpList(
+          request.headers.get("x-forwarded-for"),
+        );
+        if (forwardedIps.length > 0) {
+          result["X-Forwarded-For"] = forwardedIps.join(", ");
+        }
+      }
     }
   }
 
-  const proto = sanitizeHeaderValue(request.headers.get("x-forwarded-proto"));
+  const proto = sanitizeHeaderValue(
+    request.headers.get("x-forwarded-proto"),
+  )?.toLowerCase();
   if (proto === "http" || proto === "https") {
     result["X-Forwarded-Proto"] = proto;
   }
@@ -100,16 +153,17 @@ export function extractForwardedClientHeaders(
   return result;
 }
 
-/** Stops reading as soon as the body exceeds its byte limit. */
-export async function readBoundedBody(
+async function readBoundedBytes(
   request: Request,
   maxBytes: number,
   oversizeMessage = "Uploaded payload exceeds the size limit.",
-): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
-  const contentType = request.headers.get("content-type") ?? "";
-  const declared = Number(request.headers.get("content-length") ?? "0");
-  if (Number.isFinite(declared) && declared > maxBytes) {
-    return problemJson(413, oversizeMessage);
+): Promise<ArrayBuffer | NextResponse> {
+  const declaredHeader = request.headers.get("content-length");
+  if (declaredHeader !== null) {
+    const declared = Number(declaredHeader);
+    if (Number.isFinite(declared) && declared > maxBytes) {
+      return problemJson(413, oversizeMessage);
+    }
   }
 
   const reader = request.body?.getReader();
@@ -140,17 +194,90 @@ export async function readBoundedBody(
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return { body, contentType };
+  return body;
 }
 
+export async function readBoundedBody(
+  request: Request,
+  maxBytes: number,
+  oversizeMessage = "Uploaded payload exceeds the size limit.",
+): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
+  const body = await readBoundedBytes(request, maxBytes, oversizeMessage);
+  if (body instanceof Response) return body;
+  return { body, contentType: request.headers.get("content-type") ?? "" };
+}
+
+export interface ReadBoundedJsonOk {
+  ok: true;
+  data: unknown;
+}
+
+export interface ReadBoundedJsonError {
+  ok: false;
+  response: NextResponse;
+}
+
+/** Streams and parses a JSON request body while enforcing a hard byte limit before parsing. */
+export async function readBoundedJson(
+  request: Request,
+  maxBytes: number,
+  options?: {
+    oversizeMessage?: string;
+    invalidMessage?: string;
+    requireJsonHeader?: boolean;
+  },
+): Promise<ReadBoundedJsonOk | ReadBoundedJsonError> {
+  const invalidMessage = options?.invalidMessage ?? "Invalid JSON payload.";
+  if (options?.requireJsonHeader) {
+    const contentType = request.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      return {
+        ok: false,
+        response: problemJson(
+          400,
+          options.invalidMessage ?? "Request body must be in JSON format.",
+        ),
+      };
+    }
+  }
+
+  const bytes = await readBoundedBytes(
+    request,
+    maxBytes,
+    options?.oversizeMessage ?? "Request payload exceeds the size limit.",
+  );
+  if (bytes instanceof NextResponse) {
+    return { ok: false, response: bytes };
+  }
+
+  const text = new TextDecoder().decode(bytes);
+  if (!text.trim()) {
+    return { ok: false, response: problemJson(400, invalidMessage) };
+  }
+
+  try {
+    return { ok: true, data: JSON.parse(text) as unknown };
+  } catch {
+    return { ok: false, response: problemJson(400, invalidMessage) };
+  }
+}
+
+/** Streams a multipart request body while enforcing a hard byte limit without full-body over-buffering. */
 export async function readMultipartStream(
   request: Request,
   maxBytes: number,
-  oversizeMessage?: string,
-) {
-  if (!request.headers.get("content-type")?.startsWith("multipart/form-data"))
+  oversizeMessage = "Uploaded payload exceeds the size limit.",
+): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.startsWith("multipart/form-data")) {
     return problemJson(400, "Multipart form data is required.");
-  return readBoundedBody(request, maxBytes, oversizeMessage);
+  }
+
+  const body = await readBoundedBytes(request, maxBytes, oversizeMessage);
+  if (body instanceof Response) {
+    return body;
+  }
+  return { body, contentType };
 }
 
 /** Copies safe headers and response body from upstream while enforcing anti-sniff and cache controls. */
@@ -315,13 +442,16 @@ async function resolveRequestBody(
       };
     }
 
-    const limited = await readBoundedBody(
+    const bytes = await readBoundedBytes(
       request,
       maxBodyBytes,
-      oversizeMessage,
+      oversizeMessage ?? "Request payload exceeds the size limit.",
     );
-    if (limited instanceof Response) return { ok: false, response: limited };
-    const text = new TextDecoder().decode(limited.body);
+    if (bytes instanceof Response) {
+      return { ok: false, response: bytes };
+    }
+
+    const text = new TextDecoder().decode(bytes);
     if (!text.trim()) {
       if (bodyMode === "optional-json") {
         return { ok: true };
@@ -344,9 +474,14 @@ async function resolveRequestBody(
   }
 
   // raw mode
-  const limited = await readBoundedBody(request, maxBodyBytes, oversizeMessage);
-  if (limited instanceof Response) return { ok: false, response: limited };
-  const rawBuffer = limited.body;
+  const rawBuffer = await readBoundedBytes(
+    request,
+    maxBodyBytes,
+    oversizeMessage ?? "Uploaded payload exceeds the size limit.",
+  );
+  if (rawBuffer instanceof Response) {
+    return { ok: false, response: rawBuffer };
+  }
   const contentType = request.headers.get("content-type") ?? undefined;
   return {
     ok: true,
@@ -386,6 +521,13 @@ export async function forwardBffRequest(
     typeof config.upstreamPath === "function"
       ? config.upstreamPath(request)
       : config.upstreamPath;
+  if (
+    !path.startsWith("/api/") ||
+    path.startsWith("//") ||
+    path.includes("\\")
+  ) {
+    return problemJson(400, "Invalid request.");
+  }
   let targetUrl: URL;
   try {
     targetUrl = new URL(path, baseUrl);
@@ -394,6 +536,12 @@ export async function forwardBffRequest(
       503,
       config.missingBaseUrlMessage ?? "The service is temporarily unavailable.",
     );
+  }
+  if (
+    targetUrl.origin !== new URL(baseUrl).origin ||
+    !targetUrl.pathname.startsWith("/api/")
+  ) {
+    return problemJson(400, "Invalid request.");
   }
 
   const headers = new Headers({ Accept: "application/json" });
