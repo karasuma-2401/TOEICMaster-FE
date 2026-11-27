@@ -247,20 +247,6 @@ export async function createSpeakingTest(input: SpeakingTestInput) {
   );
 }
 
-/** Creates seven exercises and one draft test from an `.xlsx` workbook. */
-export async function importSpeakingTest(file: File) {
-  const form = new FormData();
-  form.set("file", file);
-  return parseTestDetail(
-    await speakingRequest(`${base}/tests/import`, {
-      method: "POST",
-      form,
-      refresh: true,
-      fallback: "Unable to import Speaking test.",
-    }),
-  );
-}
-
 export async function updateSpeakingTest(
   id: string,
   version: number,

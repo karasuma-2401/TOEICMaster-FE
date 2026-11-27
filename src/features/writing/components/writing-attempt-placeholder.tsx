@@ -352,7 +352,15 @@ export function WritingAttemptPlaceholder({
                 <label className="text-sm font-bold" htmlFor="writing-answer">
                   Your response
                 </label>
+                <p
+                  className="mt-1 text-xs text-slate-600"
+                  id="writing-answer-paste-policy"
+                >
+                  Typing only: pasting and drag-and-drop are disabled to match
+                  TOEIC Writing exam rules.
+                </p>
                 <textarea
+                  aria-describedby="writing-answer-paste-policy"
                   className="mt-2 min-h-64 w-full rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 xl:min-h-80"
                   disabled={preparing || transitioning}
                   id="writing-answer"
