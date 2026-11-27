@@ -142,4 +142,19 @@ describe("AttemptHistorySection", () => {
       "/login?next=%2Fhistory",
     );
   });
+
+  it("renders the sign-in prompt immediately on first render when isAuthenticated is false", () => {
+    render(
+      <AttemptHistorySection
+        isAuthenticated={false}
+        title="Recent Attempt History"
+      />,
+    );
+
+    expect(
+      screen.getByText("Sign in to view your attempt history"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No attempts yet")).not.toBeInTheDocument();
+    expect(fetchUnifiedHistory).not.toHaveBeenCalled();
+  });
 });

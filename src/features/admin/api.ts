@@ -106,8 +106,11 @@ async function request<T>(
     try {
       return (await send()) as T | undefined;
     } catch (error) {
-      if (!(error instanceof SharedApiError) || error.status !== 401)
-        throw error;
+      const isUnauthorized =
+        (error instanceof SharedApiError ||
+          error instanceof AdminUsersApiError) &&
+        error.status === 401;
+      if (!isUnauthorized) throw error;
       if (signal?.aborted) throw error;
       try {
         await refreshAdminSession();

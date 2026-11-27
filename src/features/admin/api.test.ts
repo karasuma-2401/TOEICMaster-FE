@@ -115,4 +115,23 @@ describe("getAdminUsers", () => {
     );
     expect(fetchMock.mock.calls[0][1]).not.toHaveProperty("body");
   });
+
+  it("refreshes the session and retries when a write action returns 401", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ title: "Unauthorized." }, { status: 401 }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.mocked(refreshSession).mockResolvedValue({
+      id: "1",
+      displayName: "Admin",
+      email: "admin@example.com",
+    });
+
+    await expect(lockAdminUser("user-123")).resolves.toBeUndefined();
+    expect(refreshSession).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

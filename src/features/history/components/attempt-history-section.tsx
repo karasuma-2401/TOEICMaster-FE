@@ -161,10 +161,11 @@ export function AttemptHistorySection({
   description?: string;
 }) {
   const headingId = useId();
+  const requestedSkills = skills ?? ["lr", "speaking", "writing"];
   const [items, setItems] = useState<UnifiedAttemptItem[]>([]);
   const [unauthenticatedSkills, setUnauthenticatedSkills] = useState<
     ExamSkillType[]
-  >([]);
+  >(() => (isAuthenticated ? [] : requestedSkills));
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | ExamSkillType>("ALL");
@@ -178,12 +179,7 @@ export function AttemptHistorySection({
       ? (skillsKey.split(",") as ExamSkillType[])
       : undefined;
     if (!isAuthenticated) {
-      const task = window.setTimeout(() => {
-        setItems([]);
-        setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
-        setLoading(false);
-      }, 0);
-      return () => window.clearTimeout(task);
+      return;
     }
 
     const controller = new AbortController();
@@ -213,10 +209,10 @@ export function AttemptHistorySection({
     };
   }, [isAuthenticated, skillsKey]);
 
-  const requestedSkills = skills ?? ["lr", "speaking", "writing"];
   const isGuest =
-    unauthenticatedSkills.length > 0 &&
-    requestedSkills.every((skill) => unauthenticatedSkills.includes(skill));
+    !isAuthenticated ||
+    (unauthenticatedSkills.length > 0 &&
+      requestedSkills.every((skill) => unauthenticatedSkills.includes(skill)));
 
   const filtered = useMemo(
     () =>
