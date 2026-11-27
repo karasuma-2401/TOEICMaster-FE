@@ -24,6 +24,9 @@ vi.mock("@/features/admin/exam-api", async (importOriginal) => {
   return {
     ...original,
     getReadingRevision: vi.fn(),
+    getScoreProfiles: vi.fn(),
+    updateReadingScoreProfile: vi.fn(),
+    forkReadingRevision: vi.fn(),
     createMediaUploadIntent: vi.fn(),
     uploadFileToMediaIntent: vi.fn(),
     completeMediaUploadIntent: vi.fn(),
@@ -35,6 +38,9 @@ import {
   completeMediaUploadIntent,
   createMediaUploadIntent,
   getReadingRevision,
+  getScoreProfiles,
+  updateReadingScoreProfile,
+  forkReadingRevision,
   uploadFileToMediaIntent,
 } from "@/features/admin/exam-api";
 import type { ReadingRevision } from "@/features/admin/exam-management";
@@ -109,6 +115,7 @@ function makeRevision(): ReadingRevision {
 }
 
 beforeEach(() => {
+  vi.mocked(getScoreProfiles).mockResolvedValue([]);
   vi.clearAllMocks();
   vi.mocked(getReadingRevision).mockResolvedValue(makeRevision());
   vi.mocked(readAudioDurationMs).mockResolvedValue(24_000);
@@ -131,6 +138,103 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("ReadingExamWorkspace presigned media & durationMs", () => {
+  it("resets a pending score profile selection when opening a different revision", async () => {
+    vi.mocked(getScoreProfiles).mockResolvedValue([
+      {
+        id: "chosen-profile",
+        name: "Chosen profile",
+        isComplete: true,
+        mappingCount: 202,
+      },
+    ]);
+    const view = render(
+      <ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />,
+    );
+    await screen.findByRole("option", { name: "Chosen profile" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Score profile" }), {
+      target: { value: "chosen-profile" },
+    });
+    vi.mocked(getReadingRevision).mockResolvedValue({
+      ...makeRevision(),
+      revisionId: "other-revision",
+      scoreProfileId: "other-profile",
+    });
+    view.rerender(
+      <ReadingExamWorkspace examId={EXAM_ID} revisionId="other-revision" />,
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", { name: "Score profile" }),
+      ).toHaveValue("other-profile"),
+    );
+  });
+
+  it("keeps superseded revisions read-only and shows their actual status", async () => {
+    vi.mocked(getReadingRevision).mockResolvedValue({
+      ...makeRevision(),
+      status: "Superseded",
+    });
+    render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
+    expect(await screen.findByText("Superseded")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Save question" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Create new draft" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reassigns a draft score profile", async () => {
+    vi.mocked(getScoreProfiles).mockResolvedValue([
+      {
+        id: "new-profile",
+        name: "New profile",
+        isComplete: true,
+        mappingCount: 202,
+      },
+    ]);
+    vi.mocked(updateReadingScoreProfile).mockResolvedValue();
+    render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
+    await screen.findByRole("option", { name: "New profile" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Score profile" }), {
+      target: { value: "new-profile" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apply score profile" }),
+    );
+    await waitFor(() =>
+      expect(updateReadingScoreProfile).toHaveBeenCalledWith(
+        EXAM_ID,
+        REVISION_ID,
+        "new-profile",
+      ),
+    );
+  });
+
+  it("forks a published revision and offers navigation to the created draft", async () => {
+    vi.mocked(getReadingRevision).mockResolvedValue({
+      ...makeRevision(),
+      status: "Published",
+    });
+    vi.mocked(forkReadingRevision).mockResolvedValue({
+      examId: EXAM_ID,
+      revisionId: "new-draft",
+      code: "EXAM",
+      title: "Exam",
+      versionNumber: 2,
+      status: "Draft",
+      questionCount: 200,
+    });
+    render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Create new draft" }),
+    );
+    expect(
+      await screen.findByRole("link", { name: "Open new draft" }),
+    ).toHaveAttribute("href", `/admin/exams/reading/${EXAM_ID}/new-draft`);
+    expect(forkReadingRevision).toHaveBeenCalledWith(EXAM_ID, REVISION_ID);
+  });
+
   it("displays per-block and total Listening duration and removes legacy master-audio UI", async () => {
     render(<ReadingExamWorkspace examId={EXAM_ID} revisionId={REVISION_ID} />);
 

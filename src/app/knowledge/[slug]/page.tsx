@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getSession } from "@/features/auth/api";
 import { use, useEffect, useState } from "react";
 import { KnowledgeArticlePreview } from "@/features/knowledge/components/knowledge-article-preview";
 import { KnowledgeApiError } from "@/features/knowledge/http";
@@ -11,6 +12,7 @@ import {
 import type {
   KnowledgeArticleDetail,
   KnowledgeArticleSummary,
+  PageResult,
 } from "@/features/knowledge/types";
 
 export default function KnowledgeArticlePage({
@@ -19,11 +21,17 @@ export default function KnowledgeArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug: articleSlug } = use(params);
+  return <KnowledgeArticle key={articleSlug} articleSlug={articleSlug} />;
+}
+
+function KnowledgeArticle({ articleSlug }: { articleSlug: string }) {
   const [article, setArticle] = useState<KnowledgeArticleDetail>();
   const [related, setRelated] = useState<KnowledgeArticleSummary[]>([]);
   const [saved, setSaved] = useState(false);
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [errorStatus, setErrorStatus] = useState<number>();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -33,33 +41,49 @@ export default function KnowledgeArticlePage({
       "GET",
       controller.signal,
     )
-      .then((value) => {
+      .then(async (value) => {
+        if (controller.signal.aborted) return;
         setArticle(value);
-        knowledgeRequest<SavedArticle[]>("saved", "GET", controller.signal)
-          .then((items) =>
-            setSaved(items.some((item) => item.articleId === value.id)),
-          )
-          .catch(() => {});
+        try {
+          const session = await getSession();
+          if (session.status === "guest" || controller.signal.aborted) return;
+          setSignedIn(true);
+          const page = await knowledgeRequest<PageResult<SavedArticle>>(
+            `saved?articleId=${encodeURIComponent(value.id)}&pageNumber=1&pageSize=1`,
+            "GET",
+            controller.signal,
+          );
+          if (!controller.signal.aborted)
+            setSaved(page.items.some((item) => item.articleId === value.id));
+        } catch {
+          /* Bookmark state must not prevent public article reading. */
+        }
       })
-      .catch(
-        (cause) =>
-          !controller.signal.aborted &&
-          setNotice(
-            cause instanceof Error ? cause.message : "Unable to open article.",
-          ),
-      );
+      .catch((cause) => {
+        if (controller.signal.aborted) return;
+        setErrorStatus(cause instanceof KnowledgeApiError ? cause.status : 502);
+        setNotice(
+          cause instanceof Error ? cause.message : "Unable to open article.",
+        );
+      });
     knowledgeRequest<KnowledgeArticleSummary[]>(
       `articles/${slug}/related`,
       "GET",
       controller.signal,
     )
-      .then(setRelated)
+      .then((value) => {
+        if (!controller.signal.aborted) setRelated(value);
+      })
       .catch(() => {});
     return () => controller.abort();
   }, [articleSlug]);
 
   async function toggleSaved() {
     if (!article || pending) return;
+    if (!signedIn) {
+      setNotice("Please sign in to save this article.");
+      return;
+    }
     setPending(true);
     try {
       await knowledgeRequest(`saved/${article.id}`, saved ? "DELETE" : "PUT");
@@ -82,7 +106,30 @@ export default function KnowledgeArticlePage({
     }
   }
 
-  if (!article) return <output>{notice || "Opening article…"}</output>;
+  if (!article)
+    return errorStatus ? (
+      <section
+        role="alert"
+        className="rounded-2xl border border-(--tm-border) bg-white p-8"
+      >
+        <h1 className="text-2xl font-bold">
+          {errorStatus === 404 ? "Article not found" : "Unable to open article"}
+        </h1>
+        <p className="my-4">
+          {errorStatus === 404
+            ? "This article is unavailable or no longer published."
+            : notice}
+        </p>
+        <Link
+          className="font-semibold text-(--tm-brand) underline"
+          href="/knowledge"
+        >
+          ← Knowledge Library
+        </Link>
+      </section>
+    ) : (
+      <output>Opening article…</output>
+    );
   return (
     <div className="knowledge-reading">
       <Link className="font-semibold text-[#c74422]" href="/knowledge">

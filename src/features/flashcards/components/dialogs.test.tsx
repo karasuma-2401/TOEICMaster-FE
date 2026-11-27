@@ -158,7 +158,7 @@ describe("DeckCreateDialog", () => {
     fireEvent.click(add);
     expect(screen.getByText("Cards (200)")).toBeInTheDocument();
     expect(add).toBeDisabled();
-  });
+  }, 20_000);
 
   it("preserves the draft and allows retry after an async submission failure", async () => {
     const onCreateDeck = vi

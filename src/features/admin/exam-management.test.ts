@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import { parseReadingExamPage, parseReadingRevision } from "./exam-management";
 
 describe("exam API response parsing", () => {
+  it("accepts seeded GUIDs and historical Superseded revisions", () => {
+    const revision = {
+      examId: "b1000000-0000-0000-0000-000000000001",
+      revisionId: "b2000000-0000-0000-0000-000000000001",
+      scoreProfileId: "a0000000-0000-0000-0000-000000000001",
+      code: "SEED",
+      title: "Seed exam",
+      versionNumber: 1,
+      status: "Superseded",
+      blocks: [],
+    };
+    expect(parseReadingRevision(revision)).toEqual(revision);
+    expect(
+      parseReadingExamPage({
+        items: [
+          {
+            ...revision,
+            status: "Published",
+            createdAtUtc: "2026-11-23T00:00:00Z",
+          },
+        ],
+        pageNumber: 1,
+        pageSize: 20,
+        totalCount: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      }).items[0]?.examId,
+    ).toBe(revision.examId);
+    expect(() =>
+      parseReadingRevision({ ...revision, examId: "invalid" }),
+    ).toThrow();
+  });
   it.each(["Draft", "Published", "Superseded"])(
     "accepts zero-padded IDs in %s exam lists and revisions",
     (status) => {

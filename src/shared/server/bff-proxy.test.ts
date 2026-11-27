@@ -67,6 +67,38 @@ afterEach(() => {
 });
 
 describe("shared/server/bff-proxy", () => {
+  it.each(["json", "raw"] as const)(
+    "bounds streamed %s bodies before parsing or forwarding",
+    async (bodyMode) => {
+      const fetch = vi.fn();
+      vi.stubGlobal("fetch", fetch);
+      let chunks = 0;
+      const cancel = vi.fn();
+      const request = new NextRequest(`${ORIGIN}/api/test`, {
+        method: "POST",
+        duplex: "half",
+        headers: { "Content-Type": "application/json" },
+        body: new ReadableStream({
+          pull(controller) {
+            if (++chunks < 4) controller.enqueue(new Uint8Array(11));
+            else controller.close();
+          },
+          cancel,
+        }),
+      });
+      const response = await forwardBffRequest(request, {
+        upstreamPath: "/api/test",
+        auth: "public",
+        sameOrigin: false,
+        bodyMode,
+        maxBodyBytes: 10,
+      });
+      expect(response.status).toBe(413);
+      expect(cancel).toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
   it("validates API_BASE_URL safely", () => {
     expect(resolveBackendBaseUrl()).toBe("http://api:8080");
     vi.stubEnv("API_BASE_URL", "file:///etc/passwd");

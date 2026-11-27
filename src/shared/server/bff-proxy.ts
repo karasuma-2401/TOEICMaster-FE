@@ -197,6 +197,16 @@ async function readBoundedBytes(
   return body;
 }
 
+export async function readBoundedBody(
+  request: Request,
+  maxBytes: number,
+  oversizeMessage = "Uploaded payload exceeds the size limit.",
+): Promise<{ body: ArrayBuffer; contentType: string } | Response> {
+  const body = await readBoundedBytes(request, maxBytes, oversizeMessage);
+  if (body instanceof Response) return body;
+  return { body, contentType: request.headers.get("content-type") ?? "" };
+}
+
 export interface ReadBoundedJsonOk {
   ok: true;
   data: unknown;

@@ -10,6 +10,7 @@ import {
   getScoreProfiles,
   importReadingExam,
 } from "@/features/admin/exam-api";
+import { CreateScoreProfileButton } from "./create-score-profile-button";
 import {
   formatAdminDate,
   type ReadingExamPage,
@@ -1268,6 +1269,11 @@ function CompleteTests() {
           >
             Download Excel template
           </Link>
+          <CreateScoreProfileButton
+            onCreated={(profile) =>
+              setProfiles((previous) => [...(previous ?? []), profile])
+            }
+          />
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)]"
             onClick={() => setImportOpen(true)}

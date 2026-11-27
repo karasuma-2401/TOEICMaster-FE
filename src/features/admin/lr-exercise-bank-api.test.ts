@@ -26,6 +26,59 @@ afterEach(() => {
 });
 
 describe("L&R exercise-bank API client", () => {
+  it("accepts seeded GUIDs in bank items and questions", async () => {
+    const item = {
+      id: "b1000000-0000-0000-0000-000000000001",
+      part: 5,
+      kind: "SINGLE",
+      code: "SEED",
+      topic: "Grammar",
+      difficulty: "EASY",
+      status: "PUBLISHED",
+      context: null,
+      audioUrl: null,
+      imageUrl: null,
+      version: 1,
+      createdAtUtc: "2026-11-23T00:00:00Z",
+      updatedAtUtc: "2026-11-23T00:00:00Z",
+      questions: [
+        {
+          id: "b2000000-0000-0000-0000-000000000001",
+          ordinal: 1,
+          code: "Q1",
+          prompt: "Choose",
+          optionA: "A",
+          optionB: "B",
+          optionC: "C",
+          optionD: "D",
+          correctKey: "A",
+          translation: null,
+          explanation: null,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          items: [item],
+          pageNumber: 1,
+          pageSize: 20,
+          totalCount: 1,
+          totalPages: 1,
+        }),
+      ),
+    );
+    await expect(
+      getLrExerciseItems(5, {
+        query: "",
+        difficulty: "ALL",
+        status: "ALL",
+        page: 1,
+      }),
+    ).resolves.toMatchObject({ items: [item] });
+  });
+
   it("keeps summary and list requests on same-origin BFF routes", async () => {
     const fetchMock = vi
       .fn()

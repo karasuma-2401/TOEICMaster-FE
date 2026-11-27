@@ -6,5 +6,6 @@ export function POST(request: NextRequest) {
     request,
     "/api/v1/admin/exam-media/images",
     "POST",
+    5 * 1024 * 1024 + 64 * 1024,
   );
 }

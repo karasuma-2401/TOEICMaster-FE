@@ -6439,7 +6439,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["KnowledgeArticlePageDto"];
+                        "text/json": components["schemas"]["KnowledgeArticlePageDto"];
+                        "text/plain": components["schemas"]["KnowledgeArticlePageDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
                 };
             };
         };
@@ -6474,7 +6489,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["KnowledgeArticleDetailDto"];
+                        "text/json": components["schemas"]["KnowledgeArticleDetailDto"];
+                        "text/plain": components["schemas"]["KnowledgeArticleDetailDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -6509,7 +6539,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["KnowledgeArticleSummaryDto"][];
+                        "text/json": components["schemas"]["KnowledgeArticleSummaryDto"][];
+                        "text/plain": components["schemas"]["KnowledgeArticleSummaryDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -6542,7 +6587,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["KnowledgeCategoryDto"][];
+                        "text/json": components["schemas"]["KnowledgeCategoryDto"][];
+                        "text/plain": components["schemas"]["KnowledgeCategoryDto"][];
+                    };
                 };
             };
         };
@@ -6579,6 +6628,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         put?: never;
@@ -6598,7 +6658,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    articleId?: string;
+                    pageNumber?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -6610,7 +6674,33 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["SavedKnowledgeArticlePage"];
+                        "text/json": components["schemas"]["SavedKnowledgeArticlePage"];
+                        "text/plain": components["schemas"]["SavedKnowledgeArticlePage"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -6641,12 +6731,45 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -6662,12 +6785,34 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -8897,6 +9042,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminExamContextBlockDto: {
+            altText: null | string;
+            /** Format: uuid */
+            imageAssetId: null | string;
+            imageRequired: boolean;
+            /** Format: int32 */
+            ordinal: number;
+            text: null | string;
+            type: components["schemas"]["ExamContextType"];
+        };
         AdminUserDto: {
             authProvider: string;
             avatarUrl: null | string;
@@ -9208,7 +9363,7 @@ export interface components {
             audioAssetId: null | string;
             /** Format: int32 */
             audioDurationMs?: null | number;
-            contextBlocks: components["schemas"]["ExamContextBlockDto"][];
+            contextBlocks: components["schemas"]["AdminExamContextBlockDto"][];
             /** Format: int32 */
             firstQuestionNumber: number;
             key: string;
@@ -9234,14 +9389,13 @@ export interface components {
         /** @enum {string} */
         ExamBlockType: "Single" | "Group";
         ExamContextBlockDto: {
-            altText: null | string;
+            /** Format: uuid */
+            id: string;
             /** Format: uuid */
             imageAssetId: null | string;
-            imageRequired: boolean;
             /** Format: int32 */
             ordinal: number;
             text: null | string;
-            type: components["schemas"]["ExamContextType"];
         };
         ExamContextBlockRequest: {
             altText: null | string;
@@ -9962,6 +10116,26 @@ export interface components {
             /** Format: uuid */
             questionId: string;
             selectedKey: null | string;
+        };
+        SavedKnowledgeArticle: {
+            /** Format: uuid */
+            articleId: string;
+            available: boolean;
+            title: string;
+            url: null | string;
+        };
+        SavedKnowledgeArticlePage: {
+            hasNextPage: boolean;
+            hasPreviousPage: boolean;
+            items: components["schemas"]["SavedKnowledgeArticle"][];
+            /** Format: int32 */
+            pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         SaveWritingAnswerInput: {
             answer: string;
