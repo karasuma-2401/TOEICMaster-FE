@@ -1,7 +1,116 @@
 import { describe, expect, it } from "vitest";
-import { runGuardrails } from "./check-guardrails.mjs";
+import {
+  formatGuardrailViolation,
+  runGuardrails,
+  stripComments,
+} from "./check-guardrails.mjs";
 
 describe("scripts/check-guardrails", () => {
+  it("rejects past raw flashcard localStorage writes with zero baseline", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/flashcards/storage.ts": `export const save = () => localStorage.setItem("flashcards-progress", "{}");`,
+        "src/features/flashcards/components/flashcard-match-game.tsx": `const best = window.localStorage.getItem("toeicmaster.fc.match.best.deck");`,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toHaveLength(2);
+    for (const violation of result.violations) {
+      expect(violation).toMatchObject({
+        rule: "no-raw-storage",
+        count: 1,
+        allowed: 0,
+      });
+      expect(formatGuardrailViolation(violation)).toContain(
+        "@/shared/lib/storage",
+      );
+    }
+  });
+
+  it("allows only the shared storage owner, tests, and explicitly scoped callers", () => {
+    const result = runGuardrails({
+      baseline: {},
+      files: {
+        "src/shared/lib/storage.ts": `const storage = window.localStorage;`,
+        "src/features/flashcards/storage.test.ts": `window.localStorage.setItem("old", "{}");`,
+        "src/features/flashcards/storage.ts": `import { writeScopedStorage } from "@/shared/lib/storage"; export const save = () => writeScopedStorage({ namespace: "flashcards", userId: "learner" }, "progress", "{}");`,
+        "src/features/demo/note.ts": `// Do not use localStorage or sessionStorage directly.`,
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("ratchets other legacy storage references and rejects new sessionStorage owners", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/user/preferences.ts": `const first = window.localStorage; const second = window.localStorage;`,
+        "src/features/demo/preferences.ts": `const storage = globalThis.sessionStorage;`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-storage",
+        file: "src/features/demo/preferences.ts",
+        count: 1,
+        allowed: 0,
+      },
+      {
+        rule: "no-raw-storage",
+        file: "src/features/user/preferences.ts",
+        count: 2,
+        allowed: 1,
+      },
+    ]);
+  });
+
+  it("rejects the past strict exam-management GUID regex and names the shared guards", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/admin/exam-management.ts": `
+          function isGuid(value: unknown): value is string {
+            return typeof value === "string" &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+          }
+        `,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-duplicate-guid-regex",
+        file: "src/features/admin/exam-management.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+    expect(formatGuardrailViolation(result.violations[0]!)).toContain(
+      "Import isGuid or isNullableGuid from @/shared/lib/guards",
+    );
+  });
+
+  it("catches permissive GUID patterns and RegExp strings outside the shared guard", () => {
+    const pattern =
+      "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+    const result = runGuardrails({
+      files: {
+        "src/shared/lib/guards.ts": `const GUID_REGEX = /^${pattern}$/i;`,
+        "src/features/demo/api.ts": `const guid = /^${pattern}$/i;`,
+        "src/features/demo/server/routes.ts": `const guid = new RegExp("^${pattern}$", "i");`,
+        "src/features/demo/note.ts": `// A GUID looks like ${pattern}`,
+        "src/features/demo/api.test.ts": `const guid = /^${pattern}$/i;`,
+      },
+    });
+    expect(result.violations.map(({ rule, file }) => ({ rule, file }))).toEqual(
+      [
+        { rule: "no-duplicate-guid-regex", file: "src/features/demo/api.ts" },
+        {
+          rule: "no-duplicate-guid-regex",
+          file: "src/features/demo/server/routes.ts",
+        },
+      ],
+    );
+  });
+
   it("passes on the real repository production codebase with the Wave 3 ratchet baseline", () => {
     const result = runGuardrails({ rootDir: process.cwd() });
     expect(result.violations).toEqual([]);
@@ -173,6 +282,12 @@ describe("scripts/check-guardrails", () => {
         count: 1,
         allowed: 0,
       },
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/demo/server/demo-proxy.ts",
+        count: 1,
+        allowed: 0,
+      },
     ]);
 
     const modern = runGuardrails({
@@ -182,6 +297,72 @@ describe("scripts/check-guardrails", () => {
       },
     });
     expect(modern.ok).toBe(true);
+  });
+
+  it("rejects new raw app API fetch calls with the shared BFF remediation", () => {
+    const result = runGuardrails({
+      files: {
+        "src/app/api/demo/route.ts": `export async function GET() { return fetch("http://localhost:5287/api/v1/demo"); }`,
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/app/api/demo/route.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+    expect(formatGuardrailViolation(result.violations[0]!)).toContain(
+      "Use createBffProxy or forwardBffRequest from @/shared/server/bff-proxy",
+    );
+  });
+
+  it("rejects raw fetch in server files even when they import the shared BFF proxy", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/demo/server/service.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; export const GET = () => globalThis.fetch("/api/v1/demo");`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/demo/server/service.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("permits the auth adapter, shared BFF owner, browser clients, tests, and forwarded routes", () => {
+    const result = runGuardrails({
+      baseline: {},
+      files: {
+        "src/features/auth/server/backend.ts": `export const send = () => fetch("/api/v1/auth/login");`,
+        "src/shared/server/bff-proxy.ts": `export const send = () => fetch("/api/v1/demo");`,
+        "src/features/demo/api.ts": `export const send = () => fetch("/api/demo");`,
+        "src/app/api/demo/route.test.ts": `const send = () => fetch("/api/demo");`,
+        "src/app/api/demo/route.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; export const GET = createBffProxy({ upstreamPath: "/api/v1/demo", auth: "public" });`,
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("ratchets exact existing server fetch occurrences without permitting one more", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/lr-exam/server/lr-proxy.ts": `import { createBffProxy } from "@/shared/server/bff-proxy"; const first = () => fetch("/first"); const second = () => fetch("/second");`,
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/features/lr-exam/server/lr-proxy.ts",
+        count: 2,
+        allowed: 1,
+      },
+    ]);
   });
 
   it("enforces the Wave 3 ratchet when an allowlisted file adds 1 extra violation", () => {
@@ -250,5 +431,65 @@ describe("scripts/check-guardrails", () => {
         },
       }).violations[0]?.rule,
     ).toBe("no-new-legacy-proxy");
+  });
+  it("flags raw bff fetch even after URL strings and comment-like text on the same line", () => {
+    const result = runGuardrails({
+      files: {
+        "src/app/api/bypass/route.ts":
+          'const u = "http://localhost"; fetch(u);',
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual([
+      {
+        rule: "no-raw-bff-fetch",
+        file: "src/app/api/bypass/route.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("flags raw storage and duplicate GUID regex even when preceded by URL strings or template literals", () => {
+    const result = runGuardrails({
+      files: {
+        "src/features/demo/storage.ts":
+          'const endpoint = "http://localhost:3000/api"; localStorage.setItem("key", "val");',
+        "src/features/demo/api.ts":
+          "const base = `https://example.com/api/${1}`; const guidPattern = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-/;",
+      },
+    });
+    expect(result.violations).toEqual([
+      {
+        rule: "no-duplicate-guid-regex",
+        file: "src/features/demo/api.ts",
+        count: 1,
+        allowed: 0,
+      },
+      {
+        rule: "no-raw-storage",
+        file: "src/features/demo/storage.ts",
+        count: 1,
+        allowed: 0,
+      },
+    ]);
+  });
+
+  it("accurately strips real comments while preserving URLs in strings, template literals, and regexes", () => {
+    const raw = [
+      "// Single line comment with http://example.com",
+      'const u = "http://localhost:5287"; // inline comment',
+      "/* Multiline comment",
+      "   with https://domain.com */",
+      "const tmpl = \`https://api.domain.com/\${id}\`;",
+      "const regex = /https?:\\/\\/[a-z]+/;",
+    ].join("\n");
+    const stripped = stripComments(raw);
+    expect(stripped).toContain('"http://localhost:5287"');
+    expect(stripped).toContain("https://api.domain.com/");
+    expect(stripped).toContain("/https?:\\/\\/[a-z]+/");
+    expect(stripped).not.toContain("Single line comment");
+    expect(stripped).not.toContain("Multiline comment");
+    expect(stripped).not.toContain("inline comment");
   });
 });

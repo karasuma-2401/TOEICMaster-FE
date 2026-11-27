@@ -15,7 +15,7 @@ describe("ping proxy", () => {
         Response.json({ service: "TOEICMaster", status: "ok" }),
       );
     vi.stubGlobal("fetch", mock);
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/system/ping"));
     expect(response.status).toBe(200);
     expect(String(mock.mock.calls[0][0])).toBe(
       "http://api:8080/api/v1/system/ping",
@@ -31,7 +31,9 @@ describe("ping proxy", () => {
       );
     vi.stubGlobal("fetch", mock);
 
-    expect((await GET()).status).toBe(200);
+    expect(
+      (await GET(new Request("http://localhost/api/system/ping"))).status,
+    ).toBe(200);
     expect(mock.mock.calls.map(([url]) => String(url))).toEqual([
       "http://api:8080/api/v1/system/ping",
       "http://api:8080/api/system/ping",
@@ -42,7 +44,7 @@ describe("ping proxy", () => {
       "fetch",
       vi.fn().mockRejectedValue(new Error("sensitive connection details")),
     );
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/system/ping"));
     expect(response.status).toBe(502);
     expect(await response.text()).not.toContain("sensitive");
     expect(response.headers.get("content-type")).toBe(
@@ -53,7 +55,27 @@ describe("ping proxy", () => {
     vi.stubEnv("API_BASE_URL", "file:///etc/passwd");
     const mock = vi.fn();
     vi.stubGlobal("fetch", mock);
-    expect((await GET()).status).toBe(502);
+    expect(
+      (await GET(new Request("http://localhost/api/system/ping"))).status,
+    ).toBe(502);
     expect(mock).not.toHaveBeenCalled();
+  });
+
+  it("forwards client headers through the shared BFF boundary and disables response caching", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ service: "TOEICMaster", status: "ok" }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await GET(
+      new Request("http://localhost/api/system/ping", {
+        headers: { "X-Real-IP": "198.51.100.9", "X-Forwarded-Proto": "https" },
+      }),
+    );
+    const headers = fetchMock.mock.calls[0]![1].headers as Headers;
+    expect(headers.get("X-Forwarded-For")).toBe("198.51.100.9");
+    expect(headers.get("X-Forwarded-Proto")).toBe("https");
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 });

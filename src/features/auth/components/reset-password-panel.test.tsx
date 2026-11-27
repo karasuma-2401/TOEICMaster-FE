@@ -110,4 +110,17 @@ describe("ResetPasswordPanel", () => {
       screen.getByRole("button", { name: "Reset password" }),
     ).toBeInTheDocument();
   });
+
+  it("uses WCAG AA --tm-* tokens instead of failing literal hex colors", () => {
+    const { container } = render(
+      <ResetPasswordPanel
+        expiresAtUtc={new Date(Date.now() + 10 * 60_000).toISOString()}
+        onRestart={vi.fn()}
+        resetToken="reset-token"
+      />,
+    );
+    expect(container.innerHTML).not.toMatch(
+      /#(?:ed361c|b7aeaa|c9c1bd|c8c0bc|a89f9b|a8a09c|938b87|c0b8b4|b6b0ad|beb7b3|ff6c0d)/i,
+    );
+  });
 });

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
+import { getSession } from "@/features/auth/api";
 import {
   fetchUnifiedHistory,
   type ExamSkillType,
   type UnifiedAttemptItem,
 } from "@/features/history/api";
+import { refreshSessionLocked } from "@/shared/api/http";
 import { focusRing } from "@/shared/components/practice/styles";
 
 const skillMeta: Record<
@@ -186,22 +188,44 @@ export function AttemptHistorySection({
     const task = window.setTimeout(() => {
       setLoading(true);
       setError(null);
-      void fetchUnifiedHistory({ skills: selected, signal: controller.signal })
-        .then((result) => {
-          if (controller.signal.aborted) return;
-          setItems(result.items);
-          setUnauthenticatedSkills(result.unauthenticatedSkills);
+      void (async () => {
+        const session = await getSession();
+        if (controller.signal.aborted) return;
+        if (session.status === "guest") {
+          setItems([]);
+          setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
           setLoading(false);
-        })
-        .catch((cause: unknown) => {
+          return;
+        }
+        if (session.status === "refresh_required") {
+          try {
+            await refreshSessionLocked();
+          } catch {
+            if (controller.signal.aborted) return;
+            setItems([]);
+            setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
+            setLoading(false);
+            return;
+          }
           if (controller.signal.aborted) return;
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Unable to load attempt history.",
-          );
-          setLoading(false);
+        }
+        const result = await fetchUnifiedHistory({
+          skills: selected,
+          signal: controller.signal,
         });
+        if (controller.signal.aborted) return;
+        setItems(result.items);
+        setUnauthenticatedSkills(result.unauthenticatedSkills);
+        setLoading(false);
+      })().catch((cause: unknown) => {
+        if (controller.signal.aborted) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Unable to load attempt history.",
+        );
+        setLoading(false);
+      });
     }, 0);
     return () => {
       window.clearTimeout(task);

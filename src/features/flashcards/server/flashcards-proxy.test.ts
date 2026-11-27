@@ -1,4 +1,8 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  setSessionCookie,
+  type AuthSession,
+} from "@/features/auth/server/session";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { forwardFlashcards } from "./flashcards-proxy";
 
@@ -7,6 +11,37 @@ afterEach(() => {
 });
 
 describe("flashcards server proxy", () => {
+  it.each([
+    ["decks", "00000000-0000-0000-0000-000000000001", "cards"],
+    ["decks", "00000000-0000-0000-0000-000000000001", "match-records"],
+  ])(
+    "recognizes seeded GUID routes before enforcing auth: %s/%s/%s",
+    async (...segments) => {
+      const request = new NextRequest(
+        `http://localhost:3000/api/flashcards/${segments.join("/")}`,
+        { method: "POST", headers: { origin: "http://localhost:3000" } },
+      );
+      const response = await forwardFlashcards(request, segments, "POST");
+      expect(response.status).toBe(401);
+    },
+  );
+
+  it("rejects malformed IDs and extra path segments instead of forwarding them", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    for (const segments of [
+      ["cards", "not-a-guid", "progress"],
+      ["decks", "00000000-0000-0000-0000-000000000001", "cards", "extra"],
+    ]) {
+      const request = new NextRequest(
+        `http://localhost:3000/api/flashcards/${segments.join("/")}`,
+      );
+      expect((await forwardFlashcards(request, segments, "GET")).status).toBe(
+        404,
+      );
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown paths with 404", async () => {
     const request = new NextRequest(
       "http://localhost:3000/api/flashcards/unknown",
@@ -101,5 +136,35 @@ describe("flashcards server proxy", () => {
     expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
       "http://localhost:5287/api/v1/flashcards/decks",
     );
+  });
+
+  it("returns 401 instead of guest 200 when a session has an expired access token", async () => {
+    vi.stubEnv(
+      "AUTH_SESSION_SECRET",
+      Buffer.alloc(32, 7).toString("base64url"),
+    );
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const res = NextResponse.next();
+    const session: AuthSession = {
+      accessToken: "expired-token",
+      accessTokenExpiresAtUtc: new Date(Date.now() - 60_000).toISOString(),
+      refreshToken: "valid-refresh",
+      refreshTokenExpiresAtUtc: new Date(Date.now() + 600_000).toISOString(),
+      user: { id: "u-1", displayName: "Tester", email: "t@example.com" },
+      role: "USER",
+      rememberMe: false,
+    };
+    setSessionCookie(res, session);
+    const cookie = res.headers.get("set-cookie")!.split(";")[0];
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/flashcards/decks",
+      { headers: { Cookie: cookie } },
+    );
+    const response = await forwardFlashcards(request, ["decks"], "GET");
+
+    expect(response.status).toBe(401);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
   });
 });

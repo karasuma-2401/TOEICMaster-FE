@@ -15,9 +15,13 @@ export async function POST(request: NextRequest) {
   const current = sessionCookie(request);
   if (current) {
     try {
-      const upstream = await postAuth("logout", {
-        refreshToken: current.refreshToken,
-      });
+      const upstream = await postAuth(
+        "logout",
+        {
+          refreshToken: current.refreshToken,
+        },
+        request,
+      );
       if (upstream.status === 429) return rateLimited(upstream);
       if (upstream.status !== 204) throw new Error("Unexpected logout status");
     } catch {

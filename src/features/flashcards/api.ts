@@ -1,3 +1,4 @@
+import { HttpError, requestJson, requestVoid } from "@/shared/api/http";
 import type {
   CardMastery,
   CardProgressRecord,
@@ -7,6 +8,8 @@ import type {
   FlashcardItem,
   MatchRecord,
 } from "./types";
+
+export { isGuid as isServerGuid } from "@/shared/lib/guards";
 
 export interface FlashcardWorkspaceApiResponse {
   decks: FlashcardDeck[];
@@ -58,13 +61,6 @@ const VALID_MASTERY = new Set<CardMastery>([
   "review",
   "mastered",
 ]);
-
-const GUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isServerGuid(id: string): boolean {
-  return GUID_REGEX.test(id);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -219,83 +215,73 @@ export function parseWorkspace(raw: unknown): FlashcardWorkspaceApiResponse {
   };
 }
 
-async function readErrorMessage(response: Response): Promise<string> {
-  try {
-    const data: unknown = await response.json();
-    if (isRecord(data) && typeof data.detail === "string") return data.detail;
-    if (isRecord(data) && typeof data.title === "string") return data.title;
-  } catch {
-    // Fall back to generic message.
+function toFlashcardsError(cause: unknown): never {
+  if (isRecord(cause) && cause.name === "AbortError") throw cause;
+  if (cause instanceof FlashcardsApiError) throw cause;
+  if (cause instanceof HttpError) {
+    const message = cause.detail ?? cause.title ?? cause.message;
+    throw new FlashcardsApiError(cause.status, message);
   }
-  return `Request failed (HTTP ${response.status}).`;
+  if (cause instanceof Error) {
+    throw new FlashcardsApiError(502, cause.message);
+  }
+  throw new FlashcardsApiError(502, "Unable to connect to Flashcards service.");
 }
 
-export async function getFlashcardWorkspace(): Promise<FlashcardWorkspaceApiResponse> {
-  const response = await fetch("/api/flashcards/decks", {
-    method: "GET",
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+export async function getFlashcardWorkspace(
+  signal?: AbortSignal,
+): Promise<FlashcardWorkspaceApiResponse> {
+  try {
+    return await requestJson("/api/flashcards/decks", {
+      method: "GET",
+      signal,
+      parse: parseWorkspace,
+      fallbackMessage: "Unable to load flashcards.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
-  return parseWorkspace(await response.json());
 }
 
 export async function createFlashcardDeckApi(
   payload: CreateFlashcardDeckPayload,
 ): Promise<FlashcardDeck> {
-  const response = await fetch("/api/flashcards/decks", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+  try {
+    return await requestJson("/api/flashcards/decks", {
+      method: "POST",
+      json: payload,
+      parse: parseDeck,
+      fallbackMessage: "Unable to create flashcard deck.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
-  return parseDeck(await response.json());
 }
 
 export async function addFlashcardCardApi(
   deckId: string,
   payload: CreateFlashcardCardPayload,
 ): Promise<FlashcardItem> {
-  const response = await fetch(`/api/flashcards/decks/${deckId}/cards`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+  try {
+    return await requestJson(`/api/flashcards/decks/${deckId}/cards`, {
+      method: "POST",
+      json: payload,
+      parse: parseCard,
+      fallbackMessage: "Unable to add word to the deck.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
-  return parseCard(await response.json());
 }
 
 export async function deleteFlashcardDeckApi(deckId: string): Promise<void> {
-  const response = await fetch(`/api/flashcards/decks/${deckId}`, {
-    method: "DELETE",
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok && response.status !== 204) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+  try {
+    await requestVoid(`/api/flashcards/decks/${deckId}`, {
+      method: "DELETE",
+      fallbackMessage: "Unable to delete flashcard deck.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
 }
 
@@ -304,35 +290,28 @@ export async function upsertFlashcardProgressApi(
   status: CardMastery,
   starred: boolean,
 ): Promise<CardProgressRecord> {
-  const response = await fetch(`/api/flashcards/cards/${cardId}/progress`, {
-    method: "PUT",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status, starred }),
-  });
-  if (!response.ok) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+  try {
+    return await requestJson(`/api/flashcards/cards/${cardId}/progress`, {
+      method: "PUT",
+      json: { status, starred },
+      parse: parseProgress,
+      fallbackMessage: "Unable to save card progress.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
-  return parseProgress(await response.json());
 }
 
 export async function resetFlashcardDeckProgressApi(
   deckId: string,
 ): Promise<void> {
-  const response = await fetch(`/api/flashcards/decks/${deckId}/progress`, {
-    method: "DELETE",
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok && response.status !== 204) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+  try {
+    await requestVoid(`/api/flashcards/decks/${deckId}/progress`, {
+      method: "DELETE",
+      fallbackMessage: "Unable to reset deck progress.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
 }
 
@@ -341,22 +320,14 @@ export async function recordFlashcardMatchApi(
   elapsedMs: number,
   maxCombo: number,
 ): Promise<MatchRecord> {
-  const response = await fetch(
-    `/api/flashcards/decks/${deckId}/match-records`,
-    {
+  try {
+    return await requestJson(`/api/flashcards/decks/${deckId}/match-records`, {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ elapsedMs, maxCombo }),
-    },
-  );
-  if (!response.ok) {
-    throw new FlashcardsApiError(
-      response.status,
-      await readErrorMessage(response),
-    );
+      json: { elapsedMs, maxCombo },
+      parse: parseMatchRecord,
+      fallbackMessage: "Unable to record Speed Match score.",
+    });
+  } catch (cause) {
+    toFlashcardsError(cause);
   }
-  return parseMatchRecord(await response.json());
 }

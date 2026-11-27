@@ -23,7 +23,12 @@ export async function forward(
     ) {
       return problem(401, "Session is invalid or has expired.");
     }
-    const upstream = await backendFetch(path, session.accessToken, init);
+    const upstream = await backendFetch(
+      path,
+      session.accessToken,
+      init,
+      request,
+    );
     if (upstream.status === 204) {
       return new NextResponse(null, {
         status: 204,

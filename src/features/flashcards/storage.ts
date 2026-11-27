@@ -1,3 +1,4 @@
+import { readScopedStorage, writeScopedStorage } from "@/shared/lib/storage";
 import type {
   CardFilter,
   CardMastery,
@@ -9,7 +10,8 @@ import type {
   QuizQuestion,
 } from "./types";
 
-export const FLASHCARD_STORAGE_KEY = "toeicmaster.flashcards.v1";
+const FLASHCARD_NAMESPACE = "flashcards";
+const FLASHCARD_STORAGE_KEY = "store";
 
 export const EMPTY_FLASHCARD_STORE: FlashcardStoreState = {
   progress: {},
@@ -137,24 +139,52 @@ export function parseFlashcardStore(raw: string | null): FlashcardStoreState {
   }
 }
 
-export function readFlashcardStore(): FlashcardStoreState {
-  if (typeof window === "undefined") return EMPTY_FLASHCARD_STORE;
-  try {
-    return parseFlashcardStore(
-      window.localStorage.getItem(FLASHCARD_STORAGE_KEY),
-    );
-  } catch {
-    return EMPTY_FLASHCARD_STORE;
-  }
+export function readFlashcardStore(userId: string | null): FlashcardStoreState {
+  return parseFlashcardStore(
+    readScopedStorage(
+      { namespace: FLASHCARD_NAMESPACE, userId },
+      FLASHCARD_STORAGE_KEY,
+    ),
+  );
 }
 
-export function writeFlashcardStore(state: FlashcardStoreState): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(FLASHCARD_STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // Ignore storage quota or private-mode errors gracefully.
-  }
+export function writeFlashcardStore(
+  state: FlashcardStoreState,
+  userId: string | null,
+): void {
+  writeScopedStorage(
+    { namespace: FLASHCARD_NAMESPACE, userId },
+    FLASHCARD_STORAGE_KEY,
+    JSON.stringify(state),
+  );
+}
+
+export function readFlashcardBestTime(
+  deckId: string,
+  pairCount: number,
+  userId: string | null,
+): number | null {
+  const raw = readScopedStorage(
+    { namespace: FLASHCARD_NAMESPACE, userId },
+    `match-best:${deckId}:p${pairCount}`,
+  );
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function writeFlashcardBestTime(
+  deckId: string,
+  pairCount: number,
+  milliseconds: number,
+  userId: string | null,
+): void {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return;
+  writeScopedStorage(
+    { namespace: FLASHCARD_NAMESPACE, userId },
+    `match-best:${deckId}:p${pairCount}`,
+    String(milliseconds),
+  );
 }
 
 export function getCardStatus(

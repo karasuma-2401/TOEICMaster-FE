@@ -1,6 +1,14 @@
 "use client";
 
-import { useRef, type ComponentProps, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/shared/lib/utils";
@@ -59,6 +67,34 @@ export interface DialogContentProps extends ComponentProps<
   size?: DialogSize;
   showCloseButton?: boolean;
   closeLabel?: string;
+  returnFocusRef?: RefObject<HTMLElement | null>;
+}
+
+function getFocusableOpener(
+  dialogElement: HTMLElement | null,
+): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement) || active === document.body) {
+    return null;
+  }
+  if (dialogElement?.contains(active)) {
+    return null;
+  }
+  return active;
+}
+
+function resolveReturnTarget(
+  returnFocusRef: RefObject<HTMLElement | null> | undefined,
+  openerRef: RefObject<HTMLElement | null>,
+): HTMLElement | null {
+  if (returnFocusRef?.current?.isConnected) {
+    return returnFocusRef.current;
+  }
+  if (openerRef.current?.isConnected) {
+    return openerRef.current;
+  }
+  return null;
 }
 
 /** Accessible modal or slide-over drawer content surface with focus trapping and Escape handling. */
@@ -69,8 +105,46 @@ function DialogContent({
   size = "md",
   showCloseButton = true,
   closeLabel = "Close",
+  returnFocusRef,
+  onCloseAutoFocus,
+  ref: forwardedRef,
   ...props
 }: DialogContentProps) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const wasOpenedRef = useRef(false);
+  const handledCloseRef = useRef(false);
+
+  const setContentRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (typeof forwardedRef === "function") {
+        forwardedRef(node);
+      } else if (forwardedRef && typeof forwardedRef === "object") {
+        forwardedRef.current = node;
+      }
+
+      if (node) {
+        contentRef.current = node;
+        wasOpenedRef.current = true;
+        handledCloseRef.current = false;
+        openerRef.current = getFocusableOpener(node);
+        return;
+      }
+
+      contentRef.current = null;
+      if (wasOpenedRef.current && !handledCloseRef.current) {
+        const target = resolveReturnTarget(returnFocusRef, openerRef);
+        if (target) {
+          queueMicrotask(() => {
+            if (target.isConnected) target.focus();
+          });
+        }
+      }
+      wasOpenedRef.current = false;
+    },
+    [forwardedRef, returnFocusRef],
+  );
+
   const layoutClassName =
     variant === "drawer"
       ? cn(
@@ -93,6 +167,15 @@ function DialogContent({
         )}
         data-testid="ui-dialog-content"
         data-variant={variant}
+        onCloseAutoFocus={(event) => {
+          handledCloseRef.current = true;
+          onCloseAutoFocus?.(event);
+          if (!event.defaultPrevented && returnFocusRef?.current?.isConnected) {
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }
+        }}
+        ref={setContentRef}
         {...props}
       >
         {children}
@@ -172,9 +255,39 @@ export interface ConfirmDialogProps {
   confirmLabel: string;
   onCancel: () => void;
   onConfirm: () => void;
+  confirmDisabled?: boolean;
   cancelClassName?: string;
   confirmClassName?: string;
   destructive?: boolean;
+  returnFocusRef?: RefObject<HTMLElement | null>;
+}
+
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+function useFocusRestoration(
+  open: boolean,
+  returnFocusRef: RefObject<HTMLElement | null> | undefined,
+  contentRef: RefObject<HTMLElement | null>,
+) {
+  const openerRef = useRef<HTMLElement | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    if (open) {
+      openerRef.current = getFocusableOpener(contentRef.current);
+      return () => {
+        const target = resolveReturnTarget(returnFocusRef, openerRef);
+        if (target) {
+          queueMicrotask(() => {
+            if (target.isConnected && document.activeElement !== target) {
+              target.focus();
+            }
+          });
+        }
+      };
+    }
+    return undefined;
+  }, [open, returnFocusRef, contentRef]);
+  return openerRef;
 }
 
 /** Accessible confirmation modal that focuses the cancel button initially and handles Escape cleanly. */
@@ -188,10 +301,14 @@ function ConfirmDialog({
   confirmLabel,
   onCancel,
   onConfirm,
+  confirmDisabled = false,
   cancelClassName,
   confirmClassName,
   destructive = false,
+  returnFocusRef,
 }: ConfirmDialogProps) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const openerRef = useFocusRestoration(open, returnFocusRef, contentRef);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const body = description ?? children;
 
@@ -205,14 +322,23 @@ function ConfirmDialog({
       <DialogContent
         {...(id ? { "aria-labelledby": id } : {})}
         {...(body ? {} : { "aria-describedby": undefined })}
+        onCloseAutoFocus={(event) => {
+          const target = resolveReturnTarget(returnFocusRef, openerRef);
+          if (target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           cancelButtonRef.current?.focus();
         }}
+        ref={contentRef}
+        returnFocusRef={returnFocusRef}
         showCloseButton={false}
         size="sm"
       >
-        <DialogTitle id={id}>{title}</DialogTitle>
+        <DialogTitle {...(id ? { id } : {})}>{title}</DialogTitle>
         {body ? (
           <DialogPrimitive.Description asChild>
             <div className="mt-3 text-sm leading-6 text-[var(--tm-ink-muted,#5f5953)]">
@@ -235,13 +361,14 @@ function ConfirmDialog({
           </button>
           <button
             className={cn(
-              "inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring,#ff5a1f)]",
+              "inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring,#ff5a1f)] disabled:cursor-not-allowed disabled:opacity-60",
               destructive
                 ? "bg-[var(--tm-danger,#dc2626)] hover:brightness-95"
                 : "bg-[var(--tm-brand,#e04810)] hover:brightness-105",
               confirmClassName,
             )}
             data-testid="confirm-dialog-confirm"
+            disabled={confirmDisabled}
             onClick={onConfirm}
             type="button"
           >

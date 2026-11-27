@@ -12,9 +12,15 @@ const googleCallback = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 vi.mock("next/script", () => ({
-  default: function MockScript({ onReady }: { onReady?: () => void }) {
+  default: function MockScript({
+    onReady,
+    src,
+  }: {
+    onReady?: () => void;
+    src?: string;
+  }) {
     return (
-      <button onClick={onReady} type="button">
+      <button data-src={src} onClick={onReady} type="button">
         Load Google SDK
       </button>
     );
@@ -96,4 +102,55 @@ describe("GoogleSignIn callback", () => {
       expect(navigation.refresh).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("loads English GSI script (?hl=en) and clamps button width to narrow mobile containers", async () => {
+    const user = userEvent.setup();
+    const renderButton = vi.fn();
+    window.google = {
+      accounts: {
+        id: {
+          initialize: vi.fn(),
+          renderButton,
+        },
+      },
+    };
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        width: 319,
+        height: 44,
+        top: 0,
+        left: 0,
+        right: 319,
+        bottom: 44,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+    try {
+      render(<GoogleSignIn clientId="google-client-id" />);
+      const sdkButton = screen.getByRole("button", { name: "Load Google SDK" });
+      expect(sdkButton).toHaveAttribute(
+        "data-src",
+        "https://accounts.google.com/gsi/client?hl=en",
+      );
+
+      await user.click(sdkButton);
+      await waitFor(() => expect(renderButton).toHaveBeenCalled());
+
+      const wrapper = screen.getByLabelText("Sign in with Google");
+      expect(wrapper.className).toContain("max-w-[350px]");
+      expect(wrapper.className).toContain("overflow-hidden");
+      expect(renderButton).toHaveBeenLastCalledWith(
+        wrapper,
+        expect.objectContaining({
+          width: 319,
+          locale: "en",
+        }),
+      );
+    } finally {
+      rectSpy.mockRestore();
+    }
+  });
 });

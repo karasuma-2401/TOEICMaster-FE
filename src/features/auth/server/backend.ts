@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  extractForwardedClientHeaders,
+  readBoundedJson,
+} from "@/shared/server/bff-proxy";
 import type { AuthenticatedUser, AuthSession } from "./session";
+
+const AUTH_BODY_MAX_BYTES = 16 * 1024;
 
 type Errors = Record<string, string[]>;
 type SessionRole = "USER" | "ADMIN";
@@ -39,20 +45,43 @@ export function sameOrigin(request: NextRequest): boolean {
   return request.headers.get("origin") === new URL(request.url).origin;
 }
 
+export type ReadBoundedBodyResult =
+  | { ok: true; data: Record<string, unknown> }
+  | { ok: false; response?: NextResponse };
+
+export async function readBoundedBody(
+  request: NextRequest,
+  maxBytes = AUTH_BODY_MAX_BYTES,
+): Promise<ReadBoundedBodyResult> {
+  if (!request.headers.get("content-type")?.startsWith("application/json")) {
+    return { ok: false };
+  }
+  const parsed = await readBoundedJson(request, maxBytes, {
+    oversizeMessage: "Request payload exceeds the size limit.",
+  });
+  if (!parsed.ok) {
+    return parsed.response.status === 413
+      ? { ok: false, response: parsed.response }
+      : { ok: false };
+  }
+  const value = parsed.data;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { ok: false };
+  }
+  return { ok: true, data: value as Record<string, unknown> };
+}
+
 export async function readBody(
   request: NextRequest,
 ): Promise<Record<string, unknown> | null> {
-  if (!request.headers.get("content-type")?.startsWith("application/json"))
-    return null;
-  const value: unknown = await request.json().catch(() => null);
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
+  const result = await readBoundedBody(request);
+  return result.ok ? result.data : null;
 }
 
 export async function postAuth(
   action: string,
   body: object,
+  request?: Request,
 ): Promise<Response> {
   const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
   if (
@@ -61,9 +90,14 @@ export async function postAuth(
     base.password
   )
     throw new Error("Invalid API_BASE_URL");
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    ...(request ? extractForwardedClientHeaders(request) : {}),
+  };
   const options: RequestInit = {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
@@ -80,6 +114,7 @@ export async function backendFetch(
   path: string,
   accessToken: string,
   init: RequestInit = {},
+  request?: Request,
 ): Promise<Response> {
   const base = new URL(process.env.API_BASE_URL ?? "http://localhost:5287");
   if (
@@ -89,6 +124,13 @@ export async function backendFetch(
   )
     throw new Error("Invalid API_BASE_URL");
   const headers = new Headers(init.headers);
+  if (request) {
+    for (const [key, value] of Object.entries(
+      extractForwardedClientHeaders(request),
+    )) {
+      headers.set(key, value);
+    }
+  }
   headers.set("Accept", headers.get("Accept") ?? "application/json");
   headers.set("Authorization", `Bearer ${accessToken}`);
   return fetch(new URL(path, base), {

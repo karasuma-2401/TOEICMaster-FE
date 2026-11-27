@@ -23,17 +23,22 @@ export interface QuestionPaletteProps {
 }
 
 const listeningSlotClass = {
-  answered: "border-[#10b981] bg-[#ecfdf5] text-[#047857] font-medium",
-  current: "border-[#ea580c] bg-[#fff7ed] text-[#ea580c] font-semibold",
-  unanswered: "border-[#e2e8f0] bg-white text-[#67748b]",
-  flagged: "border-[#d97106] bg-[#fffaf4] text-[#d97106] font-semibold",
+  answered:
+    "border-[var(--tm-success)] bg-[var(--tm-success-soft)] text-[var(--tm-success)] font-medium",
+  current:
+    "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)] font-semibold",
+  unanswered:
+    "border-[var(--tm-border)] bg-[var(--tm-surface)] text-[var(--tm-ink-muted)]",
+  flagged:
+    "border-[var(--tm-warning)] bg-[var(--tm-warning-soft)] text-[var(--tm-warning)] font-semibold",
 } as const;
 
 const readingSlotClass = {
-  answered: "border-[#d9d2ce] bg-[#10b981] text-white",
+  answered: "border-[var(--tm-success)] bg-[var(--tm-success)] text-white",
   current:
-    "border-[#ff5a1f] bg-[#fff7ed] text-[#ff5a1f] ring-2 ring-[#ff5a1f]/30",
-  unanswered: "border-[#d9d2ce] bg-[#eee9e6] text-[#77716e]",
+    "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-brand)] ring-2 ring-[var(--tm-brand)]/30",
+  unanswered:
+    "border-[var(--tm-border-strong)] bg-[var(--tm-surface-muted)] text-[var(--tm-ink-muted)]",
 } as const;
 
 function Slot({
@@ -81,7 +86,7 @@ function Slot({
           aria-hidden="true"
           className={
             readingStyle
-              ? "absolute top-px left-6 h-1.5 w-1 rounded-[1px] bg-[#eab308]"
+              ? "absolute top-px left-6 h-1.5 w-1 rounded-[1px] bg-[var(--tm-warning)]"
               : "ml-px text-[8.5px]"
           }
         >
@@ -138,38 +143,38 @@ function ListeningPalette(props: QuestionPaletteProps) {
   return (
     <aside
       aria-label="Question palette"
-      className="flex w-full flex-col gap-2 overflow-y-auto border border-[#e2e8f0] bg-white px-3 pt-3.5 pb-4 lg:w-[380px] lg:shrink-0"
+      className="flex w-full min-w-0 flex-col gap-2 overflow-y-auto border border-[var(--tm-border)] bg-[var(--tm-surface)] px-3 pt-3.5 pb-4 lg:w-[340px] lg:shrink-0 xl:w-[360px]"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-[12.5px] font-semibold text-[#0f172a]">
+        <h2 className="text-[12.5px] font-semibold text-[var(--tm-ink)]">
           {LR_TOTAL_QUESTIONS}-Question Palette
         </h2>
-        <p className="text-[11.5px] text-[#10b981]">
+        <p className="text-[11.5px] font-semibold text-[var(--tm-success)]">
           {summary.answered} / {LR_TOTAL_QUESTIONS} (
           {percent(summary.answered, LR_TOTAL_QUESTIONS)}%)
         </p>
       </div>
       <ul className="flex flex-wrap gap-2 text-[9.5px]">
-        <li className="font-medium text-[#10b981]">
+        <li className="font-medium text-[var(--tm-success)]">
           ■ Answered ({summary.answered})
         </li>
-        <li className="font-semibold text-[#ea580c]">
+        <li className="font-semibold text-[var(--tm-brand)]">
           ■ Current ({currentNumbers.length})
         </li>
-        <li className="font-semibold text-[#d97106]">
+        <li className="font-semibold text-[var(--tm-warning)]">
           ⚑ Flagged ({flagCount})
         </li>
-        <li className="text-[#94a3b8]">□ Unanswered</li>
+        <li className="text-[var(--tm-ink-muted)]">□ Unanswered</li>
       </ul>
       <div className="flex flex-col gap-1">
-        <p className="text-[10.5px] font-semibold text-[#1d4ed8]">
+        <p className="text-[10.5px] font-semibold text-[var(--tm-info)]">
           Listening (Q1–{LISTENING_LAST}): {summary.listeningAnswered}/
           {LISTENING_LAST} answered
         </p>
         {partsInSection("listening").map((part) => (
           <div className="flex flex-col gap-1" key={part.id}>
             <p
-              className={`text-[9.5px] ${part.first <= (currentNumbers[0] ?? 0) && (currentNumbers[0] ?? 0) <= part.last ? "font-semibold text-[#ea580c]" : "font-medium text-[#67748b]"}`}
+              className={`text-[9.5px] ${part.first <= (currentNumbers[0] ?? 0) && (currentNumbers[0] ?? 0) <= part.last ? "font-semibold text-[var(--tm-brand)]" : "font-medium text-[var(--tm-ink-muted)]"}`}
             >
               Part {part.id}: {part.title} ({part.first}–{part.last})
               {part.id === 2 ? " [A–C]" : ""}
@@ -178,12 +183,12 @@ function ListeningPalette(props: QuestionPaletteProps) {
           </div>
         ))}
       </div>
-      <hr className="border-[#e2e8f0]" />
+      <hr className="border-[var(--tm-border)]" />
       <div className="flex flex-col gap-1">
-        <p className="text-[10.5px] font-semibold text-[#047857]">
+        <p className="text-[10.5px] font-semibold text-[var(--tm-success)]">
           Reading (Q101–200): Starts after Listening
         </p>
-        <p className="text-[9.5px] font-medium text-[#67748b]">
+        <p className="text-[9.5px] font-medium text-[var(--tm-ink-muted)]">
           {partsInSection("reading")
             .map((part) => `Part ${part.id} (${part.first}–${part.last})`)
             .join(" · ")}
@@ -194,7 +199,7 @@ function ListeningPalette(props: QuestionPaletteProps) {
           numbers={range(LISTENING_LAST + 1, LR_TOTAL_QUESTIONS)}
         />
       </div>
-      <p className="rounded bg-[#f8fafc] px-2.5 py-1.5 text-[9.5px] text-[#67748b]">
+      <p className="rounded bg-[var(--tm-page)] px-2.5 py-1.5 text-[9.5px] text-[var(--tm-ink-muted)]">
         Listening plays automatically · Reading allows free navigation.
       </p>
     </aside>
@@ -217,19 +222,19 @@ function ReadingPalette(props: QuestionPaletteProps) {
   return (
     <aside
       aria-label="Question palette"
-      className="flex w-full flex-col gap-3 rounded-2xl border border-[#eee9e6] bg-white p-3 lg:w-[380px] lg:shrink-0"
+      className="flex w-full min-w-0 flex-col gap-3 rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-surface)] p-3"
     >
-      <h2 className="text-[15px] font-semibold">
+      <h2 className="text-[15px] font-semibold text-[var(--tm-ink)]">
         {LR_TOTAL_QUESTIONS}-Question Palette
       </h2>
-      <p className="text-[11px] text-[#77716e]">
+      <p className="text-[11px] text-[var(--tm-ink-muted)]">
         🔒 Listening 1–{LISTENING_LAST} locked
       </p>
       <div className="flex gap-2" role="tablist" aria-label="Question groups">
         {tabs.map((item) => (
           <button
             aria-selected={tab === item.id}
-            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${tab === item.id ? "bg-[#fff7ed] text-[#ff5a1f]" : "bg-[#faf7f5] text-[#77716e]"} ${focusRing}`}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${tab === item.id ? "bg-[var(--tm-brand-soft)] text-[var(--tm-brand)]" : "bg-[var(--tm-page)] text-[var(--tm-ink-muted)]"} ${focusRing}`}
             key={item.id}
             onClick={() => setTab(item.id)}
             role="tab"
@@ -250,7 +255,7 @@ function ReadingPalette(props: QuestionPaletteProps) {
         onSelect={onSelect}
         section="reading"
       />
-      <p className="text-[11px] text-[#77716e]">
+      <p className="text-[11px] text-[var(--tm-ink-muted)]">
         {LR_PARTS.filter((part) => part.section === "reading")
           .map((part) => `Part ${part.id}`)
           .join(" · ")}

@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/shared/components/ui/dialog";
 import { formatClock } from "@/shared/ui/format-time";
 import {
+  abandonLrAttempt,
   saveLrAnswers,
   startLrReading,
   submitLrAttempt,
@@ -51,6 +53,12 @@ export interface LrExamRoomProps {
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
   const [remaining, setRemaining] = useState(initialSeconds);
+  const expiredFiredRef = useRef(false);
+  const onExpireRef = useRef(onExpire);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -60,8 +68,11 @@ function useCountdown(initialSeconds: number, onExpire: () => void) {
   }, []);
 
   useEffect(() => {
-    if (remaining === 0) onExpire();
-  }, [remaining, onExpire]);
+    if (remaining === 0 && !expiredFiredRef.current) {
+      expiredFiredRef.current = true;
+      onExpireRef.current();
+    }
+  }, [remaining]);
 
   return remaining;
 }
@@ -84,6 +95,8 @@ export function LrExamRoom({
   const [answers, setAnswers] = useState<LrAnswers>(initialAnswers);
   const [flags, setFlags] = useState<LrFlags>(initialFlags);
   const [confirming, setConfirming] = useState(false);
+  const [abandoning, setAbandoning] = useState(false);
+  const [abandonPending, setAbandonPending] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<"listening" | "reading">(initialPhase);
   const [saveStatus, setSaveStatus] = useState<
@@ -173,6 +186,23 @@ export function LrExamRoom({
     [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref],
   );
 
+  const abandon = useCallback(async () => {
+    if (!attemptId || abandonPending) return;
+    setAbandonPending(true);
+    setActionError(null);
+    try {
+      await abandonLrAttempt(attemptId);
+      setAbandoning(false);
+      router.push("/listening-reading");
+    } catch (cause) {
+      setActionError(
+        cause instanceof Error ? cause.message : "Unable to abandon exam.",
+      );
+      setAbandonPending(false);
+      setAbandoning(false);
+    }
+  }, [attemptId, abandonPending, router]);
+
   const moveToReading = useCallback(async () => {
     if (!attemptId || phase === "reading") return;
     setActionError(null);
@@ -188,10 +218,11 @@ export function LrExamRoom({
     }
   }, [attemptId, phase, saveSnapshot, answers, flags]);
 
-  const remaining = useCountdown(
-    initialRemainingSeconds,
-    () => void submit(true),
-  );
+  const remaining = useCountdown(initialRemainingSeconds, () => {
+    setConfirming(false);
+    setAbandoning(false);
+    void submit(true);
+  });
 
   const section = phase;
   const group = findGroup(groups, current);
@@ -256,29 +287,31 @@ export function LrExamRoom({
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#faf7f5] text-[#4c4542]">
-      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#eee9e6] bg-white px-4 py-3 sm:gap-x-6 sm:px-8 sm:py-2">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[var(--tm-page)] text-[var(--tm-ink-soft)]">
+      <header className="flex min-h-[72px] flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[var(--tm-border)] bg-[var(--tm-surface)] px-4 py-3 sm:gap-x-6 sm:px-8 sm:py-2">
         <ExamBrand />
-        <div className="flex flex-col gap-0.5">
-          <p className="text-[15px] font-semibold">{exam.identity}</p>
-          <p className="text-[11px] text-[#77716e]">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="text-[15px] font-semibold text-[var(--tm-ink)]">
+            {exam.identity}
+          </p>
+          <p className="text-[11px] text-[var(--tm-ink-muted)]">
             ETS Standard Exam Room · Stable Connection
           </p>
         </div>
-        <span className="rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1.5 text-xs font-bold text-[#1d4ed8]">
+        <span className="rounded-md border border-[#bfdbfe] bg-[var(--tm-info-soft)] px-3 py-1.5 text-xs font-bold text-[var(--tm-info)]">
           {section === "listening"
             ? "SECTION 1 · LISTENING"
             : "SECTION 2 · READING"}
         </span>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
           <div
             aria-label="Remaining time"
-            className="flex items-center gap-2.5 rounded-xl bg-[#fff7ed] px-4 py-2 sm:gap-3 sm:px-5 sm:py-2.5"
+            className="flex items-center gap-2.5 rounded-xl bg-[var(--tm-brand-soft)] px-4 py-2 sm:gap-3 sm:px-5 sm:py-2.5"
             role="timer"
           >
             <ExamIcon name="timer" />
             <span
-              className={`font-mono text-lg font-bold sm:text-xl ${section === "listening" ? "text-[#b45309]" : "text-[#302c2a]"}`}
+              className={`font-mono text-lg font-bold sm:text-xl ${section === "listening" ? "text-[var(--tm-warning)]" : "text-[var(--tm-ink)]"}`}
             >
               {formatCountdown(remaining)}
             </span>
@@ -292,6 +325,15 @@ export function LrExamRoom({
               Move to Reading →
             </button>
           ) : null}
+          {attemptId ? (
+            <button
+              className={`${secondaryButton} whitespace-nowrap`}
+              onClick={() => setAbandoning(true)}
+              type="button"
+            >
+              Abandon
+            </button>
+          ) : null}
           <button
             className={`${primaryButton} whitespace-nowrap`}
             onClick={() => setConfirming(true)}
@@ -299,7 +341,10 @@ export function LrExamRoom({
           >
             {section === "listening" ? "Submit Exam" : "Submit"}
           </button>
-          <span className="text-[10px] text-[#77716e]" aria-live="polite">
+          <span
+            className="text-[10px] text-[var(--tm-ink-muted)]"
+            aria-live="polite"
+          >
             {saveStatus === "saving"
               ? "Saving…"
               : saveStatus === "saved"
@@ -312,18 +357,28 @@ export function LrExamRoom({
       </header>
 
       {actionError ? (
-        <p
-          className="mx-4 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+        <div
+          className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--tm-danger)]/35 bg-[var(--tm-danger-soft)] p-3 text-sm text-[var(--tm-danger)]"
           role="alert"
         >
-          {actionError}
-        </p>
+          <p>{actionError}</p>
+          {remaining === 0 ? (
+            <button
+              className={`${primaryButton} h-9 px-4 text-xs`}
+              disabled={submitting}
+              onClick={() => void submit(true)}
+              type="button"
+            >
+              {submitting ? "Submitting…" : "Retry Submit"}
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {section === "listening" ? (
         <div className="flex flex-1 flex-col bg-[#f8fafc] lg:flex-row">
           <main
-            className="flex flex-1 flex-col gap-5 px-4 py-6 sm:px-9"
+            className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-6 sm:px-9"
             id="main-content"
             tabIndex={-1}
           >
@@ -347,9 +402,9 @@ export function LrExamRoom({
           {palette}
         </div>
       ) : (
-        <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6 xl:flex-row">
+        <div className="grid flex-1 grid-cols-1 gap-5 p-4 sm:p-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_320px]">
           <main
-            className="flex w-full flex-col gap-5 xl:w-[948px] xl:shrink-0"
+            className="flex min-w-0 flex-col gap-5"
             id="main-content"
             tabIndex={-1}
           >
@@ -359,7 +414,7 @@ export function LrExamRoom({
               <EmptyQuestion number={current} />
             )}
           </main>
-          <div className="flex flex-1 flex-col gap-4 lg:flex-row">
+          <div className="flex min-w-0 flex-col gap-4">
             {group?.questions.some((item) => item.number === current) ? (
               <ReadingQuestion
                 flagged={Boolean(flags[current])}
@@ -376,27 +431,45 @@ export function LrExamRoom({
                 selected={answers[current]}
               />
             ) : null}
-            {palette}
           </div>
+          <div className="min-w-0">{palette}</div>
         </div>
       )}
 
       {confirming ? (
         <SubmitConfirmDialog
           onCancel={() => setConfirming(false)}
-          onConfirm={submit}
+          onConfirm={() => void submit()}
           pending={submitting}
           remainingSeconds={remaining}
           summary={summarizeSubmission(answers, exam.totalQuestions)}
         />
       ) : null}
+
+      <ConfirmDialog
+        cancelLabel="Continue Exam"
+        confirmLabel={abandonPending ? "Abandoning…" : "Abandon Exam"}
+        destructive
+        id="abandon-lr-exam-title"
+        onCancel={() => {
+          if (!abandonPending) setAbandoning(false);
+        }}
+        onConfirm={() => void abandon()}
+        open={abandoning}
+        title="Abandon this exam attempt?"
+      >
+        <p>
+          Your current attempt will be marked as abandoned and will not be
+          graded. You can start a new attempt from the exam list anytime.
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }
 
 function EmptyQuestion({ number }: { number: number }) {
   return (
-    <output className="rounded-xl border border-dashed border-[#d9d2ce] bg-white p-6 text-[13px] text-[#77716e] block">
+    <output className="block rounded-xl border border-dashed border-[var(--tm-border-strong)] bg-[var(--tm-surface)] p-6 text-[13px] text-[var(--tm-ink-muted)]">
       No content available for question {number}.
     </output>
   );
@@ -418,10 +491,10 @@ function Choice({
   const compact = tone === "compact";
   return (
     <label
-      className={`flex cursor-pointer items-center gap-2 border transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#ea580c] ${
+      className={`flex cursor-pointer items-center gap-2 border transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--tm-ring)] ${
         compact
-          ? `rounded-md px-3 py-2 text-[12.5px] ${selected ? "border-[#ea580c] bg-[#fff7ed] font-semibold" : "border-[#e6e9ee] bg-white hover:bg-[#f8fafc]"}`
-          : `gap-3 rounded-[10px] p-3 text-[13px] ${selected ? "border-2 border-[#ff5a1f] bg-[#fff7ed]" : "border-[#d9d2ce] bg-white hover:bg-[#faf7f5]"}`
+          ? `rounded-md px-3 py-2 text-[12.5px] ${selected ? "border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] font-semibold text-[var(--tm-ink)]" : "border-[#e6e9ee] bg-[var(--tm-surface)] hover:bg-[#f8fafc]"}`
+          : `gap-3 rounded-[10px] p-3 text-[13px] ${selected ? "border-2 border-[var(--tm-brand)] bg-[var(--tm-brand-soft)] text-[var(--tm-ink)]" : "border-[var(--tm-border-strong)] bg-[var(--tm-surface)] hover:bg-[var(--tm-page)]"}`
       }`}
     >
       <input
@@ -436,8 +509,8 @@ function Choice({
         aria-hidden="true"
         className={
           compact
-            ? `text-xs ${selected ? "font-bold text-[#ea580c]" : "text-[#94a3b8]"}`
-            : `font-semibold whitespace-nowrap ${selected ? "text-[#ff5a1f]" : "text-[#77716e]"}`
+            ? `text-xs ${selected ? "font-bold text-[var(--tm-brand)]" : "text-[var(--tm-ink-muted)]"}`
+            : `font-semibold whitespace-nowrap ${selected ? "text-[var(--tm-brand)]" : "text-[var(--tm-ink-muted)]"}`
         }
       >
         {compact
@@ -446,7 +519,7 @@ function Choice({
             : "○"
           : `${selected ? "●" : "○"} ${choice.key}.`}
       </span>
-      <span>
+      <span className="min-w-0 break-words">
         {compact ? `${choice.key}. ` : ""}
         {choice.text}
       </span>
@@ -483,7 +556,7 @@ function ListeningMasterPlayer({
   return (
     <section
       aria-label="Listening audio player"
-      className="flex flex-col gap-3 rounded-xl border border-[#e2e8f0] bg-white px-5 py-4"
+      className="flex flex-col gap-3 rounded-xl border border-[var(--tm-border)] bg-[var(--tm-surface)] px-5 py-4"
       data-testid="lr-master-audio-player"
     >
       <audio
@@ -497,11 +570,11 @@ function ListeningMasterPlayer({
       </audio>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#ff5a1f]">
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--tm-brand)]">
             {trackLabel}
           </p>
           <p
-            className="text-xs font-semibold tabular-nums text-[#475569]"
+            className="text-xs font-semibold tabular-nums text-[var(--tm-ink-soft)]"
             data-testid="lr-master-audio-time"
           >
             {formatClock(globalElapsedMs / 1000)} /{" "}
@@ -520,25 +593,25 @@ function ListeningMasterPlayer({
       </div>
       <div
         aria-hidden="true"
-        className="h-2 w-full overflow-hidden rounded-full bg-[#e2e8f0]"
+        className="h-2 w-full overflow-hidden rounded-full bg-[var(--tm-border)]"
       >
         <div
-          className="h-full rounded-full bg-[#ff5a1f] transition-[width] duration-200"
+          className="h-full rounded-full bg-[var(--tm-brand)] transition-[width] duration-200"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
-      <p className="text-xs text-[#64748b]">
+      <p className="text-xs text-[var(--tm-ink-muted)]">
         {isPlaying
           ? "Listening audio plays once per ETS rules: pausing and seeking are disabled."
           : "Listening audio plays only once per ETS rules: once started, you cannot pause or seek."}
       </p>
       {isBuffering ? (
-        <output className="block text-xs text-[#64748b]">
+        <output className="block text-xs text-[var(--tm-ink-muted)]">
           Buffering next audio track…
         </output>
       ) : null}
       {error ? (
-        <p className="text-xs font-medium text-[#dc2626]" role="alert">
+        <p className="text-xs font-medium text-[var(--tm-danger)]" role="alert">
           {error}
         </p>
       ) : null}
@@ -567,15 +640,19 @@ function ListeningGroup({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-sm font-bold text-[#0f172a]">{group.heading}</h1>
+        <h1 className="text-sm font-bold text-[var(--tm-ink)]">
+          {group.heading}
+        </h1>
         {group.description ? (
-          <p className="text-xs text-[#67748b]">{group.description}</p>
+          <p className="text-xs text-[var(--tm-ink-muted)]">
+            {group.description}
+          </p>
         ) : null}
       </div>
 
       {group.questions.map((question) => (
         <fieldset
-          className="flex flex-col gap-2.5 rounded-[10px] border border-[#e2e8f0] bg-white px-5 py-4"
+          className="flex flex-col gap-2.5 rounded-[10px] border border-[var(--tm-border)] bg-[var(--tm-surface)] px-5 py-4"
           key={question.number}
         >
           {question.imageUrl ? (
@@ -587,10 +664,10 @@ function ListeningGroup({
             />
           ) : null}
           <legend className="float-left mb-2.5 flex w-full gap-2 text-[13px]">
-            <span className="font-bold text-[#ea580c]">
+            <span className="font-bold text-[var(--tm-brand)]">
               QUESTION {question.number}:
             </span>
-            <span className="font-semibold text-[#0f172a]">
+            <span className="font-semibold text-[var(--tm-ink)]">
               {question.prompt}
             </span>
           </legend>
@@ -610,7 +687,7 @@ function ListeningGroup({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           aria-pressed={flagged}
-          className={`rounded-md border border-[#d97106] px-3.5 py-2 text-[11.5px] font-medium text-[#d97106] ${flagged ? "bg-[#fef3c7]" : "bg-[#fffaf4]"} ${focusRing}`}
+          className={`rounded-md border border-[var(--tm-warning)] px-3.5 py-2 text-[11.5px] font-medium text-[var(--tm-warning)] ${flagged ? "bg-[var(--tm-warning-soft)]" : "bg-[var(--tm-surface)]"} ${focusRing}`}
           onClick={onToggleFlag}
           type="button"
         >
@@ -619,7 +696,7 @@ function ListeningGroup({
 
         {nextGroup ? (
           <button
-            className={`rounded-md bg-[#ea580c] px-4 py-2 text-[11.5px] font-semibold text-white hover:bg-[#c2410c] ${focusRing}`}
+            className={`rounded-md bg-[var(--tm-brand)] px-4 py-2 text-[11.5px] font-semibold text-white hover:bg-[var(--tm-brand-hover)] ${focusRing}`}
             onClick={onNextGroup}
             type="button"
           >
@@ -635,27 +712,27 @@ function ReadingContext({ group }: { group: LrQuestionGroup }) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Pill>READING · PART {group.part}</Pill>
-        <p className="text-[13px] text-[#77716e]">
+        <h1 className="text-sm font-bold text-[var(--tm-ink)]">
+          <Pill>READING · PART {group.part}</Pill>
+        </h1>
+        <p className="text-[13px] text-[var(--tm-ink-muted)]">
           Questions {group.first}–{group.last}
           {group.description ? ` · ${group.description}` : ""}
         </p>
       </div>
-      <section className="flex flex-col gap-3 rounded-2xl border border-[#eee9e6] bg-[#faf8f7] p-5">
+      <section className="flex flex-col gap-3 rounded-2xl border border-[var(--tm-border)] bg-[var(--tm-surface-muted)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Pill>🔒 Master Audio · Completed</Pill>
-          <p className="text-[11px] text-[#77716e]">No seeking • No pausing</p>
+          <p className="text-[11px] text-[var(--tm-ink-muted)]">
+            No seeking • No pausing
+          </p>
         </div>
-        <p className="text-[13px]">🔒 Listening locked</p>
-      </section>
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[13px] text-[#77716e]">
-          Select text to highlight evidence.
+        <p className="text-[13px] text-[var(--tm-ink-soft)]">
+          🔒 Listening locked
         </p>
-        <Pill>▧ Highlight &nbsp; ⤢ Zoom</Pill>
-      </div>
+      </section>
       {group.passage ? <PassageCard passage={group.passage} /> : null}
-      <p className="text-[11px] text-[#77716e]">
+      <p className="text-[11px] text-[var(--tm-ink-muted)]">
         🔒 Listening section has ended. You cannot return to edit questions
         1–100.
       </p>
@@ -685,7 +762,7 @@ function ReadingQuestion({
   return (
     <section
       aria-label={`Question ${question.number}`}
-      className="flex flex-1 flex-col gap-4 rounded-2xl bg-white p-4"
+      className="flex min-w-0 flex-1 flex-col gap-4 rounded-2xl bg-[var(--tm-surface)] p-4 sm:p-5"
     >
       <Pill>QUESTION {question.number}</Pill>
       {question.imageUrl ? (
@@ -696,7 +773,9 @@ function ReadingQuestion({
           src={question.imageUrl}
         />
       ) : null}
-      <h2 className="text-lg font-semibold">{question.prompt}</h2>
+      <h2 className="text-lg font-semibold text-[var(--tm-ink)]">
+        {question.prompt}
+      </h2>
       <fieldset className="flex flex-col gap-3">
         <legend className="sr-only">
           Choices for question {question.number}
@@ -714,13 +793,13 @@ function ReadingQuestion({
       </fieldset>
       <button
         aria-pressed={flagged}
-        className={`w-fit rounded-lg px-2.5 py-1 text-[11px] font-semibold text-[#d97706] ${flagged ? "bg-[#fde68a]" : "bg-[#fef3c7]"} ${focusRing}`}
+        className={`w-fit rounded-lg border border-[var(--tm-warning)]/40 px-3 py-1.5 text-[11px] font-semibold text-[var(--tm-warning)] ${flagged ? "bg-[#fde68a]" : "bg-[var(--tm-warning-soft)]"} ${focusRing}`}
         onClick={onToggleFlag}
         type="button"
       >
         ⚑ Flag for review
       </button>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           className={secondaryButton}
           disabled={previous === undefined}
@@ -738,7 +817,7 @@ function ReadingQuestion({
           Next →
         </button>
       </div>
-      <output className="text-[11px] text-[#77716e] block">
+      <output className="block text-[11px] text-[var(--tm-ink-muted)]">
         Select an answer to auto-save.
       </output>
     </section>

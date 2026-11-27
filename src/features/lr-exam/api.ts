@@ -616,6 +616,32 @@ export async function getLrAttempt(attemptId: string, signal?: AbortSignal) {
   );
 }
 
+export async function getCurrentLrAttempt(
+  examId: string,
+  signal?: AbortSignal,
+): Promise<LrSheetApi | null> {
+  try {
+    const raw = await lrRequest(
+      `/api/lr/exams/${encodeURIComponent(examId)}/current-attempt`,
+      { signal },
+    );
+    if (raw === null) return null;
+    return parseSheet(raw);
+  } catch (cause) {
+    if (cause instanceof LrApiError && cause.status === 404) {
+      return null;
+    }
+    throw cause;
+  }
+}
+
+export async function abandonLrAttempt(attemptId: string): Promise<void> {
+  await lrRequest(
+    `/api/lr/exam-attempts/${encodeURIComponent(attemptId)}/abandon`,
+    { method: "POST" },
+  );
+}
+
 export async function startLrReading(attemptId: string) {
   return parseSheet(
     await lrRequest(
