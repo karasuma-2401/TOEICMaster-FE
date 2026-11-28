@@ -77,10 +77,11 @@ function messageFromResponse(response: Response): Promise<string> {
         "errors" in body &&
         body.errors &&
         typeof body.errors === "object" &&
-        "exam" in body.errors &&
-        Array.isArray(body.errors.exam)
+        ("exam" in body.errors || "workbook" in body.errors)
       ) {
-        const details = body.errors.exam.filter(
+        const errors: Record<string, unknown> = body.errors;
+        const values = errors.exam ?? errors.workbook;
+        const details = (Array.isArray(values) ? values : []).filter(
           (value): value is string => typeof value === "string",
         );
         if (details.length > 0) return details.join("\n");

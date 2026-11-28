@@ -81,7 +81,9 @@ export function LrReview({
   );
   const reviewable = visible.filter((number) => detailed.has(number));
   const index = reviewable.indexOf(current);
-  const entry = detailed.get(current);
+  const entry = reviewable.includes(current)
+    ? detailed.get(current)
+    : undefined;
 
   const selectFilter = (nextFilter: Filter) => {
     setFilter(nextFilter);
@@ -329,6 +331,11 @@ function ReviewDetail({
           />
         ) : null}
         <h2 className="text-lg font-semibold">{question.prompt}</h2>
+        {!question.correct && (
+          <output className="text-sm text-[var(--tm-danger)]">
+            Answer key unavailable for this question.
+          </output>
+        )}
         <ul className="flex flex-col gap-2">
           {question.choices.map((choice) => {
             const isCorrect = choice.key === question.correct;

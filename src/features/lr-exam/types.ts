@@ -71,7 +71,7 @@ export type LrReviewStatus = "correct" | "wrong" | "skipped";
 
 export interface LrReviewQuestionDetail extends LrQuestion {
   selected?: LrChoiceKey;
-  correct: LrChoiceKey;
+  correct?: LrChoiceKey;
   analysis: {
     summary: string;
     trap?: string;

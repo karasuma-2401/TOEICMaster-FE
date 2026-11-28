@@ -49,6 +49,7 @@ function Harness({
     activeIndex,
     activeTrack,
     isPlaying,
+    isComplete,
     isBuffering,
     globalElapsedMs,
     totalDurationMs,
@@ -79,6 +80,7 @@ function Harness({
       <div data-testid="active-index">{activeIndex}</div>
       <div data-testid="active-part">{activeTrack?.part ?? "none"}</div>
       <div data-testid="is-playing">{String(isPlaying)}</div>
+      <div data-testid="is-complete">{String(isComplete)}</div>
       <div data-testid="is-buffering">{String(isBuffering)}</div>
       <div data-testid="elapsed-ms">{globalElapsedMs}</div>
       <div data-testid="total-ms">{totalDurationMs}</div>
@@ -128,6 +130,26 @@ afterEach(() => {
 });
 
 describe("useSequentialListeningPlayer", () => {
+  it("cannot replay completed audio after ending or reloading", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(new Blob(["wav"]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const tracks = makeTracks(1);
+    const first = render(
+      <Harness attemptId="completed-attempt" tracks={tracks} />,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByText("Toggle"));
+    fireEvent.ended(screen.getByTestId("audio"));
+    expect(screen.getByTestId("is-complete")).toHaveTextContent("true");
+    fireEvent.click(screen.getByText("Toggle"));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    first.unmount();
+    render(<Harness attemptId="completed-attempt" tracks={tracks} />);
+    expect(screen.getByTestId("is-complete")).toHaveTextContent("true");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
   it("preloads audio blobs sequentially with concurrency 1 and a bounded sliding window", async () => {
     const pending = new Map<string, ReturnType<typeof deferred<Response>>>();
     const fetchMock = vi.fn((input: RequestInfo | URL) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getLrAttempt,
@@ -49,6 +50,7 @@ function LoadingOrError({
 }
 
 export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
+  const router = useRouter();
   const [state, setState] = useState<ReturnType<
     typeof sheetToRoomState
   > | null>(null);
@@ -72,44 +74,41 @@ export function LrExamSessionPage({ attemptId }: { attemptId: string }) {
         }
         const playlistPromise =
           sheet.phase === "listening"
-            ? getLrListeningPlaylist(attemptId, controller.signal).catch(
-                () => undefined,
-              )
+            ? getLrListeningPlaylist(attemptId, controller.signal)
             : Promise.resolve(undefined);
         const mediaEntries = await Promise.all(
           [...imageAssetIds].map(async (assetId) => {
-            try {
-              const media = await getLrMediaUrl(
-                attemptId,
-                "images",
-                assetId,
-                controller.signal,
-              );
-              return [assetId, media.url] as const;
-            } catch {
-              return null;
-            }
+            const media = await getLrMediaUrl(
+              attemptId,
+              "images",
+              assetId,
+              controller.signal,
+            );
+            return [assetId, media.url] as const;
           }),
         );
         const nextPlaylist = await playlistPromise;
         if (controller.signal.aborted) return;
-        const mediaUrls = Object.fromEntries(
-          mediaEntries.filter(
-            (entry): entry is readonly [string, string] => entry !== null,
-          ),
-        );
+        const mediaUrls = Object.fromEntries(mediaEntries);
         setPlaylist(nextPlaylist);
         setState(sheetToRoomState(sheet, mediaUrls));
       })
-      .catch((cause) => {
+      .catch(async (cause) => {
         if (!controller.signal.aborted) {
+          try {
+            await getLrResult(attemptId, controller.signal);
+            router.replace(`/exams/lr/attempts/${attemptId}/result`);
+            return;
+          } catch {
+            // Keep the original load error when no result exists yet.
+          }
           setError(
             cause instanceof Error ? cause.message : "Unable to load exam.",
           );
         }
       });
     return () => controller.abort();
-  }, [attemptId]);
+  }, [attemptId, router]);
 
   if (!state) return <LoadingOrError loading={!error} error={error} />;
 

@@ -10,7 +10,7 @@ import {
 } from "@/shared/server/bff-proxy";
 import { sessionCookie } from "@/features/auth/server/session";
 
-type AdminExamMethod = "GET" | "POST" | "PUT" | "DELETE";
+type AdminExamMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 function upstreamResponse(response: Response) {
   if (response.status === 204)

@@ -309,4 +309,26 @@ describe("DataBankCenter", () => {
       expect(opener).toHaveFocus();
     });
   });
+
+  it("keeps keyboard focus inside the exercise drawer and restores it on Escape", async () => {
+    const user = userEvent.setup();
+    url = "part=1";
+    render(<DataBankCenter />);
+    const opener = await screen.findByRole("button", { name: "Add question" });
+    await user.click(opener);
+    const drawer = screen.getByRole("dialog", { name: "Add new question" });
+    expect(drawer).toHaveAttribute("aria-modal", "true");
+    expect(drawer.contains(document.activeElement)).toBe(true);
+    for (let step = 0; step < 8; step++) {
+      await user.tab();
+      expect(drawer.contains(document.activeElement)).toBe(true);
+    }
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Add new question" }),
+      ).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+    });
+  });
 });

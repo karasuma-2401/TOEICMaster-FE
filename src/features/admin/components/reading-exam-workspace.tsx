@@ -244,7 +244,7 @@ export function ReadingExamWorkspace({
         },
       );
       setNotice(`Saved question ${selected.question.number}.`);
-      setRetry((value) => value + 1);
+      setRevision(await getReadingRevision(examId, revisionId));
     } catch (reason) {
       setNotice(
         reason instanceof Error ? reason.message : "Unable to save question.",
@@ -264,7 +264,7 @@ export function ReadingExamWorkspace({
         contexts,
       });
       setNotice("Saved shared context for this question group.");
-      setRetry((value) => value + 1);
+      setRevision(await getReadingRevision(examId, revisionId));
     } catch (reason) {
       setNotice(
         reason instanceof Error ? reason.message : "Unable to save context.",
@@ -781,7 +781,7 @@ function QuestionEditor({
           )}
         </div>
       </header>
-      {contexts.length > 0 && (
+      {block.type === "Group" && (
         <section className="border-b border-[var(--admin-border)] bg-[#fffaf7] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -800,6 +800,26 @@ function QuestionEditor({
             >
               Save shared context
             </button>
+            {contexts.length === 0 && !disabled && (
+              <button
+                className="rounded-lg border border-[var(--admin-border)] bg-white px-3 py-2 text-xs font-bold"
+                onClick={() =>
+                  onContextChange([
+                    {
+                      ordinal: 1,
+                      type: "Text",
+                      text: "",
+                      imageAssetId: null,
+                      altText: null,
+                      imageRequired: false,
+                    },
+                  ])
+                }
+                type="button"
+              >
+                Add shared context
+              </button>
+            )}
           </div>
           <div className="mt-3 space-y-3">
             {contexts.map((context, index) => {
@@ -857,42 +877,44 @@ function QuestionEditor({
         {field("code", "Question code")}
         {field("stem", "Question stem", true)}
         <div className="lg:col-span-2 grid gap-3 md:grid-cols-2">
-          {(["optionA", "optionB", "optionC", "optionD"] as const).map(
-            (name, index) => (
-              <div
-                className={`rounded-xl border p-3 text-sm font-bold ${draft.correctKey === "ABCD"[index] ? "border-[var(--admin-brand-orange)] bg-[var(--admin-nav-active)]" : "border-[var(--admin-border)]"}`}
-                key={name}
-              >
-                <span className="flex items-center justify-between">
-                  <span>Option {"ABCD"[index]}</span>
-                  <input
-                    aria-label={`Select Option ${"ABCD"[index]} as correct answer`}
-                    checked={draft.correctKey === "ABCD"[index]}
-                    disabled={disabled}
-                    name={`correct-${question.number}`}
-                    onChange={() =>
-                      onChange({
-                        ...draft,
-                        correctKey: "ABCD"[
-                          index
-                        ] as QuestionDraft["correctKey"],
-                      })
-                    }
-                    type="radio"
-                  />
-                </span>
+          {(
+            (block.part === 2
+              ? ["optionA", "optionB", "optionC"]
+              : ["optionA", "optionB", "optionC", "optionD"]) as (
+              "optionA" | "optionB" | "optionC" | "optionD"
+            )[]
+          ).map((name, index) => (
+            <div
+              className={`rounded-xl border p-3 text-sm font-bold ${draft.correctKey === "ABCD"[index] ? "border-[var(--admin-brand-orange)] bg-[var(--admin-nav-active)]" : "border-[var(--admin-border)]"}`}
+              key={name}
+            >
+              <span className="flex items-center justify-between">
+                <span>Option {"ABCD"[index]}</span>
                 <input
-                  aria-label={`Option ${"ABCD"[index]} text`}
-                  className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 font-medium outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
+                  aria-label={`Select Option ${"ABCD"[index]} as correct answer`}
+                  checked={draft.correctKey === "ABCD"[index]}
                   disabled={disabled}
-                  onChange={(event) =>
-                    onChange({ ...draft, [name]: event.target.value })
+                  name={`correct-${question.number}`}
+                  onChange={() =>
+                    onChange({
+                      ...draft,
+                      correctKey: "ABCD"[index] as QuestionDraft["correctKey"],
+                    })
                   }
-                  value={draft[name]}
+                  type="radio"
                 />
-              </div>
-            ),
-          )}
+              </span>
+              <input
+                aria-label={`Option ${"ABCD"[index]} text`}
+                className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 font-medium outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({ ...draft, [name]: event.target.value })
+                }
+                value={draft[name]}
+              />
+            </div>
+          ))}
         </div>
         {field("translation", "Translation", true)}
         {field("explanation", "Answer explanation", true)}

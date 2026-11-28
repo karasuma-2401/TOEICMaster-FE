@@ -142,6 +142,7 @@ function toPracticeLibraryItem(
     difficulty: toPracticeDifficulty(item.difficulty),
     attemptCount: statistics?.attemptCount ?? 0,
     bestScore: statistics?.bestScore ?? null,
+    maxScore: item.questionCount,
   };
 }
 
@@ -287,7 +288,30 @@ export function ListeningReadingPractice({
   useEffect(() => {
     const controller = new AbortController();
     void Promise.all([
-      getLrPracticeItems(Number(part), 1, 50, controller.signal),
+      (async () => {
+        const first = await getLrPracticeItems(
+          Number(part),
+          1,
+          50,
+          controller.signal,
+        );
+        const rest = await Promise.all(
+          Array.from(
+            { length: Math.max(0, first.totalPages - 1) },
+            (_, index) =>
+              getLrPracticeItems(
+                Number(part),
+                index + 2,
+                50,
+                controller.signal,
+              ),
+          ),
+        );
+        return {
+          ...first,
+          items: [first, ...rest].flatMap((page) => page.items),
+        };
+      })(),
       whenSignedIn(
         () => getLrPracticeStatistics(Number(part), controller.signal),
         [],

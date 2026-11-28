@@ -269,6 +269,7 @@ describe("LrExamRoom", () => {
         .spyOn(lrApi, "submitLrAttempt")
         .mockRejectedValueOnce(new Error("Submission service unavailable"))
         .mockResolvedValueOnce(submittedResult);
+      vi.spyOn(lrApi, "getLrResult").mockRejectedValue(new Error("Not ready"));
       render(
         <LrExamRoom
           {...loadRoomState("x")}
@@ -289,7 +290,7 @@ describe("LrExamRoom", () => {
       await act(async () => vi.advanceTimersByTimeAsync(2000));
       expect(submitApi).toHaveBeenCalledWith("attempt-room-1");
       expect(submitApi).toHaveBeenCalledTimes(1);
-      expect(saveApi).not.toHaveBeenCalled();
+      expect(saveApi).toHaveBeenCalledTimes(1);
       expect(abandonApi).not.toHaveBeenCalled();
       expect(push).not.toHaveBeenCalled();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -303,7 +304,7 @@ describe("LrExamRoom", () => {
         fireEvent.click(screen.getByRole("button", { name: "Retry Submit" })),
       );
       expect(submitApi).toHaveBeenCalledTimes(2);
-      expect(saveApi).not.toHaveBeenCalled();
+      expect(saveApi).toHaveBeenCalledTimes(2);
       expect(push).toHaveBeenCalledWith(
         "/exams/lr/attempts/attempt-room-1/result",
       );

@@ -213,7 +213,7 @@ export function reviewToState(
     const questions: LrReviewQuestionDetail[] = block.questions.map(
       (question) => {
         const correct = question.correctKey;
-        if (!choiceKeys.includes(correct as LrChoiceKey)) {
+        if (correct !== null && !choiceKeys.includes(correct as LrChoiceKey)) {
           throw new Error(
             `Missing correct answer for question ${question.number} in review data.`,
           );
@@ -234,17 +234,19 @@ export function reviewToState(
 
         return {
           number: question.number,
-          prompt: question.stem ?? "",
+          prompt: question.stem?.trim() || "Question content unavailable.",
           choices: choices(question),
           ...(question.imageAssetId && mediaUrls[question.imageAssetId]
             ? { imageUrl: mediaUrls[question.imageAssetId] }
             : {}),
           selected: selected ? (selected as LrChoiceKey) : undefined,
-          correct: correct as LrChoiceKey,
+          ...(correct ? { correct: correct as LrChoiceKey } : {}),
           analysis: {
             summary:
-              question.explanation ??
-              "No detailed explanation is available for this question.",
+              correct === null
+                ? "This question has no answer key in the exam data. Ask an administrator to complete it."
+                : (question.explanation ??
+                  "No detailed explanation is available for this question."),
             ...(question.translation ? { notes: [question.translation] } : {}),
             skill: `Listening & Reading · Part ${question.part}`,
           },
