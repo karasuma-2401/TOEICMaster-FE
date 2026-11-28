@@ -15,4 +15,12 @@ describe("mascotGuide", () => {
     expect(mascotGuide("/writing/attempts/a")).toBeNull();
     expect(mascotGuide("/writing/attempts/a/result")).not.toBeNull();
   });
+
+  it("offers the history guide on demand without opting other guides out", () => {
+    expect(mascotGuide("/history")).toMatchObject({
+      title: "Learning History",
+      autoOpen: false,
+    });
+    expect(mascotGuide("/speaking")).not.toHaveProperty("autoOpen");
+  });
 });

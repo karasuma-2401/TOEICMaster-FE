@@ -1,6 +1,7 @@
 export interface MascotGuide {
   title: string;
   tips: string[];
+  autoOpen?: boolean;
 }
 
 const guides: { match: RegExp; guide: MascotGuide }[] = [
@@ -77,6 +78,7 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
     guide: {
       title: "Learning History",
       tips: ["Open any completed attempt to review your results."],
+      autoOpen: false,
     },
   },
 ];

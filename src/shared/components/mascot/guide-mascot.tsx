@@ -101,6 +101,7 @@ export function GuideMascot() {
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const guide = mascotGuide(pathname);
+  const autoOpen = guide !== null && guide.autoOpen !== false;
 
   useEffect(() => {
     const sync = () => setHidden(isMascotHidden());
@@ -110,6 +111,8 @@ export function GuideMascot() {
   }, []);
 
   useEffect(() => {
+    if (!autoOpen) return;
+
     const task = window.setTimeout(() => {
       if (isMascotHidden()) return;
       try {
@@ -121,7 +124,7 @@ export function GuideMascot() {
       setOpen(true);
     }, 600);
     return () => window.clearTimeout(task);
-  }, []);
+  }, [autoOpen]);
 
   if (!guide || hidden) return null;
   return (
