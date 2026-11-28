@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loginAsUser } from "./learner-writing-helpers";
 
@@ -65,6 +66,7 @@ async function capture(page: Page, filename: string) {
   const directory = process.env.PIPELINE_SCREENSHOTS_DIR;
   if (!directory) return;
 
+  await page.waitForLoadState("networkidle");
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({
     animations: "disabled",
@@ -92,7 +94,18 @@ async function expectCleanGeometry(page: Page, chart: Locator) {
       });
     }),
   ).toBe(true);
-  await expect(chart).not.toContainText(/\b(?:undefined|null|NaN)\b/);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Array.from(document.images)
+          .filter((image) => !image.complete || image.naturalWidth === 0)
+          .map((image) => image.currentSrc),
+      ),
+    )
+    .toEqual([]);
+  await expect(chart).not.toContainText(
+    /\b(?:undefined|null|NaN)\b|\[object Object\]/,
+  );
 }
 
 for (const { name, viewport, mobile } of [
@@ -107,9 +120,6 @@ for (const { name, viewport, mobile } of [
       page,
     }) => {
       await loginAsUser(context);
-      await page.addInitScript(() =>
-        localStorage.setItem("toeicmaster-mascot-hidden", "1"),
-      );
       const user = {
         id: "user-learner-01",
         displayName: "Learner User",
@@ -192,14 +202,31 @@ for (const { name, viewport, mobile } of [
         }),
       ).toBe(true);
       await expectCleanGeometry(page, chart);
+      if (mobile) {
+        for (const tab of [lr, speaking, writing]) {
+          const bounds = await tab.boundingBox();
+          expect(bounds?.width).toBeGreaterThanOrEqual(44);
+          expect(bounds?.height).toBeGreaterThanOrEqual(44);
+        }
+      }
       await capture(
         page,
         mobile
           ? "02-mobile-default-390x844.png"
           : "01-desktop-default-1440x900.png",
       );
+      const evidenceDirectory = process.env.PIPELINE_SCREENSHOTS_DIR;
+      if (evidenceDirectory) {
+        await writeFile(
+          join(evidenceDirectory, `${name.toLowerCase()}-chart-aria.yml`),
+          await chart.ariaSnapshot(),
+        );
+      }
 
-      if (!mobile) {
+      if (mobile) {
+        await page.getByRole("button", { name: "Close guide" }).click();
+        await capture(page, "05-mobile-after-closing-guide.png");
+      } else {
         await dots.first().hover();
         const tooltip = chart.getByTestId("score-progression-tooltip");
         await expect(tooltip).toContainText("ETS Practice Test 10");

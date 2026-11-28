@@ -38,21 +38,39 @@ describe("score progression", () => {
     { score: Number.NaN },
     { score: Number.POSITIVE_INFINITY },
     { timestampUtc: "invalid date" },
-    { skill: "writing", maxScore: 15 },
-    { skill: "speaking", maxScore: 200, modeLabel: "Speaking part 3" },
-    { skill: "writing", maxScore: 200, modeLabel: "Writing Part 1" },
   ])("excludes non-chartable attempts: %j", (overrides) => {
     expect(isFullScaleChartAttempt(attempt(overrides))).toBe(false);
   });
 
+  it.each([3, 4, 5, 10, 15])(
+    "rejects only the mismatched Writing maximum %i",
+    (maxScore) => {
+      const fullTest = attempt({ skill: "writing", score: 1, maxScore: 200 });
+      expect(isFullScaleChartAttempt(fullTest)).toBe(true);
+      expect(isFullScaleChartAttempt({ ...fullTest, maxScore })).toBe(false);
+    },
+  );
+
+  it.each([
+    { skill: "speaking", modeLabel: "Speaking part 3" },
+    { skill: "writing", modeLabel: "Writing Part 1" },
+  ] as const)(
+    "rejects $skill part mode even at full scale",
+    ({ skill, modeLabel }) => {
+      const fullTest = attempt({ skill, score: 120, maxScore: 200 });
+      expect(isFullScaleChartAttempt(fullTest)).toBe(true);
+      expect(isFullScaleChartAttempt({ ...fullTest, modeLabel })).toBe(false);
+    },
+  );
+
   it("separates skills and sorts oldest first with ID tie-breaking", () => {
     const items = [
-      attempt({ id: "lr-2", score: 845, timestampUtc: "2026-10-01T08:00:00Z" }),
       attempt({
         id: "lr-3",
         score: 865,
         timestampUtc: "2026-10-01T10:00:00+02:00",
       }),
+      attempt({ id: "lr-2", score: 845, timestampUtc: "2026-10-01T08:00:00Z" }),
       attempt({ skill: "speaking", id: "s-1", maxScore: 200, score: 125 }),
       attempt({ skill: "writing", id: "w-1", maxScore: 200, score: 0 }),
       attempt(),
