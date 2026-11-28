@@ -25,6 +25,7 @@ export default function HistoryPage() {
         </header>
         <AttemptHistorySection
           limit={9}
+          showChart
           showFilter
           showSummary
           skills={["lr", "speaking", "writing"]}
