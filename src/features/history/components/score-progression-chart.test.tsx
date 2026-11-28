@@ -114,7 +114,12 @@ describe("ScoreProgressionChart", () => {
     const early = "2026-11-10T08:00:00Z";
     render(
       <InteractiveChart
-        items={[attempt("lr-2", "lr", 855), attempt("lr-1", "lr", 790, early)]}
+        items={[
+          attempt("lr-2", "lr", 855),
+          attempt("lr-1", "lr", 790, early),
+          attempt("s-1", "speaking", 150, early),
+          attempt("s-2", "speaking", 160),
+        ]}
       />,
     );
 
@@ -130,6 +135,16 @@ describe("ScoreProgressionChart", () => {
     await user.keyboard("{ArrowRight}");
     expect(tooltip).toHaveTextContent("Test lr-2");
     expect(tooltip).toHaveTextContent("855 / 990");
+
+    await user.click(screen.getByRole("tab", { name: "Speaking (0-200)" }));
+    await screen.findByText("200", { selector: "tspan" });
+    await user.tab();
+    const speakingTooltip = await screen.findByTestId(
+      "score-progression-tooltip",
+    );
+    expect(speakingTooltip).toHaveTextContent("Test s-1");
+    expect(speakingTooltip).toHaveTextContent("150 / 200");
+    expect(speakingTooltip).not.toHaveTextContent(/\bnull\b/i);
   });
 
   it("keeps static dots and hides range controls at 10 full tests", async () => {

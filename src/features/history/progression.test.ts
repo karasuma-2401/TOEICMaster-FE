@@ -45,22 +45,41 @@ describe("score progression", () => {
     expect(isFullScaleChartAttempt(attempt(overrides))).toBe(false);
   });
 
-  it.each([3, 4, 5, 10, 15])(
-    "rejects only the mismatched Writing maximum %i",
-    (maxScore) => {
-      const fullTest = attempt({ skill: "writing", score: 1, maxScore: 200 });
+  it.each([
+    { skill: "lr", maxScore: 200 },
+    { skill: "lr", maxScore: 500 },
+    { skill: "speaking", maxScore: 990 },
+    { skill: "speaking", maxScore: 100 },
+    { skill: "writing", maxScore: 3 },
+    { skill: "writing", maxScore: 4 },
+    { skill: "writing", maxScore: 5 },
+    { skill: "writing", maxScore: 10 },
+    { skill: "writing", maxScore: 15 },
+  ] as const)(
+    "rejects only the mismatched $skill maximum $maxScore",
+    ({ skill, maxScore }) => {
+      const fullTest = attempt({
+        skill,
+        score: 1,
+        maxScore: skill === "lr" ? 990 : 200,
+      });
       expect(isFullScaleChartAttempt(fullTest)).toBe(true);
       expect(isFullScaleChartAttempt({ ...fullTest, maxScore })).toBe(false);
     },
   );
 
   it.each([
+    { skill: "lr", modeLabel: "Listening Part 1" },
     { skill: "speaking", modeLabel: "Speaking part 3" },
     { skill: "writing", modeLabel: "Writing Part 1" },
   ] as const)(
     "rejects $skill part mode even at full scale",
     ({ skill, modeLabel }) => {
-      const fullTest = attempt({ skill, score: 120, maxScore: 200 });
+      const fullTest = attempt({
+        skill,
+        score: 120,
+        maxScore: skill === "lr" ? 990 : 200,
+      });
       expect(isFullScaleChartAttempt(fullTest)).toBe(true);
       expect(isFullScaleChartAttempt({ ...fullTest, modeLabel })).toBe(false);
     },
@@ -152,7 +171,9 @@ describe("score progression windows", () => {
 
   it("falls back to all if the selected window is unavailable for the skill", () => {
     expect(resolveEffectiveChartWindow(10, "10")).toBe("all");
+    expect(resolveEffectiveChartWindow(10, "25")).toBe("all");
     expect(resolveEffectiveChartWindow(11, "10")).toBe("10");
+    expect(resolveEffectiveChartWindow(11, "25")).toBe("all");
     expect(resolveEffectiveChartWindow(25, "25")).toBe("all");
     expect(resolveEffectiveChartWindow(26, "25")).toBe("25");
     expect(resolveEffectiveChartWindow(50, "all")).toBe("all");

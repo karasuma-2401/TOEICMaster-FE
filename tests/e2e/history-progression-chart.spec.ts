@@ -201,6 +201,7 @@ for (const { name, viewport, mobile } of [
       await expect(summary).toContainText("3 full tests");
       await expect(line).toHaveAttribute("stroke", "#1D4ED8");
       await expect(dots).toHaveCount(3);
+      await expect(chart.getByTestId("score-progression-range")).toHaveCount(0);
       await expect(canvas.getByText("990", { exact: true })).toBeVisible();
       await expect(cards).toHaveCount(8);
       expect(
@@ -323,9 +324,25 @@ for (const { name, viewport, mobile } of [
       const ticks = canvas.locator(".recharts-xAxis-tick-labels text");
       const summary = chart.getByTestId("score-progression-summary");
       const range = chart.getByRole("group", { name: "Chart attempt range" });
+      await expect(range).toHaveAttribute(
+        "data-testid",
+        "score-progression-range",
+      );
       const lastTen = range.getByRole("button", { name: "Last 10" });
       const lastTwentyFive = range.getByRole("button", { name: "Last 25" });
       const all = range.getByRole("button", { name: "All (50)" });
+      await expect(lastTen).toHaveAttribute(
+        "data-testid",
+        "score-progression-range-10",
+      );
+      await expect(lastTwentyFive).toHaveAttribute(
+        "data-testid",
+        "score-progression-range-25",
+      );
+      await expect(all).toHaveAttribute(
+        "data-testid",
+        "score-progression-range-all",
+      );
       const line = canvas.locator("path.recharts-line-curve");
 
       await expect(lastTen).toHaveAttribute("aria-pressed", "true");
