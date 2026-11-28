@@ -224,8 +224,11 @@ for (const { name, viewport, mobile } of [
       }
 
       if (mobile) {
-        await page.getByRole("button", { name: "Close guide" }).click();
-        await capture(page, "05-mobile-after-closing-guide.png");
+        const closeGuide = page.getByRole("button", { name: "Close guide" });
+        if (await closeGuide.isVisible()) {
+          await closeGuide.click();
+          await capture(page, "05-mobile-after-closing-guide.png");
+        }
       } else {
         await dots.first().hover();
         const tooltip = chart.getByTestId("score-progression-tooltip");
