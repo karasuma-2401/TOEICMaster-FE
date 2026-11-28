@@ -4,9 +4,13 @@ import {
   problem,
   sameOrigin,
 } from "@/features/auth/server/backend";
+import {
+  readBoundedBody,
+  readMultipartStream,
+} from "@/shared/server/bff-proxy";
 import { sessionCookie } from "@/features/auth/server/session";
 
-type AdminExamMethod = "GET" | "POST" | "PUT" | "DELETE";
+type AdminExamMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 function upstreamResponse(response: Response) {
   if (response.status === 204)
@@ -46,30 +50,34 @@ export async function forwardAdminExamRequest(
   if (method !== "GET" && method !== "DELETE") {
     const contentType = request.headers.get("content-type") ?? "";
     if (contentType.startsWith("application/json")) {
-      const body: unknown = await request.json().catch(() => null);
+      const limited = await readBoundedBody(
+        request,
+        maximumMultipartBytes ?? 10 * 1024 * 1024,
+      ).catch(() => null);
+      if (!limited) return problem(400, "Invalid request data.");
+      if (limited instanceof Response) return limited;
+      let body: unknown;
+      try {
+        body = JSON.parse(new TextDecoder().decode(limited.body));
+      } catch {
+        return problem(400, "Invalid request data.");
+      }
       if (!body || typeof body !== "object" || Array.isArray(body))
         return problem(400, "Invalid request data.");
       init.headers = { "Content-Type": "application/json" };
       init.body = JSON.stringify(body);
     } else if (contentType.startsWith("multipart/form-data")) {
-      const declaredLength = Number(request.headers.get("content-length"));
-      if (
-        maximumMultipartBytes !== undefined &&
-        (!Number.isFinite(declaredLength) ||
-          declaredLength > maximumMultipartBytes)
-      )
-        return problem(413, "Uploaded file exceeds the allowed size limit.");
-      const formData = await request.formData().catch(() => null);
-      if (!formData) return problem(400, "Invalid file data.");
-      if (maximumMultipartBytes !== undefined) {
-        const fileBytes = [...formData.values()].reduce(
-          (total, value) => total + (value instanceof File ? value.size : 0),
-          0,
+      try {
+        const limited = await readMultipartStream(
+          request,
+          maximumMultipartBytes ?? 10 * 1024 * 1024 + 128 * 1024,
         );
-        if (fileBytes > maximumMultipartBytes)
-          return problem(413, "Uploaded file exceeds the allowed size limit.");
+        if (limited instanceof Response) return limited;
+        init.headers = { "Content-Type": limited.contentType };
+        init.body = limited.body;
+      } catch {
+        return problem(400, "Invalid file data.");
       }
-      init.body = formData;
     } else {
       return problem(400, "Invalid request data.");
     }

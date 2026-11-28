@@ -8,8 +8,6 @@ import {
 } from "@/features/user/preferences";
 import { mascotGuide, type MascotGuide } from "./mascot-tips";
 
-const seenKey = "toeicmaster-mascot-seen";
-
 /** Mic, the TOEICMaster fox with a headset. */
 export function MascotFace({ className }: { className?: string }) {
   return (
@@ -80,11 +78,11 @@ function GuideBubble({
         {guide.tips[step]}
       </p>
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-[var(--tm-ink-subtle)]">
           {step + 1}/{guide.tips.length}
         </span>
         <button
-          className="cursor-pointer rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+          className="cursor-pointer rounded-lg bg-[var(--tm-brand)] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[var(--tm-brand-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
           onClick={() => (last ? onClose() : setStep(step + 1))}
           type="button"
         >
@@ -95,13 +93,12 @@ function GuideBubble({
   );
 }
 
-/** Corner helper explaining the current page; greets first-time visitors once. */
+/** Opt-in corner helper explaining the current page; suppressed on active exam and practice routes. */
 export function GuideMascot() {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const guide = mascotGuide(pathname);
-  const autoOpen = guide !== null && guide.autoOpen !== false;
 
   useEffect(() => {
     const sync = () => setHidden(isMascotHidden());
@@ -110,36 +107,22 @@ export function GuideMascot() {
     return () => window.removeEventListener(preferencesChangedEvent, sync);
   }, []);
 
-  useEffect(() => {
-    if (!autoOpen) return;
-
-    const task = window.setTimeout(() => {
-      if (isMascotHidden()) return;
-      try {
-        if (window.localStorage.getItem(seenKey)) return;
-        window.localStorage.setItem(seenKey, "1");
-      } catch {
-        return; // Storage blocked: stay quiet instead of greeting every page.
-      }
-      setOpen(true);
-    }, 600);
-    return () => window.clearTimeout(task);
-  }, [autoOpen]);
-
   if (!guide || hidden) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
       {open && (
-        <GuideBubble
-          guide={guide}
-          key={pathname}
-          onClose={() => setOpen(false)}
-        />
+        <div className="pointer-events-auto">
+          <GuideBubble
+            guide={guide}
+            key={pathname}
+            onClose={() => setOpen(false)}
+          />
+        </div>
       )}
       <button
         aria-expanded={open}
         aria-label="Ask Mic how to use this page"
-        className="size-16 cursor-pointer rounded-full border border-stone-300 bg-white p-1.5 shadow-[0_8px_20px_-8px_rgb(62_44_30/40%)] transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+        className="pointer-events-auto size-16 cursor-pointer rounded-full border border-stone-300 bg-white p-1.5 shadow-[0_8px_20px_-8px_rgb(62_44_30/40%)] transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tm-ring)]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >

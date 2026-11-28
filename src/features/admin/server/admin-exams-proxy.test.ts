@@ -34,6 +34,44 @@ beforeEach(() =>
 afterEach(() => vi.unstubAllEnvs());
 
 describe("forwardAdminExamRequest", () => {
+  it.each([undefined, "1"])(
+    "stops oversized streamed uploads with length %s",
+    async (length) => {
+      const cancel = vi.fn();
+      let chunks = 0;
+      const stream = new ReadableStream({
+        pull(controller) {
+          if (++chunks <= 3) controller.enqueue(new Uint8Array(11));
+          else controller.close();
+        },
+        cancel,
+      });
+      const request = new NextRequest(
+        "http://localhost/api/admin/exams/import",
+        {
+          method: "POST",
+          body: stream,
+          duplex: "half",
+          headers: {
+            Cookie: cookie("ADMIN"),
+            Origin: "http://localhost",
+            "Content-Type": "multipart/form-data; boundary=test",
+            ...(length ? { "Content-Length": length } : {}),
+          },
+        } as ConstructorParameters<typeof NextRequest>[1],
+      );
+      const response = await forwardAdminExamRequest(
+        request,
+        "/api/v1/admin/exams/import",
+        "POST",
+        10,
+      );
+      expect(response.status).toBe(413);
+      expect(cancel).toHaveBeenCalled();
+      expect(backendFetch).not.toHaveBeenCalled();
+    },
+  );
+
   it("forwards a protected GET request with the admin bearer session", async () => {
     vi.mocked(backendFetch).mockResolvedValueOnce(Response.json({ items: [] }));
     const request = new NextRequest("http://localhost/api/admin/exams", {

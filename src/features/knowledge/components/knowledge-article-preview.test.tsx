@@ -4,6 +4,28 @@ import { describe, expect, it } from "vitest";
 import { KnowledgeArticlePreview } from "./knowledge-article-preview";
 
 describe("KnowledgeArticlePreview", () => {
+  it("places the public table of contents before article content in reading order", () => {
+    const { container } = render(
+      <KnowledgeArticlePreview
+        publicView
+        title="Reading guide"
+        summary="Tips"
+        skill="Reading"
+        categoryName="Grammar"
+        status="Published"
+        tags={[]}
+        coverImageAssetId={null}
+        coverImageAlt={null}
+        content={{ type: "doc", content: [] }}
+      />,
+    );
+    const toc = screen.getByRole("complementary");
+    const article = container.querySelector("article")!;
+    expect(
+      toc.compareDocumentPosition(article) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("renders safe links as anchors and strips unsafe link hrefs to plain text", () => {
     render(
       <KnowledgeArticlePreview

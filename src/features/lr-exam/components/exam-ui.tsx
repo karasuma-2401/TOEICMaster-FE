@@ -64,7 +64,12 @@ export function LearnerNav() {
         aria-label="Main navigation"
         className="flex items-center gap-8 text-[13px]"
       >
-        <span className="text-[var(--tm-ink-soft)]">Practice by Part</span>
+        <Link
+          className={`text-[var(--tm-ink-soft)] transition hover:text-[var(--tm-brand)] ${focusRing}`}
+          href="/listening-reading"
+        >
+          Practice by Part
+        </Link>
         <span
           aria-current="page"
           className="font-semibold text-[var(--tm-brand)]"

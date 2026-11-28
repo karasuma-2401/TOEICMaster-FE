@@ -3,7 +3,7 @@ import {
   postAuth,
   problem,
   rateLimited,
-  readBody,
+  readBoundedBody,
   sameOrigin,
   upstreamProblem,
 } from "@/features/auth/server/backend";
@@ -11,8 +11,10 @@ import { clearSessionCookie } from "@/features/auth/server/session";
 
 export async function POST(request: NextRequest) {
   if (!sameOrigin(request)) return problem(403, "Invalid request.");
-  const body = await readBody(request);
-  if (!body) return problem(400, "Invalid password reset data.");
+  const bodyResult = await readBoundedBody(request);
+  if (!bodyResult.ok)
+    return bodyResult.response ?? problem(400, "Invalid password reset data.");
+  const body = bodyResult.data;
 
   const resetToken = typeof body.resetToken === "string" ? body.resetToken : "";
   const newPassword =
@@ -26,10 +28,14 @@ export async function POST(request: NextRequest) {
     return problem(400, "Invalid password reset data.", errors);
 
   try {
-    const upstream = await postAuth("reset-password", {
-      resetToken,
-      newPassword,
-    });
+    const upstream = await postAuth(
+      "reset-password",
+      {
+        resetToken,
+        newPassword,
+      },
+      request,
+    );
     if (upstream.status === 204) {
       const response = new NextResponse(null, {
         status: 204,

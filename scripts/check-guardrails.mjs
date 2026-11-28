@@ -13,20 +13,17 @@ export const TODO_WAVE3_BASELINE = {
     "src/features/flashcards/server/flashcards-proxy.ts": 1,
     "src/features/lr-exam/server/lr-proxy.ts": 1,
     "src/features/speaking/server/speaking-proxy.ts": 1,
-    "src/features/writing/server/writing-proxy.ts": 1,
   },
   "no-raw-storage": {
     "src/features/lr-exam/hooks/use-sequential-listening-player.ts": 2,
     "src/features/pronunciation/practice-progress.ts": 1,
     "src/features/user/preferences.ts": 1,
-    "src/shared/components/mascot/guide-mascot.tsx": 2,
     "src/shared/components/practice/practice-sidebar.tsx": 2,
   },
   "no-raw-dialog-open": {
     "src/features/admin/components/content/admin-excel-import.tsx": 1,
     "src/features/admin/components/content/admin-overlay.tsx": 2,
     "src/features/admin/components/content/admin-workspace.tsx": 1,
-    "src/features/admin/components/data-bank-center.tsx": 1,
     "src/features/knowledge/components/knowledge-category-modal.tsx": 1,
     "src/features/knowledge/components/knowledge-media-picker-modal.tsx": 1,
     "src/features/knowledge/components/knowledge-ui-primitives.tsx": 1,
@@ -34,15 +31,11 @@ export const TODO_WAVE3_BASELINE = {
     "src/features/pronunciation/components/sound-dialog.tsx": 1,
     "src/features/speaking/components/admin/create-test-modal.tsx": 1,
     "src/features/user/components/profile-dialog.tsx": 1,
-    "src/features/writing/components/admin-writing-pages.tsx": 3,
-    "src/features/writing/components/admin-writing-tests-live.tsx": 2,
   },
   "no-browser-dialogs": {
     "src/features/speaking/components/admin/admin-speaking-content-page.tsx": 1,
     "src/features/speaking/components/admin/speaking-test-workspace.tsx": 2,
     "src/features/speaking/components/session/speaking-attempt.tsx": 1,
-    "src/features/writing/components/admin-writing-pages.tsx": 1,
-    "src/features/writing/components/admin-writing-tests-live.tsx": 1,
   },
   "no-duplicate-auth-refresh": {
     "src/features/admin/api.ts": 4,
@@ -87,8 +80,6 @@ export const TODO_WAVE3_BASELINE = {
     "src/features/speaking/server/speaking-proxy.ts": 1,
     "src/features/speaking/server/upstream.ts": 1,
     "src/features/user/server/profile-proxy.ts": 1,
-    "src/features/writing/server/admin-writing-proxy.ts": 1,
-    "src/features/writing/server/writing-proxy.ts": 1,
   },
 };
 

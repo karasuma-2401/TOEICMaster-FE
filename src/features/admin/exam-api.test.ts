@@ -28,6 +28,88 @@ afterEach(() => {
 });
 
 describe("admin exam API client", () => {
+  it("creates score profiles, reassigns drafts and forks published revisions through the BFF", async () => {
+    const profile = {
+      id: "a0000000-0000-0000-0000-000000000001",
+      name: "Custom",
+      isComplete: false,
+      mappingCount: 1,
+    };
+    const draft = {
+      examId: "b1000000-0000-0000-0000-000000000001",
+      revisionId: "b2000000-0000-0000-0000-000000000001",
+      code: "EXAM",
+      title: "Exam",
+      versionNumber: 2,
+      status: "Draft",
+      questionCount: 200,
+    };
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(profile, { status: 201 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(Response.json(draft, { status: 201 }));
+    vi.stubGlobal("fetch", fetch);
+    const input = {
+      name: "Custom",
+      conversions: [
+        { skill: "Reading" as const, rawCorrectCount: 0, scaledScore: 5 },
+      ],
+    };
+    await expect(examApi.createScoreProfile(input)).resolves.toEqual(profile);
+    await examApi.updateReadingScoreProfile("exam", "revision", profile.id);
+    await expect(
+      examApi.forkReadingRevision("exam", "source"),
+    ).resolves.toEqual(draft);
+    expect(fetch.mock.calls.map(([path]) => path)).toEqual([
+      "/api/admin/score-profiles",
+      "/api/admin/exams/exam/revisions/revision/score-profile",
+      "/api/admin/exams/exam/revisions",
+    ]);
+    expect(fetch.mock.calls[1][1]).toMatchObject({
+      method: "PUT",
+      body: JSON.stringify({ scoreProfileId: profile.id }),
+    });
+    expect(fetch.mock.calls[2][1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ sourceRevisionId: "source" }),
+    });
+  });
+
+  it("accepts seeded IDs in an imported draft", async () => {
+    const draft = {
+      examId: "b1000000-0000-0000-0000-000000000001",
+      revisionId: "b2000000-0000-0000-0000-000000000001",
+      code: "SEED",
+      title: "Seed",
+      versionNumber: 1,
+      status: "Draft",
+      questionCount: 0,
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(draft)));
+    await expect(
+      importReadingExam(new File(["xlsx"], "exam.xlsx")),
+    ).resolves.toEqual(draft);
+  });
+
+  it("preserves exam validation details when publishing fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            title: "Validation failed",
+            errors: { exam: ["Question 1 is incomplete."] },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    await expect(
+      examApi.publishReadingRevision("exam", "revision"),
+    ).rejects.toThrow("Question 1 is incomplete.");
+  });
+
   it("keeps Reading list requests on the same-origin endpoint", async () => {
     vi.mocked(getJson).mockResolvedValueOnce({
       items: [],

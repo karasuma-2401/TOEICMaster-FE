@@ -4,6 +4,11 @@ import { POST as login } from "./login/route";
 import { POST as google } from "./google/route";
 import { POST as refresh } from "./refresh/route";
 import { POST as logout } from "./logout/route";
+import { POST as forgotPassword } from "./forgot-password/route";
+import { POST as resendVerification } from "./resend-verification/route";
+import { POST as resetPassword } from "./reset-password/route";
+import { POST as verifyEmail } from "./verify-email/route";
+import { POST as verifyPasswordReset } from "./verify-password-reset/route";
 import { GET as session } from "./session/route";
 import { readSession } from "@/features/auth/server/session";
 
@@ -309,5 +314,162 @@ describe("auth BFF", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("12");
+  });
+
+  it.each([
+    { name: "login", handler: login },
+    { name: "google", handler: google },
+    { name: "forgot-password", handler: forgotPassword },
+    { name: "resend-verification", handler: resendVerification },
+    { name: "reset-password", handler: resetPassword },
+    { name: "verify-email", handler: verifyEmail },
+    { name: "verify-password-reset", handler: verifyPasswordReset },
+  ])(
+    "rejects oversized auth JSON payloads with 413 and cancels the stream on $name",
+    async ({ name, handler }) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const cancel = vi.fn(() => Promise.resolve());
+      const chunk = new Uint8Array(10_000).fill(97);
+      const chunks = [chunk, chunk];
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            const next = chunks.shift();
+            if (next) controller.enqueue(next);
+            else controller.close();
+          },
+          cancel,
+        },
+        { highWaterMark: 0 },
+      );
+
+      const response = await handler(
+        new NextRequest(`http://localhost/api/auth/${name}`, {
+          method: "POST",
+          headers: {
+            Origin: "http://localhost",
+            "Content-Type": "application/json",
+          },
+          body,
+        }),
+      );
+
+      expect(response.status).toBe(413);
+      expect(response.headers.get("content-type")).toBe(
+        "application/problem+json",
+      );
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("forwards validated X-Forwarded-For and X-Forwarded-Proto across all 9 auth routes", async () => {
+    const validSessionCookie = await (async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValueOnce(Response.json(authBody())),
+      );
+      const res = await login(
+        request("login", {
+          email: "linh@example.com",
+          password: "password",
+        }),
+      );
+      return res.headers.get("set-cookie")!.split(";")[0];
+    })();
+
+    const cases: Array<{
+      name: string;
+      handler: (req: NextRequest) => Promise<Response>;
+      body?: object;
+      cookie?: string;
+      upstreamResponse: () => Response;
+    }> = [
+      {
+        name: "login",
+        handler: login,
+        body: { email: "linh@example.com", password: "password" },
+        upstreamResponse: () => Response.json(authBody()),
+      },
+      {
+        name: "logout",
+        handler: logout,
+        cookie: validSessionCookie,
+        upstreamResponse: () => new Response(null, { status: 204 }),
+      },
+      {
+        name: "google",
+        handler: google,
+        body: { credential: "signed-id-token" },
+        upstreamResponse: () => Response.json(authBody()),
+      },
+      {
+        name: "refresh",
+        handler: refresh,
+        cookie: validSessionCookie,
+        upstreamResponse: () => Response.json(authBody()),
+      },
+      {
+        name: "forgot-password",
+        handler: forgotPassword,
+        body: { email: "linh@example.com" },
+        upstreamResponse: () => new Response(null, { status: 202 }),
+      },
+      {
+        name: "resend-verification",
+        handler: resendVerification,
+        body: { email: "linh@example.com" },
+        upstreamResponse: () => new Response(null, { status: 202 }),
+      },
+      {
+        name: "reset-password",
+        handler: resetPassword,
+        body: { resetToken: "token-123", newPassword: "password123" },
+        upstreamResponse: () => new Response(null, { status: 204 }),
+      },
+      {
+        name: "verify-email",
+        handler: verifyEmail,
+        body: { email: "linh@example.com", code: "123456" },
+        upstreamResponse: () => new Response(null, { status: 204 }),
+      },
+      {
+        name: "verify-password-reset",
+        handler: verifyPasswordReset,
+        body: { email: "linh@example.com", code: "123456" },
+        upstreamResponse: () =>
+          Response.json({
+            resetToken: "token-123",
+            expiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+          }),
+      },
+    ];
+
+    for (const entry of cases) {
+      const fetchMock = vi.fn().mockResolvedValueOnce(entry.upstreamResponse());
+      vi.stubGlobal("fetch", fetchMock);
+
+      const req = new NextRequest(`http://localhost/api/auth/${entry.name}`, {
+        method: "POST",
+        headers: {
+          Origin: "http://localhost",
+          "X-Real-IP": "198.51.100.42",
+          "X-Forwarded-Proto": "https",
+          ...(entry.body ? { "Content-Type": "application/json" } : {}),
+          ...(entry.cookie ? { Cookie: entry.cookie } : {}),
+        },
+        ...(entry.body ? { body: JSON.stringify(entry.body) } : {}),
+      });
+
+      const res = await entry.handler(req);
+      expect(res.status).toBeLessThan(400);
+      const sentHeaders = fetchMock.mock.calls[0]![1].headers as Record<
+        string,
+        string
+      >;
+      expect(sentHeaders["X-Forwarded-For"]).toBe("198.51.100.42");
+      expect(sentHeaders["X-Forwarded-Proto"]).toBe("https");
+    }
   });
 });

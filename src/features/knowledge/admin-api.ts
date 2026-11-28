@@ -138,8 +138,9 @@ export function listKnowledgeArticles(
   } = {},
   signal?: AbortSignal,
 ) {
+  const { query, ...rest } = params;
   return knowledgeAdminRequest<PageResult<KnowledgeArticleSummary>>(
-    `${BASE}/articles${buildQuery(params)}`,
+    `${BASE}/articles${buildQuery({ ...rest, q: query })}`,
     { signal, fallback: "Could not load knowledge articles." },
   );
 }

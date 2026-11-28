@@ -3,7 +3,7 @@ import { knowledgeAdminRequest } from "./http";
 export interface SavedArticle {
   articleId: string;
   title: string;
-  url: string;
+  url: string | null;
   available: boolean;
 }
 

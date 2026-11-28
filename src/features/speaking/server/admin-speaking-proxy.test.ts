@@ -5,10 +5,7 @@ import {
   setSessionCookie,
   type AuthSession,
 } from "@/features/auth/server/session";
-import {
-  forwardAdminSpeaking,
-  importUploadLimit,
-} from "./admin-speaking-proxy";
+import { forwardAdminSpeaking, imageUploadLimit } from "./admin-speaking-proxy";
 
 vi.mock("@/features/auth/server/backend", async (importOriginal) => {
   const actual =
@@ -75,8 +72,8 @@ describe("Admin Speaking BFF proxy", () => {
     ]);
   });
 
-  describe("Excel test import", () => {
-    const url = "http://localhost/api/admin/speaking/tests/import";
+  describe("Image upload", () => {
+    const url = "http://localhost/api/admin/speaking/media/images";
     const upload = (headers: Record<string, string>, body: string) =>
       new NextRequest(url, {
         method: "POST",
@@ -90,20 +87,20 @@ describe("Admin Speaking BFF proxy", () => {
 
     it("forwards the multipart body unchanged", async () => {
       vi.mocked(backendFetch).mockResolvedValue(
-        Response.json({ id: "test-1" }, { status: 201 }),
+        Response.json({ id: "asset-1" }, { status: 201 }),
       );
       const contentType = "multipart/form-data; boundary=x";
 
       const response = await forwardAdminSpeaking(
         upload({ "Content-Type": contentType }, "--x--"),
-        ["tests", "import"],
+        ["media", "images"],
         "POST",
       );
 
       expect(response.status).toBe(201);
       const [path, token, init] = vi.mocked(backendFetch).mock.calls[0];
       expect([path, token]).toEqual([
-        "/api/v1/admin/speaking/tests/import",
+        "/api/v1/admin/speaking/media/images",
         "access-token",
       ]);
       expect(init?.method).toBe("POST");
@@ -114,18 +111,18 @@ describe("Admin Speaking BFF proxy", () => {
     it("rejects non-multipart and oversized bodies before the backend", async () => {
       const notMultipart = await forwardAdminSpeaking(
         upload({ "Content-Type": "application/json" }, "{}"),
-        ["tests", "import"],
+        ["media", "images"],
         "POST",
       );
       const tooLarge = await forwardAdminSpeaking(
         upload(
           {
             "Content-Type": "multipart/form-data; boundary=x",
-            "Content-Length": String(importUploadLimit + 1),
+            "Content-Length": String(imageUploadLimit + 1),
           },
           "--x--",
         ),
-        ["tests", "import"],
+        ["media", "images"],
         "POST",
       );
 
@@ -143,7 +140,7 @@ describe("Admin Speaking BFF proxy", () => {
           },
           "--x--",
         ),
-        ["tests", "import"],
+        ["media", "images"],
         "POST",
       );
 
@@ -152,7 +149,7 @@ describe("Admin Speaking BFF proxy", () => {
     });
   });
 
-  it("only allows known paths and methods", async () => {
+  it("only allows known paths and methods (including rejecting removed tests/import)", async () => {
     const request = new NextRequest("http://localhost/x", {
       headers: { Cookie: cookie("ADMIN") },
     });
@@ -161,6 +158,21 @@ describe("Admin Speaking BFF proxy", () => {
     );
     expect(
       (await forwardAdminSpeaking(request, ["summary"], "DELETE")).status,
+    ).toBe(404);
+    expect(
+      (
+        await forwardAdminSpeaking(
+          new NextRequest("http://localhost/api/admin/speaking/tests/import", {
+            method: "POST",
+            headers: {
+              Cookie: cookie("ADMIN"),
+              Origin: "http://localhost",
+            },
+          }),
+          ["tests", "import"],
+          "POST",
+        )
+      ).status,
     ).toBe(404);
   });
 });

@@ -10,6 +10,7 @@ import {
   getScoreProfiles,
   importReadingExam,
 } from "@/features/admin/exam-api";
+import { CreateScoreProfileButton } from "./create-score-profile-button";
 import {
   formatAdminDate,
   type ReadingExamPage,
@@ -21,11 +22,19 @@ import {
   getLrExerciseItems,
   getLrExerciseSummary,
   importLrExerciseItems,
+  updateLrExerciseMedia,
+  uploadLrExerciseMedia,
   type CreateLrExerciseItemInput,
   type LrExerciseItem,
   type LrExercisePage,
   type LrExerciseSummary,
 } from "@/features/admin/lr-exercise-bank-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { ContentTabs } from "./content/content-tabs";
 import { ExamIcon } from "./exam-icon";
 
@@ -381,18 +390,20 @@ function PartWorkspace({
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
   const [importOpen, setImportOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<LrExerciseItem | null>(null);
   const loading = items === null && error === null;
 
   const load = useCallback(
     (signal?: AbortSignal) =>
       getLrExerciseItems(
         definition.part,
-        { query, difficulty, status, page: 1 },
+        { query, difficulty, status, page },
         signal,
       ),
-    [definition.part, difficulty, query, status],
+    [definition.part, difficulty, page, query, status],
   );
 
   useEffect(() => {
@@ -472,20 +483,29 @@ function PartWorkspace({
             <input
               aria-label="Search exercises"
               className="min-w-0 flex-1 bg-transparent text-sm text-[var(--admin-ink)] outline-none placeholder:text-[var(--admin-muted)]"
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setPage(1);
+                setQuery(event.target.value);
+              }}
               placeholder="Search by code or question content..."
               value={query}
             />
           </label>
           <FilterSelect
             label="Difficulty"
-            onChange={setDifficulty}
+            onChange={(value) => {
+              setPage(1);
+              setDifficulty(value);
+            }}
             value={difficulty}
             values={["EASY", "MEDIUM", "HARD"]}
           />
           <FilterSelect
             label="Status"
-            onChange={setStatus}
+            onChange={(value) => {
+              setPage(1);
+              setStatus(value);
+            }}
             value={status}
             values={["DRAFT", "PUBLISHED", "ARCHIVED"]}
           />
@@ -515,8 +535,33 @@ function PartWorkspace({
           <ItemTable
             definition={definition}
             items={items?.items ?? []}
+            onEdit={setEditingItem}
             total={items?.totalCount ?? 0}
           />
+        )}
+        {(items?.totalPages ?? 0) > 1 && (
+          <nav
+            aria-label="Exercise pages"
+            className="flex items-center justify-end gap-3 border-t border-[var(--admin-border)] px-5 py-3 text-sm"
+          >
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((value) => value - 1)}
+              type="button"
+            >
+              Previous
+            </button>
+            <span>
+              Page {page} of {items?.totalPages}
+            </span>
+            <button
+              disabled={page >= (items?.totalPages ?? 1)}
+              onClick={() => setPage((value) => value + 1)}
+              type="button"
+            >
+              Next
+            </button>
+          </nav>
         )}
       </section>
       {importOpen && (
@@ -538,6 +583,19 @@ function PartWorkspace({
             setCreateOpen(false);
             setRetry((value) => value + 1);
             getLrExerciseSummary()
+              .then(onSummaryChange)
+              .catch(() => undefined);
+          }}
+        />
+      )}
+      {editingItem && (
+        <MediaPartModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onComplete={() => {
+            setEditingItem(null);
+            setRetry((value) => value + 1);
+            void getLrExerciseSummary()
               .then(onSummaryChange)
               .catch(() => undefined);
           }}
@@ -595,10 +653,12 @@ function EmptyPart({ definition }: { definition: (typeof parts)[number] }) {
 function ItemTable({
   definition,
   items,
+  onEdit,
   total,
 }: {
   definition: (typeof parts)[number];
   items: LrExerciseItem[];
+  onEdit: (item: LrExerciseItem) => void;
   total: number;
 }) {
   return (
@@ -613,6 +673,7 @@ function ItemTable({
             <th className="px-5 py-3">TOPIC</th>
             <th className="px-5 py-3">DIFFICULTY</th>
             <th className="px-5 py-3">STATUS</th>
+            <th className="px-5 py-3">ACTION</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--admin-border)]">
@@ -655,6 +716,15 @@ function ItemTable({
                 </td>
                 <td className="px-5 py-4">
                   <StatusBadge status={item.status} />
+                </td>
+                <td className="px-5 py-4">
+                  <button
+                    className="text-sm font-bold text-[var(--admin-brand-red)] hover:underline"
+                    onClick={() => onEdit(item)}
+                    type="button"
+                  >
+                    Media &amp; status
+                  </button>
                 </td>
               </tr>
             );
@@ -708,6 +778,13 @@ function ImportPartModal({
       title={`Import Part ${definition.part} from Excel`}
     >
       <form onSubmit={submit}>
+        {definition.part <= 4 && (
+          <p className="mb-4 text-sm text-[var(--admin-muted)]">
+            If the workbook has no media URLs, import Listening items as drafts.
+            Then use Media &amp; status on each row to upload audio
+            {definition.part === 1 ? " and an image" : ""} and publish.
+          </p>
+        )}
         <a
           className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--admin-brand-red)]/25 bg-[var(--admin-danger-soft)] px-3 py-3 text-sm font-bold text-[var(--admin-brand-red)] hover:underline"
           href={`/api/admin/lr-exercise-bank/templates/${definition.part}`}
@@ -751,6 +828,132 @@ function ImportPartModal({
   );
 }
 
+function MediaPartModal({
+  item,
+  onClose,
+  onComplete,
+}: {
+  item: LrExerciseItem;
+  onClose: () => void;
+  onComplete: () => void;
+}) {
+  const [status, setStatus] = useState(item.status);
+  const [audioUrl, setAudioUrl] = useState(item.audioUrl ?? "");
+  const [imageUrl, setImageUrl] = useState(item.imageUrl ?? "");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (
+      status === "PUBLISHED" &&
+      item.part <= 4 &&
+      !audioFile &&
+      !audioUrl.trim()
+    ) {
+      setError("Published Listening exercises need audio.");
+      return;
+    }
+    if (
+      status === "PUBLISHED" &&
+      item.part === 1 &&
+      !imageFile &&
+      !imageUrl.trim()
+    ) {
+      setError("Published Part 1 exercises need an image.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const nextAudio = audioFile
+        ? await uploadLrExerciseMedia("audio", audioFile)
+        : audioUrl.trim() || null;
+      const nextImage = imageFile
+        ? await uploadLrExerciseMedia("image", imageFile)
+        : imageUrl.trim() || null;
+      await updateLrExerciseMedia(item, {
+        status,
+        audioUrl: nextAudio,
+        imageUrl: nextImage,
+      });
+      onComplete();
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Unable to update exercise.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      onClose={onClose}
+      subtitle={`Part ${item.part} · ${item.code}`}
+      title="Media and publication"
+    >
+      <form className="space-y-4" onSubmit={submit}>
+        <SelectField
+          label="Status"
+          onChange={(value) => setStatus(value as LrExerciseItem["status"])}
+          value={status}
+          values={["DRAFT", "PUBLISHED", "ARCHIVED"]}
+        />
+        {item.part <= 4 && (
+          <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
+            Audio file (MP3/WAV, up to 20 MB)
+            <input
+              accept=".mp3,.wav,audio/mpeg,audio/wav"
+              className="mt-2 block w-full text-sm font-normal"
+              onChange={(event) =>
+                setAudioFile(event.currentTarget.files?.[0] ?? null)
+              }
+              type="file"
+            />
+          </label>
+        )}
+        <TextField
+          label="Audio URL or stored key"
+          onChange={setAudioUrl}
+          value={audioUrl}
+        />
+        <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
+          Image file (PNG/JPEG/WebP, up to 5 MB)
+          <input
+            accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+            className="mt-2 block w-full text-sm font-normal"
+            onChange={(event) =>
+              setImageFile(event.currentTarget.files?.[0] ?? null)
+            }
+            type="file"
+          />
+        </label>
+        <TextField
+          label="Image URL or stored key"
+          onChange={setImageUrl}
+          value={imageUrl}
+        />
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg bg-[var(--admin-danger-soft)] p-3 text-sm text-[var(--admin-danger)]"
+          >
+            {error}
+          </p>
+        )}
+        <ModalFooter
+          busy={busy}
+          label="Save media and status"
+          onClose={onClose}
+        />
+      </form>
+    </Modal>
+  );
+}
+
 function CreatePartDrawer({
   definition,
   onClose,
@@ -775,6 +978,8 @@ function CreatePartDrawer({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const patchQuestion = (
     index: number,
     field: keyof QuestionDraft,
@@ -788,10 +993,38 @@ function CreatePartDrawer({
     }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (
+      input.status === "PUBLISHED" &&
+      definition.part <= 4 &&
+      !audioFile &&
+      !input.audioUrl
+    ) {
+      setError("Published Listening exercises need an audio file or URL.");
+      return;
+    }
+    if (
+      input.status === "PUBLISHED" &&
+      definition.part === 1 &&
+      !imageFile &&
+      !input.imageUrl
+    ) {
+      setError("Published Part 1 exercises need an image file or URL.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      await createLrExerciseItem(definition.part, input);
+      const audioUrl = audioFile
+        ? await uploadLrExerciseMedia("audio", audioFile)
+        : input.audioUrl;
+      const imageUrl = imageFile
+        ? await uploadLrExerciseMedia("image", imageFile)
+        : input.imageUrl;
+      await createLrExerciseItem(definition.part, {
+        ...input,
+        audioUrl,
+        imageUrl,
+      });
       onComplete();
     } catch (reason) {
       setError(
@@ -802,16 +1035,18 @@ function CreatePartDrawer({
     }
   }
   return (
-    <div className="fixed inset-0 z-[80] flex justify-end">
-      <button
-        aria-label="Close add exercise form"
-        className="absolute inset-0 bg-stone-950/35 backdrop-blur-[2px]"
-        onClick={onClose}
-        type="button"
-      />
-      <aside
-        aria-label={`Add Part ${definition.part}`}
-        className="relative flex h-full w-full max-w-3xl flex-col overflow-y-auto bg-[var(--admin-surface)] shadow-2xl"
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        aria-modal="true"
+        className="max-w-3xl bg-[var(--admin-surface)] p-0"
+        showCloseButton={false}
+        size="xl"
+        variant="drawer"
       >
         <header className="sticky top-0 z-10 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-5">
           <button
@@ -825,13 +1060,40 @@ function CreatePartDrawer({
           <p className="text-[11px] font-bold tracking-[0.14em] text-[var(--admin-brand-red)]">
             PART {definition.part}: {definition.name}
           </p>
-          <h2 className="mt-2 text-xl font-bold text-[var(--admin-ink)]">
+          <DialogTitle className="mt-2 text-xl font-bold text-[var(--admin-ink)]">
             Add new {definition.grouped ? "exercise group" : "question"}
-          </h2>
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Add a Part {definition.part} exercise and its questions.
+          </DialogDescription>
         </header>
         <form className="flex flex-1 flex-col" onSubmit={submit}>
           <div className="space-y-6 px-6 py-6">
             <div className="grid gap-4 sm:grid-cols-2">
+              {definition.part <= 4 && (
+                <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
+                  Audio file (MP3/WAV, up to 20 MB)
+                  <input
+                    accept=".mp3,.wav,audio/mpeg,audio/wav"
+                    className="mt-2 block w-full text-sm font-normal"
+                    onChange={(event) =>
+                      setAudioFile(event.currentTarget.files?.[0] ?? null)
+                    }
+                    type="file"
+                  />
+                </label>
+              )}
+              <label className="block text-sm font-bold text-[var(--admin-ink-soft)]">
+                Image file (PNG/JPEG/WebP, up to 5 MB)
+                <input
+                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                  className="mt-2 block w-full text-sm font-normal"
+                  onChange={(event) =>
+                    setImageFile(event.currentTarget.files?.[0] ?? null)
+                  }
+                  type="file"
+                />
+              </label>
               <TextField
                 label="Code"
                 onChange={(value) =>
@@ -942,7 +1204,7 @@ function CreatePartDrawer({
             </div>
             {input.questions.map((question, index) => (
               <QuestionEditor
-                key={`${question.code}-${index}`}
+                key={index}
                 index={index}
                 onChange={patchQuestion}
                 part={definition.part}
@@ -975,8 +1237,8 @@ function CreatePartDrawer({
             </button>
           </footer>
         </form>
-      </aside>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1262,6 +1524,11 @@ function CompleteTests() {
           >
             Download Excel template
           </Link>
+          <CreateScoreProfileButton
+            onCreated={(profile) =>
+              setProfiles((previous) => [...(previous ?? []), profile])
+            }
+          />
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 text-sm font-bold text-[var(--admin-ink-soft)]"
             onClick={() => setImportOpen(true)}
@@ -1675,38 +1942,29 @@ function Modal({
   title: string;
 }) {
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center p-4">
-      <button
-        aria-label="Close dialog"
-        className="absolute inset-0 bg-stone-950/35 backdrop-blur-[2px]"
-        onClick={onClose}
-        type="button"
-      />
-      <dialog
-        aria-modal="true"
-        className="relative w-full max-w-[720px] rounded-xl border border-[var(--admin-border)] bg-white p-5 shadow-[0_20px_60px_rgb(48_43_41/24%)]"
-        open
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      open
+    >
+      <DialogContent
+        className="max-w-[720px] rounded-xl border-[var(--admin-border)] p-5 shadow-[0_20px_60px_rgb(48_43_41/24%)]"
+        data-testid="data-bank-modal"
+        size="lg"
       >
-        <button
-          aria-label="Close"
-          className="absolute right-4 top-4 grid size-7 place-items-center rounded-md text-[var(--admin-muted)] hover:bg-[var(--admin-surface-muted)]"
-          onClick={onClose}
-          type="button"
-        >
-          <ExamIcon className="size-5" name="close" />
-        </button>
         <span className="grid size-7 place-items-center rounded-md bg-[#ecfdf5] text-[#047857]">
           <ExamIcon className="size-4" name="file" />
         </span>
-        <h2 className="-mt-7 pr-10 pl-10 text-sm font-semibold text-[var(--admin-ink)]">
+        <DialogTitle className="-mt-7 pr-10 pl-10 text-sm font-semibold text-[var(--admin-ink)]">
           {title}
-        </h2>
-        <p className="mt-1 pl-10 text-[11px] leading-5 text-[var(--admin-muted)]">
+        </DialogTitle>
+        <DialogDescription className="mt-1 pl-10 text-[11px] leading-5 text-[var(--admin-muted)]">
           {subtitle}
-        </p>
+        </DialogDescription>
         <div className="mt-5">{children}</div>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 function ModalFooter({

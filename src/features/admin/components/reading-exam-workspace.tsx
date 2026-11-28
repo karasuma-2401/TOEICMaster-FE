@@ -7,6 +7,10 @@ import {
   completeMediaUploadIntent,
   createMediaUploadIntent,
   getReadingRevision,
+  getScoreProfiles,
+  updateReadingScoreProfile,
+  forkReadingRevision,
+  type ReadingDraft,
   publishReadingRevision,
   updateReadingContexts,
   updateReadingQuestion,
@@ -16,9 +20,11 @@ import {
   type ReadingBlock,
   type ReadingQuestion,
   type ReadingRevision,
+  type ScoreProfile,
 } from "@/features/admin/exam-management";
 import { formatClock, formatPhase } from "@/shared/ui/format-time";
 import { ExamIcon } from "./exam-icon";
+import { CreateScoreProfileButton } from "./create-score-profile-button";
 
 interface QuestionDraft {
   code: string;
@@ -90,6 +96,65 @@ export function ReadingExamWorkspace({
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [profiles, setProfiles] = useState<ScoreProfile[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState("");
+  const [newDraft, setNewDraft] = useState<ReadingDraft>();
+  const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getScoreProfiles(controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) {
+          setProfiles(value);
+          setProfileError("");
+        }
+      })
+      .catch((cause) => {
+        if (!controller.signal.aborted)
+          setProfileError(
+            cause instanceof Error
+              ? cause.message
+              : "Unable to load score profiles.",
+          );
+      });
+    return () => controller.abort();
+  }, [retry]);
+
+  async function applyScoreProfile() {
+    if (!revision || revision.status !== "Draft" || !selectedProfile || saving)
+      return;
+    setSaving(true);
+    setNotice(null);
+    try {
+      await updateReadingScoreProfile(examId, revisionId, selectedProfile);
+      setRevision({ ...revision, scoreProfileId: selectedProfile });
+      setNotice("Saved score profile.");
+    } catch (cause) {
+      setNotice(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to change score profile.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function forkRevision() {
+    if (!revision || revision.status !== "Published" || saving) return;
+    setSaving(true);
+    setNotice(null);
+    try {
+      setNewDraft(await forkReadingRevision(examId, revisionId));
+    } catch (cause) {
+      setNotice(
+        cause instanceof Error ? cause.message : "Unable to create draft.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const requestKey = `${examId}:${revisionId}:${retry}`;
   const loading = completedRequestKey !== requestKey;
@@ -101,6 +166,9 @@ export function ReadingExamWorkspace({
       .then((loaded) => {
         if (!active) return;
         setRevision(loaded);
+        setSelectedProfile("");
+        setNewDraft(undefined);
+        setNotice(null);
         const firstExamQuestion = loaded.blocks
           .flatMap((block) => block.questions)
           .find(Boolean);
@@ -176,7 +244,7 @@ export function ReadingExamWorkspace({
         },
       );
       setNotice(`Saved question ${selected.question.number}.`);
-      setRetry((value) => value + 1);
+      setRevision(await getReadingRevision(examId, revisionId));
     } catch (reason) {
       setNotice(
         reason instanceof Error ? reason.message : "Unable to save question.",
@@ -196,7 +264,7 @@ export function ReadingExamWorkspace({
         contexts,
       });
       setNotice("Saved shared context for this question group.");
-      setRetry((value) => value + 1);
+      setRevision(await getReadingRevision(examId, revisionId));
     } catch (reason) {
       setNotice(
         reason instanceof Error ? reason.message : "Unable to save context.",
@@ -356,7 +424,7 @@ export function ReadingExamWorkspace({
     (total, block) => total + block.questions.length,
     0,
   );
-  const isPublished = revision.status === "Published";
+  const isPublished = revision.status !== "Draft";
   const listeningBlocks = revision.blocks.filter(
     (block) => block.part >= 1 && block.part <= 4,
   );
@@ -396,7 +464,7 @@ export function ReadingExamWorkspace({
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-bold ${isPublished ? "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" : "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"}`}
             >
-              {isPublished ? "Published" : "Draft"}
+              {revision.status}
             </span>
           </div>
           <h1 className="mt-2 text-2xl font-bold text-[var(--admin-ink)]">
@@ -408,6 +476,24 @@ export function ReadingExamWorkspace({
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2 lg:mt-0">
+          {revision.status === "Published" && (
+            <button
+              type="button"
+              disabled={saving || !!newDraft}
+              className="h-10 rounded-lg border px-4 text-sm font-bold"
+              onClick={() => void forkRevision()}
+            >
+              Create new draft
+            </button>
+          )}
+          {newDraft && (
+            <Link
+              className="h-10 rounded-lg border px-4 py-2 text-sm font-bold"
+              href={`/admin/exams/reading/${encodeURIComponent(newDraft.examId)}/${encodeURIComponent(newDraft.revisionId)}`}
+            >
+              Open new draft
+            </Link>
+          )}
           <button
             className="h-10 rounded-lg border border-[var(--admin-border)] bg-white px-4 text-sm font-bold text-[var(--admin-ink-soft)] disabled:opacity-50"
             disabled={isPublished || saving}
@@ -431,6 +517,62 @@ export function ReadingExamWorkspace({
           </button>
         </div>
       </header>
+      <section
+        aria-label="Exam score profile"
+        className="flex flex-wrap items-center gap-3 border border-(--admin-border) bg-white p-4"
+      >
+        <label className="text-sm font-semibold">
+          Score profile{" "}
+          <select
+            className="ml-2 rounded-lg border p-2"
+            disabled={isPublished || saving}
+            value={selectedProfile || revision.scoreProfileId}
+            onChange={(event) => setSelectedProfile(event.target.value)}
+          >
+            {!profiles.some(
+              (profile) => profile.id === revision.scoreProfileId,
+            ) && (
+              <option value={revision.scoreProfileId}>Current profile</option>
+            )}
+            {profiles.map((profile) => (
+              <option value={profile.id} key={profile.id}>
+                {profile.name}
+                {profile.isComplete ? "" : " (incomplete)"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className="rounded-lg border px-3 py-2 text-sm font-semibold"
+          disabled={
+            isPublished ||
+            saving ||
+            !selectedProfile ||
+            selectedProfile === revision.scoreProfileId
+          }
+          onClick={() => void applyScoreProfile()}
+        >
+          Apply score profile
+        </button>
+        <CreateScoreProfileButton
+          onCreated={(profile) => {
+            setProfiles((previous) => [...previous, profile]);
+            setSelectedProfile(profile.id);
+          }}
+        />
+        {profileError && (
+          <p role="alert">
+            {profileError}{" "}
+            <button
+              type="button"
+              onClick={() => setRetry((value) => value + 1)}
+            >
+              Reload profiles
+            </button>
+          </p>
+        )}
+      </section>
       <div className="grid gap-0 border border-t-0 border-[var(--admin-border)] bg-white xl:grid-cols-[minmax(0,1fr)_330px]">
         <main
           className="min-w-0 space-y-4 bg-[#f8fafc] p-5"
@@ -639,7 +781,7 @@ function QuestionEditor({
           )}
         </div>
       </header>
-      {contexts.length > 0 && (
+      {block.type === "Group" && (
         <section className="border-b border-[var(--admin-border)] bg-[#fffaf7] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -658,6 +800,26 @@ function QuestionEditor({
             >
               Save shared context
             </button>
+            {contexts.length === 0 && !disabled && (
+              <button
+                className="rounded-lg border border-[var(--admin-border)] bg-white px-3 py-2 text-xs font-bold"
+                onClick={() =>
+                  onContextChange([
+                    {
+                      ordinal: 1,
+                      type: "Text",
+                      text: "",
+                      imageAssetId: null,
+                      altText: null,
+                      imageRequired: false,
+                    },
+                  ])
+                }
+                type="button"
+              >
+                Add shared context
+              </button>
+            )}
           </div>
           <div className="mt-3 space-y-3">
             {contexts.map((context, index) => {
@@ -715,42 +877,44 @@ function QuestionEditor({
         {field("code", "Question code")}
         {field("stem", "Question stem", true)}
         <div className="lg:col-span-2 grid gap-3 md:grid-cols-2">
-          {(["optionA", "optionB", "optionC", "optionD"] as const).map(
-            (name, index) => (
-              <div
-                className={`rounded-xl border p-3 text-sm font-bold ${draft.correctKey === "ABCD"[index] ? "border-[var(--admin-brand-orange)] bg-[var(--admin-nav-active)]" : "border-[var(--admin-border)]"}`}
-                key={name}
-              >
-                <span className="flex items-center justify-between">
-                  <span>Option {"ABCD"[index]}</span>
-                  <input
-                    aria-label={`Select Option ${"ABCD"[index]} as correct answer`}
-                    checked={draft.correctKey === "ABCD"[index]}
-                    disabled={disabled}
-                    name={`correct-${question.number}`}
-                    onChange={() =>
-                      onChange({
-                        ...draft,
-                        correctKey: "ABCD"[
-                          index
-                        ] as QuestionDraft["correctKey"],
-                      })
-                    }
-                    type="radio"
-                  />
-                </span>
+          {(
+            (block.part === 2
+              ? ["optionA", "optionB", "optionC"]
+              : ["optionA", "optionB", "optionC", "optionD"]) as (
+              "optionA" | "optionB" | "optionC" | "optionD"
+            )[]
+          ).map((name, index) => (
+            <div
+              className={`rounded-xl border p-3 text-sm font-bold ${draft.correctKey === "ABCD"[index] ? "border-[var(--admin-brand-orange)] bg-[var(--admin-nav-active)]" : "border-[var(--admin-border)]"}`}
+              key={name}
+            >
+              <span className="flex items-center justify-between">
+                <span>Option {"ABCD"[index]}</span>
                 <input
-                  aria-label={`Option ${"ABCD"[index]} text`}
-                  className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 font-medium outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
+                  aria-label={`Select Option ${"ABCD"[index]} as correct answer`}
+                  checked={draft.correctKey === "ABCD"[index]}
                   disabled={disabled}
-                  onChange={(event) =>
-                    onChange({ ...draft, [name]: event.target.value })
+                  name={`correct-${question.number}`}
+                  onChange={() =>
+                    onChange({
+                      ...draft,
+                      correctKey: "ABCD"[index] as QuestionDraft["correctKey"],
+                    })
                   }
-                  value={draft[name]}
+                  type="radio"
                 />
-              </div>
-            ),
-          )}
+              </span>
+              <input
+                aria-label={`Option ${"ABCD"[index]} text`}
+                className="mt-2 h-10 w-full rounded-lg border border-[var(--admin-border)] bg-white px-3 font-medium outline-none focus:border-[var(--admin-brand-orange)] disabled:bg-stone-50"
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({ ...draft, [name]: event.target.value })
+                }
+                value={draft[name]}
+              />
+            </div>
+          ))}
         </div>
         {field("translation", "Translation", true)}
         {field("explanation", "Answer explanation", true)}

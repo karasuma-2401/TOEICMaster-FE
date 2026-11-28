@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getSession } from "@/features/auth/api";
 import { AttemptHistorySection } from "@/features/history/components/attempt-history-section";
 import {
   isListeningReadingPart,
@@ -18,6 +19,7 @@ import {
   type LrPracticeItemStatisticsApi,
 } from "@/features/lr-exam/api";
 import { UserMenu } from "@/features/user/components/user-menu";
+import { refreshSessionLocked } from "@/shared/api/http";
 import {
   ExamLibrary,
   type ExamLibrarySkill,
@@ -140,7 +142,24 @@ function toPracticeLibraryItem(
     difficulty: toPracticeDifficulty(item.difficulty),
     attemptCount: statistics?.attemptCount ?? 0,
     bestScore: statistics?.bestScore ?? null,
+    maxScore: item.questionCount,
   };
+}
+
+async function whenSignedIn<T>(
+  load: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    const session = await getSession();
+    if (session.status === "guest") return fallback;
+    if (session.status === "refresh_required") {
+      await refreshSessionLocked();
+    }
+    return await load();
+  } catch {
+    return fallback;
+  }
 }
 
 export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
@@ -154,10 +173,14 @@ export function ListeningReadingLibrary({ skill }: { skill: Skill }) {
     const controller = new AbortController();
     void Promise.all([
       getLrCatalog(controller.signal),
-      // History is an extra: the catalog stays usable without it (e.g. 401).
-      Promise.resolve(
-        getLrAttemptHistory({ pageIndex: 1, pageSize: 100 }, controller.signal),
-      ).catch(() => null),
+      whenSignedIn(
+        () =>
+          getLrAttemptHistory(
+            { pageIndex: 1, pageSize: 100 },
+            controller.signal,
+          ),
+        null,
+      ),
     ])
       .then(([nextCatalog, history]) => {
         if (controller.signal.aborted) return;
@@ -265,10 +288,34 @@ export function ListeningReadingPractice({
   useEffect(() => {
     const controller = new AbortController();
     void Promise.all([
-      getLrPracticeItems(Number(part), 1, 50, controller.signal),
-      Promise.resolve(
-        getLrPracticeStatistics(Number(part), controller.signal),
-      ).catch((): LrPracticeItemStatisticsApi[] => []),
+      (async () => {
+        const first = await getLrPracticeItems(
+          Number(part),
+          1,
+          50,
+          controller.signal,
+        );
+        const rest = await Promise.all(
+          Array.from(
+            { length: Math.max(0, first.totalPages - 1) },
+            (_, index) =>
+              getLrPracticeItems(
+                Number(part),
+                index + 2,
+                50,
+                controller.signal,
+              ),
+          ),
+        );
+        return {
+          ...first,
+          items: [first, ...rest].flatMap((page) => page.items),
+        };
+      })(),
+      whenSignedIn(
+        () => getLrPracticeStatistics(Number(part), controller.signal),
+        [],
+      ),
     ])
       .then(([result, statistics]) => {
         if (controller.signal.aborted) return;

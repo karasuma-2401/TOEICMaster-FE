@@ -226,7 +226,7 @@ async function refreshAdminSession() {
 
 async function request<T>(
   path: string,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH",
   body?: FormData | object,
   signal?: AbortSignal,
 ): Promise<T> {
@@ -331,4 +331,41 @@ export async function importLrExerciseItems(
   if (!isRecord(value) || !isRecord(value.summary))
     throw new LrExerciseBankApiError(502, "Invalid exercise import response.");
   return parseSummary(value.summary);
+}
+
+export async function uploadLrExerciseMedia(
+  kind: "audio" | "image",
+  file: File,
+): Promise<string> {
+  const form = new FormData();
+  form.set("file", file);
+  const value = await request<unknown>(
+    `/api/admin/lr-exercise-bank/media/${kind}`,
+    "POST",
+    form,
+  );
+  if (
+    !isRecord(value) ||
+    typeof value.key !== "string" ||
+    !value.key.startsWith(`lr-exercise/${kind}/`)
+  )
+    throw new LrExerciseBankApiError(502, "Invalid media upload response.");
+  return value.key;
+}
+
+export async function updateLrExerciseMedia(
+  item: LrExerciseItem,
+  input: {
+    status: LrExerciseStatus;
+    audioUrl: string | null;
+    imageUrl: string | null;
+  },
+): Promise<LrExerciseItem> {
+  return parseItem(
+    await request<unknown>(
+      `/api/admin/lr-exercise-bank/parts/${item.part}/items/${item.id}`,
+      "PATCH",
+      { ...input, version: item.version },
+    ),
+  );
 }

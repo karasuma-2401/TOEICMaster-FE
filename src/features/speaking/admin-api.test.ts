@@ -4,7 +4,6 @@ import { SpeakingApiError } from "./http";
 import {
   archiveSpeakingExercise,
   createSpeakingTest,
-  importSpeakingTest,
   listSpeakingExercises,
   updateSpeakingExercise,
 } from "./admin-api";
@@ -53,25 +52,6 @@ describe("Speaking admin API", () => {
       `/api/admin/speaking/exercises/${id}?version=3`,
     );
     expect(fetchMock.mock.calls[1][1].method).toBe("DELETE");
-  });
-
-  it("uploads the workbook as multipart field `file`", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(Response.json(testDetailDto(), { status: 201 }));
-    vi.stubGlobal("fetch", fetchMock);
-    const file = new File(["xlsx"], "test.xlsx");
-
-    const { test } = await importSpeakingTest(file);
-
-    const [path, init] = fetchMock.mock.calls[0];
-    expect(path).toBe("/api/admin/speaking/tests/import");
-    expect(init.method).toBe("POST");
-    expect(init.headers).not.toHaveProperty("Content-Type");
-    expect((init.body as FormData).get("file")).toMatchObject({
-      name: "test.xlsx",
-    });
-    expect(test.id).toBe(testDetailDto().id);
   });
 
   it("numbers test slots per Part", async () => {

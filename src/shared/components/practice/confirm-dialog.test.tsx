@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -45,4 +46,48 @@ describe("practice/ConfirmDialog", () => {
     await user.keyboard("{Escape}");
     expect(onCancel).toHaveBeenCalledTimes(2);
   });
+
+  it.each(["Escape", "Cancel"] as const)(
+    "forwards returnFocusRef and restores focus on %s",
+    async (dismissMethod) => {
+      const user = userEvent.setup();
+      function Wrapper() {
+        const [open, setOpen] = useState(false);
+        const submitRef = useRef<HTMLButtonElement | null>(null);
+        return (
+          <>
+            <button onClick={() => setOpen(true)} ref={submitRef} type="button">
+              Submit
+            </button>
+            <ConfirmDialog
+              cancelLabel="Go back"
+              confirmLabel="Confirm submit"
+              id="practice-confirm"
+              onCancel={() => setOpen(false)}
+              onConfirm={() => setOpen(false)}
+              open={open}
+              returnFocusRef={submitRef}
+              title="Submit Writing attempt?"
+            >
+              <p>Locked after submit.</p>
+            </ConfirmDialog>
+          </>
+        );
+      }
+
+      render(<Wrapper />);
+      const submitBtn = screen.getByRole("button", { name: "Submit" });
+      await user.click(submitBtn);
+      await screen.findByRole("dialog", { name: "Submit Writing attempt?" });
+      if (dismissMethod === "Escape") {
+        await user.keyboard("{Escape}");
+      } else {
+        await user.click(screen.getByRole("button", { name: "Go back" }));
+      }
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        expect(submitBtn).toHaveFocus();
+      });
+    },
+  );
 });

@@ -266,9 +266,7 @@ export function ScoreProgressionChart({
                   </fieldset>
                 )}
                 <ProgressionPlot
-                  className={
-                    showRanges ? "max-sm:max-w-[calc(100%-2rem)]" : ""
-                  }
+                  className={showRanges ? "max-sm:max-w-[calc(100%-2rem)]" : ""}
                   points={visiblePoints}
                   config={config}
                 />

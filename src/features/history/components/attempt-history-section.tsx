@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
+import { getSession } from "@/features/auth/api";
 import {
   fetchUnifiedHistory,
   type ExamSkillType,
   type UnifiedAttemptItem,
 } from "@/features/history/api";
 import { resolveDefaultChartSkill } from "@/features/history/progression";
+import { refreshSessionLocked } from "@/shared/api/http";
 import { focusRing } from "@/shared/components/practice/styles";
 
 const ScoreProgressionChart = lazy(() =>
@@ -90,9 +92,9 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
           {status.label}
         </span>
       </div>
-      <h4 className="mt-3 text-lg leading-6 font-semibold text-[#2F2B28]">
+      <h3 className="mt-3 text-lg leading-6 font-semibold text-[#2F2B28]">
         {item.title}
-      </h4>
+      </h3>
       <p className="mt-1 text-[13px] text-[#6B655F]">
         {item.code ? `${item.code} · ` : ""}
         {item.modeLabel}
@@ -151,6 +153,7 @@ export function AttemptHistorySection({
   skills,
   limit,
   showChart = false,
+  isAuthenticated = true,
   showFilter = false,
   showSummary = false,
   showViewAll = false,
@@ -161,6 +164,8 @@ export function AttemptHistorySection({
   /** Initial number of cards; omit to show every attempt. */
   limit?: number;
   showChart?: boolean;
+  /** Skip history API requests on unauthenticated public shells. */
+  isAuthenticated?: boolean;
   showFilter?: boolean;
   showSummary?: boolean;
   showViewAll?: boolean;
@@ -169,11 +174,12 @@ export function AttemptHistorySection({
   description?: string;
 }) {
   const headingId = useId();
+  const requestedSkills = skills ?? defaultSkills;
   const [items, setItems] = useState<UnifiedAttemptItem[]>([]);
   const [unauthenticatedSkills, setUnauthenticatedSkills] = useState<
     ExamSkillType[]
-  >([]);
-  const [loading, setLoading] = useState(true);
+  >(() => (isAuthenticated ? [] : requestedSkills));
+  const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | ExamSkillType>("ALL");
   const [chartSkill, setChartSkill] = useState<ExamSkillType | null>(null);
@@ -183,40 +189,66 @@ export function AttemptHistorySection({
   const skillsKey = skills?.join(",") ?? "";
 
   useEffect(() => {
-    const controller = new AbortController();
     const selected = skillsKey
       ? (skillsKey.split(",") as ExamSkillType[])
       : undefined;
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const controller = new AbortController();
     const task = window.setTimeout(() => {
       setLoading(true);
       setError(null);
-      void fetchUnifiedHistory({ skills: selected, signal: controller.signal })
-        .then((result) => {
-          if (controller.signal.aborted) return;
-          setItems(result.items);
-          setUnauthenticatedSkills(result.unauthenticatedSkills);
+      void (async () => {
+        const session = await getSession();
+        if (controller.signal.aborted) return;
+        if (session.status === "guest") {
+          setItems([]);
+          setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
           setLoading(false);
-        })
-        .catch((cause: unknown) => {
+          return;
+        }
+        if (session.status === "refresh_required") {
+          try {
+            await refreshSessionLocked();
+          } catch {
+            if (controller.signal.aborted) return;
+            setItems([]);
+            setUnauthenticatedSkills(selected ?? ["lr", "speaking", "writing"]);
+            setLoading(false);
+            return;
+          }
           if (controller.signal.aborted) return;
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Unable to load attempt history.",
-          );
-          setLoading(false);
+        }
+        const result = await fetchUnifiedHistory({
+          skills: selected,
+          signal: controller.signal,
         });
+        if (controller.signal.aborted) return;
+        setItems(result.items);
+        setUnauthenticatedSkills(result.unauthenticatedSkills);
+        setLoading(false);
+      })().catch((cause: unknown) => {
+        if (controller.signal.aborted) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Unable to load attempt history.",
+        );
+        setLoading(false);
+      });
     }, 0);
     return () => {
       window.clearTimeout(task);
       controller.abort();
     };
-  }, [skillsKey]);
+  }, [isAuthenticated, skillsKey]);
 
-  const requestedSkills = skills ?? defaultSkills;
   const isGuest =
-    unauthenticatedSkills.length > 0 &&
-    requestedSkills.every((skill) => unauthenticatedSkills.includes(skill));
+    !isAuthenticated ||
+    (unauthenticatedSkills.length > 0 &&
+      requestedSkills.every((skill) => unauthenticatedSkills.includes(skill)));
   const chartSkills = requestedSkills.length ? requestedSkills : defaultSkills;
   const showProgression = showChart && !loading && !error && !isGuest;
   const activeChartSkill = useMemo(() => {

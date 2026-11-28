@@ -5,7 +5,9 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { WritingAttemptPlaceholder } from "./writing-attempt-placeholder";
 
@@ -195,4 +197,60 @@ it("ignores an older timer refresh that arrives after a successful autosave", as
   });
 
   expect(answer).toHaveValue("New");
+});
+
+it("restores focus to the Submit button when the submit ConfirmDialog is dismissed via Escape or Go back", async () => {
+  const user = userEvent.setup();
+  const now = Date.now();
+  const attempt = {
+    id: "attempt-1",
+    testCode: "WT-1",
+    testTitle: "Test",
+    isPractice: false,
+    status: "IN_PROGRESS",
+    currentPhase: "ANSWERING",
+    currentQuestionPosition: 1,
+    serverNowUtc: new Date(now).toISOString(),
+    phaseEndsAtUtc: new Date(now + 60_000).toISOString(),
+    questions: [
+      {
+        position: 1,
+        part: 3,
+        answer: "Draft response",
+        minimumWordCount: 300,
+        lockedAtUtc: null,
+      },
+    ],
+  };
+  mocks.get.mockResolvedValue(attempt);
+  render(<WritingAttemptPlaceholder attemptId="attempt-1" />);
+
+  const submitBtn = await screen.findByRole("button", { name: "Submit" });
+  const answer = screen.getByLabelText("Your response");
+  expect(answer).toHaveAccessibleDescription(
+    /pasting and drag-and-drop are disabled/i,
+  );
+  await user.click(submitBtn);
+
+  await screen.findByRole("dialog", {
+    name: "Submit Writing attempt?",
+  });
+
+  await user.keyboard("{Escape}");
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Submit Writing attempt?" }),
+    ).not.toBeInTheDocument();
+    expect(submitBtn).toHaveFocus();
+  });
+
+  await user.click(submitBtn);
+  await screen.findByRole("dialog", { name: "Submit Writing attempt?" });
+  await user.click(screen.getByRole("button", { name: "Go back" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Submit Writing attempt?" }),
+    ).not.toBeInTheDocument();
+    expect(submitBtn).toHaveFocus();
+  });
 });

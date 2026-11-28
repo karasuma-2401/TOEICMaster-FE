@@ -115,4 +115,27 @@ describe("profile BFF", () => {
     expect(response.status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("forwards validated X-Forwarded-For and X-Forwarded-Proto headers upstream", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ id: "user-1" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const req = new NextRequest("http://localhost/api/profile", {
+      method: "GET",
+      headers: {
+        Cookie: cookie(),
+        "X-Real-IP": "198.51.100.77",
+        "X-Forwarded-Proto": "https",
+      },
+    });
+    const res = await forward(req, "/api/v1/profile", { method: "GET" });
+    expect(res.status).toBe(200);
+    const sentHeaders = new Headers(
+      (fetchMock.mock.calls[0]![1] as RequestInit).headers,
+    );
+    expect(sentHeaders.get("x-forwarded-for")).toBe("198.51.100.77");
+    expect(sentHeaders.get("x-forwarded-proto")).toBe("https");
+  });
 });

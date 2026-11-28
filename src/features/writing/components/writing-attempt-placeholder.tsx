@@ -48,6 +48,7 @@ export function WritingAttemptPlaceholder({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
   const [hasPendingSave, setHasPendingSave] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const refreshInFlight = useRef(false);
@@ -351,7 +352,15 @@ export function WritingAttemptPlaceholder({
                 <label className="text-sm font-bold" htmlFor="writing-answer">
                   Your response
                 </label>
+                <p
+                  className="mt-1 text-xs text-slate-600"
+                  id="writing-answer-paste-policy"
+                >
+                  Typing only: pasting and drag-and-drop are disabled to match
+                  TOEIC Writing exam rules.
+                </p>
                 <textarea
+                  aria-describedby="writing-answer-paste-policy"
                   className="mt-2 min-h-64 w-full rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 xl:min-h-80"
                   disabled={preparing || transitioning}
                   id="writing-answer"
@@ -416,6 +425,7 @@ export function WritingAttemptPlaceholder({
                   className={primaryAction}
                   disabled={saving || transitioning}
                   onClick={() => (isLast ? setConfirming(true) : void next())}
+                  ref={isLast ? submitButtonRef : undefined}
                   type="button"
                 >
                   {isLast ? "Submit" : "Next · lock this question"}
@@ -431,6 +441,7 @@ export function WritingAttemptPlaceholder({
           id="writing-submit-dialog-title"
           onCancel={closeConfirm}
           onConfirm={() => void submit()}
+          returnFocusRef={submitButtonRef}
           title="Submit Writing attempt?"
         >
           The final question will be locked and your attempt will be queued for

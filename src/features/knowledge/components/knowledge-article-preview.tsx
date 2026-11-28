@@ -224,6 +224,44 @@ export function KnowledgeArticlePreview({
     }
   }
 
+  const tableOfContents = (
+    <aside className="h-fit rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm lg:sticky lg:top-6">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-(--admin-muted)">
+        Table of contents
+      </h2>
+      {toc.length === 0 ? (
+        <p className="mt-3 text-xs text-(--admin-muted)">
+          {publicView
+            ? "This article has no section headings."
+            : "Add H2, H3, or H4 headings in the editor to automatically generate a quick-jump table of contents."}
+        </p>
+      ) : (
+        <nav aria-label="Table of contents" className="mt-3 space-y-1.5">
+          {toc.map((item) => (
+            <button
+              className={`block w-full rounded-md px-2 py-1 text-left text-xs text-(--admin-ink-soft) transition hover:bg-(--admin-nav-active) hover:text-(--admin-brand-red) ${
+                item.level === 3
+                  ? "pl-5"
+                  : item.level >= 4
+                    ? "pl-8"
+                    : "font-semibold"
+              }`}
+              key={item.id}
+              onClick={() => {
+                document
+                  .getElementById(item.id)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              type="button"
+            >
+              {item.text}
+            </button>
+          ))}
+        </nav>
+      )}
+    </aside>
+  );
+
   return (
     <div className={publicView ? "knowledge-public-article" : "space-y-4"}>
       {!publicView && (
@@ -241,10 +279,11 @@ export function KnowledgeArticlePreview({
       <div
         className={
           publicView
-            ? "space-y-6"
+            ? "knowledge-public-grid"
             : "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]"
         }
       >
+        {publicView && tableOfContents}
         <article className="rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-6 shadow-sm sm:p-8">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
             <span className="rounded-full bg-(--admin-nav-active) px-3 py-1 text-(--admin-brand-red)">
@@ -309,40 +348,7 @@ export function KnowledgeArticlePreview({
           </div>
         </article>
 
-        <aside className="h-fit rounded-2xl border border-(--admin-border) bg-(--admin-surface) p-5 shadow-sm lg:sticky lg:top-6">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-(--admin-muted)">
-            Table of contents
-          </h2>
-          {toc.length === 0 ? (
-            <p className="mt-3 text-xs text-(--admin-muted)">
-              Add H2, H3, or H4 headings in the editor to automatically generate
-              a quick-jump table of contents.
-            </p>
-          ) : (
-            <nav aria-label="Table of contents" className="mt-3 space-y-1.5">
-              {toc.map((item) => (
-                <button
-                  className={`block w-full rounded-md px-2 py-1 text-left text-xs text-(--admin-ink-soft) transition hover:bg-(--admin-nav-active) hover:text-(--admin-brand-red) ${
-                    item.level === 3
-                      ? "pl-5"
-                      : item.level >= 4
-                        ? "pl-8"
-                        : "font-semibold"
-                  }`}
-                  key={item.id}
-                  onClick={() => {
-                    document
-                      .getElementById(item.id)
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                  type="button"
-                >
-                  {item.text}
-                </button>
-              ))}
-            </nav>
-          )}
-        </aside>
+        {!publicView && tableOfContents}
       </div>
     </div>
   );

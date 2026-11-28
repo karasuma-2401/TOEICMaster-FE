@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/shared/components/ui/dialog";
 import { formatClock } from "@/shared/ui/format-time";
 import {
   abandonLrAttempt,
+  getLrResult,
   saveLrAnswers,
   startLrReading,
   submitLrAttempt,
@@ -52,6 +53,7 @@ export interface LrExamRoomProps {
 }
 
 function useCountdown(initialSeconds: number, onExpire: () => void) {
+  const deadline = useRef<number | null>(null);
   const [remaining, setRemaining] = useState(initialSeconds);
   const expiredFiredRef = useRef(false);
   const onExpireRef = useRef(onExpire);
@@ -61,11 +63,17 @@ function useCountdown(initialSeconds: number, onExpire: () => void) {
   }, [onExpire]);
 
   useEffect(() => {
+    deadline.current = Date.now() + initialSeconds * 1000;
     const timer = window.setInterval(() => {
-      setRemaining((value) => Math.max(0, value - 1));
+      setRemaining(
+        Math.max(
+          0,
+          Math.ceil(((deadline.current ?? Date.now()) - Date.now()) / 1000),
+        ),
+      );
     }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [initialSeconds]);
 
   useEffect(() => {
     if (remaining === 0 && !expiredFiredRef.current) {
@@ -104,6 +112,8 @@ export function LrExamRoom({
   >("idle");
   const [actionError, setActionError] = useState<string | null>(null);
   const firstSave = useRef(true);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const autosaveTimer = useRef<number | null>(null);
 
   const listeningTracks = useMemo<ListeningTrack[]>(() => {
     if (!playlist?.items.length) return [];
@@ -143,7 +153,14 @@ export function LrExamRoom({
           selectedKey: nextAnswers[Number(number)] ?? null,
           isFlagged: Boolean(nextFlags[Number(number)]),
         }));
-      await saveLrAnswers(attemptId, payload);
+      const save = saveQueue.current.then(() =>
+        saveLrAnswers(attemptId, payload),
+      );
+      saveQueue.current = save.then(
+        () => undefined,
+        () => undefined,
+      );
+      await save;
     },
     [attemptId, questionIds, phase],
   );
@@ -155,36 +172,45 @@ export function LrExamRoom({
       return;
     }
     const timer = window.setTimeout(() => {
+      autosaveTimer.current = null;
       setSaveStatus("saving");
       void saveSnapshot(answers, flags)
         .then(() => setSaveStatus("saved"))
         .catch(() => setSaveStatus("error"));
     }, 500);
+    autosaveTimer.current = timer;
     return () => window.clearTimeout(timer);
   }, [answers, flags, attemptId, questionIds, saveSnapshot]);
 
-  const submit = useCallback(
-    async (skipFinalSave = false) => {
-      if (submitting) return;
-      setSubmitting(true);
-      setActionError(null);
-      try {
-        if (attemptId) {
-          if (!skipFinalSave) await saveSnapshot(answers, flags);
-          await submitLrAttempt(attemptId);
-          router.push("/exams/lr/attempts/" + attemptId + "/result");
-        } else {
-          router.push(resultHref);
-        }
-      } catch (cause) {
-        setActionError(
-          cause instanceof Error ? cause.message : "Unable to submit exam.",
-        );
-        setSubmitting(false);
+  const submit = useCallback(async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setActionError(null);
+    try {
+      if (attemptId) {
+        if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+        await saveSnapshot(answers, flags);
+        await submitLrAttempt(attemptId);
+        router.push("/exams/lr/attempts/" + attemptId + "/result");
+      } else {
+        router.push(resultHref);
       }
-    },
-    [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref],
-  );
+    } catch (cause) {
+      if (attemptId) {
+        try {
+          await getLrResult(attemptId);
+          router.push(`/exams/lr/attempts/${attemptId}/result`);
+          return;
+        } catch {
+          // The attempt is still active; show the original failure.
+        }
+      }
+      setActionError(
+        cause instanceof Error ? cause.message : "Unable to submit exam.",
+      );
+      setSubmitting(false);
+    }
+  }, [submitting, attemptId, saveSnapshot, answers, flags, router, resultHref]);
 
   const abandon = useCallback(async () => {
     if (!attemptId || abandonPending) return;
@@ -221,7 +247,7 @@ export function LrExamRoom({
   const remaining = useCountdown(initialRemainingSeconds, () => {
     setConfirming(false);
     setAbandoning(false);
-    void submit(true);
+    void submit();
   });
 
   const section = phase;
@@ -366,7 +392,7 @@ export function LrExamRoom({
             <button
               className={`${primaryButton} h-9 px-4 text-xs`}
               disabled={submitting}
-              onClick={() => void submit(true)}
+              onClick={() => void submit()}
               type="button"
             >
               {submitting ? "Submitting…" : "Retry Submit"}
@@ -536,6 +562,7 @@ function ListeningMasterPlayer({
     audioRef,
     activeTrack,
     isPlaying,
+    isComplete,
     isBuffering,
     error,
     globalElapsedMs,
@@ -584,11 +611,15 @@ function ListeningMasterPlayer({
         <button
           className={`${primaryButton} min-h-[44px] shrink-0 disabled:cursor-not-allowed disabled:opacity-60`}
           data-testid="lr-master-audio-toggle"
-          disabled={isPlaying && !error}
+          disabled={isComplete || (isPlaying && !error)}
           onClick={() => void togglePlay()}
           type="button"
         >
-          {isPlaying ? "Playing · Pause Locked" : "Start Listening Audio"}
+          {isComplete
+            ? "Listening Complete"
+            : isPlaying
+              ? "Playing · Pause Locked"
+              : "Start Listening Audio"}
         </button>
       </div>
       <div

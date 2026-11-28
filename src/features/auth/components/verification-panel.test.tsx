@@ -97,4 +97,17 @@ describe("VerificationPanel", () => {
     await user.click(screen.getByRole("button", { name: "Re-enter email" }));
     expect(onChangeEmail).toHaveBeenCalledOnce();
   });
+
+  it("uses WCAG AA --tm-* tokens instead of failing literal hex colors", () => {
+    const { container } = render(
+      <VerificationPanel
+        email="linh@example.com"
+        onChangeEmail={vi.fn()}
+        purpose="registration"
+      />,
+    );
+    expect(container.innerHTML).not.toMatch(
+      /#(?:ed361c|b7aeaa|c9c1bd|c8c0bc|a89f9b|a8a09c|938b87|c0b8b4|b6b0ad|beb7b3|ff6c0d)/i,
+    );
+  });
 });

@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DataBankCenter } from "./data-bank-center";
 
@@ -273,5 +274,61 @@ describe("DataBankCenter", () => {
     expect(
       screen.queryByRole("link", { name: "Tests" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders Data Bank modals via Radix Dialog with accessible title, description, Escape handling, and focus restoration", async () => {
+    const user = userEvent.setup();
+    url = "tab=tests";
+
+    render(<DataBankCenter />);
+    const opener = await screen.findByRole("button", {
+      name: "Create new test",
+    });
+    await user.click(opener);
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "Create new test",
+    });
+    expect(dialog).toHaveAttribute("data-testid", "data-bank-modal");
+    expect(dialog).toHaveAccessibleDescription(
+      "The system creates a draft with exactly 200 slots. You can then enter questions, context, and media in the workspace.",
+    );
+    expect(document.querySelectorAll("dialog")).toHaveLength(0);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    const codeInput = screen.getByLabelText(/Test code/i);
+    codeInput.focus();
+    for (let step = 0; step < 8; step++) {
+      await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+    });
+  });
+
+  it("keeps keyboard focus inside the exercise drawer and restores it on Escape", async () => {
+    const user = userEvent.setup();
+    url = "part=1";
+    render(<DataBankCenter />);
+    const opener = await screen.findByRole("button", { name: "Add question" });
+    await user.click(opener);
+    const drawer = screen.getByRole("dialog", { name: "Add new question" });
+    expect(drawer).toHaveAttribute("aria-modal", "true");
+    expect(drawer.contains(document.activeElement)).toBe(true);
+    for (let step = 0; step < 8; step++) {
+      await user.tab();
+      expect(drawer.contains(document.activeElement)).toBe(true);
+    }
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Add new question" }),
+      ).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+    });
   });
 });

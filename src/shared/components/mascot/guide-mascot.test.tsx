@@ -1,74 +1,46 @@
 // @vitest-environment jsdom
 
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
-import { usePathname } from "next/navigation";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setMascotHidden } from "@/features/user/preferences";
 import { GuideMascot } from "./guide-mascot";
 
+let mockPathname = "/speaking";
+
 vi.mock("next/navigation", () => ({
-  usePathname: vi.fn(),
+  usePathname: () => mockPathname,
 }));
 
 beforeEach(() => {
   localStorage.clear();
-  vi.mocked(usePathname).mockReturnValue("/speaking");
+  mockPathname = "/speaking";
 });
 
 afterEach(() => {
-  cleanup();
   vi.useRealTimers();
+  cleanup();
   localStorage.clear();
 });
 
 describe("GuideMascot", () => {
-  it("keeps first-visit history help closed but lets Mic open it without consuming the greeting", () => {
-    vi.useFakeTimers();
-    vi.mocked(usePathname).mockReturnValue("/history");
-    const { rerender } = render(<GuideMascot />);
+  it("keeps first-visit history help closed and opens Learning History on Mic click", async () => {
+    mockPathname = "/history";
+    const user = userEvent.setup();
+    render(<GuideMascot />);
 
-    act(() => vi.advanceTimersByTime(600));
     expect(
       screen.queryByRole("region", { name: "User guide" }),
     ).not.toBeInTheDocument();
-    expect(localStorage.getItem("toeicmaster-mascot-seen")).toBeNull();
 
     const mic = screen.getByRole("button", { name: /Mic/i });
     expect(mic).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(mic);
+    await user.click(mic);
     expect(
       screen.getByRole("heading", { name: "Learning History" }),
     ).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Close guide" }));
+    await user.click(screen.getByRole("button", { name: "Close guide" }));
     expect(mic).toHaveAttribute("aria-expanded", "false");
-
-    vi.mocked(usePathname).mockReturnValue("/speaking");
-    rerender(<GuideMascot />);
-    act(() => vi.advanceTimersByTime(600));
-    expect(
-      screen.getByRole("heading", { name: "Speaking Page" }),
-    ).toBeVisible();
-    expect(localStorage.getItem("toeicmaster-mascot-seen")).toBe("1");
-  });
-
-  it("cancels a pending greeting when navigating to history", () => {
-    vi.useFakeTimers();
-    const { rerender } = render(<GuideMascot />);
-    vi.mocked(usePathname).mockReturnValue("/history");
-    rerender(<GuideMascot />);
-
-    act(() => vi.advanceTimersByTime(600));
-    expect(
-      screen.queryByRole("region", { name: "User guide" }),
-    ).not.toBeInTheDocument();
-    expect(localStorage.getItem("toeicmaster-mascot-seen")).toBeNull();
   });
 
   it("renders when mascot preference is not hidden and hides when setMascotHidden(true) is called", async () => {
@@ -90,5 +62,56 @@ describe("GuideMascot", () => {
     expect(
       await screen.findByRole("button", { name: /Mic/i }),
     ).toBeInTheDocument();
+  });
+
+  it("stays closed by default even after 1s and toggles open/closed on click", async () => {
+    vi.useFakeTimers();
+    render(<GuideMascot />);
+
+    const trigger = screen.getByRole("button", {
+      name: "Ask Mic how to use this page",
+    });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("region", { name: "User guide" }),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("region", { name: "User guide" }),
+    ).not.toBeInTheDocument();
+
+    vi.useRealTimers();
+    const user = userEvent.setup();
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("region", { name: "User guide" }),
+    ).toBeInTheDocument();
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("region", { name: "User guide" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    "/exams/lr/attempts/a/attempt",
+    "/speaking/attempts/a",
+    "/writing/attempts/a",
+    "/listening/practice/1",
+    "/reading/practice/5/item-1",
+    "/speaking/parts/2",
+    "/writing/parts/1",
+  ])("renders null on active exam/practice route %s", (route) => {
+    mockPathname = route;
+    const { container } = render(<GuideMascot />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

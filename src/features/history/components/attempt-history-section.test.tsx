@@ -3,6 +3,8 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getSession } from "@/features/auth/api";
+import { refreshSessionLocked } from "@/shared/api/http";
 import { fetchUnifiedHistory, type UnifiedAttemptItem } from "../api";
 import { AttemptHistorySection } from "./attempt-history-section";
 
@@ -12,6 +14,12 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
+}));
+vi.mock("@/features/auth/api", () => ({
+  getSession: vi.fn(),
+}));
+vi.mock("@/shared/api/http", () => ({
+  refreshSessionLocked: vi.fn(),
 }));
 vi.mock("@/features/history/api", () => ({
   fetchUnifiedHistory: vi.fn(),
@@ -76,6 +84,11 @@ const sampleItems: UnifiedAttemptItem[] = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getSession).mockResolvedValue({
+    status: "authenticated",
+    user: { id: "u1", displayName: "Learner", email: "learner@example.com" },
+  });
+  vi.mocked(refreshSessionLocked).mockResolvedValue();
 });
 afterEach(cleanup);
 
@@ -224,4 +237,52 @@ describe("AttemptHistorySection", () => {
     ).toBeVisible();
     expect(fetchUnifiedHistory).toHaveBeenCalledTimes(1);
   }, 15_000);
+
+  it("renders the sign-in prompt immediately on first render when isAuthenticated is false", () => {
+    render(
+      <AttemptHistorySection
+        isAuthenticated={false}
+        title="Recent Attempt History"
+      />,
+    );
+
+    expect(
+      screen.getByText("Sign in to view your attempt history"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No attempts yet")).not.toBeInTheDocument();
+    expect(fetchUnifiedHistory).not.toHaveBeenCalled();
+  });
+
+  it("renders guest sign-in prompt with zero history fetches when session is guest", async () => {
+    vi.mocked(getSession).mockResolvedValueOnce({ status: "guest" });
+
+    render(
+      <AttemptHistorySection
+        skills={["lr", "speaking", "writing"]}
+        title="Recent Attempt History"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Sign in to view your attempt history"),
+    ).toBeInTheDocument();
+    expect(fetchUnifiedHistory).not.toHaveBeenCalled();
+    expect(refreshSessionLocked).not.toHaveBeenCalled();
+  });
+
+  it("refreshes once before fetching history when session is refresh_required", async () => {
+    vi.mocked(getSession).mockResolvedValueOnce({
+      status: "refresh_required",
+    });
+    vi.mocked(fetchUnifiedHistory).mockResolvedValueOnce({
+      items: sampleItems,
+      unauthenticatedSkills: [],
+    });
+
+    render(<AttemptHistorySection skills={["lr"]} title="L&R History" />);
+
+    expect(await screen.findByText("ETS 2026 Test 01")).toBeInTheDocument();
+    expect(refreshSessionLocked).toHaveBeenCalledTimes(1);
+    expect(fetchUnifiedHistory).toHaveBeenCalledTimes(1);
+  });
 });

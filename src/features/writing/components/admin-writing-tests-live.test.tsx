@@ -160,10 +160,6 @@ it.each([
     };
     mocks.list.mockResolvedValue({ items: [test], totalPages: 1 });
     method.mockResolvedValue(undefined);
-    const confirm = vi
-      .spyOn(window, "confirm")
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
     render(<AdminWritingTestsLive />);
     const action = await screen.findByRole(
       "button",
@@ -171,11 +167,12 @@ it.each([
       { timeout: 10000 },
     );
     fireEvent.click(action);
+    fireEvent.click(screen.getByTestId("confirm-dialog-cancel"));
     expect(method).not.toHaveBeenCalled();
     fireEvent.click(action);
+    fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
     await waitFor(() => expect(method).toHaveBeenCalledWith("test-1", 4));
     expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(confirm).toHaveBeenCalledTimes(2);
   },
 );
 
@@ -196,11 +193,11 @@ it("shows an error instead of reporting success when a lifecycle operation fails
   mocks.archiveTest.mockRejectedValue(
     new Error("Test has changed. Please reload."),
   );
-  vi.spyOn(window, "confirm").mockReturnValue(true);
   render(<AdminWritingTestsLive />);
   fireEvent.click(
     await screen.findByRole("button", { name: "Archive" }, { timeout: 10000 }),
   );
+  fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Test has changed",
   );

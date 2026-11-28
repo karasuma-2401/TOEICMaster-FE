@@ -86,14 +86,21 @@ const guides: { match: RegExp; guide: MascotGuide }[] = [
 const home: MascotGuide = {
   title: "Hi there, I'm Mic!",
   tips: [
-    'Choose the skill you want to practice in the "Three standalone tests" section.',
+    'Choose the skill you want to practice in the "Three Standalone Exams" section.',
     "Click the TOEICMaster logo in the top bar to return to the home page.",
     "Whenever you need help, just click me in the corner of the screen.",
   ],
 };
 
-/** The guide for a page, or null where the mascot would disturb a timed attempt. */
+const suppressedRoutes = [
+  /^\/(exams\/lr|speaking|writing)\/attempts\//,
+  /^\/exams\/lr\/[^/]+\/attempt(?:\/|$)/,
+  /^\/(listening|reading)\/practice\//,
+  /^\/(speaking|writing)\/parts\//,
+];
+
+/** The guide for a page, or null where the mascot would disturb an active exam or practice session. */
 export function mascotGuide(pathname: string): MascotGuide | null {
-  if (/^\/(speaking|writing)\/attempts\/[^/]+$/.test(pathname)) return null;
+  if (suppressedRoutes.some((pattern) => pattern.test(pathname))) return null;
   return guides.find((item) => item.match.test(pathname))?.guide ?? home;
 }
