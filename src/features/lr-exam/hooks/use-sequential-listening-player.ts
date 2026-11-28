@@ -15,6 +15,7 @@ export interface ListeningTrack {
 interface PersistedListeningProgress {
   activeIndex: number;
   currentTimeSec: number;
+  completed?: boolean;
 }
 
 const SLIDING_WINDOW_AHEAD = 3;
@@ -47,7 +48,11 @@ function readPersistedProgress(
       record.currentTimeSec >= 0
         ? record.currentTimeSec
         : 0;
-    return { activeIndex, currentTimeSec };
+    return {
+      activeIndex,
+      currentTimeSec,
+      completed: record.completed === true,
+    };
   } catch {
     return null;
   }
@@ -57,12 +62,13 @@ function writePersistedProgress(
   attemptId: string | undefined,
   activeIndex: number,
   currentTimeSec: number,
+  completed = false,
 ) {
   if (!attemptId || typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(
       storageKey(attemptId),
-      JSON.stringify({ activeIndex, currentTimeSec }),
+      JSON.stringify({ activeIndex, currentTimeSec, completed }),
     );
   } catch {
     // Ignore storage quota or private-mode failures.
@@ -85,6 +91,9 @@ export function useSequentialListeningPlayer({
     () => initialProgress?.activeIndex ?? 0,
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isComplete, setIsComplete] = useState(
+    initialProgress?.completed === true,
+  );
   const [isBuffering, setIsBuffering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [measuredDurations, setMeasuredDurations] = useState<
@@ -264,6 +273,13 @@ export function useSequentialListeningPlayer({
     }
 
     const restored = readPersistedProgress(attemptId, tracks.length);
+    setIsComplete(restored?.completed === true);
+    if (restored?.completed) {
+      setIsBuffering(false);
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      return;
+    }
     const startIdx = restored?.activeIndex ?? 0;
     const resumeSec = restored?.currentTimeSec ?? 0;
 
@@ -293,7 +309,7 @@ export function useSequentialListeningPlayer({
   }, [activeBlobUrl]);
 
   const togglePlay = useCallback(async () => {
-    if (!enabled || tracksRef.current.length === 0) return;
+    if (!enabled || isComplete || tracksRef.current.length === 0) return;
 
     // ETS rule: once Listening playback starts it cannot be paused. Only a
     // failed start (error state) lets the learner try again.
@@ -328,7 +344,7 @@ export function useSequentialListeningPlayer({
           : "Unable to play audio. Please try again.",
       );
     }
-  }, [enabled, pumpQueue]);
+  }, [enabled, isComplete, pumpQueue]);
 
   const onLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
@@ -373,6 +389,8 @@ export function useSequentialListeningPlayer({
 
     const nextIdx = prevIdx + 1;
     if (nextIdx >= tracksRef.current.length) {
+      writePersistedProgress(attemptId, prevIdx, 0, true);
+      setIsComplete(true);
       isPlayingRef.current = false;
       setIsPlaying(false);
       setIsBuffering(false);
@@ -403,6 +421,7 @@ export function useSequentialListeningPlayer({
     activeIndex,
     activeTrack,
     isPlaying,
+    isComplete,
     isBuffering,
     error,
     globalElapsedMs,

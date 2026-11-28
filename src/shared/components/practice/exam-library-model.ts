@@ -28,6 +28,7 @@ export interface ExamLibraryItem {
   /** Finished attempts by the current learner. */
   attemptCount: number;
   bestScore: number | null;
+  maxScore?: number;
 }
 
 export type ExamStatusFilter = "ALL" | "DONE" | "TODO";

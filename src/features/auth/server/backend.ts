@@ -42,7 +42,22 @@ export function rateLimited(response: Response) {
 }
 
 export function sameOrigin(request: NextRequest): boolean {
-  return request.headers.get("origin") === new URL(request.url).origin;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    return false;
+  }
+  if (parsed.origin === new URL(request.url).origin) return true;
+  const host = request.headers.get("host");
+  const protocol =
+    request.headers.get("x-forwarded-proto") ??
+    new URL(request.url).protocol.slice(0, -1);
+  return (
+    parsed.host === host?.toLowerCase() && parsed.protocol === `${protocol}:`
+  );
 }
 
 export type ReadBoundedBodyResult =

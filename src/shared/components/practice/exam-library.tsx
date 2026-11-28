@@ -159,7 +159,7 @@ function ExamCard({
         </span>
         <span>
           {item.bestScore !== null
-            ? `Best: ${item.bestScore} / ${skill.maxScore}`
+            ? `Best: ${item.bestScore} / ${item.maxScore ?? skill.maxScore}`
             : "No results yet"}
         </span>
       </div>
@@ -346,9 +346,12 @@ export function ExamLibrary({
             aria-label="Best score"
             className="w-full rounded-2xl border border-(--sp-line)/70 bg-white px-[18px] py-4 sm:w-60"
           >
-            <p className="text-xs uppercase text-(--sp-ink-2)">Best score</p>
+            <p className="text-xs uppercase text-(--sp-ink-2)">
+              {kind === "exercise" ? "Most correct answers" : "Best score"}
+            </p>
             <p className="mt-1 text-[36px] font-bold leading-[44px] text-[#f4511e]">
-              {best ?? "-"} / {skill.maxScore}
+              {best ?? "-"}
+              {kind === "exam" ? ` / ${skill.maxScore}` : ""}
             </p>
             <p className="mt-1 text-[13px] text-(--sp-ink-2)">
               {best === null ? "No results yet" : `${text.scope} ${skill.name}`}

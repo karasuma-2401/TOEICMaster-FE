@@ -3,7 +3,9 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.hoisted(() => vi.fn());
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+const replace = vi.hoisted(() => vi.fn());
+const router = vi.hoisted(() => ({ push, replace }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.ComponentProps<"a">) => (
     <a href={href} {...props}>
