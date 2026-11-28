@@ -158,6 +158,7 @@ for (const { name, viewport, mobile } of [
         route.fulfill({ json: { items: writingHistory } }),
       );
 
+      await page.clock.install();
       await page.goto("/history");
       const chart = page.getByRole("region", { name: "Score progression" });
       const canvas = chart.getByTestId("score-progression-canvas");
@@ -176,8 +177,14 @@ for (const { name, viewport, mobile } of [
         "svg.recharts-surface path.recharts-line-curve",
       );
       const dots = canvas.locator("circle.recharts-line-dot");
+      const mic = page.getByRole("button", { name: /Mic/i });
+      const guide = page.getByRole("region", { name: "User guide" });
 
       await expect(lr).toHaveAttribute("aria-selected", "true");
+      await expect(mic).toBeVisible();
+      await page.clock.runFor(1_000);
+      await expect(guide).toBeHidden();
+      await expect(mic).toHaveAttribute("aria-expanded", "false");
       await expect(canvas).toHaveAccessibleName(
         "Score progression line chart for Listening & Reading",
       );
@@ -223,13 +230,7 @@ for (const { name, viewport, mobile } of [
         );
       }
 
-      if (mobile) {
-        const closeGuide = page.getByRole("button", { name: "Close guide" });
-        if (await closeGuide.isVisible()) {
-          await closeGuide.click();
-          await capture(page, "05-mobile-after-closing-guide.png");
-        }
-      } else {
+      if (!mobile) {
         await dots.first().hover();
         const tooltip = chart.getByTestId("score-progression-tooltip");
         await expect(tooltip).toContainText("ETS Practice Test 10");
@@ -270,6 +271,13 @@ for (const { name, viewport, mobile } of [
       await expect(canvas).toHaveCount(0);
       await expectCleanGeometry(page, chart);
       if (!mobile) await capture(page, "04-empty-writing-state.png");
+
+      await mic.click();
+      await expect(
+        guide.getByRole("heading", { name: "Learning History" }),
+      ).toBeVisible();
+      await guide.getByRole("button", { name: "Close guide" }).click();
+      await expect(guide).toBeHidden();
     });
   });
 }
