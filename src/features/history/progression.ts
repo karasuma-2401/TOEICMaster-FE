@@ -1,5 +1,9 @@
 import type { ExamSkillType, UnifiedAttemptItem } from "@/features/history/api";
 
+export type ChartWindowOption = "10" | "25" | "all";
+export const CHART_WINDOW_THRESHOLD = 10;
+export const DENSE_DOT_THRESHOLD = 20;
+
 export interface SkillChartConfig {
   skill: ExamSkillType;
   label: string;
@@ -165,4 +169,30 @@ export function resolveDefaultChartSkill(
     availableSkills[0] ??
     "lr"
   );
+}
+
+export function getAvailableChartWindows(
+  totalPoints: number,
+): ChartWindowOption[] {
+  if (totalPoints <= CHART_WINDOW_THRESHOLD) return ["all"];
+  if (totalPoints <= 25) return ["10", "all"];
+  return ["10", "25", "all"];
+}
+
+export function resolveEffectiveChartWindow(
+  totalPoints: number,
+  requested: ChartWindowOption,
+): ChartWindowOption {
+  return getAvailableChartWindows(totalPoints).includes(requested)
+    ? requested
+    : "all";
+}
+
+export function sliceProgressionPoints(
+  points: readonly ProgressionPoint[],
+  windowOption: ChartWindowOption,
+): ProgressionPoint[] {
+  return windowOption === "all"
+    ? points.slice()
+    : points.slice(-Number(windowOption));
 }

@@ -131,4 +131,84 @@ describe("ScoreProgressionChart", () => {
     expect(tooltip).toHaveTextContent("Test lr-2");
     expect(tooltip).toHaveTextContent("855 / 990");
   });
+
+  it("keeps static dots and hides range controls at 10 full tests", async () => {
+    const items = Array.from({ length: 10 }, (_, index) =>
+      attempt(`lr-${index + 1}`, "lr", 800 + index),
+    );
+    render(<InteractiveChart items={items} />);
+
+    const canvas = await screen.findByRole("img", {
+      name: "Score progression line chart for Listening & Reading",
+    });
+    expect(canvas.querySelectorAll("circle.recharts-line-dot")).toHaveLength(
+      10,
+    );
+    expect(
+      screen.queryByRole("group", { name: "Chart attempt range" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("score-progression-summary")).toHaveTextContent(
+      "10 full tests",
+    );
+  });
+
+  it("falls back to all tests when the selected skill does not offer Last 25", async () => {
+    const user = userEvent.setup();
+    const items = (
+      [
+        ["lr", 26],
+        ["speaking", 20],
+        ["writing", 21],
+      ] as const
+    ).flatMap(([skill, total]) =>
+      Array.from({ length: total }, (_, index) =>
+        attempt(`${skill}-${index + 1}`, skill, 100),
+      ),
+    );
+    render(<InteractiveChart items={items} />);
+
+    const range = () =>
+      within(screen.getByRole("group", { name: "Chart attempt range" }));
+    const summary = screen.getByTestId("score-progression-summary");
+    const lastTen = range().getByRole("button", { name: "Last 10" });
+    expect(lastTen).toHaveAttribute("aria-pressed", "true");
+    expect(summary).toHaveTextContent("Showing last 10 of 26 full tests");
+
+    const lastTwentyFive = range().getByRole("button", { name: "Last 25" });
+    await user.click(lastTwentyFive);
+    expect(lastTwentyFive).toHaveAttribute("aria-pressed", "true");
+    expect(summary).toHaveTextContent("Showing last 25 of 26 full tests");
+
+    await user.click(screen.getByRole("tab", { name: "Speaking (0-200)" }));
+    expect(
+      range().queryByRole("button", { name: "Last 25" }),
+    ).not.toBeInTheDocument();
+    expect(range().getByRole("button", { name: "All (20)" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(summary).toHaveTextContent("20 full tests");
+    expect(summary).not.toHaveTextContent("Showing last");
+    const speaking = screen.getByRole("img", {
+      name: "Score progression line chart for Speaking",
+    });
+    expect(speaking.querySelectorAll("circle.recharts-line-dot")).toHaveLength(
+      20,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Writing (0-200)" }));
+    expect(range().getByRole("button", { name: "All (21)" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    const writing = screen.getByRole("img", {
+      name: "Score progression line chart for Writing",
+    });
+    expect(
+      writing.querySelector("path.recharts-line-curve"),
+    ).toBeInTheDocument();
+    expect(writing.querySelectorAll("circle.recharts-line-dot")).toHaveLength(
+      0,
+    );
+  });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs } from "radix-ui";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -14,7 +14,13 @@ import {
 import type { ExamSkillType, UnifiedAttemptItem } from "@/features/history/api";
 import {
   buildSkillProgression,
+  CHART_WINDOW_THRESHOLD,
+  DENSE_DOT_THRESHOLD,
+  getAvailableChartWindows,
+  resolveEffectiveChartWindow,
   skillChartConfigs,
+  sliceProgressionPoints,
+  type ChartWindowOption,
   type ProgressionPoint,
   type SkillProgressionSeries,
 } from "@/features/history/progression";
@@ -42,13 +48,20 @@ function ProgressionTooltip({ point }: { point: ProgressionPoint }) {
   );
 }
 
-function ProgressionPlot({ points, config }: SkillProgressionSeries) {
+function ProgressionPlot({
+  points,
+  config,
+  className,
+}: Pick<SkillProgressionSeries, "points" | "config"> & { className: string }) {
   const chartLabel = `Score progression line chart for ${config.label}`;
+  const datesByAttempt = new Map(
+    points.map((point) => [point.attemptNumber, point.shortDateLabel]),
+  );
 
   return (
     <ResponsiveContainer
       aria-label={chartLabel}
-      className="min-w-0"
+      className={`min-w-0 ${className}`}
       data-testid="score-progression-canvas"
       height={280}
       initialDimension={initialDimension}
@@ -68,8 +81,8 @@ function ProgressionPlot({ points, config }: SkillProgressionSeries) {
           minTickGap={16}
           padding={axisPadding}
           tick={axisStyle}
-          tickFormatter={(number: number) =>
-            points[number - 1]?.shortDateLabel ?? ""
+          tickFormatter={(attemptNumber: number) =>
+            datesByAttempt.get(attemptNumber) ?? ""
           }
           tickLine={false}
         />
@@ -97,12 +110,17 @@ function ProgressionPlot({ points, config }: SkillProgressionSeries) {
         <Line
           activeDot={{ r: 5 }}
           dataKey="score"
-          dot={{
-            r: 3.5,
-            fill: config.stroke,
-            stroke: "#FFFFFF",
-            strokeWidth: 1.5,
-          }}
+          dot={
+            points.length <= DENSE_DOT_THRESHOLD
+              ? {
+                  clipDot: false,
+                  r: 3.5,
+                  fill: config.stroke,
+                  stroke: "#FFFFFF",
+                  strokeWidth: 1.5,
+                }
+              : false
+          }
           isAnimationActive={false}
           stroke={config.stroke}
           strokeWidth={2.5}
@@ -123,11 +141,23 @@ export function ScoreProgressionChart({
   activeSkill: ExamSkillType;
   onSkillChange: (skill: ExamSkillType) => void;
 }) {
+  const [requestedWindow, setRequestedWindow] =
+    useState<ChartWindowOption>("10");
   const series = useMemo(
     () => buildSkillProgression(items, activeSkill),
     [items, activeSkill],
   );
   const { config, deltaFromPrevious, hasTrend, latestScore, points } = series;
+  const totalPoints = points.length;
+  const showRanges = totalPoints > CHART_WINDOW_THRESHOLD;
+  const effectiveWindow = resolveEffectiveChartWindow(
+    totalPoints,
+    requestedWindow,
+  );
+  const visiblePoints = useMemo(
+    () => sliceProgressionPoints(points, effectiveWindow),
+    [points, effectiveWindow],
+  );
 
   return (
     <section
@@ -159,7 +189,11 @@ export function ScoreProgressionChart({
                   {deltaFromPrevious > 0 ? "+" : ""}
                   {deltaFromPrevious} vs prev
                 </span>
-                <span>{points.length} full tests</span>
+                <span>
+                  {effectiveWindow === "all"
+                    ? `${totalPoints} full tests`
+                    : `Showing last ${visiblePoints.length} of ${totalPoints} full tests`}
+                </span>
               </p>
             ) : null}
           </div>
@@ -201,7 +235,37 @@ export function ScoreProgressionChart({
             value={skill}
           >
             {skill !== activeSkill ? null : hasTrend ? (
-              <ProgressionPlot {...series} />
+              <>
+                {showRanges && (
+                  <fieldset
+                    aria-label="Chart attempt range"
+                    className="mb-2 flex min-w-0 flex-wrap gap-1.5 border-0 p-0"
+                    data-testid="score-progression-range"
+                  >
+                    {getAvailableChartWindows(totalPoints).map((option) => (
+                      <button
+                        aria-pressed={effectiveWindow === option}
+                        className={`min-h-[44px] rounded-lg border border-[#EEE9E6] px-2.5 text-xs font-semibold text-[#6B655F] transition-colors hover:bg-[#FAF7F5] aria-pressed:border-[#EA580C] aria-pressed:bg-[#FFF7ED] aria-pressed:text-[#C2410C] sm:min-h-8 ${focusRing}`}
+                        data-testid={`score-progression-range-${option}`}
+                        key={option}
+                        onClick={() => setRequestedWindow(option)}
+                        type="button"
+                      >
+                        {option === "all"
+                          ? `All (${totalPoints})`
+                          : `Last ${option}`}
+                      </button>
+                    ))}
+                  </fieldset>
+                )}
+                <ProgressionPlot
+                  className={
+                    showRanges ? "max-sm:max-w-[calc(100%_-_2rem)]" : ""
+                  }
+                  points={visiblePoints}
+                  config={config}
+                />
+              </>
             ) : (
               <p
                 className="rounded-xl border border-dashed border-[#EEE9E6] bg-[#FAF7F5] px-4 py-6 text-center text-sm text-[#6B655F]"

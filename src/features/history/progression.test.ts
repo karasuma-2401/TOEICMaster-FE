@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { UnifiedAttemptItem } from "@/features/history/api";
 import {
   buildSkillProgression,
+  getAvailableChartWindows,
   isFullScaleChartAttempt,
   resolveDefaultChartSkill,
+  resolveEffectiveChartWindow,
+  sliceProgressionPoints,
 } from "@/features/history/progression";
 
 function attempt(
@@ -134,4 +137,46 @@ describe("score progression", () => {
     );
     expect(resolveDefaultChartSkill([], [])).toBe("lr");
   });
+});
+
+describe("score progression windows", () => {
+  it.each([
+    [0, ["all"]],
+    [10, ["all"]],
+    [11, ["10", "all"]],
+    [25, ["10", "all"]],
+    [26, ["10", "25", "all"]],
+  ])("offers windows for %i full tests", (total, expected) => {
+    expect(getAvailableChartWindows(total)).toEqual(expected);
+  });
+
+  it("falls back to all if the selected window is unavailable for the skill", () => {
+    expect(resolveEffectiveChartWindow(10, "10")).toBe("all");
+    expect(resolveEffectiveChartWindow(11, "10")).toBe("10");
+    expect(resolveEffectiveChartWindow(25, "25")).toBe("all");
+    expect(resolveEffectiveChartWindow(26, "25")).toBe("25");
+    expect(resolveEffectiveChartWindow(50, "all")).toBe("all");
+  });
+
+  it.each([
+    ["10", 10, 41],
+    ["25", 25, 26],
+    ["all", 50, 1],
+  ] as const)(
+    "plots the latest %s tests without renumbering them",
+    (range, length, firstAttempt) => {
+      const items = Array.from({ length: 50 }, (_, index) =>
+        attempt({
+          timestampUtc: new Date(Date.UTC(2026, 9, index + 1)).toISOString(),
+        }),
+      ).reverse();
+      const { points } = buildSkillProgression(items, "lr");
+      const visible = sliceProgressionPoints(points, range);
+
+      expect(visible.map(({ attemptNumber }) => attemptNumber)).toEqual(
+        Array.from({ length }, (_, index) => firstAttempt + index),
+      );
+      expect(points).toHaveLength(50);
+    },
+  );
 });
