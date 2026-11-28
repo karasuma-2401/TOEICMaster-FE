@@ -50,12 +50,12 @@ export function UsersTable({
               className="w-12 px-4 py-3"
               scope="col"
             >
-              <label className="inline-flex cursor-pointer items-center">
+              <label className="-m-2.5 inline-flex size-11 cursor-pointer items-center justify-center rounded-lg hover:bg-[var(--admin-surface-muted)]">
                 <span className="sr-only">Select all users on page</span>
                 <input
                   aria-label="Select all users on page"
                   checked={allSelected}
-                  className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+                  className="size-4.5 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                   onChange={(event) => onSelectAll(event.target.checked)}
                   type="checkbox"
                 />
@@ -105,12 +105,12 @@ export function UsersTable({
               key={user.id}
             >
               <td aria-label={`Select ${user.fullName}`} className="px-4 py-4">
-                <label className="inline-flex cursor-pointer items-center">
+                <label className="-m-2.5 inline-flex size-11 cursor-pointer items-center justify-center rounded-lg hover:bg-[var(--admin-surface-muted)]">
                   <span className="sr-only">Select {user.fullName}</span>
                   <input
                     aria-label={`Select ${user.fullName}`}
                     checked={selectedIds.has(user.id)}
-                    className="size-4 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
+                    className="size-4.5 accent-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
                     onChange={(event) =>
                       onSelectionChange(user.id, event.target.checked)
                     }

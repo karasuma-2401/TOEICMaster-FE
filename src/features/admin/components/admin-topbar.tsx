@@ -50,15 +50,6 @@ export function AdminTopbar({ onOpenMenu }: AdminTopbarProps) {
         ← <span className="ml-1.5 sm:hidden">Practice</span>
         <span className="ml-1.5 hidden sm:inline">Back to practice</span>
       </Link>
-      <button
-        aria-label="Admin notifications"
-        className="grid size-9 place-items-center rounded-full bg-[var(--admin-surface-muted)] text-[var(--admin-muted)] transition hover:text-[var(--admin-brand-red)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand-red)]"
-        type="button"
-      >
-        <span aria-hidden="true" className="text-base">
-          ◌
-        </span>
-      </button>
       <span className="grid size-9 place-items-center rounded-full bg-[var(--admin-brand-orange)] text-xs font-semibold text-white">
         M
       </span>

@@ -5,6 +5,11 @@ import {
   adminFocus,
   adminSecondary,
 } from "@/features/admin/components/content/admin-styles";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { toast } from "@/shared/ui/toast";
 import {
   deleteKnowledgeMedia,
@@ -122,16 +127,23 @@ export function KnowledgeMediaPickerModal({
   }
 
   return (
-    <dialog
-      aria-label={title}
-      aria-modal="true"
-      className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-black/50 p-4"
-      open
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      open={open}
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-(--admin-border) bg-(--admin-surface) shadow-2xl">
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex max-h-[85vh] flex-col overflow-hidden rounded-2xl border-(--admin-border) bg-(--admin-surface) p-0"
+        showCloseButton={false}
+        size="xl"
+      >
         <div className="flex items-center justify-between border-b border-(--admin-border) px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-(--admin-ink)">{title}</h2>
+            <DialogTitle className="text-lg font-bold text-(--admin-ink)">
+              {title}
+            </DialogTitle>
             <p className="text-xs text-(--admin-muted)">
               PNG, JPEG, or WebP up to 5 MiB ({totalCount} images in library)
             </p>
@@ -283,7 +295,7 @@ export function KnowledgeMediaPickerModal({
           totalCount={totalCount}
           totalPages={totalPages}
         />
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

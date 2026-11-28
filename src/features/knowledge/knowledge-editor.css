@@ -9,6 +9,12 @@
   outline: none;
 }
 
+.kn-prose .tiptap:focus-visible {
+  outline: 2px solid var(--admin-brand-orange, #fb6b24);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
 .kn-prose .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
