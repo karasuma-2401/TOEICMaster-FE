@@ -34,7 +34,7 @@ const initialDimension = { width: 640, height: 280 };
 function ProgressionTooltip({ point }: { point: ProgressionPoint }) {
   return (
     <div
-      className="max-w-56 rounded-xl border border-[#EEE9E6] bg-white px-3 py-2 text-xs break-words whitespace-normal text-[#6B655F] shadow-sm"
+      className="max-w-56 rounded-xl border border-[#EEE9E6] bg-white px-3 py-2 text-xs wrap-break-word whitespace-normal text-[#6B655F] shadow-sm"
       data-testid="score-progression-tooltip"
       role="tooltip"
     >
@@ -96,9 +96,16 @@ function ProgressionPlot({
           width={36}
         />
         <Tooltip
-          content={({ active, activeIndex }) => {
-            const point =
-              activeIndex == null ? undefined : points[Number(activeIndex)];
+          content={({ active, activeIndex, payload }) => {
+            const index =
+              activeIndex === undefined ||
+              activeIndex === null ||
+              activeIndex === ""
+                ? Number.NaN
+                : Number(activeIndex);
+            const point = Number.isInteger(index)
+              ? points[index]
+              : (payload?.[0]?.payload as ProgressionPoint | undefined);
             return (
               <div aria-live="polite">
                 {active && point ? <ProgressionTooltip point={point} /> : null}
@@ -206,7 +213,7 @@ export function ScoreProgressionChart({
               const tab = skillChartConfigs[skill];
               return (
                 <Tabs.Trigger
-                  className={`min-h-[44px] rounded-lg border border-[#EEE9E6] px-1.5 text-xs font-semibold text-[#6B655F] transition-colors hover:bg-[#FAF7F5] sm:px-2.5 ${focusRing}`}
+                  className={`min-h-11 rounded-lg border border-[#EEE9E6] px-1.5 text-xs font-semibold text-[#6B655F] transition-colors hover:bg-[#FAF7F5] sm:px-2.5 ${focusRing}`}
                   data-testid={`score-progression-tab-${skill}`}
                   key={skill}
                   style={
@@ -245,7 +252,7 @@ export function ScoreProgressionChart({
                     {getAvailableChartWindows(totalPoints).map((option) => (
                       <button
                         aria-pressed={effectiveWindow === option}
-                        className={`min-h-[44px] rounded-lg border border-[#EEE9E6] px-2.5 text-xs font-semibold text-[#6B655F] transition-colors hover:bg-[#FAF7F5] aria-pressed:border-[#EA580C] aria-pressed:bg-[#FFF7ED] aria-pressed:text-[#C2410C] sm:min-h-8 ${focusRing}`}
+                        className={`min-h-11 rounded-lg border border-[#EEE9E6] px-2.5 text-xs font-semibold text-[#6B655F] transition-colors hover:bg-[#FAF7F5] aria-pressed:border-[#EA580C] aria-pressed:bg-[#FFF7ED] aria-pressed:text-[#C2410C] sm:min-h-8 ${focusRing}`}
                         data-testid={`score-progression-range-${option}`}
                         key={option}
                         onClick={() => setRequestedWindow(option)}
@@ -260,7 +267,7 @@ export function ScoreProgressionChart({
                 )}
                 <ProgressionPlot
                   className={
-                    showRanges ? "max-sm:max-w-[calc(100%_-_2rem)]" : ""
+                    showRanges ? "max-sm:max-w-[calc(100%-2rem)]" : ""
                   }
                   points={visiblePoints}
                   config={config}

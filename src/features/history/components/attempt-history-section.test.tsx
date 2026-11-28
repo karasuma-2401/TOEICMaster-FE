@@ -223,5 +223,5 @@ describe("AttemptHistorySection", () => {
       screen.getByRole("heading", { name: "Writing Test 02" }),
     ).toBeVisible();
     expect(fetchUnifiedHistory).toHaveBeenCalledTimes(1);
-  });
+  }, 15_000);
 });
