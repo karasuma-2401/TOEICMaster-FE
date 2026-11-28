@@ -24,6 +24,25 @@ afterEach(() => {
 });
 
 describe("GuideMascot", () => {
+  it("keeps first-visit history help closed and opens Learning History on Mic click", async () => {
+    mockPathname = "/history";
+    const user = userEvent.setup();
+    render(<GuideMascot />);
+
+    expect(
+      screen.queryByRole("region", { name: "User guide" }),
+    ).not.toBeInTheDocument();
+
+    const mic = screen.getByRole("button", { name: /Mic/i });
+    expect(mic).toHaveAttribute("aria-expanded", "false");
+    await user.click(mic);
+    expect(
+      screen.getByRole("heading", { name: "Learning History" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Close guide" }));
+    expect(mic).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("renders when mascot preference is not hidden and hides when setMascotHidden(true) is called", async () => {
     render(<GuideMascot />);
     expect(

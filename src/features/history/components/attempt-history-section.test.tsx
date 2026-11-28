@@ -115,6 +115,9 @@ describe("AttemptHistorySection", () => {
     expect(section).toBeInTheDocument();
 
     expect(await screen.findByText("ETS 2026 Test 01")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("score-progression-chart"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Speaking Test 01")).toBeInTheDocument();
     expect(screen.queryByText("Writing Test 01")).not.toBeInTheDocument();
 
@@ -145,7 +148,9 @@ describe("AttemptHistorySection", () => {
       unauthenticatedSkills: ["lr"],
     });
 
-    render(<AttemptHistorySection skills={["lr"]} title="L&R History" />);
+    render(
+      <AttemptHistorySection showChart skills={["lr"]} title="L&R History" />,
+    );
 
     expect(
       await screen.findByText("Sign in to view your attempt history"),
@@ -154,7 +159,84 @@ describe("AttemptHistorySection", () => {
       "href",
       "/login?next=%2Fhistory",
     );
+    expect(
+      screen.queryByTestId("score-progression-chart"),
+    ).not.toBeInTheDocument();
   });
+
+  it("does not show the enabled chart while loading or on failure", async () => {
+    vi.mocked(fetchUnifiedHistory).mockRejectedValueOnce(
+      new Error("History unavailable"),
+    );
+    render(<AttemptHistorySection showChart />);
+
+    expect(screen.getByText("Loading attempt history…")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("score-progression-chart"),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "History unavailable",
+    );
+    expect(
+      screen.queryByTestId("score-progression-chart"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opts in above the cards and synchronizes chart tabs with specific filters only", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchUnifiedHistory).mockResolvedValueOnce({
+      items: [
+        ...sampleItems,
+        { ...sampleItems[2], id: "wr-2", title: "Writing Test 02", score: 175 },
+      ],
+      unauthenticatedSkills: [],
+    });
+    render(<AttemptHistorySection showChart showFilter />);
+
+    const chart = await screen.findByRole(
+      "region",
+      { name: "Score progression" },
+      { timeout: 5000 },
+    );
+    const firstCard = screen.getAllByRole("article")[0];
+    expect(
+      chart.compareDocumentPosition(firstCard) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const filters = within(
+      screen.getByRole("group", { name: "Filter history by skill" }),
+    );
+    const chartTabs = within(chart);
+    const all = filters.getByRole("button", { name: "All" });
+    const speakingTab = chartTabs.getByRole("tab", {
+      name: "Speaking (0-200)",
+    });
+    const writingTab = chartTabs.getByRole("tab", { name: "Writing (0-200)" });
+    expect(writingTab).toHaveAttribute("aria-selected", "true");
+
+    await user.click(speakingTab);
+    expect(speakingTab).toHaveAttribute("aria-selected", "true");
+    expect(all).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByRole("article")).toHaveLength(4);
+
+    await user.click(filters.getByRole("button", { name: "L&R" }));
+    expect(chartTabs.getByRole("tab", { name: "L&R (0-990)" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+
+    await user.click(writingTab);
+    expect(filters.getByRole("button", { name: "Writing" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", { name: "Writing Test 02" }),
+    ).toBeVisible();
+    expect(fetchUnifiedHistory).toHaveBeenCalledTimes(1);
+  }, 15_000);
 
   it("renders the sign-in prompt immediately on first render when isAuthenticated is false", () => {
     render(

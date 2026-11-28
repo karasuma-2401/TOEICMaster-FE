@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
 import { getSession } from "@/features/auth/api";
 import {
   fetchUnifiedHistory,
   type ExamSkillType,
   type UnifiedAttemptItem,
 } from "@/features/history/api";
+import { resolveDefaultChartSkill } from "@/features/history/progression";
 import { refreshSessionLocked } from "@/shared/api/http";
 import { focusRing } from "@/shared/components/practice/styles";
+
+const ScoreProgressionChart = lazy(() =>
+  import("./score-progression-chart").then(({ ScoreProgressionChart }) => ({
+    default: ScoreProgressionChart,
+  })),
+);
+
+const defaultSkills: readonly ExamSkillType[] = ["lr", "speaking", "writing"];
 
 const skillMeta: Record<
   ExamSkillType,
@@ -143,6 +152,7 @@ function AttemptCard({ item }: { item: UnifiedAttemptItem }) {
 export function AttemptHistorySection({
   skills,
   limit,
+  showChart = false,
   isAuthenticated = true,
   showFilter = false,
   showSummary = false,
@@ -153,6 +163,7 @@ export function AttemptHistorySection({
   skills?: ExamSkillType[];
   /** Initial number of cards; omit to show every attempt. */
   limit?: number;
+  showChart?: boolean;
   /** Skip history API requests on unauthenticated public shells. */
   isAuthenticated?: boolean;
   showFilter?: boolean;
@@ -163,14 +174,15 @@ export function AttemptHistorySection({
   description?: string;
 }) {
   const headingId = useId();
-  const requestedSkills = skills ?? ["lr", "speaking", "writing"];
+  const requestedSkills = skills ?? defaultSkills;
   const [items, setItems] = useState<UnifiedAttemptItem[]>([]);
   const [unauthenticatedSkills, setUnauthenticatedSkills] = useState<
-    ExamSkillType[]
+    readonly ExamSkillType[]
   >(() => (isAuthenticated ? [] : requestedSkills));
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | ExamSkillType>("ALL");
+  const [chartSkill, setChartSkill] = useState<ExamSkillType | null>(null);
   const [visibleCount, setVisibleCount] = useState(
     limit ?? Number.MAX_SAFE_INTEGER,
   );
@@ -237,6 +249,14 @@ export function AttemptHistorySection({
     !isAuthenticated ||
     (unauthenticatedSkills.length > 0 &&
       requestedSkills.every((skill) => unauthenticatedSkills.includes(skill)));
+  const chartSkills = requestedSkills.length ? requestedSkills : defaultSkills;
+  const showProgression = showChart && !loading && !error && !isGuest;
+  const activeChartSkill = useMemo(() => {
+    if (!showProgression) return null;
+    if (filter !== "ALL" && chartSkills.includes(filter)) return filter;
+    if (chartSkill && chartSkills.includes(chartSkill)) return chartSkill;
+    return resolveDefaultChartSkill(items, chartSkills);
+  }, [chartSkill, chartSkills, filter, items, showProgression]);
 
   const filtered = useMemo(
     () =>
@@ -319,6 +339,20 @@ export function AttemptHistorySection({
             </div>
           ))}
         </dl>
+      ) : null}
+
+      {activeChartSkill ? (
+        <Suspense fallback={null}>
+          <ScoreProgressionChart
+            activeSkill={activeChartSkill}
+            items={items}
+            onSkillChange={(skill) => {
+              if (filter === "ALL") setChartSkill(skill);
+              else setFilter(skill);
+            }}
+            skills={chartSkills}
+          />
+        </Suspense>
       ) : null}
 
       {showFilter ? (

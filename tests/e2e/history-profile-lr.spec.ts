@@ -485,6 +485,29 @@ test.describe("History, Profile, and L&R Flow", () => {
     await mockCommonApis(page);
   });
 
+  for (const [routePath, attemptTitle] of [
+    ["/", "ETS 2026 Test 01"],
+    ["/profile", "ETS 2026 Test 01"],
+    ["/listening-reading", "ETS 2026 Test 01"],
+    ["/listening", "ETS 2026 Test 01"],
+    ["/reading", "ETS 2026 Test 01"],
+    ["/speaking", "Speaking Test 01"],
+    ["/writing", "Writing Test 01"],
+  ]) {
+    test(`${routePath} renders embedded attempt history without the progression chart`, async ({
+      page,
+    }) => {
+      await page.goto(routePath);
+      const history = page.getByTestId("attempt-history-section");
+      await expect(
+        history
+          .getByRole("heading", { name: attemptTitle, exact: true })
+          .first(),
+      ).toBeVisible();
+      await expect(page.getByTestId("score-progression-chart")).toHaveCount(0);
+    });
+  }
+
   test("verifies /, /listening, /reading, /listening-reading, /speaking, /writing, /history, and /profile across Desktop and Mobile", async ({
     page,
   }) => {
