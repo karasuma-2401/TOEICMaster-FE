@@ -177,7 +177,7 @@ export function AttemptHistorySection({
   const requestedSkills = skills ?? defaultSkills;
   const [items, setItems] = useState<UnifiedAttemptItem[]>([]);
   const [unauthenticatedSkills, setUnauthenticatedSkills] = useState<
-    ExamSkillType[]
+    readonly ExamSkillType[]
   >(() => (isAuthenticated ? [] : requestedSkills));
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
